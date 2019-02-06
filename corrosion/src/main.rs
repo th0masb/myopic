@@ -4,13 +4,16 @@ mod dir;
 use self::square::Square;
 
 fn main() {
-    //let sq: Square = Square {i: 0, rank: 0, file: 0, loc: 0 };
-    let sq = square::H1;
-    //first2(sq);
+    let sq: Square = Square {i: 0, rank: 0, file: 0, loc: 0 };
+    let sq2 = square::H1;
+    let sq3 = square::H1;
+    let ref sqref = square::H1;
+    first2(sq2);
 //    first(sq);
-    //second(&sq);
+    second(sqref);
+    second(sqref);
     //third(&mut sq);
-    println!("{:?}", sq);
+    println!("{:?}", sq3);
 }
 
 fn first2(square: Square) {

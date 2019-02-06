@@ -1,4 +1,4 @@
-use super::dir;
+use super::dir::Dir;
 
 #[derive(Debug)]
 pub struct Square {
@@ -9,7 +9,7 @@ pub struct Square {
 }
 
 impl Square {
-    pub fn next(&self, direction: &dir::Dir) -> Option<&Square> {
+    pub fn next(&self, direction: Dir) -> Option<&Square> {
         Some(self)
     }
 
