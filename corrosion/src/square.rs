@@ -2,18 +2,25 @@ use super::dir::Dir;
 
 #[derive(Debug)]
 pub struct Square {
-    pub i: u8,
-    pub rank: u8,
-    pub file: u8,
+    pub i: i8,
+    pub rank: i8,
+    pub file: i8,
     pub loc: u64,
 }
 
 impl Square {
-    pub fn next(&self, direction: Dir) -> Option<&Square> {
-        Some(self)
+    pub fn next(&self, dir: &Dir) -> Option<&Square> {
+        let new_rank = self.rank + dir.dr;
+        let new_file = self.file + dir.df;
+        if (-1 < new_rank && new_rank < 8 && -1 < new_file && new_file < 8) {
+            Some(&ALL[(8 * new_rank + new_file) as usize])
+        }
+        else {
+            None
+        }
     }
 
-    const fn init(index: u8) -> Square {
+    const fn init(index: i8) -> Square {
         Square { i: index, 
             rank: index / 8, 
             file: index % 8, 
