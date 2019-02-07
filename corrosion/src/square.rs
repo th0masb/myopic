@@ -12,19 +12,31 @@ impl Square {
     pub fn next(&self, dir: &Dir) -> Option<&Square> {
         let new_rank = self.rank + dir.dr;
         let new_file = self.file + dir.df;
-        if (-1 < new_rank && new_rank < 8 && -1 < new_file && new_file < 8) {
+        if -1 < new_rank && new_rank < 8 && -1 < new_file && new_file < 8 {
             Some(&ALL[(8 * new_rank + new_file) as usize])
         }
         else {
             None
         }
     }
+    
+    pub fn all_squares(&self, dir: &Dir) -> Vec<&Square> { 
+        match self.next(dir) {
+            None => vec!(),
+            Some(sq) => {
+                let mut recursion = sq.all_squares(dir);
+                recursion.push(sq);
+                recursion
+            }
+        }
+    }
+
 
     const fn init(index: i8) -> Square {
         Square { i: index, 
             rank: index / 8, 
             file: index % 8, 
-            loc: (1 as u64) << index 
+            loc: 1u64 << index 
         }
     }
 }
