@@ -4,7 +4,7 @@ mod dir;
 use self::square::Square;
 
 fn main() {
-    println!("{:?}", square::H1.all_squares(&dir::N));
+//    println!("{:?}", square::H1.all_squares(&dir::N));
 }
 
 fn some_func(mut input_ref: &Square) {

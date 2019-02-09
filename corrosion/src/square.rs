@@ -1,4 +1,5 @@
 use super::dir::Dir;
+use std::fmt;
 
 #[derive(Debug)]
 pub struct Square {
@@ -6,6 +7,14 @@ pub struct Square {
     pub rank: i8,
     pub file: i8,
     pub loc: u64,
+    pub name: &'static str
+}
+
+impl fmt::Display for Square {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//        write!(f, "
+        panic!()
+    }
 }
 
 impl Square {
@@ -20,35 +29,43 @@ impl Square {
         }
     }
     
-    pub fn all_squares(&self, dir: &Dir) -> Vec<&Square> { 
+    fn search_dir(&self, dir: &Dir) -> Vec<&Square> { 
         match self.next(dir) {
             None => vec!(),
             Some(sq) => {
-                let mut recursion = sq.all_squares(dir);
+                let mut recursion = sq.search_dir(dir);
                 recursion.push(sq);
                 recursion
             }
         }
     }
 
+    pub fn search_all(&self, dirs: Vec<&Dir>) -> Vec<&Square> {
+        dirs.iter().flat_map(|dir| self.search_dir(dir)).collect()
+    }
 
-    const fn init(index: i8) -> Square {
+    pub fn search_one(&self, dirs: Vec<&Dir>) -> Vec<&Square> {
+        dirs.iter().flat_map(|dir| self.next(dir).into_iter()).collect()
+    }
+
+    const fn init(index: i8, name: &str) -> Square {
         Square { i: index, 
             rank: index / 8, 
             file: index % 8, 
-            loc: 1u64 << index 
+            loc: 1u64 << index,
+            name
         }
     }
 }
 
-pub const H1: Square = Square::init(0);
-pub const G1: Square = Square::init(1);
-pub const F1: Square = Square::init(2);
-pub const E1: Square = Square::init(3);
-pub const D1: Square = Square::init(4);
-pub const C1: Square = Square::init(5);
-pub const B1: Square = Square::init(6);
-pub const A1: Square = Square::init(7);
+pub const H1: Square = Square::init(0, "H1");
+pub const G1: Square = Square::init(1, "G1");
+pub const F1: Square = Square::init(2, "F1");
+pub const E1: Square = Square::init(3, "E1");
+pub const D1: Square = Square::init(4, "D1");
+pub const C1: Square = Square::init(5, "C1");
+pub const B1: Square = Square::init(6, "B1");
+pub const A1: Square = Square::init(7, "A1");
 
 pub const H2: Square = Square::init(8 );
 pub const G2: Square = Square::init(9 );
