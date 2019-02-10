@@ -1,10 +1,15 @@
 mod square;
+mod squareset;
 mod dir;
 
 use self::square::Square;
 
 fn main() {
-//    println!("{:?}", square::H1.all_squares(&dir::N));
+    let dirs = vec!(&dir::N);
+    let squares = square::H1.search_one(dirs);
+    println!("{:#?}", squares);
+//    println!("{}", square::H1);
+
 }
 
 fn some_func(mut input_ref: &Square) {
