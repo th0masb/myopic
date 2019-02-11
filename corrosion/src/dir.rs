@@ -1,3 +1,4 @@
+#[derive(Debug, Copy, Clone)]
 pub struct Dir {
     pub dr: i8,
     pub df: i8,
