@@ -61,6 +61,18 @@ impl Square {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::super::dir::*;
+    use super::*;
+
+    #[test]
+    fn test_next() {
+        assert_eq!(A4.next(N), Some(A5));
+
+    }
+}
+
 pub const H1: Square = Square::new(0);
 pub const G1: Square = Square::new(1);
 pub const F1: Square = Square::new(2);
