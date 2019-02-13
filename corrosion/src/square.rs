@@ -1,5 +1,6 @@
 use super::dir::Dir;
-use std::{ fmt };
+use itertools::iterate;
+use std::fmt;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Square {
@@ -19,11 +20,7 @@ impl Square {
         NAMES[self.i as usize]
     }
 
-	const fn x(self) -> u8 {
-		self.i
-	}
-
-    pub const fn next(self, dir: Dir) -> Option<Square> {
+    pub fn next(self, dir: Dir) -> Option<Square> {
         let new_rank = (self.rank as i8) + dir.dr;
         let new_file = (self.file as i8) + dir.df;
         if -1 < new_rank && new_rank < 8 && -1 < new_file && new_file < 8 {
@@ -34,20 +31,14 @@ impl Square {
     }
 
     fn search_dir(self, dir: Dir) -> Vec<Square> {
-        match self.next(dir) {
-            None => vec![],
-            Some(sq) => {
-                let mut recursion = sq.search_dir(dir);
-                recursion.push(sq);
-                recursion
-            }
-        }
+        iterate(Some(self), |op| op.and_then(|sq| sq.next(dir)))
+            .take_while(|op| op.is_some())
+            .map(|op| op.unwrap())
+            .collect()
     }
 
     pub fn search_all(self, dirs: &Vec<Dir>) -> Vec<Square> {
-        dirs.iter()
-            .flat_map(|dir| self.search_dir(*dir))
-            .collect()
+        dirs.iter().flat_map(|dir| self.search_dir(*dir)).collect()
     }
 
     pub fn search_one(self, dirs: &Vec<Dir>) -> Vec<Square> {
@@ -72,8 +63,27 @@ mod tests {
 
     #[test]
     fn test_next() {
-        assert_eq!(A4.next(N), Some(A5));
-		
+        assert_eq!(C3.next(N), Some(C4));
+        assert_eq!(C3.next(E), Some(D3));
+        assert_eq!(C3.next(S), Some(C2));
+        assert_eq!(C3.next(W), Some(B3));
+        assert_eq!(C3.next(NE), Some(D4));
+        assert_eq!(C3.next(SE), Some(D2));
+        assert_eq!(C3.next(SW), Some(B2));
+        assert_eq!(C3.next(NW), Some(B4));
+        assert_eq!(C3.next(NNE), Some(D5));
+        assert_eq!(C3.next(NEE), Some(E4));
+        assert_eq!(C3.next(SEE), Some(E2));
+        assert_eq!(C3.next(SSE), Some(D1));
+        assert_eq!(C3.next(SSW), Some(B1));
+        assert_eq!(C3.next(SWW), Some(A2));
+        assert_eq!(C3.next(NWW), Some(A4));
+        assert_eq!(C3.next(NNW), Some(B5));
+
+        assert_eq!(G8.next(N), None);
+        assert_eq!(H6.next(E), None);
+        assert_eq!(B1.next(S), None);
+        assert_eq!(A4.next(W), None);
     }
 }
 

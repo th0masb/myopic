@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate itertools;
+
 mod square;
 mod squareset;
 mod dir;

@@ -1,6 +1,7 @@
 use super::square::Square;
 use super::square;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct SquareSet(u64);
 
 struct SquareSetIterator { src: u64, counter: usize }
