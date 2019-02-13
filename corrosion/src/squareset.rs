@@ -12,12 +12,19 @@ impl SquareSetIterator {
 
 }
 
+// TODO can make this more efficient.
 impl Iterator for SquareSetIterator {
     type Item = Square;
 
     fn next(&mut self) -> Option<Square> {
-
-        Some(square::ALL[0])
+        while self.counter < 64 {
+            let prev = self.counter;
+            self.counter += 1;
+            if self.src & (1u64 << prev) != 0 {
+                return Some(square::ALL[prev]);
+            }
+        }
+        None
     }
 }
 
@@ -31,3 +38,4 @@ const RANKS: [u64; 8] = [
     (0b11111111) << 6,
     (0b11111111) << 7,
 ];
+
