@@ -16,6 +16,8 @@ impl fmt::Display for Square {
 }
 
 impl Square {
+
+
     pub fn name(self) -> &'static str {
         NAMES[self.i as usize]
     }
