@@ -30,7 +30,7 @@ impl Square {
         }
     }
 
-    fn search_dir(self, dir: Dir) -> Vec<Square> {
+    pub fn search(self, dir: Dir) -> Vec<Square> {
         iterate(Some(self), |op| op.and_then(|sq| sq.next(dir)))
             .take_while(|op| op.is_some())
             .map(|op| op.unwrap())
@@ -38,7 +38,7 @@ impl Square {
     }
 
     pub fn search_all(self, dirs: &Vec<Dir>) -> Vec<Square> {
-        dirs.iter().flat_map(|dir| self.search_dir(*dir)).collect()
+        dirs.iter().flat_map(|dir| self.search(*dir)).collect()
     }
 
     pub fn search_one(self, dirs: &Vec<Dir>) -> Vec<Square> {
@@ -60,6 +60,17 @@ impl Square {
 mod tests {
     use super::super::dir::*;
     use super::*;
+
+    #[test]
+    fn test_search_one() {
+        assert_eq!(D3.search_one(&vec!(S, E)), vec!(D2, E3));
+        assert_eq!(A8.search_one(&vec!(N, NWW, SE)), vec!(B7));
+    }
+
+    #[test]
+    fn test_search_all() {
+        assert_eq!(C3.search_all(&vec!(SSW, SWW, S)), vec!(A2, B1, C2, C1));
+    }
 
     #[test]
     fn test_next() {
@@ -85,6 +96,7 @@ mod tests {
         assert_eq!(B1.next(S), None);
         assert_eq!(A4.next(W), None);
     }
+
 }
 
 pub const H1: Square = Square::new(0);
