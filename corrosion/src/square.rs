@@ -21,6 +21,10 @@ impl Square {
         NAMES[self.i as usize]
     }
 
+    pub fn loc(self) -> BitBoard {
+        BitBoard::wrap(1u64 << self.i)
+    }
+
     pub fn next(self, dir: Dir) -> Option<Square> {
         let new_rank = (self.rank as i8) + dir.dr;
         let new_file = (self.file as i8) + dir.df;

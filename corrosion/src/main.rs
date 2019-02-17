@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate itertools;
+//extern crate bitwise;
 
 mod square;
 mod bitboard;

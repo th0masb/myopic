@@ -29,6 +29,10 @@ impl BitBoard {
     pub fn new(args: &[Square]) -> BitBoard {
         args.into_iter().map(|x| *x).collect()
     }
+
+    pub fn wrap(bitboard: u64) -> BitBoard {
+        BitBoard(bitboard)
+    }
 }
 
 impl IntoIterator for BitBoard {
