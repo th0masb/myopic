@@ -1,4 +1,5 @@
-use super::dir::Dir;
+use crate::dir::Dir;
+use crate::bitboard::BitBoard;
 use itertools::iterate;
 use std::fmt;
 
@@ -16,8 +17,6 @@ impl fmt::Display for Square {
 }
 
 impl Square {
-
-
     pub fn name(self) -> &'static str {
         NAMES[self.i as usize]
     }
@@ -32,18 +31,19 @@ impl Square {
         }
     }
 
-    pub fn search(self, dir: Dir) -> Vec<Square> {
+    pub fn search(self, dir: Dir) -> BitBoard {
         iterate(Some(self), |op| op.and_then(|sq| sq.next(dir)))
+            .skip(1)
             .take_while(|op| op.is_some())
             .map(|op| op.unwrap())
             .collect()
     }
 
-    pub fn search_all(self, dirs: &Vec<Dir>) -> Vec<Square> {
+    pub fn search_all(self, dirs: &Vec<Dir>) -> BitBoard {
         dirs.iter().flat_map(|dir| self.search(*dir)).collect()
     }
 
-    pub fn search_one(self, dirs: &Vec<Dir>) -> Vec<Square> {
+    pub fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
         dirs.iter()
             .flat_map(|dir| self.next(*dir).into_iter())
             .collect()
@@ -60,18 +60,27 @@ impl Square {
 
 #[cfg(test)]
 mod tests {
-    use super::super::dir::*;
     use super::*;
+    use crate::dir::*;
+    use crate::bitboard::*;
+
+    #[test]
+    fn test_search() {
+        assert_eq!(D3.search(S), BitBoard::new(&[D2, D1]));
+    }
 
     #[test]
     fn test_search_one() {
-        assert_eq!(D3.search_one(&vec!(S, E)), vec!(D2, E3));
-        assert_eq!(A8.search_one(&vec!(N, NWW, SE)), vec!(B7));
+        assert_eq!(D3.search_one(&vec!(S, E)), BitBoard::new(&[D2, E3]));
+        assert_eq!(A8.search_one(&vec!(N, NWW, SE)), BitBoard::new(&[B7]));
     }
 
     #[test]
     fn test_search_all() {
-        assert_eq!(C3.search_all(&vec!(SSW, SWW, S)), vec!(A2, B1, C2, C1));
+        assert_eq!(
+            C3.search_all(&vec!(SSW, SWW, S)),
+            BitBoard::new(&[B1, A2, C2, C1])
+        );
     }
 
     #[test]
@@ -98,7 +107,6 @@ mod tests {
         assert_eq!(B1.next(S), None);
         assert_eq!(A4.next(W), None);
     }
-
 }
 
 pub const H1: Square = Square::new(0);

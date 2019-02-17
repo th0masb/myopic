@@ -1,5 +1,5 @@
-use super::square;
-use super::square::Square;
+use crate::square;
+use crate::square::Square;
 use std::iter::{FromIterator, IntoIterator};
 
 fn loc(sq: Square) -> u64 {
@@ -7,38 +7,59 @@ fn loc(sq: Square) -> u64 {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct SquareSet(u64);
+pub struct BitBoard(u64);
 
-impl IntoIterator for SquareSet {
+impl BitBoard {
+    pub fn or(self, other: BitBoard) -> BitBoard {
+        BitBoard(self.0 | other.0)
+    }
+
+    pub fn xor(self, other: BitBoard) -> BitBoard {
+        BitBoard(self.0 ^ other.0)
+    }
+
+    pub fn and(self, other: BitBoard) -> BitBoard {
+        BitBoard(self.0 & other.0)
+    }
+
+    pub fn flip(self) -> BitBoard {
+        BitBoard(!self.0)
+    }
+
+    pub fn new(args: &[Square]) -> BitBoard {
+        args.into_iter().map(|x| *x).collect()
+    }
+}
+
+impl IntoIterator for BitBoard {
     type Item = Square;
-    type IntoIter = SquareSetIterator;
+    type IntoIter = BitBoardIterator;
 
     fn into_iter(self) -> Self::IntoIter {
-        SquareSetIterator {
+        BitBoardIterator {
             src: self.0,
             counter: 0,
         }
     }
 }
 
-impl FromIterator<Square> for SquareSet {
+impl FromIterator<Square> for BitBoard {
     fn from_iter<I: IntoIterator<Item = Square>>(iter: I) -> Self {
         let mut locations = 0u64;
         for square in iter {
             locations |= loc(square);
         }
-        SquareSet(locations)
+        BitBoard(locations)
     }
 }
 
 #[cfg(test)]
 mod iterationtests {
+    use crate::bitboard::{loc, BitBoard};
     use crate::square::*;
-    use crate::squareset::loc;
-    use crate::squareset::SquareSet;
 
-    fn new_set(a: Square, b: Square, c: Square) -> SquareSet {
-        SquareSet(loc(a) | loc(b) | loc(c))
+    fn new_set(a: Square, b: Square, c: Square) -> BitBoard {
+        BitBoard(loc(a) | loc(b) | loc(c))
     }
 
     #[test]
@@ -55,13 +76,17 @@ mod iterationtests {
     }
 }
 
-pub struct SquareSetIterator {
+pub struct BitBoardIterator {
     src: u64,
     counter: usize,
 }
 
+impl BitBoardIterator {
+
+}
+
 // TODO can make this more efficient.
-impl Iterator for SquareSetIterator {
+impl Iterator for BitBoardIterator {
     type Item = Square;
 
     fn next(&mut self) -> Option<Square> {
@@ -85,4 +110,16 @@ const RANKS: [u64; 8] = [
     (0b11111111) << 5,
     (0b11111111) << 6,
     (0b11111111) << 7,
+];
+
+const HALVES: [u64; 2] = [
+    RANKS[0] | RANKS[1] | RANKS[2] | RANKS[3],
+    RANKS[4] | RANKS[5] | RANKS[6] | RANKS[7],
+];
+
+const QUARTS: [u64; 4] = [
+    RANKS[0] | RANKS[1],
+    RANKS[2] | RANKS[3],
+    RANKS[4] | RANKS[5],
+    RANKS[6] | RANKS[7],
 ];
