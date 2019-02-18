@@ -6,11 +6,14 @@ mod square;
 mod bitboard;
 mod dir;
 
-use self::square::Square;
+use crate::square::*;
+use crate::bitboard::BitBoard;
 
 fn main() {
     let dirs = vec!(&dir::N);
-    println!("hi");
+    let board = BitBoard::new(&[D2, H3]);
+    println!("{}", board);
+    println!("{}", board.flip());
 //    let squares = square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
 //    println!("{}", square::H1);

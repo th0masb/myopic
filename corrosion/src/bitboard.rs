@@ -1,12 +1,15 @@
 use crate::square;
 use crate::square::Square;
+use itertools::Itertools;
+use std::fmt;
+use std::fmt::Display;
 use std::iter::{FromIterator, IntoIterator};
 
 fn loc(sq: Square) -> u64 {
     1u64 << sq.i
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub struct BitBoard(u64);
 
 impl BitBoard {
@@ -35,6 +38,19 @@ impl BitBoard {
     }
 }
 
+impl fmt::Debug for BitBoard {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{{}}}", self.into_iter().join(", "))
+    }
+}
+
+impl fmt::Display for BitBoard {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{{}}}", self.into_iter().join(", "))
+    }
+}
+
+
 impl IntoIterator for BitBoard {
     type Item = Square;
     type IntoIter = BitBoardIterator;
@@ -58,7 +74,7 @@ impl FromIterator<Square> for BitBoard {
 }
 
 #[cfg(test)]
-mod iterationtests {
+mod test {
     use crate::bitboard::{loc, BitBoard};
     use crate::square::*;
 
@@ -78,6 +94,12 @@ mod iterationtests {
             new_set(F1, G6, C7).into_iter().collect::<Vec<Square>>()
         );
     }
+
+    #[test]
+    fn test_display() {
+        let result = BitBoard::new(&[A1, H7, D5]);
+        assert_eq!("{A1, D5, H7}".to_owned(), format!("{}", result));
+    }
 }
 
 pub struct BitBoardIterator {
@@ -85,9 +107,7 @@ pub struct BitBoardIterator {
     counter: usize,
 }
 
-impl BitBoardIterator {
-
-}
+impl BitBoardIterator {}
 
 // TODO can make this more efficient.
 impl Iterator for BitBoardIterator {
