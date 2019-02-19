@@ -1,9 +1,11 @@
 use crate::square;
 use crate::square::Square;
 use itertools::Itertools;
+
 use std::fmt;
 use std::fmt::Display;
 use std::iter::{FromIterator, IntoIterator};
+use std::ops;
 
 fn loc(sq: Square) -> u64 {
     1u64 << sq.i
@@ -13,21 +15,6 @@ fn loc(sq: Square) -> u64 {
 pub struct BitBoard(u64);
 
 impl BitBoard {
-    pub fn or(self, other: BitBoard) -> BitBoard {
-        BitBoard(self.0 | other.0)
-    }
-
-    pub fn xor(self, other: BitBoard) -> BitBoard {
-        BitBoard(self.0 ^ other.0)
-    }
-
-    pub fn and(self, other: BitBoard) -> BitBoard {
-        BitBoard(self.0 & other.0)
-    }
-
-    pub fn flip(self) -> BitBoard {
-        BitBoard(!self.0)
-    }
 
     pub fn new(args: &[Square]) -> BitBoard {
         args.into_iter().map(|x| *x).collect()
@@ -35,6 +22,46 @@ impl BitBoard {
 
     pub fn wrap(bitboard: u64) -> BitBoard {
         BitBoard(bitboard)
+    }
+}
+
+impl ops::Not for BitBoard {
+    type Output = Self;
+
+    fn not(self) -> Self {
+        BitBoard(!self.0)
+    }
+}
+
+impl ops::Sub for BitBoard {
+    type Output = Self;
+
+    fn sub(self, other: BitBoard) -> Self {
+        BitBoard(self.0 & !other.0)
+    }
+}
+
+impl ops::BitXor for BitBoard {
+    type Output = Self;
+
+    fn bitxor(self, other: BitBoard) -> Self {
+        BitBoard(self.0 ^ other.0)
+    }
+}
+
+impl ops::BitOr for BitBoard {
+    type Output = Self;
+
+    fn bitor(self, other: BitBoard) -> Self {
+        BitBoard(self.0 | other.0)
+    }
+}
+
+impl ops::BitAnd for BitBoard {
+    type Output = Self;
+
+    fn bitand(self, other: BitBoard) -> Self {
+        BitBoard(self.0 & other.0)
     }
 }
 
