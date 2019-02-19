@@ -1,7 +1,7 @@
 use crate::dir::Dir;
 use crate::bitboard::BitBoard;
 use itertools::{Itertools, iterate};
-use std::fmt;
+use std::{fmt, ops};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Square {
@@ -19,6 +19,30 @@ impl fmt::Debug for Square {
 impl fmt::Display for Square {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.name())
+    }
+}
+
+impl ops::Not for Square {
+    type Output = BitBoard;
+
+    fn not(self) -> Self::Output {
+        !self.loc()
+    }
+}
+
+impl ops::BitOr<Square> for Square {
+    type Output = BitBoard;
+
+    fn bitor(self, other: Square) -> Self::Output {
+        self.loc() | other.loc()
+    }
+}
+
+impl ops::BitOr<BitBoard> for Square {
+    type Output = BitBoard;
+
+    fn bitor(self, other: BitBoard) -> Self::Output {
+        self.loc() | other
     }
 }
 

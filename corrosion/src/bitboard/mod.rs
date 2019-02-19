@@ -1,11 +1,13 @@
+mod operator_impl;
+
 use crate::square;
 use crate::square::Square;
 use itertools::Itertools;
 
 use std::fmt;
-use std::fmt::Display;
 use std::iter::{FromIterator, IntoIterator};
 use std::ops;
+
 
 fn loc(sq: Square) -> u64 {
     1u64 << sq.i
@@ -33,11 +35,19 @@ impl ops::Not for BitBoard {
     }
 }
 
-impl ops::Sub for BitBoard {
+impl ops::Sub<BitBoard> for BitBoard {
     type Output = Self;
 
     fn sub(self, other: BitBoard) -> Self {
         BitBoard(self.0 & !other.0)
+    }
+}
+
+impl ops::Sub<Square> for BitBoard {
+    type Output = Self;
+
+    fn sub(self, other: Square) -> Self {
+       BitBoard(self.0 & !loc(other))
     }
 }
 
@@ -49,11 +59,19 @@ impl ops::BitXor for BitBoard {
     }
 }
 
-impl ops::BitOr for BitBoard {
+impl ops::BitOr<BitBoard> for BitBoard {
     type Output = Self;
 
     fn bitor(self, other: BitBoard) -> Self {
         BitBoard(self.0 | other.0)
+    }
+}
+
+impl ops::BitOr<Square> for BitBoard {
+    type Output = Self;
+
+    fn bitor(self, other: Square) -> Self {
+        BitBoard(self.0 | loc(other))
     }
 }
 
@@ -76,7 +94,6 @@ impl fmt::Display for BitBoard {
         write!(f, "{{{}}}", self.into_iter().join(", "))
     }
 }
-
 
 impl IntoIterator for BitBoard {
     type Item = Square;

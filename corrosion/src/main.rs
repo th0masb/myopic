@@ -13,7 +13,6 @@ fn main() {
     let dirs = vec!(&dir::N);
     let board = BitBoard::new(&[D2, H3]);
     println!("{}", board);
-    println!("{}", board.flip());
 //    let squares = square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
 //    println!("{}", square::H1);
