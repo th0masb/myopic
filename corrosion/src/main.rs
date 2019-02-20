@@ -3,7 +3,7 @@ extern crate itertools;
 //extern crate bitwise;
 
 use crate::bitboard::BitBoard;
-use crate::square::*;
+
 use crate::square::constants::*;
 
 mod square;
@@ -11,7 +11,7 @@ mod bitboard;
 mod dir;
 
 fn main() {
-    let dirs = vec!(&dir::N);
+    let _dirs = vec!(&dir::N);
     let board = BitBoard::new(&[D2, H3]);
     let board2 = BitBoard::new(&[A3, G7]);
     println!("{}", board | board2);

@@ -4,6 +4,7 @@ use itertools::Itertools;
 
 use crate::square::Square;
 
+pub mod simple;
 mod operators;
 mod iterator;
 

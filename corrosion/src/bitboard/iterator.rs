@@ -2,7 +2,7 @@ use std::iter::{FromIterator, IntoIterator};
 
 use crate::bitboard;
 use crate::bitboard::BitBoard;
-use crate::square::constants::ALL;
+use crate::square::constants::SQUARES;
 use crate::square::Square;
 
 // Iterator related trait implementations for the BitBoard struct.
@@ -76,7 +76,7 @@ impl Iterator for BitBoardIterator {
             let prev = self.counter;
             self.counter += 1;
             if self.src & (1u64 << prev) != 0 {
-                return Some(ALL[prev]);
+                return Some(SQUARES[prev]);
             }
         }
         None

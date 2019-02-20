@@ -1,6 +1,4 @@
-use std::{fmt, ops};
-
-use itertools::{iterate, Itertools};
+use itertools::iterate;
 
 use crate::bitboard::BitBoard;
 use crate::dir::Dir;
@@ -15,7 +13,6 @@ pub struct Square {
     pub file: u8,
 }
 
-
 impl Square {
     pub fn name(self) -> &'static str {
         NAMES[self.i as usize]
@@ -29,7 +26,7 @@ impl Square {
         let new_rank = (self.rank as i8) + dir.dr;
         let new_file = (self.file as i8) + dir.df;
         if -1 < new_rank && new_rank < 8 && -1 < new_file && new_file < 8 {
-            Some(constants::ALL[(8 * new_rank + new_file) as usize])
+            Some(constants::SQUARES[(8 * new_rank + new_file) as usize])
         } else {
             None
         }
@@ -113,9 +110,6 @@ mod impl_tests {
         assert_eq!(A4.next(W), None);
     }
 }
-
-
-
 
 static NAMES: [&str; 64] = [
     "H1", "G1", "F1", "E1", "D1", "C1", "B1", "A1", "H2", "G2", "F2", "E2", "D2", "C2", "B2", "A2",
