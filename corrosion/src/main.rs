@@ -2,12 +2,13 @@
 extern crate itertools;
 //extern crate bitwise;
 
+use crate::bitboard::BitBoard;
+use crate::square::*;
+use crate::square::constants::*;
+
 mod square;
 mod bitboard;
 mod dir;
-
-use crate::square::*;
-use crate::bitboard::BitBoard;
 
 fn main() {
     let dirs = vec!(&dir::N);
@@ -17,29 +18,10 @@ fn main() {
     println!("{}", board | F3);
     println!("{}", F3 | board);
     println!("{}", G1 | A8);
+    let bitboard: BitBoard = vec!(A1, G5).into_iter().collect();
+    println!("{}", bitboard);
 //    let squares = square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
 //    println!("{}", square::H1);
 }
 
-fn some_func(mut input_ref: &Square) {
-    input_ref = &square::H1;
-}
-
-fn first2(square: Square) {
-    println!("{:?}", square);
-}
-
-fn first(mut square: Square) {
-    square.i = 5;
-    println!("{:?}", square);
-}
-
-fn second(square: &Square) {
-    println!("{:?}", square);
-}
-
-fn third(square: &mut Square) {
-    square.i = 5;
-    println!("{:?}", square);
-}

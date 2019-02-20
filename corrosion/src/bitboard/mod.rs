@@ -1,14 +1,11 @@
-mod operators;
-mod iterator;
+use std::fmt;
 
-use std::iter::{FromIterator, IntoIterator};
-use std::{fmt, ops};
 use itertools::Itertools;
 
-use crate::square;
 use crate::square::Square;
-use crate::bitboard::iterator::BitBoardIterator;
 
+mod operators;
+mod iterator;
 
 fn loc(sq: Square) -> u64 {
     1u64 << sq.i
@@ -39,44 +36,18 @@ impl fmt::Display for BitBoard {
     }
 }
 
-impl IntoIterator for BitBoard {
-    type Item = Square;
-    type IntoIter = BitBoardIterator;
-
-    fn into_iter(self) -> Self::IntoIter {
-        BitBoardIterator::new(self.0)
-    }
-}
-
-impl FromIterator<Square> for BitBoard {
-    fn from_iter<I: IntoIterator<Item = Square>>(iter: I) -> Self {
-        iter.into_iter().fold(EMPTY, |a, b| a | b)
-    }
-}
-
 const EMPTY: BitBoard = BitBoard(0u64);
 const ALL: BitBoard = BitBoard(!0u64);
 
+
 #[cfg(test)]
 mod test {
-    use crate::bitboard::{loc, BitBoard};
-    use crate::square::*;
-
-    fn new_set(a: Square, b: Square, c: Square) -> BitBoard {
-        BitBoard(loc(a) | loc(b) | loc(c))
-    }
+    use crate::bitboard::BitBoard;
+    use crate::square::constants::*;
 
     #[test]
-    fn test_from_iter() {
-        assert_eq!(new_set(F1, G6, C7), vec!(F1, G6, C7).into_iter().collect());
-    }
-
-    #[test]
-    fn test_into_iter() {
-        assert_eq!(
-            vec!(F1, G6, C7),
-            new_set(F1, G6, C7).into_iter().collect::<Vec<Square>>()
-        );
+    fn test_new() {
+        assert_eq!(BitBoard(0b11u64), BitBoard::new(&[H1, G1]))
     }
 
     #[test]

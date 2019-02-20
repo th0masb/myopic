@@ -1,8 +1,7 @@
-use crate::bitboard::{BitBoard, loc};
-use crate::square::Square;
-
 use std::ops;
 
+use crate::bitboard::{BitBoard, loc};
+use crate::square::Square;
 
 impl ops::Not for BitBoard {
     type Output = Self;
