@@ -9,6 +9,8 @@ use crate::square::constants::*;
 mod square;
 mod bitboard;
 mod dir;
+mod side;
+mod pieces;
 
 fn main() {
     let _dirs = vec!(&dir::N);
@@ -18,6 +20,7 @@ fn main() {
     println!("{}", board | F3);
     println!("{}", F3 | board);
     println!("{}", G1 | A8);
+    println!("{}", G1 > H1);
     let bitboard: BitBoard = vec!(A1, G5).into_iter().collect();
     println!("{}", bitboard);
 //    let squares = square::H1.search_one(dirs);

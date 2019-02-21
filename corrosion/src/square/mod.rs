@@ -6,7 +6,7 @@ use crate::dir::Dir;
 pub mod constants;
 mod trait_impl;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd)]
 pub struct Square {
     pub i: u8,
     pub rank: u8,
@@ -51,6 +51,7 @@ impl Square {
     }
 
     const fn new(index: u8) -> Square {
+
         Square {
             i: index,
             rank: index / 8,
@@ -65,6 +66,24 @@ mod impl_tests {
     use crate::dir::*;
 
     use super::constants::*;
+    use crate::square::Square;
+
+    #[test]
+    fn test_partial_ord() {
+        for i in 0..64 {
+            let prev: Vec<_> = SQUARES.iter().take(i).map(|x| *x).collect();
+            let next: Vec<_> = SQUARES.iter().skip(i + 1).map(|x| *x).collect();
+            let pivot = SQUARES[i];
+
+            for smaller in prev {
+                assert_eq!(true, smaller < pivot);
+            }
+
+            for larger in next {
+                assert_eq!(true, pivot < larger);
+            }
+        }
+    }
 
     #[test]
     fn test_search() {
