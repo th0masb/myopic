@@ -12,3 +12,8 @@ fn compute_empty_board_moves(side: Side) -> Vec<BitBoard> {
     };
     unimplemented!()
 }
+
+pub struct WhitePawn;
+pub struct BlackPawn;
+
+

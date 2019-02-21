@@ -1,8 +1,10 @@
 #[macro_use]
 extern crate itertools;
+#[macro_use]
+extern crate lazy_static;
 //extern crate bitwise;
 
-use crate::bitboard::BitBoard;
+use crate::bitboard::{BitBoard, simple::*};
 
 use crate::square::constants::*;
 
@@ -26,5 +28,6 @@ fn main() {
 //    let squares = square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
 //    println!("{}", square::H1);
+    println!("{}", RANKS[1]);
 }
 
