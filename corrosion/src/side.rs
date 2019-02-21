@@ -1,9 +1,9 @@
 
-enum Side {
-    WHITE,
-    BLACK
+pub enum Side {
+    White,
+    Black
 }
 
 impl Side {
-    
+
 }
