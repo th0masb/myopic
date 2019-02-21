@@ -7,6 +7,7 @@ extern crate lazy_static;
 use crate::bitboard::{BitBoard, simple::*};
 
 use crate::square::constants::*;
+use crate::pieces::{Piece, pawns::WhitePawn};
 
 mod square;
 mod bitboard;
@@ -29,5 +30,6 @@ fn main() {
 //    println!("{:#?}", squares);
 //    println!("{}", square::H1);
     println!("{}", RANKS[1]);
+    println!("{}", WhitePawn.control_set(H3, BitBoard::EMPTY, BitBoard::EMPTY));
 }
 

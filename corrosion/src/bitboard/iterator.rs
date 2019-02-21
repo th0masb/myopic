@@ -18,7 +18,7 @@ impl IntoIterator for BitBoard {
 
 impl FromIterator<Square> for BitBoard {
     fn from_iter<I: IntoIterator<Item = Square>>(iter: I) -> Self {
-        iter.into_iter().fold(bitboard::EMPTY, |a, b| a | b)
+        iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
     }
 }
 

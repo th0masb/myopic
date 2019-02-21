@@ -20,7 +20,12 @@ pub fn create_ranks() -> Vec<BitBoard> {
 #[cfg(test)]
 mod test {
     use crate::square::constants::*;
-    use super::create_ranks;
+    use super::*;
+
+    #[test]
+    fn test_create_files() {
+        assert_eq!(H1 | H2 | H3 | H4 | H5 | H6 | H7 | H8, create_files()[0]);
+    }
 
     #[test]
     fn test_create_ranks() {

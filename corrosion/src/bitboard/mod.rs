@@ -23,6 +23,10 @@ impl BitBoard {
     pub fn wrap(bitboard: u64) -> BitBoard {
         BitBoard(bitboard)
     }
+
+    pub const EMPTY: BitBoard = BitBoard(0u64);
+    pub const ALL: BitBoard = BitBoard(!0u64);
+
 }
 
 impl fmt::Debug for BitBoard {
@@ -36,9 +40,6 @@ impl fmt::Display for BitBoard {
         write!(f, "{{{}}}", self.into_iter().join(", "))
     }
 }
-
-const EMPTY: BitBoard = BitBoard(0u64);
-const ALL: BitBoard = BitBoard(!0u64);
 
 
 #[cfg(test)]

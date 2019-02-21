@@ -19,7 +19,7 @@ impl ops::Not for Square {
     type Output = BitBoard;
 
     fn not(self) -> Self::Output {
-        !self.loc()
+        !self.as_set()
     }
 }
 
@@ -27,7 +27,7 @@ impl ops::BitOr<Square> for Square {
     type Output = BitBoard;
 
     fn bitor(self, other: Square) -> Self::Output {
-        self.loc() | other.loc()
+        self.as_set() | other.as_set()
     }
 }
 
@@ -35,6 +35,6 @@ impl ops::BitOr<BitBoard> for Square {
     type Output = BitBoard;
 
     fn bitor(self, other: BitBoard) -> Self::Output {
-        self.loc() | other
+        self.as_set() | other
     }
 }

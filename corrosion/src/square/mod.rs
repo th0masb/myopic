@@ -18,7 +18,7 @@ impl Square {
         NAMES[self.i as usize]
     }
 
-    pub fn loc(self) -> BitBoard {
+    pub fn as_set(self) -> BitBoard {
         BitBoard::wrap(1u64 << self.i)
     }
 

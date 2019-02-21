@@ -58,3 +58,5 @@ impl ops::BitAnd for BitBoard {
         BitBoard(self.0 & other.0)
     }
 }
+
+
