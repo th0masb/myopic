@@ -3,6 +3,22 @@ use std::ops;
 use crate::bitboard::{BitBoard, loc};
 use crate::square::Square;
 
+impl ops::Shr<u8> for BitBoard {
+    type Output = Self;
+
+    fn shr(self, shift: u8) -> Self {
+        BitBoard(self.0 >> shift)
+    }
+}
+
+impl ops::Shl<u8> for BitBoard {
+    type Output = Self;
+
+    fn shl(self, shift: u8) -> Self {
+        BitBoard(self.0 << shift)
+    }
+}
+
 impl ops::Not for BitBoard {
     type Output = Self;
 
