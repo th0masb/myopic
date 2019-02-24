@@ -32,7 +32,7 @@ impl Square {
         }
     }
 
-    pub fn search(self, dir: Dir) -> BitBoard {
+    pub fn search_vec(self, dir: Dir) -> Vec<Square> {
         iterate(Some(self), |op| op.and_then(|sq| sq.next(dir)))
             .skip(1)
             .take_while(|op| op.is_some())
@@ -40,13 +40,17 @@ impl Square {
             .collect()
     }
 
+    pub fn search(self, dir: Dir) -> BitBoard {
+        self.search_vec(dir).into_iter().collect()
+    }
+
     pub fn search_all(self, dirs: &Vec<Dir>) -> BitBoard {
-        dirs.iter().flat_map(|dir| self.search(*dir)).collect()
+        dirs.iter().flat_map(|&dir| self.search(dir)).collect()
     }
 
     pub fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
         dirs.iter()
-            .flat_map(|dir| self.next(*dir).into_iter())
+            .flat_map(|&dir| self.next(dir).into_iter())
             .collect()
     }
 

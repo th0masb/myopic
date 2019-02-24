@@ -24,6 +24,10 @@ impl BitBoard {
         BitBoard(bitboard)
     }
 
+    pub fn is_empty(self) -> Bool {
+        self.0 == 0
+    }
+
     pub const EMPTY: BitBoard = BitBoard(0u64);
     pub const ALL: BitBoard = BitBoard(!0u64);
 
