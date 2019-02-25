@@ -4,7 +4,7 @@ use crate::bitboard::BitBoard;
 use crate::dir::Dir;
 
 pub mod constants;
-mod trait_impl;
+mod traits;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd)]
 pub struct Square {

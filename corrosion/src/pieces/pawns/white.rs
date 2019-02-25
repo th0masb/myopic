@@ -1,7 +1,7 @@
-use crate::pieces::{Piece, WhitePawn};
-use crate::square::{Square, constants::*};
-use crate::bitboard::{BitBoard, simple::RANKS};
 use super::WHITE_CONTROL;
+use crate::bitboard::{simple::RANKS, BitBoard};
+use crate::pieces::{Piece, WhitePawn};
+use crate::square::{constants::*, Square};
 
 impl WhitePawn {
     fn on_start_rank(loc: Square) -> bool {
@@ -20,7 +20,7 @@ impl Piece for WhitePawn {
         if WhitePawn::on_start_rank(loc) && !result.is_empty() {
             result = result | ((loc.as_set() << 16) - all)
         }
-        result
+        result | self.attackset(loc, white, black)
     }
 
     fn attackset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
@@ -51,7 +51,7 @@ mod test {
 
     #[test]
     fn test_moveset() {
-        assert_eq!(D3 | D4, WhitePawn.moveset(D2, E2 | D5, G1 | F7));
+        assert_eq!(D3 | D4 | E3, WhitePawn.moveset(D2, E2 | D5, G1 | F7 | E3));
         assert_eq!(D3.as_set(), WhitePawn.moveset(D2, D4 | G6, A2 | D7));
         assert_eq!(BitBoard::EMPTY, WhitePawn.moveset(D2, D3 | A1, B5 | D5));
         assert_eq!(G7.as_set(), WhitePawn.moveset(G6, A1 | F5, H6 | B3));

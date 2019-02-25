@@ -1,11 +1,12 @@
 use crate::bitboard::{simple::*, BitBoard};
 use crate::dir::{Dir, N, S};
-use crate::pieces::{Piece, WhitePawn, BlackPawn};
+use crate::pieces::{BlackPawn, Piece, WhitePawn};
 use crate::side::{Side, Side::Black, Side::White};
 use crate::square::constants::{A1, A6, H3, H8, SQUARES};
 use crate::square::Square;
 
 pub mod white;
+pub mod black;
 
 fn compute_all_empty_board_control(side: Side) -> Vec<BitBoard> {
     SQUARES
@@ -26,7 +27,3 @@ lazy_static! {
     static ref WHITE_CONTROL: Vec<BitBoard> = compute_all_empty_board_control(White);
     static ref BLACK_CONTROL: Vec<BitBoard> = compute_all_empty_board_control(Black);
 }
-
-
-
-
