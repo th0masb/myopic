@@ -24,7 +24,7 @@ impl BitBoard {
         BitBoard(bitboard)
     }
 
-    pub fn is_empty(self) -> Bool {
+    pub fn is_empty(self) -> bool {
         self.0 == 0
     }
 

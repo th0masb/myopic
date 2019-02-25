@@ -7,7 +7,7 @@ extern crate lazy_static;
 use crate::bitboard::{BitBoard, simple::*};
 
 use crate::square::constants::*;
-use crate::pieces::{Piece, pawns::WhitePawn};
+use crate::pieces::{Piece, WhitePawn};
 
 mod square;
 mod bitboard;

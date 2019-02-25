@@ -3,14 +3,14 @@ use crate::dir;
 use crate::square::constants::*;
 use crate::square::Square;
 
-pub fn create_files() -> Vec<BitBoard> {
+fn create_files() -> Vec<BitBoard> {
     (H1.search(dir::W) | H1)
         .into_iter()
         .map(|sq| sq.search(dir::N) | sq)
         .collect()
 }
 
-pub fn create_ranks() -> Vec<BitBoard> {
+fn create_ranks() -> Vec<BitBoard> {
     (H1.search(dir::N) | H1)
         .into_iter()
         .map(|sq| sq.search(dir::W) | sq)

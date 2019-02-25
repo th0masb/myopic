@@ -67,11 +67,19 @@ impl ops::BitOr<Square> for BitBoard {
     }
 }
 
-impl ops::BitAnd for BitBoard {
+impl ops::BitAnd<BitBoard> for BitBoard {
     type Output = Self;
 
     fn bitand(self, other: BitBoard) -> Self {
         BitBoard(self.0 & other.0)
+    }
+}
+
+impl ops::BitAnd<Square> for BitBoard {
+    type Output = Self;
+
+    fn bitand(self, other: Square) -> Self {
+        BitBoard(self.0 & loc(other))
     }
 }
 

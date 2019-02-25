@@ -38,3 +38,19 @@ impl ops::BitOr<BitBoard> for Square {
         self.as_set() | other
     }
 }
+
+impl ops::BitAnd<BitBoard> for Square {
+   type Output = BitBoard;
+
+    fn bitand(self, other: BitBoard) -> Self::Output {
+        self.as_set() & other
+    }
+}
+
+impl ops::Sub<BitBoard> for Square {
+    type Output = BitBoard;
+
+    fn sub(self, other: BitBoard) -> Self::Output {
+        self.as_set() - other
+    }
+}

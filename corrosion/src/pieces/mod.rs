@@ -11,3 +11,22 @@ pub trait Piece {
 
     fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
 }
+
+
+pub struct WhitePawn;
+pub struct BlackPawn;
+
+pub struct WhiteKnight;
+pub struct BlackKnight;
+
+pub struct WhiteBishop;
+pub struct BlackBishop;
+
+pub struct WhiteRook;
+pub struct BlackRook;
+
+pub struct WhiteQueen;
+pub struct BlackQueen;
+
+pub struct WhiteKing;
+pub struct BlackKing;
