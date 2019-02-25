@@ -2,6 +2,7 @@ use crate::bitboard::BitBoard;
 use crate::square::Square;
 
 pub mod pawns;
+pub mod knights;
 
 pub trait Piece {
     fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
