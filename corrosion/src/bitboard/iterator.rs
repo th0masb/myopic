@@ -22,12 +22,11 @@ impl FromIterator<Square> for BitBoard {
     }
 }
 
-// Do we want this or could it be confusing?
-//impl FromIterator<BitBoard> for BitBoard {
-//    fn from_iter<I: IntoIterator<Item = BitBoard>>(iter: I) -> Self {
-//        iter.into_iter().fold(bitboard::EMPTY, |a, b| a | b)
-//    }
-//}
+impl FromIterator<BitBoard> for BitBoard {
+    fn from_iter<I: IntoIterator<Item = BitBoard>>(iter: I) -> Self {
+        iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
+    }
+}
 
 #[cfg(test)]
 mod trait_test {

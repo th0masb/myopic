@@ -28,6 +28,11 @@ impl BitBoard {
         self.0 == 0
     }
 
+    pub fn size(self) -> usize {
+        // Can make this faster with bit twiddling
+       self.into_iter().count()
+    }
+
     pub const EMPTY: BitBoard = BitBoard(0u64);
     pub const ALL: BitBoard = BitBoard(!0u64);
 
