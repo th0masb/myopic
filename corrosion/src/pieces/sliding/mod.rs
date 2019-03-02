@@ -57,4 +57,64 @@ lazy_static! {
     static ref ROOK_MASKS: Vec<BitBoard> = compute_rook_masks();
 }
 
+fn compute_bishop_shifts() -> Vec<usize> {
+    compute_bishop_masks().iter().map(|x| x.size()).collect()
+}
 
+fn compute_rook_shifts() -> Vec<usize> {
+    compute_rook_masks().iter().map(|x| x.size()).collect()
+}
+
+lazy_static! {
+    static ref BISHOP_SHIFTS: Vec<usize> = compute_bishop_shifts();
+    static ref ROOK_SHIFTS: Vec<usize> = compute_rook_shifts();
+}
+
+fn bishop_control(loc: Square, occ: BitBoard) -> BitBoard {
+    sliding_control(loc, occ, vec![NE, SE, SW, NW])
+}
+
+fn rook_control(loc: Square, occ: BitBoard) -> BitBoard {
+    sliding_control(loc, occ, vec![N, S, S, N])
+}
+
+fn sliding_control(loc: Square, occ: BitBoard, dirs: Vec<Dir>) -> BitBoard {
+    let mut res = vec![];
+    for dir in dirs {
+        for sq in loc.search_vec(dir) {
+            res.push(sq);
+            if !(occ & sq).is_empty() {
+                break;
+            }
+        }
+    }
+    res.into_iter().collect()
+}
+
+#[cfg(test)]
+mod control_tests {
+   use super::*;
+}
+
+fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
+    if squares.is_empty() {
+        vec![]
+    } else {
+        let (head, rest) = (squares[0], &squares[1..].to_vec());
+        let recursive = compute_powerset(rest);
+        let mut res = vec![];
+        for set in recursive {
+            res.push(set);
+            res.push(set | head);
+        }
+        res
+    }
+}
+
+#[cfg(test)]
+mod powerset_test {
+    use super::*;
+    use crate::square::constants::*;
+
+    //fn test
+}
