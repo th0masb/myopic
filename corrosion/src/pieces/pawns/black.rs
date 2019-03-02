@@ -16,9 +16,9 @@ impl Piece for BlackPawn {
 
     fn moveset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         let all = white | black;
-        let mut result = ((loc - RANKS[0]) << 8) - all;
+        let mut result = ((loc - RANKS[0]) >> 8) - all;
         if BlackPawn::on_start_rank(loc) && !result.is_empty() {
-            result = result | ((loc.as_set() << 16) - all)
+            result = result | ((loc.as_set() >> 16) - all)
         }
         result | self.attackset(loc, white, black)
     }
@@ -43,20 +43,19 @@ mod test {
 
     #[test]
     fn test_controlset() {
-        assert_eq!(D2 | F2, BlackPawn.controlset(E3, A1 | B6, D8 | D4));
-        assert_eq!(F7 | D7, BlackPawn.controlset(E8, A1 | B6, D8 | D4));
-        assert_eq!(B2.as_set(), BlackPawn.controlset(A3, A4 | C5, F4 | H8));
-        assert_eq!(G2.as_set(), BlackPawn.controlset(H3, A4 | C5, F4 | H8));
+        let bp = BlackPawn;
+        assert_eq!(D2 | F2, bp.controlset(E3, A1 | B6, D8 | D4));
+        assert_eq!(F7 | D7, bp.controlset(E8, A1 | B6, D8 | D4));
+        assert_eq!(B2.as_set(), bp.controlset(A3, A4 | C5, F4 | H8));
+        assert_eq!(G2.as_set(), bp.controlset(H3, A4 | C5, F4 | H8));
     }
 
     #[test]
     fn test_moveset() {
-        assert_eq!(D3 | D4, BlackPawn.moveset(D2, E2 | D5, G1 | F7));
-        assert_eq!(D3.as_set(), BlackPawn.moveset(D2, D4 | G6, A2 | D7));
-        assert_eq!(BitBoard::EMPTY, BlackPawn.moveset(D2, D3 | A1, B5 | D5));
-        assert_eq!(G7.as_set(), BlackPawn.moveset(G6, A1 | F5, H6 | B3));
-        assert_eq!(BitBoard::EMPTY, BlackPawn.moveset(G6, A1 | G7, H6 | B3));
-        assert_eq!(BitBoard::EMPTY, BlackPawn.moveset(G6, A1 | A5, H6 | G7));
-        assert_eq!(BitBoard::EMPTY, BlackPawn.moveset(A8, D3 | H7, F4 | C3));
+        let (bp, zero) = (BlackPawn, BitBoard::EMPTY);
+        assert_eq!(D1.as_set(), bp.moveset(D2, E2 | D5, G1 | F7));
+        assert_eq!(G6 | G5, bp.moveset(G7, A1 | F5, H6 | B3));
+        assert_eq!(zero, bp.moveset(G7, A1 | G6, H6 | B3));
+        assert_eq!(G6.as_set(), bp.moveset(G7, A1 | G8, G5 | B3));
     }
 }
