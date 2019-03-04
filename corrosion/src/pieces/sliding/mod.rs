@@ -58,11 +58,11 @@ lazy_static! {
 }
 
 fn compute_bishop_shifts() -> Vec<usize> {
-    compute_bishop_masks().iter().map(|x| x.size()).collect()
+    compute_bishop_masks().iter().map(|x| 64 - x.size()).collect()
 }
 
 fn compute_rook_shifts() -> Vec<usize> {
-    compute_rook_masks().iter().map(|x| x.size()).collect()
+    compute_rook_masks().iter().map(|x| 64 - x.size()).collect()
 }
 
 lazy_static! {
@@ -75,7 +75,7 @@ fn bishop_control(loc: Square, occ: BitBoard) -> BitBoard {
 }
 
 fn rook_control(loc: Square, occ: BitBoard) -> BitBoard {
-    sliding_control(loc, occ, vec![N, S, S, N])
+    sliding_control(loc, occ, vec![N, E, S, W])
 }
 
 fn sliding_control(loc: Square, occ: BitBoard, dirs: Vec<Dir>) -> BitBoard {
@@ -93,7 +93,20 @@ fn sliding_control(loc: Square, occ: BitBoard, dirs: Vec<Dir>) -> BitBoard {
 
 #[cfg(test)]
 mod control_tests {
-   use super::*;
+    use super::*;
+    use crate::square::constants::*;
+
+    #[test]
+    fn test_sliding_control() {
+        // Could split this up to test rook and bishop separately.
+        let loc = D4;
+        let whites = D1 | F4 | D6 | G7 | H8;
+        let blacks = B2 | B4 | E3 | A7;
+        let dirs = vec![N, NE, E, SE, S, SW, W, NW];
+        let expected_control = D5 | D6 | E5 | F6 | G7 | E4 | F4 | E3 | D3 | D2 | D1 | C3 | B2
+         | C4 | B4 | C5 | B6 | A7;
+        assert_eq!(expected_control, sliding_control(loc, whites | blacks, dirs));
+    }
 }
 
 fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
