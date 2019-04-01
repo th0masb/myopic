@@ -5,7 +5,9 @@ use crate::dir::{E, N, S, W};
 use crate::dir::{NE, NW, SE, SW};
 use crate::square::constants::SQUARES;
 use crate::square::Square;
+use std::collections::HashSet;
 use std::vec::IntoIter;
+use rand::prelude::*;
 
 /// Computes a bitboard representation of every square
 /// on the edge of a chessboard.
@@ -14,14 +16,25 @@ fn board_border() -> BitBoard {
     RANKS[0] | RANKS[7] | FILES[0] | FILES[7]
 }
 
-/// Computes a vector containing the bishop occupancy
+fn bishop_dirs() -> Vec<Dir> {
+    vec![NE, SE, SW, NW]
+}
+
+fn rook_dirs() -> Vec<Dir> {
+    vec![N, E, S, W]
+}
+
+/// Computes a vector containing the rook occupancy
 /// masks for each square.
 ///
-fn compute_bishop_masks() -> Vec<BitBoard> {
-    let (border, dirs) = (board_border(), vec![NE, SE, SW, NW]);
+fn compute_masks(dirs: Vec<Dir>) -> Vec<BitBoard> {
     SQUARES
         .iter()
-        .map(|&sq| sq.search_all(&dirs) - border)
+        .map(|&sq| {
+            dirs.iter()
+                .map(|&dir| search_remove_last(sq, dir))
+                .collect()
+        })
         .collect()
 }
 
@@ -36,20 +49,6 @@ fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
     res.into_iter().collect()
 }
 
-/// Computes a vector containing the rook occupancy
-/// masks for each square.
-///
-fn compute_rook_masks() -> Vec<BitBoard> {
-    let dirs = vec![N, E, S, W];
-    SQUARES
-        .iter()
-        .map(|&sq| {
-            dirs.iter()
-                .map(|&dir| search_remove_last(sq, dir))
-                .collect()
-        })
-        .collect()
-}
 
 #[cfg(test)]
 mod mask_tests {
@@ -58,8 +57,9 @@ mod mask_tests {
 
     #[test]
     fn test_bishop_masks() {
-        let (bmasks, rmasks) = (compute_bishop_masks(), compute_rook_masks());
+        let bmasks = compute_masks(bishop_dirs());
         assert_eq!(C7 | C5 | D4 | E3 | F2, bmasks[B6.i as usize]);
+        let rmasks = compute_masks(rook_dirs());
         assert_eq!(
             A2 | A3 | A5 | A6 | A7 | B4 | C4 | D4 | E4 | F4 | G4,
             rmasks[A4.i as usize]
@@ -68,32 +68,22 @@ mod mask_tests {
 }
 
 lazy_static! {
-    static ref BISHOP_MASKS: Vec<BitBoard> = compute_bishop_masks();
-    static ref ROOK_MASKS: Vec<BitBoard> = compute_rook_masks();
+    static ref BISHOP_MASKS: Vec<BitBoard> = compute_masks(bishop_dirs());
+    static ref ROOK_MASKS: Vec<BitBoard> = compute_masks(rook_dirs());
 }
 
-fn compute_bishop_shifts() -> Vec<usize> {
-    compute_bishop_masks()
+///
+///
+fn compute_shifts(dirs: Vec<Dir>) -> Vec<usize> {
+    compute_masks(dirs)
         .iter()
         .map(|x| 64 - x.size())
         .collect()
 }
 
-fn compute_rook_shifts() -> Vec<usize> {
-    compute_rook_masks().iter().map(|x| 64 - x.size()).collect()
-}
-
 lazy_static! {
-    static ref BISHOP_SHIFTS: Vec<usize> = compute_bishop_shifts();
-    static ref ROOK_SHIFTS: Vec<usize> = compute_rook_shifts();
-}
-
-fn bishop_control(loc: Square, occ: BitBoard) -> BitBoard {
-    sliding_control(loc, occ, vec![NE, SE, SW, NW])
-}
-
-fn rook_control(loc: Square, occ: BitBoard) -> BitBoard {
-    sliding_control(loc, occ, vec![N, E, S, W])
+    static ref BISHOP_SHIFTS: Vec<usize> = compute_shifts(bishop_dirs());
+    static ref ROOK_SHIFTS: Vec<usize> = compute_shifts(rook_dirs());
 }
 
 /// Computes the control set for a piece assumed to be
@@ -157,7 +147,6 @@ fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
 mod powerset_test {
     use super::*;
     use crate::square::constants::*;
-    use std::collections::HashSet;
 
     #[test]
     fn test_powerset() {
@@ -176,4 +165,34 @@ mod powerset_test {
         let actual: HashSet<_> = compute_powerset(&non_empty).into_iter().collect();
         assert_eq!(expected, actual);
     }
+}
+
+/// Use brute force trial end error to compute a valid set
+/// of magic numbers
+fn compute_magic_numbers(dirs: Vec<Dir>) -> Vec<usize> {
+    let masks = compute_masks(dirs.clone());
+    let shifts = compute_shifts(dirs.clone());
+    loop {
+        let guess = gen_64_randoms();
+        for (&num, &mask, &shift) in izip!(&guess, &masks, &shifts) {
+            let mut indices = HashSet::new();
+            for occ_var in compute_powerset(&mask.into_iter().collect()) {
+                let index = (occ_var.loc() * (num as u64)) >> shift;
+                // Sanity check
+                assert_eq!(index, (index as usize) as u64);
+                if indices.contains(&index) {
+                    continue;
+                } else {
+                    indices.insert(index);
+                }
+            }
+        }
+        // These numbers do not generate any collisions
+        break guess;
+    }
+}
+
+fn gen_64_randoms() -> Vec<usize> {
+    let mut rng = rand::thread_rng();
+    (0..64).map(|x| rng.gen()).collect()
 }

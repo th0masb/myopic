@@ -2,6 +2,7 @@
 extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
+extern crate rand;
 //extern crate bitwise;
 
 use crate::bitboard::{BitBoard, simple::*};

@@ -33,6 +33,10 @@ impl BitBoard {
        self.into_iter().count()
     }
 
+    pub fn loc(self) -> u64 {
+        self.0
+    }
+
     pub const EMPTY: BitBoard = BitBoard(0u64);
     pub const ALL: BitBoard = BitBoard(!0u64);
 
