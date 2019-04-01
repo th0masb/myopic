@@ -6,7 +6,7 @@ use crate::dir::Dir;
 pub mod constants;
 mod traits;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd)]
 pub struct Square {
     pub i: u8,
     pub rank: u8,
@@ -18,7 +18,7 @@ impl Square {
         NAMES[self.i as usize]
     }
 
-    pub fn as_set(self) -> BitBoard {
+    pub fn lift(self) -> BitBoard {
         BitBoard::wrap(1u64 << self.i)
     }
 

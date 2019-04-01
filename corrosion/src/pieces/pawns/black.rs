@@ -18,7 +18,7 @@ impl Piece for BlackPawn {
         let all = white | black;
         let mut result = ((loc - RANKS[0]) >> 8) - all;
         if BlackPawn::on_start_rank(loc) && !result.is_empty() {
-            result = result | ((loc.as_set() >> 16) - all)
+            result = result | ((loc.lift() >> 16) - all)
         }
         result | self.attackset(loc, white, black)
     }
@@ -46,16 +46,16 @@ mod test {
         let bp = BlackPawn;
         assert_eq!(D2 | F2, bp.controlset(E3, A1 | B6, D8 | D4));
         assert_eq!(F7 | D7, bp.controlset(E8, A1 | B6, D8 | D4));
-        assert_eq!(B2.as_set(), bp.controlset(A3, A4 | C5, F4 | H8));
-        assert_eq!(G2.as_set(), bp.controlset(H3, A4 | C5, F4 | H8));
+        assert_eq!(B2.lift(), bp.controlset(A3, A4 | C5, F4 | H8));
+        assert_eq!(G2.lift(), bp.controlset(H3, A4 | C5, F4 | H8));
     }
 
     #[test]
     fn test_moveset() {
         let (bp, zero) = (BlackPawn, BitBoard::EMPTY);
-        assert_eq!(D1.as_set(), bp.moveset(D2, E2 | D5, G1 | F7));
+        assert_eq!(D1.lift(), bp.moveset(D2, E2 | D5, G1 | F7));
         assert_eq!(G6 | G5, bp.moveset(G7, A1 | F5, H6 | B3));
         assert_eq!(zero, bp.moveset(G7, A1 | G6, H6 | B3));
-        assert_eq!(G6.as_set(), bp.moveset(G7, A1 | G8, G5 | B3));
+        assert_eq!(G6.lift(), bp.moveset(G7, A1 | G8, G5 | B3));
     }
 }

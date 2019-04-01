@@ -19,7 +19,7 @@ impl ops::Not for Square {
     type Output = BitBoard;
 
     fn not(self) -> Self::Output {
-        !self.as_set()
+        !self.lift()
     }
 }
 
@@ -27,7 +27,7 @@ impl ops::BitOr<Square> for Square {
     type Output = BitBoard;
 
     fn bitor(self, other: Square) -> Self::Output {
-        self.as_set() | other.as_set()
+        self.lift() | other.lift()
     }
 }
 
@@ -35,7 +35,7 @@ impl ops::BitOr<BitBoard> for Square {
     type Output = BitBoard;
 
     fn bitor(self, other: BitBoard) -> Self::Output {
-        self.as_set() | other
+        self.lift() | other
     }
 }
 
@@ -43,7 +43,7 @@ impl ops::BitAnd<BitBoard> for Square {
    type Output = BitBoard;
 
     fn bitand(self, other: BitBoard) -> Self::Output {
-        self.as_set() & other
+        self.lift() & other
     }
 }
 
@@ -51,6 +51,6 @@ impl ops::Sub<BitBoard> for Square {
     type Output = BitBoard;
 
     fn sub(self, other: BitBoard) -> Self::Output {
-        self.as_set() - other
+        self.lift() - other
     }
 }

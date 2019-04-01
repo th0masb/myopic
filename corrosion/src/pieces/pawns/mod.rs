@@ -16,7 +16,7 @@ fn compute_all_empty_board_control(side: Side) -> Vec<BitBoard> {
 }
 
 fn compute_empty_board_control(side: Side, loc: Square) -> BitBoard {
-    let (x, left, right) = (loc.as_set() - RANKS[0], FILES[7], FILES[0]);
+    let (x, left, right) = (loc.lift() - RANKS[0], FILES[7], FILES[0]);
     match side {
         White => ((x - left) << 9u8) | ((x - right) << 7u8),
         Black => ((x - left) >> 7u8) | ((x - right) >> 9u8),

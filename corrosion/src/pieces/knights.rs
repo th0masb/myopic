@@ -51,7 +51,7 @@ mod white_test {
     #[test]
     fn test_attackset() {
         let wn = WhiteKnight;
-        assert_eq!(A4.as_set(), wn.attackset(B2, D1 | B1, A4 | D7));
+        assert_eq!(A4.lift(), wn.attackset(B2, D1 | B1, A4 | D7));
     }
 }
 
@@ -90,7 +90,7 @@ mod black_test {
     #[test]
     fn test_attackset() {
         let bn = BlackKnight;
-        assert_eq!(D1.as_set(), bn.attackset(B2, D1 | B1, A4 | D7));
+        assert_eq!(D1.lift(), bn.attackset(B2, D1 | B1, A4 | D7));
     }
 }
 

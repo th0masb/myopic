@@ -12,7 +12,7 @@ fn loc(sq: Square) -> u64 {
     1u64 << sq.i
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub struct BitBoard(u64);
 
 impl BitBoard {
