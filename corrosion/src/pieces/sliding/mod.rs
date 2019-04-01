@@ -179,6 +179,7 @@ fn compute_magic_numbers(dirs: Vec<Dir>) -> Vec<usize> {
             for occ_var in compute_powerset(&mask.into_iter().collect()) {
                 let index = (occ_var.loc() * (num as u64)) >> shift;
                 // Sanity check
+                // Should I be checking the index is less than the number of the occ vars?
                 assert_eq!(index, (index as usize) as u64);
                 if indices.contains(&index) {
                     continue;
