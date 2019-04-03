@@ -31,19 +31,16 @@ lazy_static! {
 }
 
 /// Computes a bitboard representation of every square on the edge of a chessboard.
-///
 fn board_border() -> BitBoard {
     RANKS[0] | RANKS[7] | FILES[0] | FILES[7]
 }
 
 /// Computes a vector containing all the directions a bishop can move in.
-///
 fn bishop_dirs() -> Vec<Dir> {
     vec![NE, SE, SW, NW]
 }
 
 /// Computes a vector containing all the directions a rook can move in.
-///
 fn rook_dirs() -> Vec<Dir> {
     vec![N, E, S, W]
 }
@@ -52,7 +49,6 @@ fn rook_dirs() -> Vec<Dir> {
 /// occupancy mask at a square for some direction set is defined to be the
 /// locations a piece could move to on an empty board excluding the last
 /// square in each of the direction 'rays'.
-///
 fn compute_masks(dirs: &Vec<Dir>) -> Vec<BitBoard> {
     SQUARES
         .iter()
@@ -66,7 +62,6 @@ fn compute_masks(dirs: &Vec<Dir>) -> Vec<BitBoard> {
 
 /// Computes the set of squares in a given direction from some source square
 /// with the furthest away excluded.
-///
 fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
     let mut res = loc.search_vec(dir);
     if res.len() > 0 {
@@ -94,14 +89,12 @@ mod mask_tests {
 
 /// Computes the magic bitshift values for all squares which is defined to
 /// be the 1 count of the corresponding occupancy mask subtracted from 64.
-///
 fn compute_shifts(dirs: &Vec<Dir>) -> Vec<usize> {
     compute_masks(dirs).iter().map(|x| 64 - x.size()).collect()
 }
 
 /// Computes the powerset of some set of squares with the resulting elements
 /// of the powerset represented as bitboards.
-///
 fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
     if squares.is_empty() {
         vec![BitBoard::EMPTY]
@@ -144,7 +137,6 @@ mod powerset_test {
 /// Computes the control set for a piece assumed to be located at a given
 /// source square and which is permitted to move in a specified set of
 /// directions.
-///
 fn sliding_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
     let mut res = 0u64;
     for &dir in dirs {
@@ -183,7 +175,6 @@ mod control_tests {
 /// A magic number for a square is considered to be valid if it causes no
 /// conflicting collisions among the occupancy variations, that is no two
 /// variations which map to the same index but have different control sets.
-///
 fn compute_magic_numbers(dirs: &Vec<Dir>) -> Vec<u64> {
     let (masks, shifts) = (compute_masks(&dirs), compute_shifts(&dirs));
     let mut magics: Vec<u64> = Vec::with_capacity(64);
@@ -221,6 +212,7 @@ fn compute_magic_numbers(dirs: &Vec<Dir>) -> Vec<u64> {
     magics
 }
 
+/// Generates a random unsigned long with a sparse set of 1 bits.
 fn gen_magic_candidate() -> u64 {
     rand::random::<u64>() & rand::random::<u64>() & rand::random::<u64>()
 }

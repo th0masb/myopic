@@ -1,2 +1,0 @@
-# Corrosion
-Learning some Rust
