@@ -11,25 +11,49 @@ use std::iter::repeat;
 use std::num::Wrapping;
 use std::vec::IntoIter;
 
-/// Computes a bitboard representation of every square
-/// on the edge of a chessboard.
+/// Static references to the constituent parts of the 'magic bitboard' mapping
+/// technique.
+lazy_static! {
+    /// The masks are combined with the locations of pieces on the board via
+    /// bitwise 'and' to create an 'occupancy variation'.
+    static ref BISHOP_MASKS: Vec<BitBoard> = compute_masks(&bishop_dirs());
+    static ref ROOK_MASKS: Vec<BitBoard> = compute_masks(&rook_dirs());
+
+    /// The magic numbers are combined with the masked occupancy variation via
+    /// overflowing multiplication.
+    static ref BISHOP_MAGICS: Vec<u64> = compute_magic_numbers(&bishop_dirs());
+    static ref ROOK_MAGICS: Vec<u64> = compute_magic_numbers(&rook_dirs());
+
+    /// The shifts are used to reduce the result of the magic multiplication
+    /// to an index.
+    static ref BISHOP_SHIFTS: Vec<usize> = compute_shifts(&bishop_dirs());
+    static ref ROOK_SHIFTS: Vec<usize> = compute_shifts(&rook_dirs());
+}
+
+/// Computes a bitboard representation of every square on the edge of a chessboard.
 ///
 fn board_border() -> BitBoard {
     RANKS[0] | RANKS[7] | FILES[0] | FILES[7]
 }
 
+/// Computes a vector containing all the directions a bishop can move in.
+///
 fn bishop_dirs() -> Vec<Dir> {
     vec![NE, SE, SW, NW]
 }
 
+/// Computes a vector containing all the directions a rook can move in.
+///
 fn rook_dirs() -> Vec<Dir> {
     vec![N, E, S, W]
 }
 
-/// Computes a vector containing the occupancy
-/// masks for each square.
+/// Computes a vector containing the occupancy masks for each square. The
+/// occupancy mask at a square for some direction set is defined to be the
+/// locations a piece could move to on an empty board excluding the last
+/// square in each of the direction 'rays'.
 ///
-fn compute_masks(dirs: Vec<Dir>) -> Vec<BitBoard> {
+fn compute_masks(dirs: &Vec<Dir>) -> Vec<BitBoard> {
     SQUARES
         .iter()
         .map(|&sq| {
@@ -40,8 +64,8 @@ fn compute_masks(dirs: Vec<Dir>) -> Vec<BitBoard> {
         .collect()
 }
 
-/// Computes the set of squares in a given direction from
-/// some source square with the furthest away excluded
+/// Computes the set of squares in a given direction from some source square
+/// with the furthest away excluded.
 ///
 fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
     let mut res = loc.search_vec(dir);
@@ -58,9 +82,9 @@ mod mask_tests {
 
     #[test]
     fn test_bishop_masks() {
-        let bmasks = compute_masks(bishop_dirs());
+        let bmasks = compute_masks(&bishop_dirs());
         assert_eq!(C7 | C5 | D4 | E3 | F2, bmasks[B6.i as usize]);
-        let rmasks = compute_masks(rook_dirs());
+        let rmasks = compute_masks(&rook_dirs());
         assert_eq!(
             A2 | A3 | A5 | A6 | A7 | B4 | C4 | D4 | E4 | F4 | G4,
             rmasks[A4.i as usize]
@@ -68,25 +92,15 @@ mod mask_tests {
     }
 }
 
-lazy_static! {
-    static ref BISHOP_MASKS: Vec<BitBoard> = compute_masks(bishop_dirs());
-    static ref ROOK_MASKS: Vec<BitBoard> = compute_masks(rook_dirs());
-}
-
+/// Computes the magic bitshift values for all squares which is defined to
+/// be the 1 count of the corresponding occupancy mask subtracted from 64.
 ///
-///
-fn compute_shifts(dirs: Vec<Dir>) -> Vec<usize> {
+fn compute_shifts(dirs: &Vec<Dir>) -> Vec<usize> {
     compute_masks(dirs).iter().map(|x| 64 - x.size()).collect()
 }
 
-lazy_static! {
-    static ref BISHOP_SHIFTS: Vec<usize> = compute_shifts(bishop_dirs());
-    static ref ROOK_SHIFTS: Vec<usize> = compute_shifts(rook_dirs());
-}
-
-/// Computes the powerset of some set of squares with the
-/// resulting elements of the powerset represented as
-/// bitboards.
+/// Computes the powerset of some set of squares with the resulting elements
+/// of the powerset represented as bitboards.
 ///
 fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
     if squares.is_empty() {
@@ -127,15 +141,15 @@ mod powerset_test {
     }
 }
 
-/// Computes the control set for a piece assumed to be
-/// located at a given source square and which is permitted
-/// to move in a specified set of directions.
+/// Computes the control set for a piece assumed to be located at a given
+/// source square and which is permitted to move in a specified set of
+/// directions.
 ///
 fn sliding_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
     let mut res = 0u64;
     for &dir in dirs {
         for sq in loc.search_vec(dir) {
-            res |= (1u64 << sq.i);
+            res |= 1u64 << sq.i;
             if !(occ & sq).is_empty() {
                 break;
             }
@@ -165,14 +179,14 @@ mod control_tests {
     }
 }
 
-/// Use brute force trial end error to compute a valid set
-/// of magic numbers
+/// Use brute force trial end error to compute a valid set of magic numbers.
+/// A magic number for a square is considered to be valid if it causes no
+/// conflicting collisions among the occupancy variations, that is no two
+/// variations which map to the same index but have different control sets.
 ///
-fn compute_magic_numbers(dirs: Vec<Dir>) -> Vec<u64> {
-    let masks = compute_masks(dirs.clone());
-    let shifts = compute_shifts(dirs.clone());
+fn compute_magic_numbers(dirs: &Vec<Dir>) -> Vec<u64> {
+    let (masks, shifts) = (compute_masks(&dirs), compute_shifts(&dirs));
     let mut magics: Vec<u64> = Vec::with_capacity(64);
-
     for (&sq, &mask, &shift) in izip!(SQUARES.iter(), &masks, &shifts) {
         let occ_vars = compute_powerset(&mask.into_iter().collect());
         let control: Vec<_> = occ_vars
@@ -180,25 +194,22 @@ fn compute_magic_numbers(dirs: Vec<Dir>) -> Vec<u64> {
             .map(|&ov| sliding_control(sq, ov, &dirs).loc())
             .collect();
         let mut indices: Vec<_> = repeat(064).take(occ_vars.len()).collect();
-        let mut moves: Vec<_> = repeat(064).take(occ_vars.len()).collect();
+        let mut moves: Vec<_> = indices.clone();
         let upper = 100000000;
         'outer: for i in 1..=upper {
             let magic = gen_magic_candidate();
-
             for (&occ_var, &control) in occ_vars.iter().zip(control.iter()) {
                 let (w_occ_var, w_num) = (Wrapping(occ_var.loc()), Wrapping(magic));
                 let index = ((w_occ_var * w_num).0 >> shift) as usize;
                 if indices[index] == i {
                     if moves[index] != control {
-                        // The magic candidate has failed
-                        continue 'outer;
+                        continue 'outer; // The magic candidate has failed
                     }
                 } else {
                     indices[index] = i;
                     moves[index] = control;
                 }
             }
-
             if i == upper {
                 panic!("Failed to generate number!")
             } else {
@@ -220,6 +231,6 @@ mod magic_num_test {
 
     #[test]
     fn test() {
-        assert_eq!(true, compute_magic_numbers(vec![NE, SE, SW, NW]).len() > 0);
+        assert_eq!(true, compute_magic_numbers(&vec![NE, SE, SW, NW]).len() > 0);
     }
 }
