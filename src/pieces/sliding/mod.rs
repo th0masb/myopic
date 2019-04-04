@@ -11,6 +11,8 @@ use std::iter::repeat;
 use std::num::Wrapping;
 use std::vec::IntoIter;
 
+pub mod bishops;
+
 /// Static references to the constituent parts of the 'magic bitboard' mapping
 /// technique.
 lazy_static! {
@@ -137,7 +139,7 @@ mod powerset_test {
 /// Computes the control set for a piece assumed to be located at a given
 /// source square and which is permitted to move in a specified set of
 /// directions.
-fn sliding_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
+fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
     let mut res = 0u64;
     for &dir in dirs {
         for sq in loc.search_vec(dir) {
@@ -166,7 +168,7 @@ mod control_tests {
             D5 | D6 | E5 | F6 | G7 | E4 | F4 | E3 | D3 | D2 | D1 | C3 | B2 | C4 | B4 | C5 | B6 | A7;
         assert_eq!(
             expected_control,
-            sliding_control(loc, whites | blacks, &dirs)
+            compute_control(loc, whites | blacks, &dirs)
         );
     }
 }
@@ -182,7 +184,7 @@ fn compute_magic_numbers(dirs: &Vec<Dir>) -> Vec<u64> {
         let occ_vars = compute_powerset(&mask.into_iter().collect());
         let control: Vec<_> = occ_vars
             .iter()
-            .map(|&ov| sliding_control(sq, ov, &dirs).loc())
+            .map(|&ov| compute_control(sq, ov, &dirs).0)
             .collect();
         let mut indices: Vec<_> = repeat(064).take(occ_vars.len()).collect();
         let mut moves: Vec<_> = indices.clone();
@@ -190,8 +192,7 @@ fn compute_magic_numbers(dirs: &Vec<Dir>) -> Vec<u64> {
         'outer: for i in 1..=upper {
             let magic = gen_magic_candidate();
             for (&occ_var, &control) in occ_vars.iter().zip(control.iter()) {
-                let (w_occ_var, w_num) = (Wrapping(occ_var.loc()), Wrapping(magic));
-                let index = ((w_occ_var * w_num).0 >> shift) as usize;
+                let index = compute_magic_index(occ_var.0, magic, shift);
                 if indices[index] == i {
                     if moves[index] != control {
                         continue 'outer; // The magic candidate has failed
@@ -210,6 +211,14 @@ fn compute_magic_numbers(dirs: &Vec<Dir>) -> Vec<u64> {
         }
     }
     magics
+}
+
+/// Applies the magic index mapping operation by multiplying the occupancy
+/// and magic number together (allowing overflow) and then performing a right
+/// shift on the result.
+fn compute_magic_index(occupancy: u64, magic: u64, shift: usize) -> usize {
+    let (o, m) = (Wrapping(occupancy), Wrapping(magic));
+    ((o * m).0 >> shift) as usize
 }
 
 /// Generates a random unsigned long with a sparse set of 1 bits.

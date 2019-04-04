@@ -13,7 +13,7 @@ fn loc(sq: Square) -> u64 {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
-pub struct BitBoard(u64);
+pub struct BitBoard(pub u64);
 
 impl BitBoard {
     pub fn new(args: &[Square]) -> BitBoard {
@@ -31,10 +31,6 @@ impl BitBoard {
     pub fn size(self) -> usize {
         // Can make this faster with bit twiddling
        self.into_iter().count()
-    }
-
-    pub fn loc(self) -> u64 {
-        self.0
     }
 
     pub const EMPTY: BitBoard = BitBoard(0u64);
