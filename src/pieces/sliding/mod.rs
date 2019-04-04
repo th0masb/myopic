@@ -13,6 +13,20 @@ use std::vec::IntoIter;
 
 pub mod bishops;
 
+/// API for computing the magic index for a bishop positioned at a given
+/// location with the given piece arrangement on the board.
+fn compute_bishop_index(pieces: BitBoard, location: Square) -> usize {
+    let i = location.i as usize;
+    compute_magic_index((pieces & BISHOP_MASKS[i]).0, BISHOP_MAGICS[i], BISHOP_SHIFTS[i])
+}
+
+/// API for computing the magic index for a rook positioned at a given
+/// location with the given piece arrangement on the board.
+fn compute_rook_index(pieces: BitBoard, location: Square) -> usize {
+    let i = location.i as usize;
+    compute_magic_index((pieces & ROOK_MASKS[i]).0, ROOK_MAGICS[i], ROOK_SHIFTS[i])
+}
+
 /// Static references to the constituent parts of the 'magic bitboard' mapping
 /// technique.
 lazy_static! {
@@ -32,6 +46,7 @@ lazy_static! {
     static ref ROOK_SHIFTS: Vec<usize> = compute_shifts(&rook_dirs());
 }
 
+// Implementation details and related tests.
 /// Computes a bitboard representation of every square on the edge of a chessboard.
 fn board_border() -> BitBoard {
     RANKS[0] | RANKS[7] | FILES[0] | FILES[7]

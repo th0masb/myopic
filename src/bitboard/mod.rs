@@ -29,8 +29,14 @@ impl BitBoard {
     }
 
     pub fn size(self) -> usize {
-        // Can make this faster with bit twiddling
-       self.into_iter().count()
+        // Uses popcount algorithm.
+        let mut x = self.0;
+        let mut count = 0;
+        while x > 0 {
+            x &= x - 1;
+            count += 1;
+        };
+        count
     }
 
     pub const EMPTY: BitBoard = BitBoard(0u64);
@@ -65,6 +71,13 @@ mod test {
     fn test_display() {
         let result = BitBoard::new(&[A1, H7, D5]);
         assert_eq!("{A1, D5, H7}".to_owned(), format!("{}", result));
+    }
+
+    #[test]
+    fn test_size() {
+        assert_eq!(0, BitBoard::EMPTY.size());
+        assert_eq!(64, BitBoard::ALL.size());
+        assert_eq!(3, (A3 | G6 | H4).size());
     }
 }
 
