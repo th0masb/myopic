@@ -15,14 +15,14 @@ pub mod bishops;
 
 /// API for computing the magic index for a bishop positioned at a given
 /// location with the given piece arrangement on the board.
-fn compute_bishop_index(pieces: BitBoard, location: Square) -> usize {
+fn compute_bishop_index(location: Square, pieces: BitBoard) -> usize {
     let i = location.i as usize;
     compute_magic_index((pieces & BISHOP_MASKS[i]).0, BISHOP_MAGICS[i], BISHOP_SHIFTS[i])
 }
 
 /// API for computing the magic index for a rook positioned at a given
 /// location with the given piece arrangement on the board.
-fn compute_rook_index(pieces: BitBoard, location: Square) -> usize {
+fn compute_rook_index(location: Square, pieces: BitBoard) -> usize {
     let i = location.i as usize;
     compute_magic_index((pieces & ROOK_MASKS[i]).0, ROOK_MAGICS[i], ROOK_SHIFTS[i])
 }
@@ -241,12 +241,3 @@ fn gen_magic_candidate() -> u64 {
     rand::random::<u64>() & rand::random::<u64>() & rand::random::<u64>()
 }
 
-#[cfg(test)]
-mod magic_num_test {
-    use super::*;
-
-    #[test]
-    fn test() {
-        assert_eq!(true, compute_magic_numbers(&vec![NE, SE, SW, NW]).len() > 0);
-    }
-}
