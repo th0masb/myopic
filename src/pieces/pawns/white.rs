@@ -14,7 +14,7 @@ impl Piece for WhitePawn {
     fn moveset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         let all = white | black;
         let mut result = ((loc - RANKS[7]) << 8) - all;
-        if WhitePawn::on_start_rank(loc) && !result.is_empty() {
+        if on_start_rank(loc) && !result.is_empty() {
             result = result | ((loc.lift() << 16) - all)
         }
         result | self.attackset(loc, white, black)
