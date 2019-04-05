@@ -8,6 +8,12 @@ use crate::square::Square;
 pub mod white;
 pub mod black;
 
+/// Static vectors caching the control sets for all squares for both color pawns.
+lazy_static! {
+    static ref WHITE_CONTROL: Vec<BitBoard> = compute_all_empty_board_control(White);
+    static ref BLACK_CONTROL: Vec<BitBoard> = compute_all_empty_board_control(Black);
+}
+
 fn compute_all_empty_board_control(side: Side) -> Vec<BitBoard> {
     SQUARES
         .iter()
@@ -21,9 +27,4 @@ fn compute_empty_board_control(side: Side, loc: Square) -> BitBoard {
         White => ((x - left) << 9u8) | ((x - right) << 7u8),
         Black => ((x - left) >> 7u8) | ((x - right) >> 9u8),
     }
-}
-
-lazy_static! {
-    static ref WHITE_CONTROL: Vec<BitBoard> = compute_all_empty_board_control(White);
-    static ref BLACK_CONTROL: Vec<BitBoard> = compute_all_empty_board_control(Black);
 }

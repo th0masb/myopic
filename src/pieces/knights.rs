@@ -4,18 +4,9 @@ use crate::dir::*;
 use crate::side::Side;
 use crate::square::{constants::SQUARES, Square};
 
-fn compute_empty_board_control() -> Vec<BitBoard> {
-    let search_dirs = vec![NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW];
-    SQUARES
-        .iter()
-        .map(|&sq| sq.search_one(&search_dirs))
-        .collect()
-}
 
-lazy_static! {
-    static ref CONTROL: Vec<BitBoard> = compute_empty_board_control();
-}
-
+/// Piece trait implementation for the white knight struct. It simply queries
+/// a static vector of moves for each square.
 impl Piece for WhiteKnight {
     fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
@@ -28,6 +19,35 @@ impl Piece for WhiteKnight {
     fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] & black
     }
+}
+
+/// Piece trait implementation for the black knight struct. It simply queries
+/// a static vector of moves for each square.
+impl Piece for BlackKnight {
+    fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        CONTROL[location.i as usize]
+    }
+
+    fn moveset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        CONTROL[location.i as usize] - black
+    }
+
+    fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        CONTROL[location.i as usize] & white
+    }
+}
+
+// Implementation and tests.
+lazy_static! {
+    static ref CONTROL: Vec<BitBoard> = compute_empty_board_control();
+}
+
+fn compute_empty_board_control() -> Vec<BitBoard> {
+    let search_dirs = vec![NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW];
+    SQUARES
+        .iter()
+        .map(|&sq| sq.search_one(&search_dirs))
+        .collect()
 }
 
 #[cfg(test)]
@@ -52,20 +72,6 @@ mod white_test {
     fn test_attackset() {
         let wn = WhiteKnight;
         assert_eq!(A4.lift(), wn.attackset(B2, D1 | B1, A4 | D7));
-    }
-}
-
-impl Piece for BlackKnight {
-    fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize]
-    }
-
-    fn moveset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize] - black
-    }
-
-    fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize] & white
     }
 }
 

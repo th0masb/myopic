@@ -3,12 +3,9 @@ use crate::square::{Square, constants::*};
 use crate::bitboard::{BitBoard, simple::RANKS};
 use super::BLACK_CONTROL;
 
-impl BlackPawn {
-    fn on_start_rank(loc: Square) -> bool {
-        !(loc & RANKS[6]).is_empty()
-    }
-}
 
+/// Piece trait implementation for the black pawn struct. the control sets for
+/// each square are cached whereas the moveset is currently calculated each time.
 impl Piece for BlackPawn {
     fn controlset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         BLACK_CONTROL[loc.i as usize]
@@ -17,7 +14,7 @@ impl Piece for BlackPawn {
     fn moveset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         let all = white | black;
         let mut result = ((loc - RANKS[0]) >> 8) - all;
-        if BlackPawn::on_start_rank(loc) && !result.is_empty() {
+        if on_start_rank(loc) && !result.is_empty() {
             result = result | ((loc.lift() >> 16) - all)
         }
         result | self.attackset(loc, white, black)
@@ -28,6 +25,13 @@ impl Piece for BlackPawn {
     }
 }
 
+/// Computes whether a black pawn starts a game of standard chess on a given
+/// square.
+fn on_start_rank(loc: Square) -> bool {
+    !(loc & RANKS[6]).is_empty()
+}
+
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -35,10 +39,10 @@ mod test {
 
     #[test]
     fn test_on_start_rank() {
-        assert_eq!(true, BlackPawn::on_start_rank(B7));
-        assert_eq!(true, BlackPawn::on_start_rank(A7));
-        assert_eq!(false, BlackPawn::on_start_rank(D4));
-        assert_eq!(false, BlackPawn::on_start_rank(H8));
+        assert_eq!(true, on_start_rank(B7));
+        assert_eq!(true, on_start_rank(A7));
+        assert_eq!(false, on_start_rank(D4));
+        assert_eq!(false, on_start_rank(H8));
     }
 
     #[test]

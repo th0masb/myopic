@@ -3,12 +3,9 @@ use crate::bitboard::{simple::RANKS, BitBoard};
 use crate::pieces::{Piece, WhitePawn};
 use crate::square::{constants::*, Square};
 
-impl WhitePawn {
-    fn on_start_rank(loc: Square) -> bool {
-        !(loc & RANKS[1]).is_empty()
-    }
-}
 
+/// Piece trait implementation for the white pawn struct. the control sets for
+/// each square are cached whereas the moveset is currently calculated each time.
 impl Piece for WhitePawn {
     fn controlset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         WHITE_CONTROL[loc.i as usize]
@@ -28,6 +25,13 @@ impl Piece for WhitePawn {
     }
 }
 
+/// Computes whether a white pawn starts a game of standard chess on a given
+/// square.
+fn on_start_rank(loc: Square) -> bool {
+    !(loc & RANKS[1]).is_empty()
+}
+
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -35,10 +39,10 @@ mod test {
 
     #[test]
     fn test_on_start_rank() {
-        assert_eq!(true, WhitePawn::on_start_rank(B2));
-        assert_eq!(true, WhitePawn::on_start_rank(A2));
-        assert_eq!(false, WhitePawn::on_start_rank(D4));
-        assert_eq!(false, WhitePawn::on_start_rank(G7));
+        assert_eq!(true, on_start_rank(B2));
+        assert_eq!(true, on_start_rank(A2));
+        assert_eq!(false, on_start_rank(D4));
+        assert_eq!(false, on_start_rank(G7));
     }
 
     #[test]
