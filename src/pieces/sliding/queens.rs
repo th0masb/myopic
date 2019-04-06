@@ -1,4 +1,5 @@
-use crate::bitboard::BitBoard;
+use crate::base::bitboard::BitBoard;
+use crate::base::square::Square;
 use crate::pieces::BlackBishop;
 use crate::pieces::BlackQueen;
 use crate::pieces::BlackRook;
@@ -6,7 +7,6 @@ use crate::pieces::Piece;
 use crate::pieces::WhiteBishop;
 use crate::pieces::WhiteQueen;
 use crate::pieces::WhiteRook;
-use crate::square::Square;
 
 impl Piece for WhiteQueen {
     fn controlset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {

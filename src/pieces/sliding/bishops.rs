@@ -1,12 +1,13 @@
-use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
-use crate::bitboard::BitBoard;
+use std::iter::repeat;
+
+use crate::base::bitboard::BitBoard;
+use crate::base::square::constants::SQUARES;
+use crate::base::square::Square;
 use crate::pieces::BlackBishop;
 use crate::pieces::Piece;
 use crate::pieces::WhiteBishop;
-use crate::square::constants::SQUARES;
-use crate::square::Square;
 
-use std::iter::repeat;
+use super::{bishop_dirs, BISHOP_MASKS, compute_bishop_index, compute_control, compute_powerset};
 
 /// Piece trait implementation for the white bishop singleton struct.
 /// The move database is cached in the static memory and the code for
@@ -69,8 +70,9 @@ fn compute_move_database() -> Moves {
 
 #[cfg(test)]
 mod test {
+    use crate::base::square::constants::*;
+
     use super::{compute_bishop_index, compute_move_database, Moves};
-    use crate::square::constants::*;
 
     #[test]
     fn test() {

@@ -1,7 +1,7 @@
 use std::{fmt, ops};
 
-use crate::bitboard::BitBoard;
-use crate::square::Square;
+use crate::base::bitboard::BitBoard;
+use crate::base::square::Square;
 
 impl fmt::Debug for Square {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

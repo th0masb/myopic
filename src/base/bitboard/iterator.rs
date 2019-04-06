@@ -1,12 +1,11 @@
 use std::iter::{FromIterator, IntoIterator};
-
-use crate::bitboard::BitBoard;
-use crate::square::constants::SQUARES;
-use crate::square::Square;
-
 use std::num::Wrapping;
 
-/// A bitboard is a set of squares and is therefore iterable.
+use crate::base::bitboard::BitBoard;
+use crate::base::square::constants::SQUARES;
+use crate::base::square::Square;
+
+/// A base.bitboard is a set of squares and is therefore iterable.
 impl IntoIterator for BitBoard {
     type Item = Square;
     type IntoIter = BitBoardIterator;
@@ -23,7 +22,7 @@ impl FromIterator<Square> for BitBoard {
     }
 }
 
-/// We can collect an iterator of bitboards into a single bitboard under the
+/// We can collect an iterator of bitboards into a single base.bitboard under the
 /// logical OR binary operator on sets.
 impl FromIterator<BitBoard> for BitBoard {
     fn from_iter<I: IntoIterator<Item = BitBoard>>(iter: I) -> Self {
@@ -33,9 +32,9 @@ impl FromIterator<BitBoard> for BitBoard {
 
 #[cfg(test)]
 mod iter_test {
-    use crate::bitboard::{loc, BitBoard};
-    use crate::square::constants::*;
-    use crate::square::Square;
+    use crate::base::bitboard::{BitBoard, loc};
+    use crate::base::square::constants::*;
+    use crate::base::square::Square;
 
     fn new_set(a: Square, b: Square) -> BitBoard {
         BitBoard(loc(a) | loc(b))
@@ -55,7 +54,7 @@ mod iter_test {
     }
 }
 
-/// The iterator implementation struct produced by a bitboard. It simply
+/// The iterator implementation struct produced by a base.bitboard. It simply
 /// wraps a long value used to track the remaining set bits.
 pub struct BitBoardIterator {
     src: u64,
@@ -63,7 +62,7 @@ pub struct BitBoardIterator {
 
 /// The implementation uses the 'de bruijn' forward bitscan method for
 /// determining the LSB of the encapsulated u64 value. The LSB represents
-/// the next square to be returned.
+/// the next base.square to be returned.
 impl Iterator for BitBoardIterator {
     type Item = Square;
 

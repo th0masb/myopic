@@ -1,7 +1,7 @@
 use itertools::iterate;
 
-use crate::bitboard::BitBoard;
-use crate::dir::Dir;
+use crate::base::bitboard::BitBoard;
+use crate::base::dir::Dir;
 
 pub mod constants;
 mod traits;
@@ -66,8 +66,8 @@ impl Square {
 
 #[cfg(test)]
 mod impl_tests {
-    use crate::bitboard::*;
-    use crate::dir::*;
+    use crate::base::bitboard::*;
+    use crate::base::dir::*;
 
     use super::constants::*;
 

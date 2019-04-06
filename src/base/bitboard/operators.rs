@@ -1,7 +1,7 @@
 use std::ops;
 
-use crate::bitboard::{BitBoard, loc};
-use crate::square::Square;
+use crate::base::bitboard::{BitBoard, loc};
+use crate::base::square::Square;
 
 /// Operator implementations for bitboards which all use the underlying u64 value.
 impl ops::Shr<u8> for BitBoard {
@@ -83,5 +83,3 @@ impl ops::BitAnd<Square> for BitBoard {
         BitBoard(self.0 & loc(other))
     }
 }
-
-

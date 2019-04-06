@@ -5,15 +5,12 @@ extern crate lazy_static;
 extern crate rand;
 //extern crate bitwise;
 
-use crate::bitboard::{BitBoard, simple::*};
-
-use crate::square::constants::*;
+use crate::base::bitboard::{BitBoard, simple::*};
+use crate::base::dir;
+use crate::base::square::constants::*;
 use crate::pieces::{Piece, WhitePawn};
 
-mod square;
-mod bitboard;
-mod dir;
-mod side;
+mod base;
 mod pieces;
 
 fn main() {
@@ -27,9 +24,9 @@ fn main() {
     println!("{}", G1 > H1);
     let bitboard: BitBoard = vec!(A1, G5).into_iter().collect();
     println!("{}", bitboard);
-//    let squares = square::H1.search_one(dirs);
+//    let squares = base.square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
-//    println!("{}", square::H1);
+//    println!("{}", base.square::H1);
     println!("{}", RANKS[1]);
     println!("{}", WhitePawn.controlset(H3, BitBoard::EMPTY, BitBoard::EMPTY));
 

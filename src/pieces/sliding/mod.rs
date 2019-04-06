@@ -1,10 +1,11 @@
-use crate::bitboard::BitBoard;
-use crate::dir::Dir;
-use crate::dir::{E, N, S, W};
-use crate::dir::{NE, NW, SE, SW};
-use crate::square::constants::SQUARES;
-use crate::square::Square;
 use std::num::Wrapping;
+
+use crate::base::bitboard::BitBoard;
+use crate::base::dir::{E, N, S, W};
+use crate::base::dir::{NE, NW, SE, SW};
+use crate::base::dir::Dir;
+use crate::base::square::constants::SQUARES;
+use crate::base::square::Square;
 
 pub mod bishops;
 pub mod rooks;
@@ -48,10 +49,10 @@ fn rook_dirs() -> Vec<Dir> {
     vec![N, E, S, W]
 }
 
-/// Computes a vector containing the occupancy masks for each square. The
-/// occupancy mask at a square for some direction set is defined to be the
+/// Computes a vector containing the occupancy masks for each base.square. The
+/// occupancy mask at a base.square for some direction set is defined to be the
 /// locations a piece could move to on an empty board excluding the last
-/// square in each of the direction 'rays'.
+/// base.square in each of the direction 'rays'.
 fn compute_masks(dirs: &Vec<Dir>) -> Vec<u64> {
     SQUARES
         .iter()
@@ -64,7 +65,7 @@ fn compute_masks(dirs: &Vec<Dir>) -> Vec<u64> {
         .collect()
 }
 
-/// Computes the set of squares in a given direction from some source square
+/// Computes the set of squares in a given direction from some source base.square
 /// with the furthest away excluded.
 fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
     let mut res = loc.search_vec(dir);
@@ -76,8 +77,9 @@ fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
 
 #[cfg(test)]
 mod mask_tests {
+    use crate::base::square::constants::*;
+
     use super::*;
-    use crate::square::constants::*;
 
     #[test]
     fn test_bishop_masks() {
@@ -117,9 +119,11 @@ fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
 
 #[cfg(test)]
 mod powerset_test {
-    use super::*;
-    use crate::square::constants::*;
     use std::collections::HashSet;
+
+    use crate::base::square::constants::*;
+
+    use super::*;
 
     #[test]
     fn test() {
@@ -141,7 +145,7 @@ mod powerset_test {
 }
 
 /// Computes the control set for a piece assumed to be located at a given
-/// source square and which is permitted to move in a specified set of
+/// source base.square and which is permitted to move in a specified set of
 /// directions.
 fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
     let mut res = 0u64;
@@ -158,8 +162,9 @@ fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
 
 #[cfg(test)]
 mod control_tests {
+    use crate::base::square::constants::*;
+
     use super::*;
-    use crate::square::constants::*;
 
     #[test]
     fn test_sliding_control() {
@@ -181,7 +186,7 @@ mod control_tests {
 /// code compiler warnings.
 
 ///// Use brute force trial end error to compute a valid set of magic numbers.
-///// A magic number for a square is considered to be valid if it causes no
+///// A magic number for a base.square is considered to be valid if it causes no
 ///// conflicting collisions among the occupancy variations, that is no two
 ///// variations which map to the same index but have different control sets.
 //fn compute_magic_numbers(dirs: &Vec<Dir>) -> Vec<u64> {
@@ -226,7 +231,7 @@ mod control_tests {
 //}
 
 
-/// Constants forming the constituent parts of the 'magic bitboard' mapping
+/// Constants forming the constituent parts of the 'magic base.bitboard' mapping
 /// technique.
 ///
 /// The shifts are used to reduce the result of the magic multiplication

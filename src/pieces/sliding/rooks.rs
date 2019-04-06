@@ -1,12 +1,13 @@
-use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, ROOK_MASKS};
-use crate::bitboard::BitBoard;
+use std::iter::repeat;
+
+use crate::base::bitboard::BitBoard;
+use crate::base::square::constants::SQUARES;
+use crate::base::square::Square;
 use crate::pieces::BlackRook;
 use crate::pieces::Piece;
 use crate::pieces::WhiteRook;
-use crate::square::constants::SQUARES;
-use crate::square::Square;
 
-use std::iter::repeat;
+use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, ROOK_MASKS};
 
 /// Piece trait implementation for the white rook singleton struct.
 /// The move database is cached in the static memory and the code for
@@ -69,8 +70,9 @@ fn compute_move_database() -> Moves {
 
 #[cfg(test)]
 mod test {
+    use crate::base::square::constants::*;
+
     use super::{compute_move_database, compute_rook_index, Moves};
-    use crate::square::constants::*;
 
     #[test]
     fn test() {

@@ -2,11 +2,11 @@ use std::fmt;
 
 use itertools::Itertools;
 
-use crate::square::Square;
+use crate::base::square::Square;
 
-pub mod simple;
-mod operators;
 mod iterator;
+mod operators;
+pub mod simple;
 
 fn loc(sq: Square) -> u64 {
     1u64 << sq.i
@@ -35,13 +35,12 @@ impl BitBoard {
         while x > 0 {
             x &= x - 1;
             count += 1;
-        };
+        }
         count
     }
 
     pub const EMPTY: BitBoard = BitBoard(0u64);
     pub const ALL: BitBoard = BitBoard(!0u64);
-
 }
 
 impl fmt::Debug for BitBoard {
@@ -56,11 +55,10 @@ impl fmt::Display for BitBoard {
     }
 }
 
-
 #[cfg(test)]
 mod test {
-    use crate::bitboard::BitBoard;
-    use crate::square::constants::*;
+    use crate::base::bitboard::BitBoard;
+    use crate::base::square::constants::*;
 
     #[test]
     fn test_new() {
@@ -80,4 +78,3 @@ mod test {
         assert_eq!(3, (A3 | G6 | H4).size());
     }
 }
-

@@ -1,4 +1,4 @@
-use crate::square::Square;
+use crate::base::square::Square;
 
 pub const H1: Square = Square::new(0);
 pub const G1: Square = Square::new(1);

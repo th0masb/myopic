@@ -1,5 +1,5 @@
-use crate::bitboard::BitBoard;
-use crate::square::Square;
+use crate::base::bitboard::BitBoard;
+use crate::base::square::Square;
 
 pub mod pawns;
 pub mod knights;

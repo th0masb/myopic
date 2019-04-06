@@ -1,10 +1,11 @@
+use crate::base::bitboard::BitBoard;
+use crate::base::dir::*;
+use crate::base::square::{constants::SQUARES, Square};
+
 use super::{BlackKnight, Piece, WhiteKnight};
-use crate::bitboard::BitBoard;
-use crate::dir::*;
-use crate::square::{constants::SQUARES, Square};
 
 /// Piece trait implementation for the white knight struct. It simply queries
-/// a static vector of moves for each square.
+/// a static vector of moves for each base.square.
 impl Piece for WhiteKnight {
     fn controlset(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
@@ -20,7 +21,7 @@ impl Piece for WhiteKnight {
 }
 
 /// Piece trait implementation for the black knight struct. It simply queries
-/// a static vector of moves for each square.
+/// a static vector of moves for each base.square.
 impl Piece for BlackKnight {
     fn controlset(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
@@ -112,8 +113,9 @@ const CONTROL: [BitBoard; 64] = [
 
 #[cfg(test)]
 mod white_test {
+    use crate::base::square::constants::*;
+
     use super::*;
-    use crate::square::constants::*;
 
     #[test]
     fn test_control() {
@@ -140,8 +142,9 @@ mod white_test {
 
 #[cfg(test)]
 mod black_test {
+    use crate::base::square::constants::*;
+
     use super::*;
-    use crate::square::constants::*;
 
     #[test]
     fn test_control() {

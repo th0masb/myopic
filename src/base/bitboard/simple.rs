@@ -1,6 +1,6 @@
-use crate::bitboard::BitBoard;
-use crate::dir;
-use crate::square::constants::*;
+use crate::base::bitboard::BitBoard;
+use crate::base::dir;
+use crate::base::square::constants::*;
 
 fn create_files() -> Vec<BitBoard> {
     (H1.search(dir::W) | H1)
@@ -18,7 +18,8 @@ fn create_ranks() -> Vec<BitBoard> {
 
 #[cfg(test)]
 mod test {
-    use crate::square::constants::*;
+    use crate::base::square::constants::*;
+
     use super::*;
 
     #[test]
@@ -28,7 +29,7 @@ mod test {
 
     #[test]
     fn test_create_ranks() {
-       assert_eq!(A3 | B3 | C3 | D3 | E3 | F3 | G3 | H3, create_ranks()[2]);
+        assert_eq!(A3 | B3 | C3 | D3 | E3 | F3 | G3 | H3, create_ranks()[2]);
     }
 }
 

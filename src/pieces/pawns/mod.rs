@@ -1,7 +1,7 @@
-use crate::bitboard::{simple::*, BitBoard};
-use crate::side::{Side, Side::Black, Side::White};
-use crate::square::constants::SQUARES;
-use crate::square::Square;
+use crate::base::{Side, Side::Black, Side::White};
+use crate::base::bitboard::{BitBoard, simple::*};
+use crate::base::square::constants::SQUARES;
+use crate::base::square::Square;
 
 pub mod black;
 pub mod white;
