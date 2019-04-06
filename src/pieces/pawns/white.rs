@@ -1,8 +1,7 @@
 use super::WHITE_CONTROL;
 use crate::bitboard::{simple::RANKS, BitBoard};
 use crate::pieces::{Piece, WhitePawn};
-use crate::square::{Square};
-
+use crate::square::Square;
 
 /// Piece trait implementation for the white pawn struct. the control sets for
 /// each square are cached whereas the moveset is currently calculated each time.
@@ -30,7 +29,6 @@ impl Piece for WhitePawn {
 fn on_start_rank(loc: Square) -> bool {
     !(loc & RANKS[1]).is_empty()
 }
-
 
 #[cfg(test)]
 mod test {

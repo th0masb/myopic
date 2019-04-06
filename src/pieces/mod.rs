@@ -3,6 +3,7 @@ use crate::square::Square;
 
 pub mod pawns;
 pub mod knights;
+pub mod kings;
 pub mod sliding;
 
 pub trait Piece {

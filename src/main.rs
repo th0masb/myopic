@@ -33,5 +33,7 @@ fn main() {
     println!("{}", RANKS[1]);
     println!("{}", WhitePawn.controlset(H3, BitBoard::EMPTY, BitBoard::EMPTY));
 
+//    let x = pieces::pawns::BLACK_CONTROL.clone().into_iter().map(|x| x.0).collect::<Vec<_>>();
+//    println!("{:?}", x);
 }
 

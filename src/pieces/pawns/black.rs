@@ -1,8 +1,7 @@
-use crate::pieces::{Piece, BlackPawn};
-use crate::square::{Square};
-use crate::bitboard::{BitBoard, simple::RANKS};
 use super::BLACK_CONTROL;
-
+use crate::bitboard::{simple::RANKS, BitBoard};
+use crate::pieces::{BlackPawn, Piece};
+use crate::square::Square;
 
 /// Piece trait implementation for the black pawn struct. the control sets for
 /// each square are cached whereas the moveset is currently calculated each time.
@@ -30,7 +29,6 @@ impl Piece for BlackPawn {
 fn on_start_rank(loc: Square) -> bool {
     !(loc & RANKS[6]).is_empty()
 }
-
 
 #[cfg(test)]
 mod test {
