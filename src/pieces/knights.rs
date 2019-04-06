@@ -7,15 +7,23 @@ use super::{BlackKnight, Piece, WhiteKnight};
 /// Piece trait implementation for the white knight struct. It simply queries
 /// a static vector of moves for each base.square.
 impl Piece for WhiteKnight {
-    fn control(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn index(&self) -> usize {
+        1
+    }
+
+    fn id(&self) -> &'static str {
+        "wn"
+    }
+
+    fn control(&self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
     }
 
-    fn moves(self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn moves(&self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] - white
     }
 
-    fn attacks(self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
+    fn attacks(&self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] & black
     }
 }
@@ -23,15 +31,23 @@ impl Piece for WhiteKnight {
 /// Piece trait implementation for the black knight struct. It simply queries
 /// a static vector of moves for each base.square.
 impl Piece for BlackKnight {
-    fn control(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn index(&self) -> usize {
+        7
+    }
+
+    fn id(&self) -> &'static str {
+        "bn"
+    }
+
+    fn control(&self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
     }
 
-    fn moves(self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
+    fn moves(&self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] - black
     }
 
-    fn attacks(self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn attacks(&self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] & white
     }
 }

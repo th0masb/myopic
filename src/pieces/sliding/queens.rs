@@ -9,29 +9,45 @@ use crate::pieces::WhiteQueen;
 use crate::pieces::WhiteRook;
 
 impl Piece for WhiteQueen {
-    fn control(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn index(&self) -> usize {
+        4
+    }
+
+    fn id(&self) -> &'static str {
+        "wq"
+    }
+
+    fn control(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         WhiteBishop.control(loc, white, black) | WhiteRook.control(loc, white, black)
     }
 
-    fn moves(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn moves(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         WhiteBishop.moves(loc, white, black) | WhiteRook.moves(loc, white, black)
     }
 
-    fn attacks(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn attacks(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         WhiteBishop.attacks(loc, white, black) | WhiteRook.attacks(loc, white, black)
     }
 }
 
 impl Piece for BlackQueen {
-    fn control(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn index(&self) -> usize {
+        10
+    }
+
+    fn id(&self) -> &'static str {
+        "bq"
+    }
+
+    fn control(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         BlackBishop.control(loc, white, black) | BlackRook.control(loc, white, black)
     }
 
-    fn moves(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn moves(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         BlackBishop.moves(loc, white, black) | BlackRook.moves(loc, white, black)
     }
 
-    fn attacks(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn attacks(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         BlackBishop.attacks(loc, white, black) | BlackRook.attacks(loc, white, black)
     }
 }

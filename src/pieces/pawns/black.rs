@@ -7,11 +7,19 @@ use super::BLACK_CONTROL;
 /// Piece trait implementation for the black pawn struct. the control sets for
 /// each base.square are cached whereas the moves is currently calculated each time.
 impl Piece for BlackPawn {
-    fn control(self, loc: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn index(&self) -> usize {
+        6
+    }
+
+    fn id(&self) -> &'static str {
+        "bp"
+    }
+
+    fn control(&self, loc: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         BLACK_CONTROL[loc.i as usize]
     }
 
-    fn moves(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn moves(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         let all = white | black;
         let mut result = ((loc - RANKS[0]) >> 8) - all;
         if on_start_rank(loc) && !result.is_empty() {
@@ -20,7 +28,7 @@ impl Piece for BlackPawn {
         result | self.attacks(loc, white, black)
     }
 
-    fn attacks(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn attacks(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         self.control(loc, white, black) & white
     }
 }
