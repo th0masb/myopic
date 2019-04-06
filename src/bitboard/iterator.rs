@@ -7,23 +7,25 @@ use crate::square::Square;
 
 use std::num::Wrapping;
 
-// Iterator related trait implementations for the BitBoard struct.
-//
+/// A bitboard is a set of squares and is therefore iterable.
 impl IntoIterator for BitBoard {
     type Item = Square;
     type IntoIter = BitBoardIterator;
 
     fn into_iter(self) -> Self::IntoIter {
-        BitBoardIterator::new(self.0)
+        BitBoardIterator { src: self.0 }
     }
 }
 
+/// A set of squares can be build from an iterator traversing squares.
 impl FromIterator<Square> for BitBoard {
     fn from_iter<I: IntoIterator<Item = Square>>(iter: I) -> Self {
         iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
     }
 }
 
+/// We can collect an iterator of bitboards into a single bitboard under the
+/// logical OR binary operator on sets.
 impl FromIterator<BitBoard> for BitBoard {
     fn from_iter<I: IntoIterator<Item = BitBoard>>(iter: I) -> Self {
         iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
@@ -31,8 +33,8 @@ impl FromIterator<BitBoard> for BitBoard {
 }
 
 #[cfg(test)]
-mod trait_test {
-    use crate::bitboard::{BitBoard, loc};
+mod iter_test {
+    use crate::bitboard::{loc, BitBoard};
     use crate::square::constants::*;
     use crate::square::Square;
 
@@ -54,33 +56,26 @@ mod trait_test {
     }
 }
 
-
-// Implementation of the actual Iterator that a BitBoard produces.
-//
+/// The iterator implementation struct produced by a bitboard. It simply
+/// wraps a long value used to track the remaining set bits.
 pub struct BitBoardIterator {
     src: u64,
-    counter: usize,
 }
 
-impl BitBoardIterator {
-    pub fn new(src: u64) -> BitBoardIterator {
-        BitBoardIterator { src, counter: 0 }
-    }
-}
-
-// TODO can make this more efficient.
+/// The implementation uses the 'de bruijn' forward bitscan method for
+/// determining the LSB of the encapsulated u64 value. The LSB represents
+/// the next square to be returned.
 impl Iterator for BitBoardIterator {
     type Item = Square;
 
     fn next(&mut self) -> Option<Square> {
-        while self.counter < 64 {
-            let prev = self.counter;
-            self.counter += 1;
-            if self.src & (1u64 << prev) != 0 {
-                return Some(SQUARES[prev]);
-            }
+        if self.src == 0 {
+            None
+        } else {
+            let lsb = bitscan(self.src);
+            self.src ^= 1u64 << lsb;
+            Some(SQUARES[lsb])
         }
-        None
     }
 }
 
@@ -90,21 +85,16 @@ fn bitscan(x: u64) -> usize {
 }
 
 const BITSCAN: [usize; 64] = [
-    0, 47,  1, 56, 48, 27,  2, 60,
-    57, 49, 41, 37, 28, 16,  3, 61,
-    54, 58, 35, 52, 50, 42, 21, 44,
-    38, 32, 29, 23, 17, 11,  4, 62,
-    46, 55, 26, 59, 40, 36, 15, 53,
-    34, 51, 20, 43, 31, 22, 10, 45,
-    25, 39, 14, 33, 19, 30,  9, 24,
-    13, 18,  8, 12,  7,  6,  5, 63
+    0, 47, 1, 56, 48, 27, 2, 60, 57, 49, 41, 37, 28, 16, 3, 61, 54, 58, 35, 52, 50, 42, 21, 44, 38,
+    32, 29, 23, 17, 11, 4, 62, 46, 55, 26, 59, 40, 36, 15, 53, 34, 51, 20, 43, 31, 22, 10, 45, 25,
+    39, 14, 33, 19, 30, 9, 24, 13, 18, 8, 12, 7, 6, 5, 63,
 ];
 
 const DEBRUIJN64: Wrapping<u64> = Wrapping(0x03f79d71b4cb0a89u64);
 
 #[cfg(test)]
 mod bitscan_test {
-    use super::{bitscan};
+    use super::bitscan;
 
     #[test]
     fn test() {
@@ -115,4 +105,3 @@ mod bitscan_test {
         assert_eq!(21, bitscan(0b1001111011000000000000000000000));
     }
 }
-

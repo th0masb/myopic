@@ -8,15 +8,15 @@ use crate::square::{constants::SQUARES, Square};
 /// Piece trait implementation for the white knight struct. It simply queries
 /// a static vector of moves for each square.
 impl Piece for WhiteKnight {
-    fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn controlset(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
     }
 
-    fn moveset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn moveset(self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] - white
     }
 
-    fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn attackset(self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] & black
     }
 }
@@ -24,15 +24,15 @@ impl Piece for WhiteKnight {
 /// Piece trait implementation for the black knight struct. It simply queries
 /// a static vector of moves for each square.
 impl Piece for BlackKnight {
-    fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn controlset(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
     }
 
-    fn moveset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn moveset(self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] - black
     }
 
-    fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn attackset(self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] & white
     }
 }
