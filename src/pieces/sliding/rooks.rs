@@ -76,18 +76,12 @@ mod test {
     fn test() {
         let moves = compute_move_database();
         test_case_one(&moves);
-        test_case_two(&moves);
+        //test_case_two(&moves);
     }
 
     fn test_case_one(moves: &Moves) {
-        let (sq, occ) = (D3, E2 | B1 | F5 | H7 | D4);
-        let expected = E2 | C2 | B1 | C4 | B5 | A6 | E4 | F5;
-        assert_eq!(expected, moves[sq.i as usize][compute_rook_index(sq, occ)])
-    }
-
-    fn test_case_two(moves: &Moves) {
-        let (sq, occ) = (H5, D1 | E2 | G6 | C5 | F6 | A1 | A4 | D2);
-        let expected = G4 | F3 | E2 | G6;
+        let (sq, occ) = (D3, D1 | D5 | D6 | G3 | C3 | A6 | H8);
+        let expected = D2 | D1 | D4 | D5 | E3 | F3 | G3 | C3;
         assert_eq!(expected, moves[sq.i as usize][compute_rook_index(sq, occ)])
     }
 }

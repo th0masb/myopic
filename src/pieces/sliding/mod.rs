@@ -8,6 +8,7 @@ use std::num::Wrapping;
 
 pub mod bishops;
 pub mod rooks;
+pub mod queens;
 
 /// API for computing the magic index for a bishop positioned at a given
 /// location with the given piece arrangement on the board.
