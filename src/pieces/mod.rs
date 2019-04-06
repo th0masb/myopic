@@ -1,15 +1,18 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
+use crate::base::Side;
 
-pub mod kings;
-pub mod knights;
-pub mod pawns;
-pub mod sliding;
+mod kings;
+mod knights;
+mod pawns;
+mod sliding;
 
 pub trait Piece {
     fn index(&self) -> usize;
 
-    fn id(&self) -> &'static str;
+    fn id(&self) -> &str;
+
+    fn side(&self) -> Side;
 
     fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
 
@@ -63,23 +66,6 @@ const ALL: [&'static dyn Piece; 12] = [
     &BlackKing,
 ];
 
-fn all() -> Vec<Box<Piece>> {
-    let mut dest: Vec<Box<Piece>> = Vec::with_capacity(12);
-    dest.push(Box::new(WhitePawn));
-    dest.push(Box::new(WhiteKnight));
-    dest.push(Box::new(WhiteBishop));
-    dest.push(Box::new(WhiteRook));
-    dest.push(Box::new(WhiteQueen));
-    dest.push(Box::new(WhiteKing));
-    dest.push(Box::new(BlackPawn));
-    dest.push(Box::new(BlackKnight));
-    dest.push(Box::new(BlackBishop));
-    dest.push(Box::new(BlackRook));
-    dest.push(Box::new(BlackQueen));
-    dest.push(Box::new(BlackKing));
-    dest
-}
-
 const WHITE: [&'static dyn Piece; 6] = [
     &WhitePawn,
     &WhiteKnight,
@@ -112,7 +98,17 @@ mod test {
 
     #[test]
     fn test_indices() {
-        let id = ALL[0].id();
-        //assert_eq!(WhitePawn.id(), *(&ALL[WhitePawn.index()].id()));
+        assert_eq!("wp", ALL[WhitePawn.index()].id());
+        assert_eq!("wn", ALL[WhiteKnight.index()].id());
+        assert_eq!("wb", ALL[WhiteBishop.index()].id());
+        assert_eq!("wr", ALL[WhiteRook.index()].id());
+        assert_eq!("wq", ALL[WhiteQueen.index()].id());
+        assert_eq!("wk", ALL[WhiteKing.index()].id());
+        assert_eq!("bp", ALL[BlackPawn.index()].id());
+        assert_eq!("bn", ALL[BlackKnight.index()].id());
+        assert_eq!("bb", ALL[BlackBishop.index()].id());
+        assert_eq!("br", ALL[BlackRook.index()].id());
+        assert_eq!("bq", ALL[BlackQueen.index()].id());
+        assert_eq!("bk", ALL[BlackKing.index()].id());
     }
 }

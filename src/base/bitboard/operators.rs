@@ -83,3 +83,10 @@ impl ops::BitAnd<Square> for BitBoard {
         BitBoard(self.0 & loc(other))
     }
 }
+
+impl ops::BitXorAssign<Square> for BitBoard {
+    fn bitxor_assign(&mut self, rhs: Square) {
+        self.0 = self.0 ^ (1u64 << rhs.i);
+    }
+}
+

@@ -16,12 +16,8 @@ fn loc(sq: Square) -> u64 {
 pub struct BitBoard(pub u64);
 
 impl BitBoard {
-    pub fn new(args: &[Square]) -> BitBoard {
-        args.into_iter().map(|x| *x).collect()
-    }
-
-    pub fn wrap(bitboard: u64) -> BitBoard {
-        BitBoard(bitboard)
+    pub fn contains(self, square: Square) -> bool {
+        self.0 & (1u64 << square.i) != 0
     }
 
     pub fn is_empty(self) -> bool {
@@ -61,13 +57,8 @@ mod test {
     use crate::base::square::constants::*;
 
     #[test]
-    fn test_new() {
-        assert_eq!(BitBoard(0b11u64), BitBoard::new(&[H1, G1]))
-    }
-
-    #[test]
     fn test_display() {
-        let result = BitBoard::new(&[A1, H7, D5]);
+        let result = A1 | H7 | D5;
         assert_eq!("{A1, D5, H7}".to_owned(), format!("{}", result));
     }
 

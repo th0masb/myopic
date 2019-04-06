@@ -3,6 +3,7 @@ use crate::base::dir::*;
 use crate::base::square::{constants::SQUARES, Square};
 
 use super::{BlackKnight, Piece, WhiteKnight};
+use crate::base::Side;
 
 /// Piece trait implementation for the white knight struct. It simply queries
 /// a static vector of moves for each base.square.
@@ -13,6 +14,10 @@ impl Piece for WhiteKnight {
 
     fn id(&self) -> &'static str {
         "wn"
+    }
+
+    fn side(&self) -> Side {
+        Side::White
     }
 
     fn control(&self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
@@ -37,6 +42,10 @@ impl Piece for BlackKnight {
 
     fn id(&self) -> &'static str {
         "bn"
+    }
+
+    fn side(&self) -> Side {
+        Side::Black
     }
 
     fn control(&self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {

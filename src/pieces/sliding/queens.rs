@@ -7,6 +7,7 @@ use crate::pieces::Piece;
 use crate::pieces::WhiteBishop;
 use crate::pieces::WhiteQueen;
 use crate::pieces::WhiteRook;
+use crate::base::Side;
 
 impl Piece for WhiteQueen {
     fn index(&self) -> usize {
@@ -15,6 +16,10 @@ impl Piece for WhiteQueen {
 
     fn id(&self) -> &'static str {
         "wq"
+    }
+
+    fn side(&self) -> Side {
+        Side::White
     }
 
     fn control(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
@@ -37,6 +42,10 @@ impl Piece for BlackQueen {
 
     fn id(&self) -> &'static str {
         "bq"
+    }
+
+    fn side(&self) -> Side {
+        Side::Black
     }
 
     fn control(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {

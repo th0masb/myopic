@@ -156,7 +156,7 @@ fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
             }
         }
     }
-    BitBoard::wrap(res)
+    BitBoard(res)
 }
 
 #[cfg(test)]

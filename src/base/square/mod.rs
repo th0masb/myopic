@@ -19,7 +19,7 @@ impl Square {
     }
 
     pub fn lift(self) -> BitBoard {
-        BitBoard::wrap(1u64 << self.i)
+        BitBoard(1u64 << self.i)
     }
 
     pub fn next(self, dir: Dir) -> Option<Square> {
@@ -90,20 +90,20 @@ mod impl_tests {
 
     #[test]
     fn test_search() {
-        assert_eq!(D3.search(S), BitBoard::new(&[D2, D1]));
+        assert_eq!(D3.search(S), D2 | D1);
     }
 
     #[test]
     fn test_search_one() {
-        assert_eq!(D3.search_one(&vec!(S, E)), BitBoard::new(&[D2, E3]));
-        assert_eq!(A8.search_one(&vec!(N, NWW, SE)), BitBoard::new(&[B7]));
+        assert_eq!(D3.search_one(&vec!(S, E)), D2 | E3);
+        assert_eq!(A8.search_one(&vec!(N, NWW, SE)), B7.lift());
     }
 
     #[test]
     fn test_search_all() {
         assert_eq!(
             C3.search_all(&vec!(SSW, SWW, S)),
-            BitBoard::new(&[B1, A2, C2, C1])
+            B1 | A2 | C2 | C1
         );
     }
 
@@ -133,7 +133,7 @@ mod impl_tests {
     }
 }
 
-static NAMES: [&str; 64] = [
+const NAMES: [&str; 64] = [
     "H1", "G1", "F1", "E1", "D1", "C1", "B1", "A1", "H2", "G2", "F2", "E2", "D2", "C2", "B2", "A2",
     "H3", "G3", "F3", "E3", "D3", "C3", "B3", "A3", "H4", "G4", "F4", "E4", "D4", "C4", "B4", "A4",
     "H5", "G5", "F5", "E5", "D5", "C5", "B5", "A5", "H6", "G6", "F6", "E6", "D6", "C6", "B6", "A6",

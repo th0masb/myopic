@@ -12,11 +12,12 @@ use crate::pieces::{Piece, WhitePawn};
 
 mod base;
 mod pieces;
+mod board;
 
 fn main() {
     let _dirs = vec!(&dir::N);
-    let board = BitBoard::new(&[D2, H3]);
-    let board2 = BitBoard::new(&[A3, G7]);
+    let board = D2 | H3;
+    let board2 = A3 | G7;
     println!("{}", board | board2);
     println!("{}", board | F3);
     println!("{}", F3 | board);

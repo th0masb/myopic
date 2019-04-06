@@ -8,6 +8,7 @@ use crate::pieces::Piece;
 use crate::pieces::WhiteBishop;
 
 use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
+use crate::base::Side;
 
 /// Piece trait implementation for the white bishop singleton struct.
 /// The move database is cached in the static memory and the code for
@@ -19,6 +20,10 @@ impl Piece for WhiteBishop {
 
     fn id(&self) -> &'static str {
         "wb"
+    }
+
+    fn side(&self) -> Side {
+        Side::White
     }
 
     fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
@@ -44,6 +49,10 @@ impl Piece for BlackBishop {
 
     fn id(&self) -> &'static str {
         "bb"
+    }
+
+    fn side(&self) -> Side {
+        Side::Black
     }
 
     fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
