@@ -1,5 +1,5 @@
 use crate::pieces::{Piece, BlackPawn};
-use crate::square::{Square, constants::*};
+use crate::square::{Square};
 use crate::bitboard::{BitBoard, simple::RANKS};
 use super::BLACK_CONTROL;
 
@@ -7,7 +7,7 @@ use super::BLACK_CONTROL;
 /// Piece trait implementation for the black pawn struct. the control sets for
 /// each square are cached whereas the moveset is currently calculated each time.
 impl Piece for BlackPawn {
-    fn controlset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn controlset(self, loc: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         BLACK_CONTROL[loc.i as usize]
     }
 

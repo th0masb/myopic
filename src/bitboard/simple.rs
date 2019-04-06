@@ -1,7 +1,6 @@
 use crate::bitboard::BitBoard;
 use crate::dir;
 use crate::square::constants::*;
-use crate::square::Square;
 
 fn create_files() -> Vec<BitBoard> {
     (H1.search(dir::W) | H1)

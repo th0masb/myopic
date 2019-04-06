@@ -70,7 +70,6 @@ mod impl_tests {
     use crate::dir::*;
 
     use super::constants::*;
-    use crate::square::Square;
 
     #[test]
     fn test_partial_ord() {

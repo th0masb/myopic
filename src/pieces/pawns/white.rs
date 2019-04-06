@@ -1,13 +1,13 @@
 use super::WHITE_CONTROL;
 use crate::bitboard::{simple::RANKS, BitBoard};
 use crate::pieces::{Piece, WhitePawn};
-use crate::square::{constants::*, Square};
+use crate::square::{Square};
 
 
 /// Piece trait implementation for the white pawn struct. the control sets for
 /// each square are cached whereas the moveset is currently calculated each time.
 impl Piece for WhitePawn {
-    fn controlset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn controlset(self, loc: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         WHITE_CONTROL[loc.i as usize]
     }
 

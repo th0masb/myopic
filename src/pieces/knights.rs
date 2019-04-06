@@ -1,7 +1,6 @@
 use super::{BlackKnight, Piece, WhiteKnight};
 use crate::bitboard::BitBoard;
 use crate::dir::*;
-use crate::side::Side;
 use crate::square::{constants::SQUARES, Square};
 
 

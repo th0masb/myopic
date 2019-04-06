@@ -32,5 +32,6 @@ fn main() {
 //    println!("{}", square::H1);
     println!("{}", RANKS[1]);
     println!("{}", WhitePawn.controlset(H3, BitBoard::EMPTY, BitBoard::EMPTY));
+
 }
 

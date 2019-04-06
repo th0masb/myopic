@@ -1,8 +1,6 @@
 use crate::bitboard::{simple::*, BitBoard};
-use crate::dir::{Dir, N, S};
-use crate::pieces::{BlackPawn, Piece, WhitePawn};
 use crate::side::{Side, Side::Black, Side::White};
-use crate::square::constants::{A1, A6, H3, H8, SQUARES};
+use crate::square::constants::SQUARES;
 use crate::square::Square;
 
 pub mod white;

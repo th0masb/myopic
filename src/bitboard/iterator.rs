@@ -1,6 +1,5 @@
 use std::iter::{FromIterator, IntoIterator};
 
-use crate::bitboard;
 use crate::bitboard::BitBoard;
 use crate::square::constants::SQUARES;
 use crate::square::Square;
