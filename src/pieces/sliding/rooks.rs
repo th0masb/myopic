@@ -13,16 +13,16 @@ use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, RO
 /// The move database is cached in the static memory and the code for
 /// that is at the bottom of this file.
 impl Piece for WhiteRook {
-    fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn control(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         MOVES[location.i as usize][compute_rook_index(location, white | black)]
     }
 
-    fn moveset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.controlset(location, white, black) - white
+    fn moves(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        self.control(location, white, black) - white
     }
 
-    fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.controlset(location, white, black) & black
+    fn attacks(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        self.control(location, white, black) & black
     }
 }
 
@@ -30,16 +30,16 @@ impl Piece for WhiteRook {
 /// The move database is cached in the static memory and the code for
 /// that is at the bottom of this file.
 impl Piece for BlackRook {
-    fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn control(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         MOVES[location.i as usize][compute_rook_index(location, white | black)]
     }
 
-    fn moveset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.controlset(location, white, black) - black
+    fn moves(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        self.control(location, white, black) - black
     }
 
-    fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.controlset(location, white, black) & white
+    fn attacks(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        self.control(location, white, black) & white
     }
 }
 

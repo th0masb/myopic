@@ -7,22 +7,22 @@ use crate::pieces::BlackBishop;
 use crate::pieces::Piece;
 use crate::pieces::WhiteBishop;
 
-use super::{bishop_dirs, BISHOP_MASKS, compute_bishop_index, compute_control, compute_powerset};
+use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
 
 /// Piece trait implementation for the white bishop singleton struct.
 /// The move database is cached in the static memory and the code for
 /// that is at the bottom of this file.
 impl Piece for WhiteBishop {
-    fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn control(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         MOVES[location.i as usize][compute_bishop_index(location, white | black)]
     }
 
-    fn moveset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.controlset(location, white, black) - white
+    fn moves(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        self.control(location, white, black) - white
     }
 
-    fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.controlset(location, white, black) & black
+    fn attacks(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        self.control(location, white, black) & black
     }
 }
 
@@ -30,16 +30,16 @@ impl Piece for WhiteBishop {
 /// The move database is cached in the static memory and the code for
 /// that is at the bottom of this file.
 impl Piece for BlackBishop {
-    fn controlset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    fn control(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         MOVES[location.i as usize][compute_bishop_index(location, white | black)]
     }
 
-    fn moveset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.controlset(location, white, black) - black
+    fn moves(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        self.control(location, white, black) - black
     }
 
-    fn attackset(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.controlset(location, white, black) & white
+    fn attacks(self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        self.control(location, white, black) & white
     }
 }
 

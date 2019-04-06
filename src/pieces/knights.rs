@@ -7,15 +7,15 @@ use super::{BlackKnight, Piece, WhiteKnight};
 /// Piece trait implementation for the white knight struct. It simply queries
 /// a static vector of moves for each base.square.
 impl Piece for WhiteKnight {
-    fn controlset(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn control(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
     }
 
-    fn moveset(self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn moves(self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] - white
     }
 
-    fn attackset(self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
+    fn attacks(self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] & black
     }
 }
@@ -23,15 +23,15 @@ impl Piece for WhiteKnight {
 /// Piece trait implementation for the black knight struct. It simply queries
 /// a static vector of moves for each base.square.
 impl Piece for BlackKnight {
-    fn controlset(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn control(self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize]
     }
 
-    fn moveset(self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
+    fn moves(self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] - black
     }
 
-    fn attackset(self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
+    fn attacks(self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
         CONTROL[location.i as usize] & white
     }
 }
@@ -122,21 +122,21 @@ mod white_test {
         let (wn, zero) = (WhiteKnight, BitBoard::EMPTY);
         assert_eq!(
             D1 | C2 | C4 | D5 | F5 | G4 | G2 | F1,
-            wn.controlset(E3, zero, zero)
+            wn.control(E3, zero, zero)
         );
-        assert_eq!(A4 | C4 | D3 | D1, wn.controlset(B2, zero, zero));
+        assert_eq!(A4 | C4 | D3 | D1, wn.control(B2, zero, zero));
     }
 
     #[test]
-    fn test_moveset() {
+    fn test_moves() {
         let wn = WhiteKnight;
-        assert_eq!(A4 | C4 | D3, wn.moveset(B2, D1 | B1, A4 | D7));
+        assert_eq!(A4 | C4 | D3, wn.moves(B2, D1 | B1, A4 | D7));
     }
 
     #[test]
-    fn test_attackset() {
+    fn test_attacks() {
         let wn = WhiteKnight;
-        assert_eq!(A4.lift(), wn.attackset(B2, D1 | B1, A4 | D7));
+        assert_eq!(A4.lift(), wn.attacks(B2, D1 | B1, A4 | D7));
     }
 }
 
@@ -151,20 +151,20 @@ mod black_test {
         let (bn, zero) = (BlackKnight, BitBoard::EMPTY);
         assert_eq!(
             D1 | C2 | C4 | D5 | F5 | G4 | G2 | F1,
-            bn.controlset(E3, zero, zero)
+            bn.control(E3, zero, zero)
         );
-        assert_eq!(A4 | C4 | D3 | D1, bn.controlset(B2, zero, zero));
+        assert_eq!(A4 | C4 | D3 | D1, bn.control(B2, zero, zero));
     }
 
     #[test]
-    fn test_moveset() {
+    fn test_moves() {
         let bn = BlackKnight;
-        assert_eq!(C4 | D3 | D1, bn.moveset(B2, D1 | B1, A4 | D7));
+        assert_eq!(C4 | D3 | D1, bn.moves(B2, D1 | B1, A4 | D7));
     }
 
     #[test]
-    fn test_attackset() {
+    fn test_attacks() {
         let bn = BlackKnight;
-        assert_eq!(D1.lift(), bn.attackset(B2, D1 | B1, A4 | D7));
+        assert_eq!(D1.lift(), bn.attacks(B2, D1 | B1, A4 | D7));
     }
 }

@@ -1,15 +1,15 @@
 use std::num::Wrapping;
 
 use crate::base::bitboard::BitBoard;
+use crate::base::dir::Dir;
 use crate::base::dir::{E, N, S, W};
 use crate::base::dir::{NE, NW, SE, SW};
-use crate::base::dir::Dir;
 use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
 
 pub mod bishops;
-pub mod rooks;
 pub mod queens;
+pub mod rooks;
 
 /// API for computing the magic index for a bishop positioned at a given
 /// location with the given piece arrangement on the board.
@@ -36,7 +36,6 @@ fn compute_magic_index(occupancy: u64, magic: u64, shift: usize) -> usize {
     let (o, m) = (Wrapping(occupancy), Wrapping(magic));
     ((o * m).0 >> shift) as usize
 }
-
 
 // Implementation details and related tests.
 /// Computes a vector containing all the directions a bishop can move in.
@@ -229,7 +228,6 @@ mod control_tests {
 //fn gen_magic_candidate() -> u64 {
 //    rand::random::<u64>() & rand::random::<u64>() & rand::random::<u64>()
 //}
-
 
 /// Constants forming the constituent parts of the 'magic base.bitboard' mapping
 /// technique.
@@ -522,4 +520,3 @@ const ROOK_MAGICS: [u64; 64] = [
     8800401621508,
     857903159050370,
 ];
-

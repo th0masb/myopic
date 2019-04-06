@@ -9,29 +9,29 @@ use crate::pieces::WhiteQueen;
 use crate::pieces::WhiteRook;
 
 impl Piece for WhiteQueen {
-    fn controlset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        WhiteBishop.controlset(loc, white, black) | WhiteRook.controlset(loc, white, black)
+    fn control(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        WhiteBishop.control(loc, white, black) | WhiteRook.control(loc, white, black)
     }
 
-    fn moveset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        WhiteBishop.moveset(loc, white, black) | WhiteRook.moveset(loc, white, black)
+    fn moves(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        WhiteBishop.moves(loc, white, black) | WhiteRook.moves(loc, white, black)
     }
 
-    fn attackset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        WhiteBishop.attackset(loc, white, black) | WhiteRook.attackset(loc, white, black)
+    fn attacks(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        WhiteBishop.attacks(loc, white, black) | WhiteRook.attacks(loc, white, black)
     }
 }
 
 impl Piece for BlackQueen {
-    fn controlset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        BlackBishop.controlset(loc, white, black) | BlackRook.controlset(loc, white, black)
+    fn control(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        BlackBishop.control(loc, white, black) | BlackRook.control(loc, white, black)
     }
 
-    fn moveset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        BlackBishop.moveset(loc, white, black) | BlackRook.moveset(loc, white, black)
+    fn moves(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        BlackBishop.moves(loc, white, black) | BlackRook.moves(loc, white, black)
     }
 
-    fn attackset(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        BlackBishop.attackset(loc, white, black) | BlackRook.attackset(loc, white, black)
+    fn attacks(self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+        BlackBishop.attacks(loc, white, black) | BlackRook.attacks(loc, white, black)
     }
 }
