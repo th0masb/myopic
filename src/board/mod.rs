@@ -2,6 +2,8 @@ use crate::base::bitboard::BitBoard;
 use crate::pieces::Piece;
 use crate::base::square::Square;
 
+pub mod hash;
+
 #[derive(PartialEq)]
 struct PieceTracker {
     boards: Vec<BitBoard>,

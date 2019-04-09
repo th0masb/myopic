@@ -51,7 +51,7 @@ pub struct WhiteKing;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct BlackKing;
 
-const ALL: [&'static dyn Piece; 12] = [
+pub const ALL: [&'static dyn Piece; 12] = [
     &WhitePawn,
     &WhiteKnight,
     &WhiteBishop,
@@ -66,7 +66,7 @@ const ALL: [&'static dyn Piece; 12] = [
     &BlackKing,
 ];
 
-const WHITE: [&'static dyn Piece; 6] = [
+pub const WHITE: [&'static dyn Piece; 6] = [
     &WhitePawn,
     &WhiteKnight,
     &WhiteBishop,
@@ -75,7 +75,7 @@ const WHITE: [&'static dyn Piece; 6] = [
     &WhiteKing,
 ];
 
-const BLACK: [&'static dyn Piece; 6] = [
+pub const BLACK: [&'static dyn Piece; 6] = [
     &BlackPawn,
     &BlackKnight,
     &BlackBishop,
@@ -84,12 +84,12 @@ const BLACK: [&'static dyn Piece; 6] = [
     &BlackKing,
 ];
 
-const PAWNS: [&'static dyn Piece; 2] = [&WhitePawn, &BlackPawn];
-const KNIGHTS: [&'static dyn Piece; 2] = [&WhiteKnight, &BlackKnight];
-const BISHOPS: [&'static dyn Piece; 2] = [&WhiteBishop, &BlackBishop];
-const ROOKS: [&'static dyn Piece; 2] = [&WhiteRook, &BlackRook];
-const QUEENS: [&'static dyn Piece; 2] = [&WhiteQueen, &BlackQueen];
-const KINGS: [&'static dyn Piece; 2] = [&WhiteKing, &BlackKing];
+pub const PAWNS: [&'static dyn Piece; 2] = [&WhitePawn, &BlackPawn];
+pub const KNIGHTS: [&'static dyn Piece; 2] = [&WhiteKnight, &BlackKnight];
+pub const BISHOPS: [&'static dyn Piece; 2] = [&WhiteBishop, &BlackBishop];
+pub const ROOKS: [&'static dyn Piece; 2] = [&WhiteRook, &BlackRook];
+pub const QUEENS: [&'static dyn Piece; 2] = [&WhiteQueen, &BlackQueen];
+pub const KINGS: [&'static dyn Piece; 2] = [&WhiteKing, &BlackKing];
 
 
 #[cfg(test)]

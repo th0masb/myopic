@@ -9,6 +9,7 @@ use crate::base::bitboard::{BitBoard, simple::*};
 use crate::base::dir;
 use crate::base::square::constants::*;
 use crate::pieces::{Piece, WhitePawn};
+use crate::board::hash::gen_unique;
 
 mod base;
 mod pieces;
@@ -33,5 +34,6 @@ fn main() {
 
 //    let x = pieces::pawns::BLACK_CONTROL.clone().into_iter().map(|x| x.0).collect::<Vec<_>>();
 //    println!("{:?}", x);
+    println!("{:?}", gen_unique(800));
 }
 
