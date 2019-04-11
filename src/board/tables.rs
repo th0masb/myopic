@@ -7,23 +7,24 @@ use crate::pieces::Piece;
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the midgame.
 pub fn midgame_eval(piece: &dyn Piece, location: Square) -> i32 {
-    let (side, pindex) = (piece.side(), piece.index() % 6);
-    let (tableindex, parity) = match side {
-        Side::White => (63 - location.i as usize, 1),
-        Side::Black => (63 - reflect(location).i as usize, -1)
-    };
-    parity * MIDGAME[pindex][tableindex]
+    let (table_index, parity) = compute_index_parity(piece, location);
+    parity * MIDGAME[piece.index() % 6][table_index]
 }
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the endgame.
 pub fn endgame_eval(piece: &dyn Piece, location: Square) -> i32 {
-    let (side, pindex) = (piece.side(), piece.index() % 6);
-    let (tableindex, parity) = match side {
+    let (table_index, parity) = compute_index_parity(piece, location);
+    parity * ENDGAME[piece.index() % 6][table_index]
+}
+
+/// Computes the table index alongside the parity multiplier according to the
+/// piece side.
+fn compute_index_parity(piece: &dyn Piece, location: Square) -> (usize, i32) {
+    match piece.side() {
         Side::White => (63 - location.i as usize, 1),
         Side::Black => (63 - reflect(location).i as usize, -1)
-    };
-    parity * ENDGAME[pindex][tableindex]
+    }
 }
 
 /// Reflects a square through the horizontal line bisecting the chess board.
