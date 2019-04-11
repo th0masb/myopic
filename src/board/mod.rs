@@ -3,6 +3,7 @@ use crate::pieces::Piece;
 use crate::base::square::Square;
 
 pub mod hash;
+pub mod tables;
 
 #[derive(PartialEq)]
 struct PieceTracker {

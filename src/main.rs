@@ -35,5 +35,6 @@ fn main() {
 //    let x = pieces::pawns::BLACK_CONTROL.clone().into_iter().map(|x| x.0).collect::<Vec<_>>();
 //    println!("{:?}", x);
     println!("{:?}", gen_unique(800));
+    let x = board::tables::midgame_eval(&WhitePawn, D5);
 }
 
