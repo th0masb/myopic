@@ -14,6 +14,7 @@ use crate::base::square::constants::H1;
 use crate::base::square::constants::H8;
 use crate::base::square::Square;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct CastleZone {
     i: usize,
     king_source: Square,
