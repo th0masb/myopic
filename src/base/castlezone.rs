@@ -67,3 +67,67 @@ impl CastleZone {
         &CastleZone::BQ,
     ];
 }
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+pub struct CastleZoneSet {
+    data: usize,
+}
+
+impl CastleZoneSet {
+    pub fn all() -> CastleZoneSet {
+        CastleZoneSet {data: 0b1111}
+    }
+
+    pub fn none() -> CastleZoneSet {
+        CastleZoneSet {data: 0}
+    }
+
+    pub fn contains(self, zone: &'static CastleZone) -> bool {
+        (1usize << zone.i) & self.data != 0
+    }
+
+    pub fn add(&mut self, zone: &'static CastleZone) {
+        self.data |= (1usize << zone.i)
+    }
+
+    pub fn remove(&mut self, zone: &'static CastleZone) {
+        self.data &= !(1usize << zone.i)
+    }
+}
+
+#[cfg(test)]
+mod set_test {
+    use super::*;
+
+    #[test]
+    fn test_all() {
+        let all = CastleZoneSet::all();
+        for &zone in &CastleZone::ALL {
+            assert!(all.contains(zone));
+        }
+    }
+
+    #[test]
+    fn test_none() {
+        let none = CastleZoneSet::none();
+        for &zone in &CastleZone::ALL {
+            assert!(!none.contains(zone));
+        }
+    }
+
+    #[test]
+    fn test_add() {
+        let mut set = CastleZoneSet::none();
+        assert!(!set.contains(&CastleZone::BK));
+        set.add(&CastleZone::BK);
+        assert!(set.contains(&CastleZone::BK));
+    }
+
+    #[test]
+    fn test_remove() {
+        let mut set = CastleZoneSet::all();
+        assert!(set.contains(&CastleZone::WQ));
+        set.remove(&CastleZone::WQ);
+        assert!(!set.contains(&CastleZone::WQ));
+    }
+}

@@ -5,7 +5,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
 
-/// A base.bitboard is a set of squares and is therefore iterable.
+/// A bitboard is a set of squares and is therefore iterable.
 impl IntoIterator for BitBoard {
     type Item = Square;
     type IntoIter = BitBoardIterator;
