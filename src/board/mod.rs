@@ -6,4 +6,5 @@ pub mod hash;
 pub mod tables;
 mod piecetracker;
 mod castletracker;
+mod hashcache;
 

@@ -13,6 +13,8 @@ use crate::base::square::constants::G8;
 use crate::base::square::constants::H1;
 use crate::base::square::constants::H8;
 use crate::base::square::Square;
+use std::iter::FromIterator;
+use std::ops;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CastleZone {
@@ -26,6 +28,10 @@ pub struct CastleZone {
 impl CastleZone {
     pub fn i(&self) -> usize {
         self.i
+    }
+
+    pub fn lift(&self) -> CastleZoneSet {
+        CastleZoneSet {data: 1usize << self.i}
     }
 
     pub const WK: CastleZone = CastleZone {
@@ -82,18 +88,41 @@ impl CastleZoneSet {
         CastleZoneSet {data: 0}
     }
 
-    pub fn contains(self, zone: &'static CastleZone) -> bool {
+    pub fn contains(self, zone: &CastleZone) -> bool {
         (1usize << zone.i) & self.data != 0
     }
+}
 
-    pub fn add(&mut self, zone: &'static CastleZone) {
-        self.data |= (1usize << zone.i)
-    }
-
-    pub fn remove(&mut self, zone: &'static CastleZone) {
-        self.data &= !(1usize << zone.i)
+impl FromIterator<&'static CastleZone> for CastleZoneSet {
+    fn from_iter<T: IntoIterator<Item=&'static CastleZone>>(iter: T) -> Self {
+        CastleZoneSet{data: iter.into_iter().map(|cz| 1usize << cz.i).fold(0, |a, b| a | b)}
     }
 }
+
+impl ops::Sub<CastleZoneSet> for CastleZoneSet {
+    type Output = CastleZoneSet;
+
+    fn sub(self, rhs: CastleZoneSet) -> Self::Output {
+        CastleZoneSet {data: self.data & !rhs.data}
+    }
+}
+
+impl ops::BitOr<CastleZoneSet> for CastleZoneSet {
+    type Output = CastleZoneSet;
+
+    fn bitor(self, rhs: CastleZoneSet) -> Self::Output {
+        CastleZoneSet{data: self.data | rhs.data}
+    }
+}
+
+impl ops::BitAnd<CastleZoneSet> for CastleZoneSet {
+    type Output = CastleZoneSet;
+
+    fn bitand(self, rhs: CastleZoneSet) -> Self::Output {
+        CastleZoneSet{data: self.data & rhs.data}
+    }
+}
+
 
 #[cfg(test)]
 mod set_test {
@@ -116,18 +145,25 @@ mod set_test {
     }
 
     #[test]
-    fn test_add() {
-        let mut set = CastleZoneSet::none();
-        assert!(!set.contains(&CastleZone::BK));
-        set.add(&CastleZone::BK);
-        assert!(set.contains(&CastleZone::BK));
+    fn test_collect() {
+        let source = vec![&CastleZone::BK, &CastleZone::WK, &CastleZone::WQ, &CastleZone::BQ];
+        let collected: CastleZoneSet = source.into_iter().collect();
+        assert_eq!(CastleZoneSet::all(), collected);
     }
 
-    #[test]
-    fn test_remove() {
-        let mut set = CastleZoneSet::all();
-        assert!(set.contains(&CastleZone::WQ));
-        set.remove(&CastleZone::WQ);
-        assert!(!set.contains(&CastleZone::WQ));
-    }
+//    #[test]
+//    fn test_add() {
+//        let mut set = CastleZoneSet::none();
+//        assert!(!set.contains(&CastleZone::BK));
+//        set.add(&CastleZone::BK);
+//        assert!(set.contains(&CastleZone::BK));
+//    }
+//
+//    #[test]
+//    fn test_remove() {
+//        let mut set = CastleZoneSet::all();
+//        assert!(set.contains(&CastleZone::WQ));
+//        set.remove(&CastleZone::WQ);
+//        assert!(!set.contains(&CastleZone::WQ));
+//    }
 }

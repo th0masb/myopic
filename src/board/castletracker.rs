@@ -1,5 +1,6 @@
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::Side;
 
 #[derive(Debug, PartialEq, Clone)]
 struct CastleTracker {
@@ -9,16 +10,33 @@ struct CastleTracker {
 }
 
 impl CastleTracker {
-    pub fn remaining_rights(&self) -> CastleZoneSet {
-        self.remaining_rights
+    pub fn remove_rights(&mut self, rights: CastleZoneSet) {
+        self.remaining_rights = self.remaining_rights - rights;
     }
 
-    pub fn white_status(&self) -> Option<&'static CastleZone> {
-        self.white_status
+    pub fn add_rights(&mut self, rights: CastleZoneSet) {
+        self.remaining_rights = self.remaining_rights | rights;
     }
 
-    pub fn black_status(&self) -> Option<&'static CastleZone> {
-        self.black_status
+    pub fn set_status(&mut self, side: Side, status: &'static CastleZone) {
+        match side {
+            Side::White => self.white_status = Some(status),
+            Side::Black => self.black_status = Some(status)
+        }
+    }
+
+    pub fn remove_status(&mut self, side: Side) {
+        match side {
+            Side::White => self.white_status = None,
+            Side::Black => self.black_status = None
+        }
+    }
+
+    pub fn get_status(&self, side: Side) -> Option<&'static CastleZone> {
+        match side {
+            Side::White => self.white_status,
+            Side::Black => self.black_status
+        }
     }
 }
 
