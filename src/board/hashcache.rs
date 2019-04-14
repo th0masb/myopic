@@ -2,25 +2,33 @@ use std::iter;
 
 const CACHE_SIZE: usize = 20;
 
+/// The hashcache is a circular fixed sized array which tracks a sequence
+/// of board hashings. When a new hash is added to the head of the sequence
+/// the tail hash is lost. When a hash is popped from the head of the
+/// sequence a replacement tail hash must be provided. The cache can check
+/// for three repetitions of the same hash value which would imply a drawn
+///  (by repetition) game.
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct HashCache {
-    count: usize,
+    /// Records how many pop operations required to return to initial state.
+    pop_dist: usize,
+    /// Fixed size vector which maintains the hash values.
     cache: Vec<u64>,
 }
 
-
-
 impl HashCache {
-    pub fn new() -> HashCache {
-        HashCache {count: 0, cache: iter::repeat(0u64).take(CACHE_SIZE).collect()}
+    pub fn new(initial_hash: u64) -> HashCache {
+        let mut cache: Vec<_> = iter::repeat(0u64).take(CACHE_SIZE).collect();
+        cache[0] = initial_hash;
+        HashCache { pop_dist: 0, cache}
     }
 
     fn cache_index(&self) -> usize {
-        self.count % CACHE_SIZE
+        self.pop_dist % CACHE_SIZE
     }
 
     pub fn push_head(&mut self, new_head: u64) -> u64 {
-        self.count += 1;
+        self.pop_dist += 1;
         let index = self.cache_index();
         let old_tail = self.cache[index];
         self.cache[index] = new_head;
@@ -28,18 +36,14 @@ impl HashCache {
     }
 
     pub fn pop_head(&mut self, new_tail: u64) {
-        debug_assert!(self.count > 0);
+        debug_assert!(self.pop_dist > 0);
         let index = self.cache_index();
         self.cache[index] = new_tail;
-        self.count -= 1;
-    }
-
-    pub fn head(&self) -> u64 {
-        self.cache[self.cache_index()]
+        self.pop_dist -= 1;
     }
 
     pub fn has_three_repetitions(&self) -> bool {
-        if self.count < CACHE_SIZE {
+        if self.pop_dist < CACHE_SIZE {
             false
         } else {
             let mut cache = self.cache.clone();
@@ -59,5 +63,63 @@ impl HashCache {
             }
             count == 3
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn n_consecutive(n: usize) -> HashCache {
+        let mut cache = HashCache::new(0u64);
+        for n in 1..n {
+            cache.push_head(n as u64);
+        }
+        cache
+    }
+
+    #[test]
+    fn test_push_pop_head() {
+        let (cs, n) = (CACHE_SIZE as u64, (2 * CACHE_SIZE) as u64);
+        let init_cache = n_consecutive(n as usize);
+        let mut cache = init_cache.clone();
+        assert_eq!(n - cs, cache.push_head(n), "{:?}", cache);
+        assert_eq!(n - cs + 1, cache.push_head(n), "{:?}", cache);
+        assert_eq!(n - cs + 2, cache.push_head(n), "{:?}", cache);
+        assert_eq!(n - cs + 3, cache.push_head(n), "{:?}", cache);
+
+        // Put the results back
+        cache.pop_head(n - cs + 3);
+        cache.pop_head(n - cs + 2);
+        cache.pop_head(n - cs + 1);
+        cache.pop_head(n - cs);
+        assert_eq!(init_cache, cache);
+    }
+
+    #[test]
+    fn test_three_repetitions() {
+        let cs = CACHE_SIZE;
+        // Change test values if cache size changes
+        assert_eq!(20, cs);
+        // Test return false if not enough elements
+        let mut cache1 = n_consecutive(cs - 5);
+        cache1.push_head(2u64);
+        cache1.push_head(5u64);
+        cache1.push_head(2u64);
+        assert!(!cache1.has_three_repetitions());
+
+        // Test return false if enough elements but not three reps
+        let mut cache2 = n_consecutive(cs);
+        cache2.push_head(18u64);
+        cache2.push_head(5u64);
+        cache2.push_head(17u64);
+        assert!(!cache2.has_three_repetitions());
+
+        // Test return true if enough elements and three reps
+        let mut cache3 = n_consecutive(cs);
+        cache3.push_head(15u64);
+        cache3.push_head(12u64);
+        cache3.push_head(15u64);
+        assert!(cache3.has_three_repetitions());
     }
 }
