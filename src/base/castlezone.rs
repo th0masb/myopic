@@ -15,6 +15,8 @@ use crate::base::square::constants::H8;
 use crate::base::square::Square;
 use std::iter::FromIterator;
 use std::ops;
+use crate::base::square::constants::D8;
+use crate::base::square::constants::D1;
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
 pub struct CastleZone {
@@ -27,19 +29,19 @@ impl CastleZone {
     }
 
     pub fn king_source(&self) -> Square {
-        unimplemented!()
+        CastleZone::KING_SOURCES[self.i]
     }
 
     pub fn king_target(&self) -> Square {
-        unimplemented!()
+        CastleZone::KING_TARGETS[self.i]
     }
 
     pub fn rook_source(&self) -> Square {
-        unimplemented!()
+        CastleZone::ROOK_SOURCES[self.i]
     }
 
     pub fn rook_target(&self) -> Square {
-        unimplemented!()
+        CastleZone::ROOK_TARGETS[self.i]
     }
 
     pub fn lift(&self) -> CastleZoneSet {
@@ -55,8 +57,13 @@ impl CastleZone {
         CastleZone::WK,
         CastleZone::WQ,
         CastleZone::BK,
-        CastleZone::BQ,
+        CastleZone::BQ
     ];
+
+    const KING_SOURCES: [Square; 4] = [E1, E1, E8, E8];
+    const KING_TARGETS: [Square; 4] = [G1, C1, G8, C8];
+    const ROOK_SOURCES: [Square; 4] = [H1, A1, H8, A8];
+    const ROOK_TARGETS: [Square; 4] = [F1, D1, F8, D8];
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]
