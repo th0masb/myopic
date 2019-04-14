@@ -3,7 +3,7 @@ pub mod square;
 pub mod dir;
 pub mod castlezone;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
 pub enum Side {
     White,
     Black,

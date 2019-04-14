@@ -8,7 +8,7 @@ const CACHE_SIZE: usize = 20;
 /// sequence a replacement tail hash must be provided. The cache can check
 /// for three repetitions of the same hash value which would imply a drawn
 ///  (by repetition) game.
-#[derive(Debug, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct HashCache {
     /// Records how many pop operations required to return to initial state.
     pop_dist: usize,

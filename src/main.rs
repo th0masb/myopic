@@ -10,8 +10,8 @@ extern crate rand;
 use crate::base::bitboard::{BitBoard, simple::*};
 use crate::base::dir;
 use crate::base::square::constants::*;
-use crate::pieces::{Piece, WhitePawn};
 use crate::board::hash::gen_unique;
+use crate::base::castlezone::CastleZone;
 
 mod base;
 mod pieces;
@@ -32,11 +32,10 @@ fn main() {
 //    println!("{:#?}", squares);
 //    println!("{}", base.square::H1);
     println!("{}", RANKS[1]);
-    println!("{}", WhitePawn.control(H3, BitBoard::EMPTY, BitBoard::EMPTY));
+    println!("{}", pieces::WP.control(H3, BitBoard::EMPTY, BitBoard::EMPTY));
+    let wn = pieces::WN;
 
 //    let x = pieces::pawns::BLACK_CONTROL.clone().into_iter().map(|x| x.0).collect::<Vec<_>>();
 //    println!("{:?}", x);
-    println!("{:?}", gen_unique(800));
-    let x = board::tables::midgame_eval(&WhitePawn, D5);
 }
 

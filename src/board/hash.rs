@@ -34,10 +34,10 @@ pub fn black_feature() -> u64 {
 }
 
 pub fn enpassant_feature(square: Square) -> u64 {
-    FEATURES[N_FEATURES - 6 - square.file as usize]
+    FEATURES[N_FEATURES - 6 - square.file()]
 }
 
-pub fn castle_feature(zone: &CastleZone) -> u64 {
+pub fn castle_feature(zone: CastleZone) -> u64 {
     FEATURES[N_FEATURES - 2 - zone.i()]
 }
 

@@ -16,13 +16,9 @@ use crate::base::square::Square;
 use std::iter::FromIterator;
 use std::ops;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
 pub struct CastleZone {
     i: usize,
-    king_source: Square,
-    king_target: Square,
-    rook_source: Square,
-    rook_target: Square,
 }
 
 impl CastleZone {
@@ -30,51 +26,40 @@ impl CastleZone {
         self.i
     }
 
+    pub fn king_source(&self) -> Square {
+        unimplemented!()
+    }
+
+    pub fn king_target(&self) -> Square {
+        unimplemented!()
+    }
+
+    pub fn rook_source(&self) -> Square {
+        unimplemented!()
+    }
+
+    pub fn rook_target(&self) -> Square {
+        unimplemented!()
+    }
+
     pub fn lift(&self) -> CastleZoneSet {
         CastleZoneSet {data: 1usize << self.i}
     }
 
-    pub const WK: CastleZone = CastleZone {
-        i: 0,
-        king_source: E1,
-        king_target: G1,
-        rook_source: H1,
-        rook_target: F1,
-    };
+    pub const WK: CastleZone = CastleZone {i: 0};
+    pub const WQ: CastleZone = CastleZone {i: 1};
+    pub const BK: CastleZone = CastleZone {i: 2};
+    pub const BQ: CastleZone = CastleZone {i: 3};
 
-    pub const WQ: CastleZone = CastleZone {
-        i: 1,
-        king_source: E1,
-        king_target: B1,
-        rook_source: A1,
-        rook_target: C1,
-    };
-
-    pub const BK: CastleZone = CastleZone {
-        i: 2,
-        king_source: E8,
-        king_target: G8,
-        rook_source: H8,
-        rook_target: F8,
-    };
-
-    pub const BQ: CastleZone = CastleZone {
-        i: 3,
-        king_source: E8,
-        king_target: B8,
-        rook_source: A8,
-        rook_target: C8,
-    };
-
-    pub const ALL: [&'static CastleZone; 4] = [
-        &CastleZone::WK,
-        &CastleZone::WQ,
-        &CastleZone::BK,
-        &CastleZone::BQ,
+    pub const ALL: [CastleZone; 4] = [
+        CastleZone::WK,
+        CastleZone::WQ,
+        CastleZone::BK,
+        CastleZone::BQ,
     ];
 }
 
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]
 pub struct CastleZoneSet {
     data: usize,
 }
@@ -88,13 +73,13 @@ impl CastleZoneSet {
         CastleZoneSet {data: 0}
     }
 
-    pub fn contains(self, zone: &CastleZone) -> bool {
+    pub fn contains(self, zone: CastleZone) -> bool {
         (1usize << zone.i) & self.data != 0
     }
 }
 
-impl FromIterator<&'static CastleZone> for CastleZoneSet {
-    fn from_iter<T: IntoIterator<Item=&'static CastleZone>>(iter: T) -> Self {
+impl<'a> FromIterator<&'a CastleZone> for CastleZoneSet {
+    fn from_iter<T: IntoIterator<Item=&'a CastleZone>>(iter: T) -> Self {
         CastleZoneSet{data: iter.into_iter().map(|cz| 1usize << cz.i).fold(0, |a, b| a | b)}
     }
 }

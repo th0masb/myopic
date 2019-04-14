@@ -3,12 +3,10 @@ use crate::pieces::Piece;
 use crate::base::square::Square;
 use crate::board::hash;
 
-#[derive(Debug, Clone, PartialEq)]
-struct PieceTracker {
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
+pub struct PieceTracker {
     boards: Vec<BitBoard>,
     hash: u64,
-    //    mid_eval: i32, lets completely detach evaluation
-    //    end_eval: i32,
 }
 
 impl PieceTracker {
@@ -50,8 +48,7 @@ mod test {
 
     use crate::base::square::constants::C5;
     use crate::base::square::constants::E3;
-    use crate::pieces::BlackKnight;
-    use crate::pieces::WhitePawn;
+    use crate::pieces;
 
     use super::*;
 
@@ -60,16 +57,16 @@ mod test {
     #[test]
     fn test() {
         let mut tracker = init_pawn_and_knight();
-        tracker.remove(&WhitePawn, E3);
+        tracker.remove(pieces::WP, E3);
         assert_eq!(init_knight(), tracker);
-        tracker.add(&WhitePawn, E3);
+        tracker.add(pieces::WP, E3);
         assert_eq!(init_pawn_and_knight(), tracker);
-        tracker.remove(&BlackKnight, C5);
+        tracker.remove(pieces::BN, C5);
         assert_eq!(init_pawn(), tracker);
-        tracker.remove(&WhitePawn, E3);
+        tracker.remove(pieces::WP, E3);
         assert_eq!(init_empty(), tracker);
-        tracker.add(&WhitePawn, E3);
-        tracker.add(&BlackKnight, C5);
+        tracker.add(pieces::WP, E3);
+        tracker.add(pieces::BN, C5);
         assert_eq!(init_pawn_and_knight(), tracker);
     }
 
@@ -79,7 +76,7 @@ mod test {
         boards[7] = C5.lift();
         PieceTracker {
             boards,
-            hash: hash::piece_feature(&WhitePawn, E3) ^ hash::piece_feature(&BlackKnight, C5)
+            hash: hash::piece_feature(pieces::WP, E3) ^ hash::piece_feature(pieces::BN, C5)
         }
     }
 
@@ -88,7 +85,7 @@ mod test {
         boards[0] = E3.lift();
         PieceTracker {
             boards,
-            hash: hash::piece_feature(&WhitePawn, E3),
+            hash: hash::piece_feature(pieces::WP, E3),
         }
     }
 
@@ -97,7 +94,7 @@ mod test {
         boards[7] = C5.lift();
         PieceTracker {
             boards,
-            hash: hash::piece_feature(&BlackKnight, C5),
+            hash: hash::piece_feature(pieces::BN, C5),
         }
     }
 

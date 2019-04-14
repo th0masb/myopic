@@ -2,8 +2,8 @@ use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::Side;
 
-#[derive(Debug, PartialEq, Clone)]
-struct CastleTracker {
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
+pub struct CastleTracker {
     remaining_rights: CastleZoneSet,
     white_status: Option<&'static CastleZone>,
     black_status: Option<&'static CastleZone>,

@@ -9,13 +9,21 @@ mod traits;
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd)]
 pub struct Square {
     pub i: u8,
-    pub rank: u8,
-    pub file: u8,
+    rank: u8,
+    file: u8,
 }
 
 impl Square {
     pub fn name(self) -> &'static str {
         NAMES[self.i as usize]
+    }
+
+    pub fn rank(self) -> usize {
+        self.rank as usize
+    }
+
+    pub fn file(self) -> usize {
+        self.file as usize
     }
 
     pub fn lift(self) -> BitBoard {

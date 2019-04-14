@@ -28,7 +28,7 @@ fn compute_index_and_parity(piece: &dyn Piece, location: Square) -> (usize, i32)
 
 /// Reflects a square through the horizontal line bisecting the chess board.
 fn reflect(loc: Square) -> Square {
-    let (rank, file) = (loc.rank as usize, loc.file as usize);
+    let (rank, file) = (loc.rank(), loc.file());
     SQUARES[(7 - rank) * 8 + file]
 }
 
@@ -36,7 +36,6 @@ fn reflect(loc: Square) -> Square {
 mod test {
     use crate::base::square::constants::*;
     use crate::base::square::Square;
-    use crate::board::tables::PAWN_MIDGAME;
     use crate::board::tables::{endgame_eval, midgame_eval};
     use crate::pieces::*;
 
@@ -52,44 +51,44 @@ mod test {
 
     #[test]
     fn test_midgame() {
-        assert_eq!(30, midgame_eval(&WhitePawn, C6));
-        assert_eq!(-30, midgame_eval(&BlackPawn, C3));
+        assert_eq!(30, midgame_eval(WP, C6));
+        assert_eq!(-30, midgame_eval(BP, C3));
 
-        assert_eq!(10, midgame_eval(&WhiteKnight, D3));
-        assert_eq!(-10, midgame_eval(&BlackKnight, D6));
+        assert_eq!(10, midgame_eval(WN, D3));
+        assert_eq!(-10, midgame_eval(BN, D6));
 
-        assert_eq!(25, midgame_eval(&WhiteBishop, D4));
-        assert_eq!(-25, midgame_eval(&BlackBishop, D5));
+        assert_eq!(25, midgame_eval(WB, D4));
+        assert_eq!(-25, midgame_eval(BB, D5));
 
-        assert_eq!(5, midgame_eval(&WhiteRook, D2));
-        assert_eq!(-5, midgame_eval(&BlackRook, D7));
+        assert_eq!(5, midgame_eval(WR, D2));
+        assert_eq!(-5, midgame_eval(BR, D7));
 
-        assert_eq!(5, midgame_eval(&WhiteQueen, B3));
-        assert_eq!(-5, midgame_eval(&BlackQueen, B6));
+        assert_eq!(5, midgame_eval(WQ, B3));
+        assert_eq!(-5, midgame_eval(BQ, B6));
 
-        assert_eq!(50, midgame_eval(&WhiteKing, B1));
-        assert_eq!(-50, midgame_eval(&BlackKing, B8));
+        assert_eq!(50, midgame_eval(WK, B1));
+        assert_eq!(-50, midgame_eval(BK, B8));
     }
 
     #[test]
     fn test_endgame() {
-        assert_eq!(80, endgame_eval(&WhitePawn, C6));
-        assert_eq!(-80, endgame_eval(&BlackPawn, C3));
+        assert_eq!(80, endgame_eval(WP, C6));
+        assert_eq!(-80, endgame_eval(BP, C3));
 
-        assert_eq!(-40, endgame_eval(&WhiteKnight, E1));
-        assert_eq!(40, endgame_eval(&BlackKnight, E8));
+        assert_eq!(-40, endgame_eval(WN, E1));
+        assert_eq!(40, endgame_eval(BN, E8));
 
-        assert_eq!(25, endgame_eval(&WhiteBishop, D4));
-        assert_eq!(-25, endgame_eval(&BlackBishop, D5));
+        assert_eq!(25, endgame_eval(WB, D4));
+        assert_eq!(-25, endgame_eval(BB, D5));
 
-        assert_eq!(10, endgame_eval(&WhiteRook, D3));
-        assert_eq!(-10, endgame_eval(&BlackRook, D6));
+        assert_eq!(10, endgame_eval(WR, D3));
+        assert_eq!(-10, endgame_eval(BR, D6));
 
-        assert_eq!(-30, endgame_eval(&WhiteQueen, A4));
-        assert_eq!(30, endgame_eval(&BlackQueen, A5));
+        assert_eq!(-30, endgame_eval(WQ, A4));
+        assert_eq!(30, endgame_eval(BQ, A5));
 
-        assert_eq!(10, endgame_eval(&WhiteKing, D7));
-        assert_eq!(-10, endgame_eval(&BlackKing, D2));
+        assert_eq!(10, endgame_eval(WK, D7));
+        assert_eq!(-10, endgame_eval(BK, D2));
     }
 }
 
