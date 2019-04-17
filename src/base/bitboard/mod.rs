@@ -24,6 +24,10 @@ impl BitBoard {
         self.0 == 0
     }
 
+    pub fn intersects(self, other: BitBoard) -> bool {
+        !(self & other).is_empty()
+    }
+
     pub fn size(self) -> usize {
         // Uses popcount algorithm.
         let mut x = self.0;

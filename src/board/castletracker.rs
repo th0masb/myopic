@@ -10,12 +10,14 @@ pub struct CastleTracker {
 }
 
 impl CastleTracker {
-    pub fn remove_rights(&mut self, rights: CastleZoneSet) {
+    pub fn remove_rights(&mut self, rights: CastleZoneSet) -> u64 {
         self.remaining_rights = self.remaining_rights - rights;
+        unimplemented!()
     }
 
-    pub fn add_rights(&mut self, rights: CastleZoneSet) {
+    pub fn add_rights(&mut self, rights: CastleZoneSet) -> u64 {
         self.remaining_rights = self.remaining_rights | rights;
+        unimplemented!()
     }
 
     pub fn set_status(&mut self, side: Side, status: &'static CastleZone) {

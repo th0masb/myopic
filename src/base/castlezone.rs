@@ -17,6 +17,7 @@ use std::iter::FromIterator;
 use std::ops;
 use crate::base::square::constants::D8;
 use crate::base::square::constants::D1;
+use crate::board::hash;
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
 pub struct CastleZone {
@@ -83,6 +84,25 @@ impl CastleZoneSet {
     pub fn contains(self, zone: CastleZone) -> bool {
         (1usize << zone.i) & self.data != 0
     }
+
+    pub fn hash(self) -> u64 {
+        (0..4).filter(|i| (1usize << i) & self.data != 0)
+            .map(|i| hash::castle_feature(CastleZone::ALL[i]))
+            .fold(0u64, |a, b| a ^ b)
+//        let mut res =  0;
+//        for i in 0..4 {
+//            if 1 << i & self.data != 0 {
+//                res ^= hash::castle_feature(CastleZone::ALL[i]);
+//            }
+//        }
+//        res
+    }
+}
+
+impl FromIterator<CastleZone> for CastleZoneSet {
+    fn from_iter<T: IntoIterator<Item=CastleZone>>(iter: T) -> Self {
+        CastleZoneSet{data: iter.into_iter().map(|cz| 1usize << cz.i).fold(0, |a, b| a | b)}
+    }
 }
 
 impl<'a> FromIterator<&'a CastleZone> for CastleZoneSet {
@@ -138,7 +158,7 @@ mod set_test {
 
     #[test]
     fn test_collect() {
-        let source = vec![&CastleZone::BK, &CastleZone::WK, &CastleZone::WQ, &CastleZone::BQ];
+        let source = vec![CastleZone::BK, CastleZone::WK, CastleZone::WQ, CastleZone::BQ];
         let collected: CastleZoneSet = source.into_iter().collect();
         assert_eq!(CastleZoneSet::all(), collected);
     }

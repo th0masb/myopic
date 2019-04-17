@@ -1,5 +1,6 @@
 use crate::base::bitboard::BitBoard;
 use crate::pieces::Piece;
+use crate::pieces;
 use crate::base::square::Square;
 use crate::board::hash;
 
@@ -10,6 +11,16 @@ pub struct PieceTracker {
 }
 
 impl PieceTracker {
+    pub fn move_piece(&mut self, source: Square, target: Square) -> (Option<&dyn Piece>, u64) {
+        unimplemented!()
+    }
+
+    pub fn piece_at(&self, location: Square) -> Option<&dyn Piece> {
+        self.boards.iter().enumerate()
+            .find(|(_, &board)| board.contains(location))
+            .map(|(i, _)| pieces::ALL[i])
+    }
+
     pub fn contains(&self, piece: &dyn Piece, location: Square) -> bool {
         self.locations(piece).contains(location)
     }
@@ -31,9 +42,16 @@ impl PieceTracker {
         self.perform_xor(piece, location);
     }
 
-    pub fn remove(&mut self, piece: &dyn Piece, location: Square) {
-        debug_assert!(self.boards[piece.index()].contains(location));
-        self.perform_xor(piece, location);
+    pub fn remove(&mut self, location: Square) -> Option<&dyn Piece> {
+        let mut removed = None;
+        for (i, &board) in self.boards.iter().enumerate() {
+            if board.contains(location) {
+                self.boards[i] ^= location;
+                removed = Some(pieces::ALL[i]);
+                break;
+            }
+        }
+        removed
     }
 
     fn perform_xor(&mut self, piece: &dyn Piece, location: Square) {
