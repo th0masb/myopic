@@ -15,49 +15,49 @@ impl PieceTracker {
         unimplemented!()
     }
 
-    pub fn piece_at(&self, location: Square) -> Option<&dyn Piece> {
-        self.boards.iter().enumerate()
-            .find(|(_, &board)| board.contains(location))
-            .map(|(i, _)| pieces::ALL[i])
-    }
-
-    pub fn contains(&self, piece: &dyn Piece, location: Square) -> bool {
-        self.locations(piece).contains(location)
-    }
-
-    pub fn locations(&self, piece: &dyn Piece) -> BitBoard {
-        self.boards[piece.index()]
-    }
-
-    pub fn whites(&self) -> BitBoard {
-        (&self.boards).into_iter().take(6).map(|x| *x).collect()
-    }
-
-    pub fn blacks(&self) -> BitBoard {
-        (&self.boards).into_iter().skip(6).map(|x| *x).collect()
-    }
-
-    pub fn add(&mut self, piece: &dyn Piece, location: Square) {
-        debug_assert!(!self.boards[piece.index()].contains(location));
-        self.perform_xor(piece, location);
-    }
-
-    pub fn remove(&mut self, location: Square) -> Option<&dyn Piece> {
-        let mut removed = None;
-        for (i, &board) in self.boards.iter().enumerate() {
-            if board.contains(location) {
-                self.boards[i] ^= location;
-                removed = Some(pieces::ALL[i]);
-                break;
-            }
-        }
-        removed
-    }
-
-    fn perform_xor(&mut self, piece: &dyn Piece, location: Square) {
-        self.boards[piece.index()] ^= location;
-        self.hash ^= hash::piece_feature(piece, location);
-    }
+//    pub fn piece_at(&self, location: Square) -> Option<&dyn Piece> {
+//        self.boards.iter().enumerate()
+//            .find(|(_, &board)| board.contains(location))
+//            .map(|(i, _)| pieces::ALL[i])
+//    }
+//
+//    pub fn contains(&self, piece: &dyn Piece, location: Square) -> bool {
+//        self.locations(piece).contains(location)
+//    }
+//
+//    pub fn locations(&self, piece: &dyn Piece) -> BitBoard {
+//        self.boards[piece.index()]
+//    }
+//
+//    pub fn whites(&self) -> BitBoard {
+//        (&self.boards).into_iter().take(6).map(|x| *x).collect()
+//    }
+//
+//    pub fn blacks(&self) -> BitBoard {
+//        (&self.boards).into_iter().skip(6).map(|x| *x).collect()
+//    }
+//
+//    pub fn add(&mut self, piece: &dyn Piece, location: Square) {
+//        debug_assert!(!self.boards[piece.index()].contains(location));
+//        self.perform_xor(piece, location);
+//    }
+//
+//    pub fn remove(&mut self, location: Square) -> Option<&dyn Piece> {
+//        let mut removed = None;
+//        for (i, &board) in self.boards.iter().enumerate() {
+//            if board.contains(location) {
+//                self.boards[i] ^= location;
+//                removed = Some(pieces::ALL[i]);
+//                break;
+//            }
+//        }
+//        removed
+//    }
+//
+//    fn perform_xor(&mut self, piece: &dyn Piece, location: Square) {
+//        self.boards[piece.index()] ^= location;
+//        self.hash ^= hash::piece_feature(piece, location);
+//    }
 }
 
 #[cfg(test)]
@@ -74,18 +74,19 @@ mod test {
     /// black knight at C5.
     #[test]
     fn test() {
-        let mut tracker = init_pawn_and_knight();
-        tracker.remove(pieces::WP, E3);
-        assert_eq!(init_knight(), tracker);
-        tracker.add(pieces::WP, E3);
-        assert_eq!(init_pawn_and_knight(), tracker);
-        tracker.remove(pieces::BN, C5);
-        assert_eq!(init_pawn(), tracker);
-        tracker.remove(pieces::WP, E3);
-        assert_eq!(init_empty(), tracker);
-        tracker.add(pieces::WP, E3);
-        tracker.add(pieces::BN, C5);
-        assert_eq!(init_pawn_and_knight(), tracker);
+        unimplemented!()
+//        let mut tracker = init_pawn_and_knight();
+//        tracker.remove(pieces::WP, E3);
+//        assert_eq!(init_knight(), tracker);
+//        tracker.add(pieces::WP, E3);
+//        assert_eq!(init_pawn_and_knight(), tracker);
+//        tracker.remove(pieces::BN, C5);
+//        assert_eq!(init_pawn(), tracker);
+//        tracker.remove(pieces::WP, E3);
+//        assert_eq!(init_empty(), tracker);
+//        tracker.add(pieces::WP, E3);
+//        tracker.add(pieces::BN, C5);
+//        assert_eq!(init_pawn_and_knight(), tracker);
     }
 
     fn init_pawn_and_knight() -> PieceTracker {

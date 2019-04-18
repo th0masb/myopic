@@ -9,3 +9,12 @@ pub enum Side {
     Black,
 }
 
+impl Side {
+    pub fn other(self) -> Side {
+        match self {
+            Side::White => Side::Black,
+            _ => Side::Black
+        }
+    }
+}
+

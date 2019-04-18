@@ -4,6 +4,7 @@ use crate::pieces::Piece;
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 use std::iter;
+use crate::base::Side;
 
 const SEED: u64 = 0x110894u64;
 const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
@@ -29,8 +30,11 @@ pub fn piece_feature(piece: &dyn Piece, square: Square) -> u64 {
     FEATURES[piece.index() * 64 + square.i as usize]
 }
 
-pub fn black_feature() -> u64 {
-    FEATURES[N_FEATURES - 1]
+pub fn side_feature(side: Side) -> u64 {
+    match side {
+        Side::Black => FEATURES[N_FEATURES - 1],
+        Side::White => 0
+    }
 }
 
 pub fn enpassant_feature(square: Square) -> u64 {
@@ -62,7 +66,7 @@ mod test {
         for &square in &SQUARES[..8] {
             unique_add(&mut dest, enpassant_feature(square));
         }
-        unique_add(&mut dest, black_feature());
+        unique_add(&mut dest, side_feature(Side::Black));
     }
 
     fn unique_add(dest: &mut Vec<u64>, next: u64) {

@@ -32,33 +32,30 @@ impl Board {
     }
 
     fn standard_evolve(&mut self, source: Square, target: Square) -> RD {
-        let rights_removed = Board::compute_rights_removed(source | target);
-        //let new_rights = self.castling.
-        let (piece_taken, hash) = self.pieces.move_piece(source, target);
+        let (rights_removed, rights_hash) = self.castling.remove_rights(source | target);
+        let (piece_taken, piece_hash) = self.pieces.move_piece(source, target);
+        self.active = self.active.other();
+        let side_hash = crate::board::hash::side_feature(self.active);
 //        self.active = Side::White;
 //        let piece_taken3 = self.active;
         unimplemented!()
     }
 
 
-    fn compute_enpassant(source: Square, target: Square, piece: &dyn Piece) -> Option<Square> {
+
+
+    fn compute_enpassant(source: Square, target: Square, piece: &dyn Piece) -> (Option<Square>, u64) {
         match piece.class() {
             PieceClass::Pawn => {
                 let (srank, trank) = (target.rank() as i32, source.rank() as i32);
                 if (trank - srank).abs() == 2 {
                    unimplemented!()
                 } else {
-                    None
+                    (None, 0u64)
                 }
             },
-            _ => None
+            _ => (None, 0u64)
         }
-    }
-
-    fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
-        CastleZone::ALL.iter()
-            .filter(|&x| move_components.intersects(x.king_source() | x.rook_source()))
-            .collect()
     }
 
     fn enpassant_evolve(&mut self, source: Square, target: Square) -> RD {
