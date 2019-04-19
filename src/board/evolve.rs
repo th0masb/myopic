@@ -9,6 +9,7 @@ use crate::base::square::constants::H1;
 use crate::base::square::constants::H8;
 use crate::base::square::Square;
 use crate::board::Board;
+use crate::board::hash;
 use crate::board::Move;
 use crate::board::Move::Castle;
 use crate::board::Move::Enpassant;
@@ -32,29 +33,40 @@ impl Board {
     }
 
     fn standard_evolve(&mut self, source: Square, target: Square) -> RD {
-        let (rights_removed, rights_hash) = self.castling.remove_rights(source | target);
-        let (piece_taken, piece_hash) = self.pieces.move_piece(source, target);
+        let (moved_piece, discarded_piece) = self.pieces.move_piece(source, target);
+        let discarded_rights = self.castling.remove_rights(source | target);
+        let discarded_enpassant = self.enpassant;
+        let next_enpassant = Board::compute_enpassant(source, target, moved_piece);
+        self.enpassant = next_enpassant;
         self.active = self.active.other();
-        let side_hash = crate::board::hash::side_feature(self.active);
-//        self.active = Side::White;
-//        let piece_taken3 = self.active;
+        let discarded_hash = self.update_hash();
+
+        ReversalData {
+            discarded_rights,
+            discarded_piece,//: discarded_piece.map(|x| x.class()),
+            discarded_enpassant,
+            discarded_hash
+        }
+    }
+
+    fn update_hash(&mut self) -> u64 {
         unimplemented!()
     }
 
 
 
 
-    fn compute_enpassant(source: Square, target: Square, piece: &dyn Piece) -> (Option<Square>, u64) {
+    fn compute_enpassant(source: Square, target: Square, piece: &dyn Piece) -> Option<Square> {
         match piece.class() {
             PieceClass::Pawn => {
                 let (srank, trank) = (target.rank() as i32, source.rank() as i32);
                 if (trank - srank).abs() == 2 {
                    unimplemented!()
                 } else {
-                    (None, 0u64)
+                    None
                 }
             },
-            _ => (None, 0u64)
+            _ => None
         }
     }
 

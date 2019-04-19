@@ -17,7 +17,7 @@ impl CastleTracker {
             .collect()
     }
 
-    pub fn remove_rights(&mut self, move_components: BitBoard) -> (CastleZoneSet, u64) {
+    pub fn remove_rights(&mut self, move_components: BitBoard) -> CastleZoneSet {
         unimplemented!()
     }
 

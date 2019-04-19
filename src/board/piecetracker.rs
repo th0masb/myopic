@@ -4,6 +4,8 @@ use crate::pieces;
 use crate::base::square::Square;
 use crate::board::hash;
 
+type P = &'static dyn Piece;
+
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct PieceTracker {
     boards: Vec<BitBoard>,
@@ -11,8 +13,16 @@ pub struct PieceTracker {
 }
 
 impl PieceTracker {
-    pub fn move_piece(&mut self, source: Square, target: Square) -> (Option<&dyn Piece>, u64) {
+    pub fn move_piece(&mut self, source: Square, target: Square) -> (P, Option<P>) {
         unimplemented!()
+    }
+
+    pub fn add_piece(&mut self, piece: P, location: Square) {
+        unimplemented!()
+    }
+
+    pub fn hash(&self) -> u64 {
+        self.hash
     }
 
 //    pub fn piece_at(&self, location: Square) -> Option<&dyn Piece> {

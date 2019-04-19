@@ -28,10 +28,14 @@ pub struct Board {
     clock: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+impl Board {
+    //pub fn compute
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {
     discarded_rights: CastleZoneSet,
-    discarded_piece: Option<PieceClass>,
+    discarded_piece: Option<&'static dyn Piece>,
     discarded_enpassant: Option<Square>,
     discarded_hash: u64,
 }

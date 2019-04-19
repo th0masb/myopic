@@ -1,6 +1,9 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
+use std::fmt::Debug;
+use std::fmt::Formatter;
+use std::fmt::Error;
 
 mod kings;
 mod knights;
@@ -21,6 +24,18 @@ pub trait Piece {
     fn moves(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
 
     fn attacks(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
+}
+
+impl Debug for Piece {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        unimplemented!()
+    }
+}
+
+impl PartialEq<Piece> for Piece {
+    fn eq(&self, other: &Piece) -> bool {
+        unimplemented!()
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
