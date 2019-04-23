@@ -32,7 +32,7 @@ impl FromIterator<BitBoard> for BitBoard {
 
 #[cfg(test)]
 mod iter_test {
-    use crate::base::bitboard::{BitBoard, loc};
+    use crate::base::bitboard::{loc, BitBoard};
     use crate::base::square::constants::*;
     use crate::base::square::Square;
 

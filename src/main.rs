@@ -7,11 +7,11 @@ extern crate lazy_static;
 extern crate rand;
 //extern crate bitwise;
 
-use crate::base::bitboard::{BitBoard, simple::*};
+use crate::base::bitboard::BitBoard;
+use crate::base::castlezone::CastleZone;
 use crate::base::dir;
 use crate::base::square::constants::*;
 use crate::board::hash::gen_unique;
-use crate::base::castlezone::CastleZone;
 
 mod base;
 mod pieces;
@@ -31,10 +31,8 @@ fn main() {
 //    let squares = base.square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
 //    println!("{}", base.square::H1);
-    println!("{}", RANKS[1]);
-    println!("{}", pieces::WP.control(H3, BitBoard::EMPTY, BitBoard::EMPTY));
-    let wn = pieces::WN;
 
+    println!("{:?}", base::bitboard::create_ranks().iter().map(|x| x.0).collect::<Vec<_>>());
 //    let x = pieces::pawns::BLACK_CONTROL.clone().into_iter().map(|x| x.0).collect::<Vec<_>>();
 //    println!("{:?}", x);
 }

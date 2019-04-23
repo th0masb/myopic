@@ -1,9 +1,9 @@
-use crate::base::bitboard::{simple::RANKS, BitBoard};
+use crate::base::bitboard::BitBoard;
+use crate::base::Side;
 use crate::base::square::Square;
 use crate::pieces::{BlackPawn, Piece};
 
 use super::BLACK_CONTROL;
-use crate::base::Side;
 
 /// Piece trait implementation for the black pawn struct. the control sets for
 /// each base.square are cached whereas the moves is currently calculated each time.
@@ -26,7 +26,7 @@ impl Piece for BlackPawn {
 
     fn moves(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         let all = white | black;
-        let mut result = ((loc - RANKS[0]) >> 8) - all;
+        let mut result = ((loc - BitBoard::RANKS[0]) >> 8) - all;
         if on_start_rank(loc) && !result.is_empty() {
             result = result | ((loc.lift() >> 16) - all)
         }
@@ -41,7 +41,7 @@ impl Piece for BlackPawn {
 /// Computes whether a black pawn starts a game of standard chess on a given
 /// base.square.
 fn on_start_rank(loc: Square) -> bool {
-    !(loc & RANKS[6]).is_empty()
+    !(loc & BitBoard::RANKS[6]).is_empty()
 }
 
 #[cfg(test)]

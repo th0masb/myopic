@@ -1,9 +1,9 @@
-use crate::base::bitboard::{simple::RANKS, BitBoard};
+use crate::base::bitboard::BitBoard;
+use crate::base::Side;
 use crate::base::square::Square;
 use crate::pieces::{Piece, WhitePawn};
 
 use super::WHITE_CONTROL;
-use crate::base::Side;
 
 /// Piece trait implementation for the white pawn struct. the control sets for
 /// each base.square are cached whereas the moves is currently calculated each time.
@@ -26,7 +26,7 @@ impl Piece for WhitePawn {
 
     fn moves(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
         let all = white | black;
-        let mut result = ((loc - RANKS[7]) << 8) - all;
+        let mut result = ((loc - BitBoard::RANKS[7]) << 8) - all;
         if on_start_rank(loc) && !result.is_empty() {
             result = result | ((loc.lift() << 16) - all)
         }
@@ -41,7 +41,7 @@ impl Piece for WhitePawn {
 /// Computes whether a white pawn starts a game of standard chess on a given
 /// base.square.
 fn on_start_rank(loc: Square) -> bool {
-    !(loc & RANKS[1]).is_empty()
+    !(loc & BitBoard::RANKS[1]).is_empty()
 }
 
 #[cfg(test)]
