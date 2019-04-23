@@ -37,7 +37,7 @@ impl PieceTracker {
         (moved.unwrap(), removed)
     }
 
-    pub fn add_piece(&mut self, piece: P, location: Square) {
+    pub fn toggle_piece(&mut self, piece: P, location: Square) {
         self.boards[piece.index()] ^= location
     }
 
@@ -57,6 +57,7 @@ mod test {
     use super::*;
     use crate::base::square::constants::E5;
     use crate::base::square::constants::C3;
+    use crate::base::square::constants::E4;
 
     #[test]
     fn test_move_case_1() {
@@ -64,6 +65,22 @@ mod test {
         let result = board.move_piece(E5, C3);
         assert_eq!(board, init_tracker(Some(C3), None));
         assert_eq!((pieces::WP, Some(pieces::BN)), result);
+    }
+
+    #[test]
+    fn test_move_case_2() {
+        let mut board = init_tracker(Some(E5), Some(C3));
+        let result = board.move_piece(C3, E5);
+        assert_eq!(board, init_tracker(None, Some(E5)));
+        assert_eq!((pieces::BN, Some(pieces::WP)), result);
+    }
+
+    #[test]
+    fn test_move_case_3() {
+        let mut board = init_tracker(Some(E5), Some(C3));
+        let result = board.move_piece(E5, E4);
+        assert_eq!(board, init_tracker(Some(E4), Some(C3)));
+        assert_eq!((pieces::WP, None), result);
     }
 
     fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> PieceTracker {

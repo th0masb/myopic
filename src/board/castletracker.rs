@@ -18,42 +18,14 @@ impl CastleTracker {
     }
 
     pub fn remove_rights(&mut self, move_components: BitBoard) -> CastleZoneSet {
-        unimplemented!()
+        let to_remove = CastleTracker::compute_rights_removed(move_components);
+        let removed = self.remaining_rights & to_remove;
+        self.remaining_rights = self.remaining_rights - removed;
+        removed
     }
 
     pub fn hash(&self) -> u64 {
         self.remaining_rights.hash()
     }
-
-//    pub fn remove_rights(&mut self, rights: CastleZoneSet) -> u64 {
-//        self.remaining_rights = self.remaining_rights - rights;
-//        unimplemented!()
-//    }
-//
-//    pub fn add_rights(&mut self, rights: CastleZoneSet) -> u64 {
-//        self.remaining_rights = self.remaining_rights | rights;
-//        unimplemented!()
-//    }
-//
-//    pub fn set_status(&mut self, side: Side, status: &'static CastleZone) {
-//        match side {
-//            Side::White => self.white_status = Some(status),
-//            Side::Black => self.black_status = Some(status)
-//        }
-//    }
-//
-//    pub fn remove_status(&mut self, side: Side) {
-//        match side {
-//            Side::White => self.white_status = None,
-//            Side::Black => self.black_status = None
-//        }
-//    }
-//
-//    pub fn get_status(&self, side: Side) -> Option<&'static CastleZone> {
-//        match side {
-//            Side::White => self.white_status,
-//            Side::Black => self.black_status
-//        }
-//    }
 }
 

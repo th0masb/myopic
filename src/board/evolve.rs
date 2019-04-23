@@ -59,18 +59,13 @@ impl Board {
     }
 
     fn compute_enpassant(source: Square, target: Square, piece: &dyn Piece) -> Option<Square> {
-        unimplemented!()
-        //        match piece.class() {
-        //            PieceClass::Pawn => {
-        //                let (srank, trank) = (target.rank() as i32, source.rank() as i32);
-        //                if (trank - srank).abs() == 2 {
-        //                   unimplemented!()
-        //                } else {
-        //                    None
-        //                }
-        //            },
-        //            _ => None
-        //        }
+        if piece.index() % 6 == 0 {
+            let is_white = piece.side() == Side::White;
+
+           unimplemented!()
+        } else {
+            None
+        }
     }
 
     fn enpassant_evolve(&mut self, source: Square, target: Square) -> RD {
