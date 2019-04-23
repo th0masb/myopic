@@ -4,7 +4,6 @@ use crate::pieces::{BlackPawn, Piece};
 
 use super::BLACK_CONTROL;
 use crate::base::Side;
-use crate::pieces::PieceClass;
 
 /// Piece trait implementation for the black pawn struct. the control sets for
 /// each base.square are cached whereas the moves is currently calculated each time.
@@ -19,10 +18,6 @@ impl Piece for BlackPawn {
 
     fn side(&self) -> Side {
         Side::Black
-    }
-
-    fn class(&self) -> PieceClass {
-        PieceClass::Pawn
     }
 
     fn control(&self, loc: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {

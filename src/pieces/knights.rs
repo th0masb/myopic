@@ -4,7 +4,6 @@ use crate::base::square::{constants::SQUARES, Square};
 
 use super::{BlackKnight, Piece, WhiteKnight};
 use crate::base::Side;
-use crate::pieces::PieceClass;
 
 /// Piece trait implementation for the white knight struct. It simply queries
 /// a static vector of moves for each base.square.
@@ -19,10 +18,6 @@ impl Piece for WhiteKnight {
 
     fn side(&self) -> Side {
         Side::White
-    }
-
-    fn class(&self) -> PieceClass {
-        PieceClass::Knight
     }
 
     fn control(&self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
@@ -51,10 +46,6 @@ impl Piece for BlackKnight {
 
     fn side(&self) -> Side {
         Side::Black
-    }
-
-    fn class(&self) -> PieceClass {
-        PieceClass::Knight
     }
 
     fn control(&self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {

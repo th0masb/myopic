@@ -9,7 +9,6 @@ use crate::pieces::WhiteRook;
 
 use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, ROOK_MASKS};
 use crate::base::Side;
-use crate::pieces::PieceClass;
 
 /// Piece trait implementation for the white rook singleton struct.
 /// The move database is cached in the static memory and the code for
@@ -25,10 +24,6 @@ impl Piece for WhiteRook {
 
     fn side(&self) -> Side {
         Side::White
-    }
-
-    fn class(&self) -> PieceClass {
-        PieceClass::Rook
     }
 
     fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
@@ -58,10 +53,6 @@ impl Piece for BlackRook {
 
     fn side(&self) -> Side {
         Side::Black
-    }
-
-    fn class(&self) -> PieceClass {
-        PieceClass::Rook
     }
 
     fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {

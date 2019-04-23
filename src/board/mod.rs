@@ -6,7 +6,6 @@ use crate::board::piecetracker::PieceTracker;
 use crate::board::castletracker::CastleTracker;
 use crate::base::Side;
 use crate::base::castlezone::CastleZone;
-use crate::pieces::PieceClass;
 use crate::base::castlezone::CastleZoneSet;
 
 pub mod hash;
@@ -40,11 +39,11 @@ pub struct ReversalData {
     discarded_hash: u64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Move {
     Standard {source: Square, target: Square},
     Enpassant {source: Square, target: Square},
-    Promotion {source: Square, target: Square, piece: PieceClass},
+    Promotion {source: Square, target: Square, piece: &'static dyn Piece},
     Castle {zone: CastleZone}
 }
 
@@ -57,7 +56,7 @@ impl Move {
         Move::Enpassant {source, target}
     }
 
-    pub fn promotion(source: Square, target: Square, piece: PieceClass) -> Move {
+    pub fn promotion(source: Square, target: Square, piece: &'static dyn Piece) -> Move {
         Move::Promotion {source, target, piece}
     }
 

@@ -17,7 +17,7 @@ pub trait Piece {
 
     fn side(&self) -> Side;
 
-    fn class(&self) -> PieceClass;
+//    fn class(&self) -> PieceClass;
 
     fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
 
@@ -34,19 +34,19 @@ impl Debug for Piece {
 
 impl PartialEq<Piece> for Piece {
     fn eq(&self, other: &Piece) -> bool {
-        unimplemented!()
+        self.index() == other.index()
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum PieceClass {
-    Pawn,
-    Knight,
-    Bishop,
-    Rook,
-    Queen,
-    King,
-}
+//#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+//pub enum PieceClass {
+//    Pawn,
+//    Knight,
+//    Bishop,
+//    Rook,
+//    Queen,
+//    King,
+//}
 
 /// Constant static references to each white piece.
 pub const WP: &'static dyn Piece = &WhitePawn;
