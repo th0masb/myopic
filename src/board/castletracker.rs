@@ -21,6 +21,10 @@ impl CastleTracker {
         unimplemented!()
     }
 
+    pub fn hash(&self) -> u64 {
+        self.remaining_rights.hash()
+    }
+
 //    pub fn remove_rights(&mut self, rights: CastleZoneSet) -> u64 {
 //        self.remaining_rights = self.remaining_rights - rights;
 //        unimplemented!()

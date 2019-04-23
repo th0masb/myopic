@@ -44,11 +44,19 @@ impl ops::Sub<Square> for BitBoard {
     }
 }
 
-impl ops::BitXor for BitBoard {
+impl ops::BitXor<BitBoard> for BitBoard {
     type Output = Self;
 
     fn bitxor(self, other: BitBoard) -> Self {
         BitBoard(self.0 ^ other.0)
+    }
+}
+
+impl ops::BitXor<Square> for BitBoard {
+    type Output = Self;
+
+    fn bitxor(self, rhs: Square) -> Self {
+        BitBoard(self.0 ^ loc(rhs))
     }
 }
 
@@ -81,6 +89,12 @@ impl ops::BitAnd<Square> for BitBoard {
 
     fn bitand(self, other: Square) -> Self {
         BitBoard(self.0 & loc(other))
+    }
+}
+
+impl ops::BitXorAssign<BitBoard> for BitBoard {
+    fn bitxor_assign(&mut self, rhs: BitBoard) {
+        self.0 = self.0 ^ rhs.0;
     }
 }
 

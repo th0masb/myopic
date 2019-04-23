@@ -1,6 +1,7 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::Side;
 use crate::base::square::constants::A1;
 use crate::base::square::constants::A8;
 use crate::base::square::constants::E1;
@@ -11,23 +12,23 @@ use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::hash;
 use crate::board::Move;
-use crate::board::Move::Castle;
-use crate::board::Move::Enpassant;
-use crate::board::Move::Promotion;
-use crate::board::Move::Standard;
+use crate::board::Move::*;
 use crate::board::ReversalData;
 use crate::pieces::Piece;
-use crate::base::Side;
 
 type RD = ReversalData;
 
 impl Board {
     pub fn evolve(&mut self, action: Move) -> RD {
         match action {
+            Castle { zone } => self.castle_evolve(zone),
             Standard { source, target } => self.standard_evolve(source, target),
             Enpassant { source, target } => self.enpassant_evolve(source, target),
-            Promotion { source, target, piece, } => self.promotion_evolve(source, target, piece),
-            Castle { zone } => self.castle_evolve(zone),
+            Promotion {
+                source,
+                target,
+                piece,
+            } => self.promotion_evolve(source, target, piece),
         }
     }
 
@@ -43,30 +44,33 @@ impl Board {
             discarded_rights,
             discarded_piece,
             discarded_enpassant,
-            discarded_hash
+            discarded_hash,
         }
     }
 
+    /// Combines the various components of the hash together and pushes the
+    /// result onto the head of the cache, returning the overwritten value.
     fn update_hash(&mut self) -> u64 {
-        unimplemented!()
+        let next_hash = self.pieces.hash()
+            ^ self.castling.hash()
+            ^ hash::side_feature(self.active)
+            ^ self.enpassant.map_or(0u64, |x| hash::enpassant_feature(x));
+        self.hashes.push_head(next_hash)
     }
-
-
-
 
     fn compute_enpassant(source: Square, target: Square, piece: &dyn Piece) -> Option<Square> {
         unimplemented!()
-//        match piece.class() {
-//            PieceClass::Pawn => {
-//                let (srank, trank) = (target.rank() as i32, source.rank() as i32);
-//                if (trank - srank).abs() == 2 {
-//                   unimplemented!()
-//                } else {
-//                    None
-//                }
-//            },
-//            _ => None
-//        }
+        //        match piece.class() {
+        //            PieceClass::Pawn => {
+        //                let (srank, trank) = (target.rank() as i32, source.rank() as i32);
+        //                if (trank - srank).abs() == 2 {
+        //                   unimplemented!()
+        //                } else {
+        //                    None
+        //                }
+        //            },
+        //            _ => None
+        //        }
     }
 
     fn enpassant_evolve(&mut self, source: Square, target: Square) -> RD {
