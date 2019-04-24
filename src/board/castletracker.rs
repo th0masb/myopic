@@ -13,7 +13,7 @@ pub struct CastleTracker {
 impl CastleTracker {
     fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
         CastleZone::ALL.iter()
-            .filter(|&x| move_components.intersects(x.king_source() | x.rook_source()))
+            .filter(|&x| move_components.intersects(x.source_squares()))
             .collect()
     }
 

@@ -18,6 +18,8 @@ use std::ops;
 use crate::base::square::constants::D8;
 use crate::base::square::constants::D1;
 use crate::board::hash;
+use crate::pieces::{Piece, KINGS, ROOKS};
+use crate::base::bitboard::BitBoard;
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
 pub struct CastleZone {
@@ -25,25 +27,47 @@ pub struct CastleZone {
 }
 
 impl CastleZone {
-    pub fn i(&self) -> usize {
+    pub fn i(self) -> usize {
         self.i
     }
 
-    pub fn king_source(&self) -> Square {
-        CastleZone::KING_SOURCES[self.i]
+    pub fn source_squares(self) -> BitBoard {
+        CastleZone::KING_SOURCES[self.i] | CastleZone::ROOK_SOURCES[self.i]
     }
 
-    pub fn king_target(&self) -> Square {
-        CastleZone::KING_TARGETS[self.i]
+    pub fn rook_data(self) -> (&'static dyn Piece, Square, Square) {
+        let i = self.i;
+        (ROOKS[i / 2], CastleZone::ROOK_SOURCES[i], CastleZone::ROOK_TARGETS[i])
     }
 
-    pub fn rook_source(&self) -> Square {
-        CastleZone::ROOK_SOURCES[self.i]
+    pub fn king_data(self) -> (&'static dyn Piece, Square, Square) {
+        let i = self.i;
+        (KINGS[i / 2], CastleZone::KING_SOURCES[i], CastleZone::KING_TARGETS[i])
     }
 
-    pub fn rook_target(&self) -> Square {
-        CastleZone::ROOK_TARGETS[self.i]
-    }
+//    pub fn king_source(self) -> Square {
+//        CastleZone::KING_SOURCES[self.i]
+//    }
+//
+//    pub fn king_target(self) -> Square {
+//        CastleZone::KING_TARGETS[self.i]
+//    }
+//
+//    pub fn rook_source(self) -> Square {
+//        CastleZone::ROOK_SOURCES[self.i]
+//    }
+//
+//    pub fn rook_target(self) -> Square {
+//        CastleZone::ROOK_TARGETS[self.i]
+//    }
+//
+//    pub fn king(self) -> &'static dyn Piece {
+//        KINGS[self. i / 2]
+//    }
+//
+//    pub fn rook(self) -> &'static dyn Piece {
+//        ROOKS[self. i / 2]
+//    }
 
     pub fn lift(&self) -> CastleZoneSet {
         CastleZoneSet {data: 1usize << self.i}
@@ -89,13 +113,6 @@ impl CastleZoneSet {
         (0..4).filter(|i| (1usize << i) & self.data != 0)
             .map(|i| hash::castle_feature(CastleZone::ALL[i]))
             .fold(0u64, |a, b| a ^ b)
-//        let mut res =  0;
-//        for i in 0..4 {
-//            if 1 << i & self.data != 0 {
-//                res ^= hash::castle_feature(CastleZone::ALL[i]);
-//            }
-//        }
-//        res
     }
 }
 
@@ -162,20 +179,4 @@ mod set_test {
         let collected: CastleZoneSet = source.into_iter().collect();
         assert_eq!(CastleZoneSet::all(), collected);
     }
-
-//    #[test]
-//    fn test_add() {
-//        let mut set = CastleZoneSet::none();
-//        assert!(!set.contains(&CastleZone::BK));
-//        set.add(&CastleZone::BK);
-//        assert!(set.contains(&CastleZone::BK));
-//    }
-//
-//    #[test]
-//    fn test_remove() {
-//        let mut set = CastleZoneSet::all();
-//        assert!(set.contains(&CastleZone::WQ));
-//        set.remove(&CastleZone::WQ);
-//        assert!(!set.contains(&CastleZone::WQ));
-//    }
 }
