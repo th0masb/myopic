@@ -1,9 +1,15 @@
+use std::iter::FromIterator;
+use std::ops;
+
+use crate::base::bitboard::BitBoard;
 use crate::base::square::constants::A1;
 use crate::base::square::constants::A8;
 use crate::base::square::constants::B1;
 use crate::base::square::constants::B8;
 use crate::base::square::constants::C1;
 use crate::base::square::constants::C8;
+use crate::base::square::constants::D1;
+use crate::base::square::constants::D8;
 use crate::base::square::constants::E1;
 use crate::base::square::constants::E8;
 use crate::base::square::constants::F1;
@@ -13,13 +19,8 @@ use crate::base::square::constants::G8;
 use crate::base::square::constants::H1;
 use crate::base::square::constants::H8;
 use crate::base::square::Square;
-use std::iter::FromIterator;
-use std::ops;
-use crate::base::square::constants::D8;
-use crate::base::square::constants::D1;
 use crate::board::hash;
-use crate::pieces::{Piece, KINGS, ROOKS};
-use crate::base::bitboard::BitBoard;
+use crate::pieces::{KINGS, Piece, ROOKS};
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
 pub struct CastleZone {
@@ -105,6 +106,14 @@ impl CastleZoneSet {
         CastleZoneSet {data: 0}
     }
 
+    pub fn white() -> CastleZoneSet {
+        CastleZoneSet {data: 0b11}
+    }
+
+    pub fn black() -> CastleZoneSet {
+        CastleZoneSet {data: 0b1100}
+    }
+
     pub fn contains(self, zone: CastleZone) -> bool {
         (1usize << zone.i) & self.data != 0
     }
@@ -133,6 +142,12 @@ impl ops::Sub<CastleZoneSet> for CastleZoneSet {
 
     fn sub(self, rhs: CastleZoneSet) -> Self::Output {
         CastleZoneSet {data: self.data & !rhs.data}
+    }
+}
+
+impl ops::SubAssign<CastleZoneSet> for CastleZoneSet {
+    fn sub_assign(&mut self, rhs: CastleZoneSet) {
+        self.data &= !rhs.data
     }
 }
 

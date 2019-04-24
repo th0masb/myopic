@@ -36,8 +36,10 @@ impl PieceTracker {
         (moved.unwrap(), removed)
     }
 
-    pub fn toggle_piece(&mut self, piece: P, location: Square) {
-        self.boards[piece.index()] ^= location
+    pub fn toggle_piece(&mut self, piece: P, locations: &[Square]) {
+        for &location in locations.iter() {
+            self.boards[piece.index()] ^= location
+        }
     }
 
     pub fn hash(&self) -> u64 {

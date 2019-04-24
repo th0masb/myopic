@@ -39,13 +39,32 @@ impl Board {
         let discarded_rights = self.castling.remove_rights(source | target);
         let discarded_enpassant = self.enpassant;
         self.enpassant = Board::compute_enpassant(source, target, moved_piece);
-        self.active = self.active.other();
+        self.switch_side();
         let discarded_hash = self.update_hash();
 
         ReversalData {
             discarded_rights,
             discarded_piece,
             discarded_enpassant,
+            discarded_hash,
+        }
+    }
+
+    fn castle_evolve(&mut self, zone: CastleZone) -> RD {
+        let (rook, r_source, r_target) = zone.rook_data();
+        let (king, k_source, k_target) = zone.king_data();
+        self.pieces.toggle_piece(rook, &[r_source, r_target]);
+        self.pieces.toggle_piece(king, &[k_source, k_target]);
+        let discarded_rights = self.castling.set_status(self.active, zone);
+        let discarded_enpassant = self.enpassant;
+        self.enpassant = None;
+        self.switch_side();
+        let discarded_hash = self.update_hash();
+
+        ReversalData {
+            discarded_piece: None,
+            discarded_enpassant,
+            discarded_rights,
             discarded_hash,
         }
     }
@@ -58,6 +77,10 @@ impl Board {
             ^ hash::side_feature(self.active)
             ^ self.enpassant.map_or(0u64, |x| hash::enpassant_feature(x));
         self.hashes.push_head(next_hash)
+    }
+
+    fn switch_side(&mut self) {
+        self.active = self.active.other();
     }
 
     /// Determines the enpassant square for the next board state given a
@@ -82,10 +105,6 @@ impl Board {
     }
 
     fn promotion_evolve(&mut self, source: Square, target: Square, piece: &dyn Piece) -> RD {
-        unimplemented!()
-    }
-
-    fn castle_evolve(&mut self, zone: CastleZone) -> RD {
         unimplemented!()
     }
 }

@@ -6,8 +6,8 @@ use crate::base::bitboard::BitBoard;
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct CastleTracker {
     remaining_rights: CastleZoneSet,
-    white_status: Option<&'static CastleZone>,
-    black_status: Option<&'static CastleZone>,
+    white_status: Option<CastleZone>,
+    black_status: Option<CastleZone>,
 }
 
 impl CastleTracker {
@@ -15,6 +15,21 @@ impl CastleTracker {
         CastleZone::ALL.iter()
             .filter(|&x| move_components.intersects(x.source_squares()))
             .collect()
+    }
+
+    pub fn set_status(&mut self, side: Side, zone: CastleZone) -> CastleZoneSet {
+        let side_rights = match side {
+            Side::White => CastleZoneSet::white(),
+            Side::Black => CastleZoneSet::black(),
+        };
+        let rights_removed = self.remaining_rights & side_rights;
+        self.remaining_rights -= rights_removed;
+        if side == Side::White {
+            self.white_status = Some(zone);
+        } else {
+            self.black_status = Some(zone);
+        }
+        rights_removed
     }
 
     pub fn remove_rights(&mut self, move_components: BitBoard) -> CastleZoneSet {
