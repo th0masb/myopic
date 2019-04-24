@@ -23,13 +23,10 @@ impl PieceTracker {
         let mut removed = None;
         for (i, &p) in PS.iter().enumerate() {
             if moved.is_none() && self.boards[i].contains(source) {
-                debug_assert!(!self.boards[i].contains(target));
-                self.boards[i] ^= source.lift() ^ target;
-                self.hash ^= hash::piece_feature(p, source) ^ hash::piece_feature(p, target);
+                self.toggle_piece(p, &[source, target]);
                 moved = Some(p);
             } else if removed.is_none() && self.boards[i].contains(target) {
-                self.boards[i] ^= target;
-                self.hash ^= hash::piece_feature(p, target);
+                self.toggle_piece(p, &[target]);
                 removed = Some(p);
             }
         }
@@ -38,7 +35,8 @@ impl PieceTracker {
 
     pub fn toggle_piece(&mut self, piece: P, locations: &[Square]) {
         for &location in locations.iter() {
-            self.boards[piece.index()] ^= location
+            self.boards[piece.index()] ^= location;
+            self.hash ^= hash::piece_feature(piece, location);
         }
     }
 

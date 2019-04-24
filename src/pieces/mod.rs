@@ -17,13 +17,15 @@ pub trait Piece {
 
     fn side(&self) -> Side;
 
-//    fn class(&self) -> PieceClass;
-
     fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
 
     fn moves(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
 
     fn attacks(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
+
+    fn is_pawn(&self) -> bool {
+        self.index() % 6 == 0
+    }
 }
 
 impl Debug for Piece {

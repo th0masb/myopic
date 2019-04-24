@@ -42,7 +42,7 @@ pub struct ReversalData {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Move {
     Standard {source: Square, target: Square},
-    Enpassant {source: Square, target: Square},
+    Enpassant {source: Square},
     Promotion {source: Square, target: Square, piece: &'static dyn Piece},
     Castle {zone: CastleZone}
 }
@@ -52,8 +52,8 @@ impl Move {
         Move::Standard {source, target}
     }
 
-    pub fn enpassant(source: Square, target: Square) -> Move {
-        Move::Enpassant {source, target}
+    pub fn enpassant(source: Square) -> Move {
+        Move::Enpassant {source}
     }
 
     pub fn promotion(source: Square, target: Square, piece: &'static dyn Piece) -> Move {

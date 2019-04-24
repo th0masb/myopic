@@ -3,6 +3,11 @@ pub struct Dir {
     pub dr: i8,
     pub df: i8,
 }
+impl Dir {
+    pub fn opposite(self) -> Dir {
+        Dir {dr: -self.dr, df: -self.df}
+    }
+}
 
 pub const N: Dir = Dir { dr: 1, df: 0 };
 pub const E: Dir = Dir { dr: 0, df: -1 };
