@@ -15,6 +15,8 @@ use crate::board::Move;
 use crate::board::Move::*;
 use crate::board::ReversalData;
 use crate::pieces::Piece;
+use crate::base::dir::N;
+use crate::base::dir::S;
 
 type RD = ReversalData;
 
@@ -58,11 +60,18 @@ impl Board {
         self.hashes.push_head(next_hash)
     }
 
+    /// Determines the enpassant square for the next board state given a
+    /// piece which has just moved from the source to the target.
     fn compute_enpassant(source: Square, target: Square, piece: &dyn Piece) -> Option<Square> {
-        if piece.index() % 6 == 0 {
+        if piece.index() % 6 == 0 { // piece is a pawn
             let is_white = piece.side() == Side::White;
-
-           unimplemented!()
+            let start_rank = BitBoard::RANKS[if is_white {1} else {6}];
+            let ep_rank = BitBoard::RANKS[if is_white {3} else {4}];
+            if start_rank.contains(source) && ep_rank.contains(target) {
+                source.next(if is_white {N} else {S})
+            } else {
+                None
+            }
         } else {
             None
         }

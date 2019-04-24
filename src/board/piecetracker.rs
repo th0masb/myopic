@@ -21,17 +21,16 @@ impl PieceTracker {
     pub fn move_piece(&mut self, source: Square, target: Square) -> (P, Option<P>) {
         let mut moved = None;
         let mut removed = None;
-        for i in 0..12 {
+        for (i, &p) in PS.iter().enumerate() {
             if moved.is_none() && self.boards[i].contains(source) {
+                debug_assert!(!self.boards[i].contains(target));
                 self.boards[i] ^= source.lift() ^ target;
-                let p = PS[i];
-                moved = Some(p);
                 self.hash ^= hash::piece_feature(p, source) ^ hash::piece_feature(p, target);
+                moved = Some(p);
             } else if removed.is_none() && self.boards[i].contains(target) {
                 self.boards[i] ^= target;
-                let p = PS[i];
-                removed = Some(p);
                 self.hash ^= hash::piece_feature(p, target);
+                removed = Some(p);
             }
         }
         (moved.unwrap(), removed)
