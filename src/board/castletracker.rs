@@ -32,11 +32,23 @@ impl CastleTracker {
         rights_removed
     }
 
+    pub fn clear_status(&mut self, side: Side) {
+        if side == Side::White {
+            self.white_status = None
+        } else {
+            self.black_status = None
+        }
+    }
+
     pub fn remove_rights(&mut self, move_components: BitBoard) -> CastleZoneSet {
         let to_remove = CastleTracker::compute_rights_removed(move_components);
         let removed = self.remaining_rights & to_remove;
         self.remaining_rights = self.remaining_rights - removed;
         removed
+    }
+
+    pub fn add_rights(&mut self, rights: CastleZoneSet) {
+        self.remaining_rights = self.remaining_rights | rights;
     }
 
     pub fn hash(&self) -> u64 {

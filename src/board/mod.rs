@@ -16,6 +16,7 @@ mod piecetracker;
 mod castletracker;
 mod hashcache;
 
+pub type PieceRef = &'static dyn Piece;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
@@ -28,13 +29,15 @@ pub struct Board {
 }
 
 impl Board {
-    //pub fn compute
+    fn switch_side(&mut self) {
+        self.active = self.active.other();
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {
     discarded_rights: CastleZoneSet,
-    discarded_piece: Option<&'static dyn Piece>,
+    discarded_piece: Option<PieceRef>,
     discarded_enpassant: Option<Square>,
     discarded_hash: u64,
     discarded_clock: usize,
@@ -44,7 +47,7 @@ pub struct ReversalData {
 pub enum Move {
     Standard {source: Square, target: Square},
     Enpassant {source: Square},
-    Promotion {source: Square, target: Square, piece: &'static dyn Piece},
+    Promotion {source: Square, target: Square, piece: PieceRef},
     Castle {zone: CastleZone}
 }
 
@@ -57,7 +60,7 @@ impl Move {
         Move::Enpassant {source}
     }
 
-    pub fn promotion(source: Square, target: Square, piece: &'static dyn Piece) -> Move {
+    pub fn promotion(source: Square, target: Square, piece: PieceRef) -> Move {
         Move::Promotion {source, target, piece}
     }
 

@@ -19,9 +19,9 @@ use crate::board::hash;
 use crate::board::Move;
 use crate::board::Move::*;
 use crate::board::ReversalData;
+use crate::board::PieceRef;
 
 type RD = ReversalData;
-type P = &'static dyn Piece;
 
 impl Board {
     pub fn evolve(&mut self, action: Move) -> RD {
@@ -99,7 +99,7 @@ impl Board {
         }
     }
 
-    fn evolve_p(&mut self, source: Square, target: Square, promotion_result: P) -> RD {
+    fn evolve_p(&mut self, source: Square, target: Square, promotion_result: PieceRef) -> RD {
         let (moved_pawn, discarded_piece) = self.pieces.move_piece(source, target);
         self.pieces.toggle_piece(moved_pawn, &[target]);
         self.pieces.toggle_piece(promotion_result, &[target]);
@@ -129,13 +129,9 @@ impl Board {
         self.hashes.push_head(next_hash)
     }
 
-    fn switch_side(&mut self) {
-        self.active = self.active.other();
-    }
-
     /// Determines the enpassant square for the next board state given a
     /// piece which has just moved from the source to the target.
-    fn compute_enpassant(source: Square, target: Square, piece: &dyn Piece) -> Option<Square> {
+    fn compute_enpassant(source: Square, target: Square, piece: PieceRef) -> Option<Square> {
         if piece.is_pawn() {
             let side = piece.side();
             if side.pawn_first_rank().contains(source) && side.pawn_third_rank().contains(target) {
