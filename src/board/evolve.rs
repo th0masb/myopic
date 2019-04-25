@@ -37,6 +37,8 @@ impl Board {
         let (moved_piece, discarded_piece) = self.pieces.move_piece(source, target);
         let discarded_rights = self.castling.remove_rights(source | target);
         let discarded_enpassant = self.enpassant;
+        let discarded_clock = self.clock;
+        self.clock = if discarded_piece.is_some() || moved_piece.is_pawn() {self.clock + 1} else {0};
         self.enpassant = Board::compute_enpassant(source, target, moved_piece);
         self.switch_side();
         let discarded_hash = self.update_hash();
@@ -46,6 +48,7 @@ impl Board {
             discarded_piece,
             discarded_enpassant,
             discarded_hash,
+            discarded_clock
         }
     }
 
@@ -56,7 +59,9 @@ impl Board {
         self.pieces.toggle_piece(king, &[k_source, k_target]);
         let discarded_rights = self.castling.set_status(self.active, zone);
         let discarded_enpassant = self.enpassant;
+        let discarded_clock = self.clock;
         self.enpassant = None;
+        self.clock += 1;
         self.switch_side();
         let discarded_hash = self.update_hash();
 
@@ -65,6 +70,7 @@ impl Board {
             discarded_enpassant,
             discarded_rights,
             discarded_hash,
+            discarded_clock,
         }
     }
 
@@ -76,10 +82,11 @@ impl Board {
         };
         let enpassant_square = self.enpassant.unwrap();
         let removal_square = enpassant_square.next(active.pawn_dir().opposite()).unwrap();
-        self.pieces
-            .toggle_piece(active_pawn, &[source, enpassant_square]);
+        self.pieces.toggle_piece(active_pawn, &[source, enpassant_square]);
         self.pieces.toggle_piece(passive_pawn, &[removal_square]);
         self.enpassant = None;
+        let discarded_clock = self.clock;
+        self.clock = 0;
         self.switch_side();
         let discarded_hash = self.update_hash();
 
@@ -88,6 +95,7 @@ impl Board {
             discarded_hash,
             discarded_rights: CastleZoneSet::none(),
             discarded_enpassant: Some(enpassant_square),
+            discarded_clock,
         }
     }
 
@@ -97,13 +105,17 @@ impl Board {
         self.pieces.toggle_piece(promotion_result, &[target]);
         let discarded_enpassant = self.enpassant;
         self.enpassant = None;
+        let discarded_clock = self.clock;
+        self.clock = 0;
         self.switch_side();
         let discarded_hash = self.update_hash();
+
         ReversalData {
             discarded_piece,
             discarded_enpassant,
             discarded_hash,
             discarded_rights: CastleZoneSet::none(),
+            discarded_clock,
         }
     }
 

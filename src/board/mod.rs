@@ -37,6 +37,7 @@ pub struct ReversalData {
     discarded_piece: Option<&'static dyn Piece>,
     discarded_enpassant: Option<Square>,
     discarded_hash: u64,
+    discarded_clock: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
