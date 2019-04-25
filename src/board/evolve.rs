@@ -20,6 +20,8 @@ use crate::board::Move;
 use crate::board::Move::*;
 use crate::board::ReversalData;
 use crate::board::PieceRef;
+use crate::pieces::WP;
+use crate::pieces::BP;
 
 type RD = ReversalData;
 
@@ -27,19 +29,20 @@ impl Board {
     pub fn evolve(&mut self, action: Move) -> RD {
         match action {
             Castle { zone } => self.evolve_c(zone),
-            Standard { source, target } => self.evolve_s(source, target),
+            Standard { piece, source, target } => self.evolve_s(piece, source, target),
             Enpassant { source } => self.evolve_e(source),
             Promotion { source, target, piece } => self.evolve_p(source, target, piece),
         }
     }
 
-    fn evolve_s(&mut self, source: Square, target: Square) -> RD {
-        let (moved_piece, discarded_piece) = self.pieces.move_piece(source, target);
+    fn evolve_s(&mut self, piece: PieceRef, source: Square, target: Square) -> RD {
+        let discarded_piece = self.pieces.erase_square(target);
+        self.pieces.toggle_piece(piece, &[source, target]);
         let discarded_rights = self.castling.remove_rights(source | target);
         let discarded_enpassant = self.enpassant;
         let discarded_clock = self.clock;
-        self.clock = if discarded_piece.is_some() || moved_piece.is_pawn() {self.clock + 1} else {0};
-        self.enpassant = Board::compute_enpassant(source, target, moved_piece);
+        self.clock = if discarded_piece.is_some() || piece.is_pawn() {self.clock + 1} else {0};
+        self.enpassant = Board::compute_enpassant(source, target, piece);
         self.switch_side();
         let discarded_hash = self.update_hash();
 
@@ -100,8 +103,12 @@ impl Board {
     }
 
     fn evolve_p(&mut self, source: Square, target: Square, promotion_result: PieceRef) -> RD {
-        let (moved_pawn, discarded_piece) = self.pieces.move_piece(source, target);
-        self.pieces.toggle_piece(moved_pawn, &[target]);
+        let discarded_piece = self.pieces.erase_square(target);
+        let moved_pawn = match self.active {
+            Side::White => WP,
+            Side::Black => BP,
+        };
+        self.pieces.toggle_piece(moved_pawn, &[source]);
         self.pieces.toggle_piece(promotion_result, &[target]);
         let discarded_enpassant = self.enpassant;
         self.enpassant = None;

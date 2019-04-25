@@ -3,9 +3,9 @@ use crate::base::square::Square;
 use crate::board::hash;
 use crate::pieces;
 use crate::pieces::Piece;
+use crate::board::PieceRef;
 
-type P = &'static dyn Piece;
-const PS: [P; 12] = pieces::ALL;
+const PS: [PieceRef; 12] = pieces::ALL;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct PieceTracker {
@@ -14,26 +14,20 @@ pub struct PieceTracker {
 }
 
 impl PieceTracker {
-    /// Moves a piece from a source square to a target square erasing any piece
-    /// found at the target square before returning a pair containing the moving
-    /// piece and the erased piece (if it exists). Will panic if there is no
-    /// piece found at the source square.
-    pub fn move_piece(&mut self, source: Square, target: Square) -> (P, Option<P>) {
-        let mut moved = None;
-        let mut removed = None;
+    pub fn erase_square(&mut self, square: Square) -> Option<PieceRef> {
+        let mut erased_piece = None;
         for (i, &p) in PS.iter().enumerate() {
-            if moved.is_none() && self.boards[i].contains(source) {
-                self.toggle_piece(p, &[source, target]);
-                moved = Some(p);
-            } else if removed.is_none() && self.boards[i].contains(target) {
-                self.toggle_piece(p, &[target]);
-                removed = Some(p);
+            if self.boards[i].contains(square) {
+                erased_piece = Some(p);
+                self.boards[i] ^= square;
+                self.hash ^= hash::piece_feature(p, square);
+                break;
             }
         }
-        (moved.unwrap(), removed)
+        erased_piece
     }
 
-    pub fn toggle_piece(&mut self, piece: P, locations: &[Square]) {
+    pub fn toggle_piece(&mut self, piece: PieceRef, locations: &[Square]) {
         for &location in locations.iter() {
             self.boards[piece.index()] ^= location;
             self.hash ^= hash::piece_feature(piece, location);
@@ -59,28 +53,38 @@ mod test {
     use crate::base::square::constants::E4;
 
     #[test]
-    fn test_move_case_1() {
+    fn test_erase_square() {
         let mut board = init_tracker(Some(E5), Some(C3));
-        let result = board.move_piece(E5, C3);
-        assert_eq!(board, init_tracker(Some(C3), None));
-        assert_eq!((pieces::WP, Some(pieces::BN)), result);
+        let result = board.erase_square(E5);
+        assert_eq!(Some(pieces::WP), result);
+        assert_eq!(init_tracker(None, Some(C3)), board);
+        let result2 = board.erase_square(E4);
+        assert_eq!(None, result2);
+        assert_eq!(init_tracker(None, Some(C3)), board);
     }
 
     #[test]
-    fn test_move_case_2() {
+    fn test_toggle_square() {
         let mut board = init_tracker(Some(E5), Some(C3));
-        let result = board.move_piece(C3, E5);
-        assert_eq!(board, init_tracker(None, Some(E5)));
-        assert_eq!((pieces::BN, Some(pieces::WP)), result);
+        board.toggle_piece(pieces::WP, &[E5, E4]);
+        assert_eq!(init_tracker(Some(E4), Some(C3)), board);
     }
 
-    #[test]
-    fn test_move_case_3() {
-        let mut board = init_tracker(Some(E5), Some(C3));
-        let result = board.move_piece(E5, E4);
-        assert_eq!(board, init_tracker(Some(E4), Some(C3)));
-        assert_eq!((pieces::WP, None), result);
-    }
+//    #[test]
+//    fn test_move_case_2() {
+//        let mut board = init_tracker(Some(E5), Some(C3));
+//        let result = board.move_piece(C3, E5);
+//        assert_eq!(board, init_tracker(None, Some(E5)));
+//        assert_eq!((pieces::BN, Some(pieces::WP)), result);
+//    }
+//
+//    #[test]
+//    fn test_move_case_3() {
+//        let mut board = init_tracker(Some(E5), Some(C3));
+//        let result = board.move_piece(E5, E4);
+//        assert_eq!(board, init_tracker(Some(E4), Some(C3)));
+//        assert_eq!((pieces::WP, None), result);
+//    }
 
     fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> PieceTracker {
         let mut boards: Vec<_> = iter::repeat(BitBoard::EMPTY).take(12).collect();

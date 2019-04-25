@@ -11,7 +11,7 @@ impl Board {
     pub fn devolve(&mut self, action: Move, discards: ReversalData) {
         match action {
             Castle { zone } => self.devolve_c(zone, discards),
-            Standard { source, target } => self.devolve_s(source, target, discards),
+            Standard { piece, source, target } => self.devolve_s(piece, source, target, discards),
             Enpassant { source } => self.devolve_e(source, discards),
             Promotion { source, target, piece } => self.devolve_p(source, target, piece, discards),
         }
@@ -25,11 +25,11 @@ impl Board {
         unimplemented!()
     }
 
-    fn devolve_s(&mut self, source: Square, target: Square, discards: ReversalData) {
+    fn devolve_s(&mut self, piece: PieceRef, source: Square, target: Square, discards: ReversalData) {
         self.switch_side();
-        self.pieces.move_piece(target, source);
+        self.pieces.toggle_piece(piece, &[target, source]);
         match discards.discarded_piece {
-            Some(p) => self.pieces.toggle_piece(p, &[target]),
+            Some(discarded) => self.pieces.toggle_piece(discarded, &[target]),
             _ => (),
         };
         self.castling.add_rights(discards.discarded_rights);
