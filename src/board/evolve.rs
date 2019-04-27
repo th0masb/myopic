@@ -29,20 +29,18 @@ impl Board {
     pub fn evolve(&mut self, action: Move) -> RD {
         match action {
             Standard { piece, source, target } => self.evolve_s(piece, source, target),
-            _ => unimplemented!(),
-//            Castle { zone } => self.evolve_c(zone),
-//            Enpassant { source } => self.evolve_e(source),
-//            Promotion { source, target, piece } => self.evolve_p(source, target, piece),
+            Castle { zone } => self.evolve_c(zone),
+            Enpassant { source } => self.evolve_e(source),
+            Promotion { source, target, piece } => self.evolve_p(source, target, piece),
         }
     }
 
     pub fn devolve(&mut self, action: Move, discards: RD) {
         match action {
             Standard { piece, source, target } => self.devolve_s(piece, source, target, discards),
-            _ => unimplemented!(),
-//            Castle { zone } => self.devolve_c(zone, discards),
-//            Enpassant { source } => self.devolve_e(source, discards),
-//            Promotion { source, target, piece } => self.devolve_p(source, target, piece, discards),
+            Castle { zone } => self.devolve_c(zone, discards),
+            Enpassant { source } => self.devolve_e(source, discards),
+            Promotion { source, target, piece } => self.devolve_p(source, target, piece, discards),
         }
     }
 
@@ -79,115 +77,85 @@ impl Board {
             Some(discarded) => self.pieces.toggle_piece(discarded, &[target]),
             _ => (),
         };
-        self.devolve_meta(discards);
+        self.replace_metadata(discards);
     }
 
 
-//    fn evolve_c(&mut self, zone: CastleZone) -> RD {
-//        let discarded_rights = self.castling.set_status(self.active, zone);
-//        let rev_data = self.rev_data(None, discarded_rights);
-//        self.toggle_castle_pieces(zone);
-//        let discarded_enpassant = self.enpassant;
-//        let discarded_clock = self.clock;
-//        self.enpassant = None;
-//        self.clock += 1;
-//        self.switch_side();
-//        let discarded_hash = self.update_hash();
-//
-//        ReversalData {
-//            discarded_piece: None,
-//            discarded_enpassant,
-//            discarded_rights,
-//            discarded_hash,
-//            discarded_clock,
-//        }
-//    }
-//
-//    fn devolve_c(&mut self, zone: CastleZone, discards: RD) {
-//        self.switch_side();
-//        self.toggle_castle_pieces(zone);
-//        self.castling.clear_status(self.active);
-//        self.devolve_meta(discards);
-//    }
-//
-//    fn toggle_castle_pieces(&mut self, zone: CastleZone) {
-//        let (rook, r_source, r_target) = zone.rook_data();
-//        let (king, k_source, k_target) = zone.king_data();
-//        self.pieces.toggle_piece(rook, &[r_source, r_target]);
-//        self.pieces.toggle_piece(king, &[k_source, k_target]);
-//    }
-//
-//
-//    fn evolve_e(&mut self, source: Square) -> RD {
-//        let enpassant_square = self.enpassant.unwrap();
-//        self.toggle_enpassant_pieces(source, enpassant_square);
-//        self.enpassant = None;
-//        let discarded_clock = self.clock;
-//        self.clock = 0;
-//        self.switch_side();
-//        let discarded_hash = self.update_hash();
-//
-//        ReversalData {
-//            discarded_piece: Some(match self.active {Side::White => WP, _ => BP}),
-//            discarded_hash,
-//            discarded_rights: CastleZoneSet::none(),
-//            discarded_enpassant: Some(enpassant_square),
-//            discarded_clock,
-//        }
-//    }
-//
-//    fn devolve_e(&mut self, source: Square, discards: RD) {
-//        self.switch_side();
-//        self.toggle_enpassant_pieces(source, discards.discarded_enpassant.unwrap());
-//        self.devolve_meta(discards);
-//    }
-//
-//    fn toggle_enpassant_pieces(&mut self, source: Square, enpassant: Square) {
-//        let active = self.active;
-//        let (active_pawn, passive_pawn) = match active { Side::White => (WP, BP), _ => (BP, WP), };
-//        let removal_square = enpassant.next(active.pawn_dir().opposite()).unwrap();
-//        self.pieces.toggle_piece(active_pawn, &[source, enpassant]);
-//        self.pieces.toggle_piece(passive_pawn, &[removal_square]);
-//    }
-//
-//
-//    fn evolve_p(&mut self, source: Square, target: Square, promotion_result: PieceRef) -> RD {
-//        let discarded_piece = self.pieces.erase_square(target);
-//        let moved_pawn = match self.active {
-//            Side::White => WP,
-//            Side::Black => BP,
-//        };
-//        self.pieces.toggle_piece(moved_pawn, &[source]);
-//        self.pieces.toggle_piece(promotion_result, &[target]);
-//        let discarded_enpassant = self.enpassant;
-//        self.enpassant = None;
-//        let discarded_clock = self.clock;
-//        self.clock = 0;
-//        self.switch_side();
-//        let discarded_hash = self.update_hash();
-//
-//        ReversalData {
-//            discarded_piece,
-//            discarded_enpassant,
-//            discarded_hash,
-//            discarded_rights: CastleZoneSet::none(),
-//            discarded_clock,
-//        }
-//    }
-//
-//    fn devolve_p(&mut self, source: Square, target: Square, piece: PieceRef, discards: RD) {
-//        self.switch_side();
-//        let moved_pawn = match self.active { Side::White => WP, _ => BP, };
-//        self.pieces.toggle_piece(moved_pawn, &[source]);
-//        self.pieces.toggle_piece(piece, &[target]);
-//        match discards.discarded_piece {
-//            Some(p) => self.pieces.toggle_piece(p, &[target]),
-//            _ => (),
-//        };
-//        self.devolve_meta(discards);
-//    }
+    fn evolve_c(&mut self, zone: CastleZone) -> RD {
+        let discarded_rights = self.castling.set_status(self.active, zone);
+        let rev_data = self.create_rev_data(None, discarded_rights);
+        self.toggle_castle_pieces(zone);
+        self.enpassant = None;
+        self.clock += 1;
+        self.switch_side_and_update_hash();
+        rev_data
+    }
 
-    fn devolve_meta(&mut self, discards: RD) {
+    fn devolve_c(&mut self, zone: CastleZone, discards: RD) {
+        self.switch_side();
+        self.toggle_castle_pieces(zone);
+        self.castling.clear_status(self.active);
+        self.replace_metadata(discards);
+    }
+
+    fn toggle_castle_pieces(&mut self, zone: CastleZone) {
+        let (rook, r_source, r_target) = zone.rook_data();
+        let (king, k_source, k_target) = zone.king_data();
+        self.pieces.toggle_piece(rook, &[r_source, r_target]);
+        self.pieces.toggle_piece(king, &[k_source, k_target]);
+    }
+
+
+    fn evolve_e(&mut self, source: Square) -> RD {
+        let discarded_piece = match self.active {Side::White => BP, _ => WP};
+        let rev_data = self.create_rev_data(Some(discarded_piece), CastleZoneSet::none());
+        self.toggle_enpassant_pieces(source, self.enpassant.unwrap());
+        self.enpassant = None;
+        self.clock = 0;
+        self.switch_side_and_update_hash();
+        rev_data
+    }
+
+    fn devolve_e(&mut self, source: Square, discards: RD) {
+        self.switch_side();
+        self.toggle_enpassant_pieces(source, discards.discarded_enpassant.unwrap());
+        self.replace_metadata(discards);
+    }
+
+    fn toggle_enpassant_pieces(&mut self, source: Square, enpassant: Square) {
+        let active = self.active;
+        let (active_pawn, passive_pawn) = match active { Side::White => (WP, BP), _ => (BP, WP), };
+        let removal_square = enpassant.next(active.pawn_dir().opposite()).unwrap();
+        self.pieces.toggle_piece(active_pawn, &[source, enpassant]);
+        self.pieces.toggle_piece(passive_pawn, &[removal_square]);
+    }
+
+
+    fn evolve_p(&mut self, source: Square, target: Square, promotion_result: PieceRef) -> RD {
+        let discarded_piece = self.pieces.erase_square(target);
+        let rev_data = self.create_rev_data(discarded_piece, CastleZoneSet::none());
+        let moved_pawn = match self.active { Side::White => WP, _ => BP, };
+        self.pieces.toggle_piece(moved_pawn, &[source]);
+        self.pieces.toggle_piece(promotion_result, &[target]);
+        self.enpassant = None;
+        self.clock = 0;
+        self.switch_side_and_update_hash();
+        rev_data
+    }
+
+    fn devolve_p(&mut self, source: Square, target: Square, piece: PieceRef, discards: RD) {
+        self.switch_side();
+        let moved_pawn = match self.active { Side::White => WP, _ => BP, };
+        self.pieces.toggle_piece(moved_pawn, &[source]);
+        self.pieces.toggle_piece(piece, &[target]);
+        match discards.discarded_piece {
+            Some(p) => self.pieces.toggle_piece(p, &[target]),
+            _ => (),
+        };
+        self.replace_metadata(discards);
+    }
+
+    fn replace_metadata(&mut self, discards: RD) {
         self.castling.add_rights(discards.discarded_rights);
         self.hashes.pop_head(discards.discarded_hash);
         self.enpassant = discards.discarded_enpassant;

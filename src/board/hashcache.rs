@@ -90,22 +90,25 @@ mod test {
 
     #[test]
     fn test_push_pop_head() {
-        unimplemented!()
-//        let (cs, n) = (CACHE_SIZE as u64, (2 * CACHE_SIZE) as u64);
-//        let init_cache = n_consecutive(n as usize);
-//        let mut cache = init_cache.clone();
-//
-//        assert_eq!(n - cs, cache.push_head(n), "{:?}", cache);
-//        assert_eq!(n - cs + 1, cache.push_head(n), "{:?}", cache);
-//        assert_eq!(n - cs + 2, cache.push_head(n), "{:?}", cache);
-//        assert_eq!(n - cs + 3, cache.push_head(n), "{:?}", cache);
-//
-//        // Put the results back
-//        cache.pop_head(n - cs + 3);
-//        cache.pop_head(n - cs + 2);
-//        cache.pop_head(n - cs + 1);
-//        cache.pop_head(n - cs);
-//        assert_eq!(init_cache, cache);
+        let (cs, n) = (CACHE_SIZE as u64, (2 * CACHE_SIZE) as u64);
+        let init_cache = n_consecutive(n as usize);
+        let mut cache = init_cache.clone();
+
+        assert_eq!(n - cs, cache.tail(), "{:?}", cache);
+        cache.push_head(n);
+        assert_eq!(n - cs + 1, cache.tail(), "{:?}", cache);
+        cache.push_head(n);
+        assert_eq!(n - cs + 2, cache.tail(), "{:?}", cache);
+        cache.push_head(n);
+        assert_eq!(n - cs + 3, cache.tail(), "{:?}", cache);
+        cache.push_head(n);
+
+        // Put the results back
+        cache.pop_head(n - cs + 3);
+        cache.pop_head(n - cs + 2);
+        cache.pop_head(n - cs + 1);
+        cache.pop_head(n - cs);
+        assert_eq!(init_cache, cache);
     }
 
     #[test]

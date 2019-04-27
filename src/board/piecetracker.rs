@@ -70,22 +70,6 @@ mod test {
         assert_eq!(init_tracker(Some(E4), Some(C3)), board);
     }
 
-//    #[test]
-//    fn test_move_case_2() {
-//        let mut board = init_tracker(Some(E5), Some(C3));
-//        let result = board.move_piece(C3, E5);
-//        assert_eq!(board, init_tracker(None, Some(E5)));
-//        assert_eq!((pieces::BN, Some(pieces::WP)), result);
-//    }
-//
-//    #[test]
-//    fn test_move_case_3() {
-//        let mut board = init_tracker(Some(E5), Some(C3));
-//        let result = board.move_piece(E5, E4);
-//        assert_eq!(board, init_tracker(Some(E4), Some(C3)));
-//        assert_eq!((pieces::WP, None), result);
-//    }
-
     fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> PieceTracker {
         let mut boards: Vec<_> = iter::repeat(BitBoard::EMPTY).take(12).collect();
         boards[pieces::WP.index()] = pawn_loc.map_or(BitBoard::EMPTY, |x| x.lift());
