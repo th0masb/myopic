@@ -1,7 +1,7 @@
+use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::Side;
-use crate::base::bitboard::BitBoard;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct CastleTracker {
@@ -11,8 +11,21 @@ pub struct CastleTracker {
 }
 
 impl CastleTracker {
+    pub fn new(
+        rights: CastleZoneSet,
+        white_status: Option<CastleZone>,
+        black_status: Option<CastleZone>,
+    ) -> CastleTracker {
+        CastleTracker {
+            remaining_rights: rights,
+            black_status,
+            white_status,
+        }
+    }
+
     fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
-        CastleZone::ALL.iter()
+        CastleZone::ALL
+            .iter()
             .filter(|&x| move_components.intersects(x.source_squares()))
             .collect()
     }
@@ -22,10 +35,11 @@ impl CastleTracker {
             Side::White => self.white_status = Some(zone),
             Side::Black => self.black_status = Some(zone),
         };
-        let rights_removed = self.remaining_rights & match side {
-            Side::White => CastleZoneSet::white(),
-            Side::Black => CastleZoneSet::black(),
-        };
+        let rights_removed = self.remaining_rights
+            & match side {
+                Side::White => CastleZoneSet::white(),
+                Side::Black => CastleZoneSet::black(),
+            };
         self.remaining_rights -= rights_removed;
         rights_removed
     }
@@ -52,4 +66,3 @@ impl CastleTracker {
         self.remaining_rights.hash()
     }
 }
-

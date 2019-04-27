@@ -4,6 +4,7 @@ use crate::board::hash;
 use crate::pieces;
 use crate::pieces::Piece;
 use crate::board::PieceRef;
+use crate::board::Board;
 
 const PS: [PieceRef; 12] = pieces::ALL;
 
@@ -14,6 +15,17 @@ pub struct PieceTracker {
 }
 
 impl PieceTracker {
+    pub fn new(initial_boards: Vec<BitBoard>) -> PieceTracker {
+        assert_eq!(12, initial_boards.len());
+        let initial_hash = initial_boards.iter().zip(&pieces::ALL)
+            .flat_map(|(&b, &p)| b.into_iter().map(move |sq| hash::piece_feature(p, sq)))
+            .fold(0u64, |a, b| a ^ b);
+
+        PieceTracker {
+            boards: initial_boards,
+            hash: initial_hash,
+        }
+    }
     pub fn erase_square(&mut self, square: Square) -> Option<PieceRef> {
         let mut erased_piece = None;
         for (i, &p) in PS.iter().enumerate() {
