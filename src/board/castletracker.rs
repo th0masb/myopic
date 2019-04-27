@@ -33,10 +33,9 @@ impl CastleTracker {
     }
 
     pub fn clear_status(&mut self, side: Side) {
-        if side == Side::White {
-            self.white_status = None
-        } else {
-            self.black_status = None
+        match side {
+            Side::White => self.white_status = None,
+            Side::Black => self.black_status = None,
         }
     }
 

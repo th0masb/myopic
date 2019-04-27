@@ -18,18 +18,18 @@ use crate::board::Board;
 use crate::board::hash;
 use crate::board::Move;
 use crate::board::Move::*;
-use crate::board::ReversalData;
 use crate::board::PieceRef;
-use crate::pieces::WP;
+use crate::board::ReversalData;
 use crate::pieces::BP;
+use crate::pieces::WP;
 
 type RD = ReversalData;
 
 impl Board {
     pub fn evolve(&mut self, action: Move) -> RD {
         match action {
-            Castle { zone } => self.evolve_c(zone),
             Standard { piece, source, target } => self.evolve_s(piece, source, target),
+            Castle { zone } => self.evolve_c(zone),
             Enpassant { source } => self.evolve_e(source),
             Promotion { source, target, piece } => self.evolve_p(source, target, piece),
         }
@@ -79,10 +79,7 @@ impl Board {
 
     fn evolve_e(&mut self, source: Square) -> RD {
         let active = self.active;
-        let (active_pawn, passive_pawn) = match active {
-            Side::White => (pieces::WP, pieces::BP),
-            Side::Black => (pieces::BP, pieces::WP),
-        };
+        let (active_pawn, passive_pawn) = match active { Side::White => (WP, BP), _ => (BP, WP), };
         let enpassant_square = self.enpassant.unwrap();
         let removal_square = enpassant_square.next(active.pawn_dir().opposite()).unwrap();
         self.pieces.toggle_piece(active_pawn, &[source, enpassant_square]);
