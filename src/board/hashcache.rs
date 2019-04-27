@@ -23,21 +23,31 @@ impl HashCache {
         HashCache { pop_dist: 0, cache}
     }
 
-    fn cache_index(&self) -> usize {
+    fn head_index(&self) -> usize {
         self.pop_dist % CACHE_SIZE
     }
 
-    pub fn push_head(&mut self, new_head: u64) -> u64 {
+    fn tail_index(&self) -> usize {
+        (self.pop_dist + 1) % CACHE_SIZE
+    }
+
+    pub fn head(&self) -> u64 {
+        self.cache[self.head_index()]
+    }
+
+    pub fn tail(&self) -> u64 {
+        self.cache[self.tail_index()]
+    }
+
+    pub fn push_head(&mut self, new_head: u64) {
         self.pop_dist += 1;
-        let index = self.cache_index();
-        let old_tail = self.cache[index];
+        let index = self.head_index();
         self.cache[index] = new_head;
-        old_tail
     }
 
     pub fn pop_head(&mut self, new_tail: u64) {
         debug_assert!(self.pop_dist > 0);
-        let index = self.cache_index();
+        let index = self.head_index();
         self.cache[index] = new_tail;
         self.pop_dist -= 1;
     }
@@ -80,20 +90,22 @@ mod test {
 
     #[test]
     fn test_push_pop_head() {
-        let (cs, n) = (CACHE_SIZE as u64, (2 * CACHE_SIZE) as u64);
-        let init_cache = n_consecutive(n as usize);
-        let mut cache = init_cache.clone();
-        assert_eq!(n - cs, cache.push_head(n), "{:?}", cache);
-        assert_eq!(n - cs + 1, cache.push_head(n), "{:?}", cache);
-        assert_eq!(n - cs + 2, cache.push_head(n), "{:?}", cache);
-        assert_eq!(n - cs + 3, cache.push_head(n), "{:?}", cache);
-
-        // Put the results back
-        cache.pop_head(n - cs + 3);
-        cache.pop_head(n - cs + 2);
-        cache.pop_head(n - cs + 1);
-        cache.pop_head(n - cs);
-        assert_eq!(init_cache, cache);
+        unimplemented!()
+//        let (cs, n) = (CACHE_SIZE as u64, (2 * CACHE_SIZE) as u64);
+//        let init_cache = n_consecutive(n as usize);
+//        let mut cache = init_cache.clone();
+//
+//        assert_eq!(n - cs, cache.push_head(n), "{:?}", cache);
+//        assert_eq!(n - cs + 1, cache.push_head(n), "{:?}", cache);
+//        assert_eq!(n - cs + 2, cache.push_head(n), "{:?}", cache);
+//        assert_eq!(n - cs + 3, cache.push_head(n), "{:?}", cache);
+//
+//        // Put the results back
+//        cache.pop_head(n - cs + 3);
+//        cache.pop_head(n - cs + 2);
+//        cache.pop_head(n - cs + 1);
+//        cache.pop_head(n - cs);
+//        assert_eq!(init_cache, cache);
     }
 
     #[test]

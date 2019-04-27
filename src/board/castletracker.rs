@@ -18,17 +18,15 @@ impl CastleTracker {
     }
 
     pub fn set_status(&mut self, side: Side, zone: CastleZone) -> CastleZoneSet {
-        let side_rights = match side {
+        match side {
+            Side::White => self.white_status = Some(zone),
+            Side::Black => self.black_status = Some(zone),
+        };
+        let rights_removed = self.remaining_rights & match side {
             Side::White => CastleZoneSet::white(),
             Side::Black => CastleZoneSet::black(),
         };
-        let rights_removed = self.remaining_rights & side_rights;
         self.remaining_rights -= rights_removed;
-        if side == Side::White {
-            self.white_status = Some(zone);
-        } else {
-            self.black_status = Some(zone);
-        }
         rights_removed
     }
 

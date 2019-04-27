@@ -9,12 +9,14 @@ use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 
 pub mod hash;
-pub mod tables;
+pub mod tables;// To be removed
 pub mod evolve;
-pub mod devolve;
+
 mod piecetracker;
 mod castletracker;
 mod hashcache;
+
+
 
 pub type PieceRef = &'static dyn Piece;
 
