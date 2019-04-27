@@ -18,7 +18,7 @@ impl Side {
     pub fn other(self) -> Side {
         match self {
             Side::White => Side::Black,
-            _ => Side::Black
+            _ => Side::White,
         }
     }
 

@@ -1,4 +1,4 @@
-use crate::base::bitboard::BitBoard;
+use crate::base::bitboard::{BitBoard};
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::castlezone::CastleZone;
 use crate::base::Side;
@@ -9,6 +9,26 @@ use std::iter;
 use crate::board::castletracker::CastleTracker;
 use crate::board::hashcache::HashCache;
 use crate::board::Move;
+use crate::base::square::constants::F2;
+use crate::base::square::constants::G2;
+use crate::base::square::constants::B3;
+use crate::base::square::constants::C4;
+use crate::base::square::constants::A1;
+use crate::base::square::constants::H1;
+use crate::base::square::constants::C2;
+use crate::base::square::constants::E1;
+use crate::base::square::constants::A7;
+use crate::base::square::constants::C5;
+use crate::base::square::constants::E7;
+use crate::base::square::constants::F7;
+use crate::base::square::constants::B6;
+use crate::base::square::constants::D6;
+use crate::base::square::constants::A8;
+use crate::base::square::constants::H8;
+use crate::base::square::constants::D7;
+use crate::base::square::constants::E8;
+use crate::base::square::constants::G1;
+use crate::base::square::constants::F1;
 
 #[derive(Debug, Clone)]
 struct TestBoard {
@@ -32,14 +52,16 @@ impl TestBoard {
         for i in 0..self.hash_offset {
             hashes.push_head(i as u64);
         }
-        Board {
+        let mut result = Board {
             hashes,
             pieces,
             castling,
             active: self.active,
             enpassant: self.enpassant,
             clock: self.clock,
-        }
+        };
+        result.update_hash();
+        result
     }
 }
 
@@ -50,15 +72,62 @@ struct TestCase {
     end: TestBoard,
 }
 
+#[test]
+fn test() {
+    check_case(case_1());
+}
 
-fn check_case(test_case: &TestCase) {
+fn check_case(test_case: TestCase) {
     let action = test_case.action.clone();
     let start = test_case.start.clone().to_board();
     let end = test_case.end.clone().to_board();
 
-    let mut subject = start.clone();
-    let rev_data = subject.evolve(&action);
-    assert_eq!(end, subject);
-    subject.devolve(&action, rev_data);
-    assert_eq!(start, subject);
+    let mut forward_subject = start.clone();
+    let rev_data = forward_subject.evolve(&action);
+    check_constrained_board_equality(end, forward_subject.clone());
+    forward_subject.devolve(&action, rev_data);
+    check_constrained_board_equality(start, forward_subject);
+}
+
+fn check_constrained_board_equality(left: Board, right: Board) {
+    assert_eq!(left.clock, right.clock);
+    assert_eq!(left.enpassant, right.enpassant);
+    assert_eq!(left.active, right.active);
+    assert_eq!(left.pieces, right.pieces);
+    assert_eq!(left.castling, right.castling);
+    assert_eq!(left.hashes.head(), right.hashes.head());
+}
+
+
+const EMPTY: BitBoard = BitBoard::EMPTY;
+
+fn case_1() -> TestCase {
+    let blacks = vec![A7 | C5 | E7 | F7, B6.lift(), D6.lift(), A8 | H8, D7.lift(), E8.lift()];
+    TestCase {
+        action: Move::Castle(CastleZone::WK),
+
+        start: TestBoard {
+            whites: vec![F2 | G2, B3.lift(), C4.lift(), A1 | H1, C2.lift(), E1.lift()],
+            blacks: blacks.clone(),
+            castle_rights: CastleZoneSet::all(),
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: None,
+            clock: 20,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![F2 | G2, B3.lift(), C4.lift(), A1 | F1, C2.lift(), G1.lift()],
+            blacks: blacks.clone(),
+            castle_rights: CastleZoneSet::black(),
+            white_status: Some(CastleZone::WK),
+            black_status: None,
+            active: Side::Black,
+            enpassant: None,
+            clock: 21,
+            hash_offset: 12,
+        },
+    }
 }
