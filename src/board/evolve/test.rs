@@ -9,33 +9,8 @@ use std::iter;
 use crate::board::castletracker::CastleTracker;
 use crate::board::hashcache::HashCache;
 use crate::board::Move;
-use crate::base::square::constants::F2;
-use crate::base::square::constants::G2;
-use crate::base::square::constants::B3;
-use crate::base::square::constants::C4;
-use crate::base::square::constants::A1;
-use crate::base::square::constants::H1;
-use crate::base::square::constants::C2;
-use crate::base::square::constants::E1;
-use crate::base::square::constants::A7;
-use crate::base::square::constants::C5;
-use crate::base::square::constants::E7;
-use crate::base::square::constants::F7;
-use crate::base::square::constants::B6;
-use crate::base::square::constants::D6;
-use crate::base::square::constants::A8;
-use crate::base::square::constants::H8;
-use crate::base::square::constants::D7;
-use crate::base::square::constants::E8;
-use crate::base::square::constants::G1;
-use crate::base::square::constants::F1;
-use crate::base::square::constants::C1;
-use crate::base::square::constants::D1;
-use crate::base::square::constants::H2;
-use crate::base::square::constants::F8;
-use crate::base::square::constants::G8;
-use crate::base::square::constants::D8;
-use crate::base::square::constants::C8;
+use crate::base::bitboard::constants::*;
+use crate::pieces;
 
 #[derive(Debug, Clone)]
 struct TestBoard {
@@ -106,12 +81,12 @@ const EMPTY: BitBoard = BitBoard::EMPTY;
 /// Testing white kingside castling.
 #[test]
 fn case_1() {
-    let blacks = vec![A7 | C5 | E7 | F7, B6.lift(), D6.lift(), A8 | H8, D7.lift(), E8.lift()];
+    let blacks = vec![A7 | C5 | E7 | F7, B6, D6, A8 | H8, D7, E8];
     check_case(TestCase {
         action: Move::Castle(CastleZone::WK),
 
         start: TestBoard {
-            whites: vec![F2 | G2, B3.lift(), C4.lift(), A1 | H1, C2.lift(), E1.lift()],
+            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
             blacks: blacks.clone(),
             castle_rights: CastleZoneSet::all(),
             white_status: None,
@@ -123,7 +98,7 @@ fn case_1() {
         },
 
         end: TestBoard {
-            whites: vec![F2 | G2, B3.lift(), C4.lift(), A1 | F1, C2.lift(), G1.lift()],
+            whites: vec![F2 | G2, B3, C4, A1 | F1, C2, G1],
             blacks: blacks.clone(),
             castle_rights: CastleZoneSet::black(),
             white_status: Some(CastleZone::WK),
@@ -139,12 +114,12 @@ fn case_1() {
 /// Testing white queenside castling.
 #[test]
 fn case_2() {
-    let blacks = vec![A7 | C5 | E7 | F7, B6.lift(), D6.lift(), A8 | H8, D7.lift(), E8.lift()];
+    let blacks = vec![A7 | C5 | E7 | F7, B6, D6, A8 | H8, D7, E8];
     check_case(TestCase {
         action: Move::Castle(CastleZone::WQ),
 
         start: TestBoard {
-            whites: vec![F2 | G2, B3.lift(), C4.lift(), A1 | H1, C2.lift(), E1.lift()],
+            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
             blacks: blacks.clone(),
             castle_rights: CastleZoneSet::all(),
             white_status: None,
@@ -156,7 +131,7 @@ fn case_2() {
         },
 
         end: TestBoard {
-            whites: vec![F2 | G2, B3.lift(), C4.lift(), H1 | D1, C2.lift(), C1.lift()],
+            whites: vec![F2 | G2, B3, C4, H1 | D1, C2, C1],
             blacks: blacks.clone(),
             castle_rights: CastleZoneSet::black(),
             white_status: Some(CastleZone::WQ),
@@ -172,13 +147,13 @@ fn case_2() {
 /// Black kingside castling test
 #[test]
 fn case_3() {
-    let whites = vec![F2 | G2, B3.lift(), C4.lift(), A1 | H1, C2.lift(), E1.lift()];
+    let whites = vec![F2 | G2, B3, C4, A1 | H1, C2, E1];
     check_case(TestCase {
         action: Move::Castle(CastleZone::BK),
 
         start: TestBoard {
             whites: whites.clone(),
-            blacks: vec![A7 | C5 | E7 | F7, B6.lift(), D6.lift(), A8 | H8, D7.lift(), E8.lift()],
+            blacks: vec![A7 | C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
             castle_rights: CastleZoneSet::all(),
             white_status: None,
             black_status: None,
@@ -190,7 +165,7 @@ fn case_3() {
 
         end: TestBoard {
             whites: whites.clone(),
-            blacks: vec![A7 | C5 | E7 | F7, B6.lift(), D6.lift(), A8 | F8, D7.lift(), G8.lift()],
+            blacks: vec![A7 | C5 | E7 | F7, B6, D6, A8 | F8, D7, G8],
             castle_rights: CastleZoneSet::white(),
             white_status: None,
             black_status: Some(CastleZone::BK),
@@ -205,13 +180,13 @@ fn case_3() {
 /// Black queenside castling test
 #[test]
 fn case_4() {
-    let whites = vec![F2 | G2, B3.lift(), C4.lift(), A1 | H1, C2.lift(), E1.lift()];
+    let whites = vec![F2 | G2, B3, C4, A1 | H1, C2, E1];
     check_case(TestCase {
         action: Move::Castle(CastleZone::BQ),
 
         start: TestBoard {
             whites: whites.clone(),
-            blacks: vec![A7 | C5 | E7 | F7, B6.lift(), D6.lift(), A8 | H8, D7.lift(), E8.lift()],
+            blacks: vec![A7 | C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
             castle_rights: CastleZoneSet::all(),
             white_status: None,
             black_status: None,
@@ -223,7 +198,7 @@ fn case_4() {
 
         end: TestBoard {
             whites: whites.clone(),
-            blacks: vec![A7 | C5 | E7 | F7, B6.lift(), D6.lift(), D8 | H8, D7.lift(), C8.lift()],
+            blacks: vec![A7 | C5 | E7 | F7, B6, D6, D8 | H8, D7, C8],
             castle_rights: CastleZoneSet::white(),
             white_status: None,
             black_status: Some(CastleZone::BQ),
@@ -234,3 +209,26 @@ fn case_4() {
         },
     })
 }
+
+
+/////
+//#[test]
+//fn case_x() {
+//    check_case(TestCase {
+//        action: Move::Standard(pieces::WR, H1, H8),
+//
+//        start: TestBoard {
+//            whites: vec![F2 | G2, B3, ],
+//            blacks: vec![],
+//            castle_rights: CastleZoneSet::none(),
+//            white_status: None,
+//            black_status: None,
+//            active: Side::White,
+//            enpassant: None,
+//            clock: 21,
+//            hash_offset: 12,
+//        },
+//
+//    })
+//}
+

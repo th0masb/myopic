@@ -14,19 +14,19 @@ pub struct Square {
 }
 
 impl Square {
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         NAMES[self.i as usize]
     }
 
-    pub fn rank(self) -> usize {
+    pub const fn rank(self) -> usize {
         self.rank as usize
     }
 
-    pub fn file(self) -> usize {
+    pub const fn file(self) -> usize {
         self.file as usize
     }
 
-    pub fn lift(self) -> BitBoard {
+    pub const fn lift(self) -> BitBoard {
         BitBoard(1u64 << self.i)
     }
 

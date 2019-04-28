@@ -6,6 +6,7 @@ use crate::base::dir;
 use crate::base::square::constants::H1;
 use crate::base::square::Square;
 
+pub mod constants;
 mod iterator;
 mod operators;
 
