@@ -707,3 +707,250 @@ fn test_black_pawn_takes_white_bishop() {
 }
 
 // next is case020
+#[test]
+fn test_white_queen_takes_black_queen() {
+    check_case(TestCase {
+        action: Move::Standard(pieces::WQ, square::constants::C2, square::constants::D7),
+
+        start: TestBoard {
+            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
+            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: None,
+            clock: 21,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![F2 | G2, B3, C4, A1 | H1, D7, E1],
+            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::Black,
+            enpassant: None,
+            clock: 0,
+            hash_offset: 12,
+        },
+    })
+}
+
+#[test]
+fn test_black_queen_takes_white_queen() {
+    check_case(TestCase {
+        action: Move::Standard(pieces::BQ, square::constants::D7, square::constants::C2),
+
+        start: TestBoard {
+            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
+            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::Black,
+            enpassant: None,
+            clock: 21,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![F2 | G2, B3, C4, A1 | H1, EMPTY, E1],
+            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, C2, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: None,
+            clock: 0,
+            hash_offset: 12,
+        },
+    })
+}
+
+#[test]
+fn test_white_king_takes_black_king() {
+    check_case(TestCase {
+        action: Move::Standard(pieces::WK, square::constants::E1, square::constants::E8),
+
+        start: TestBoard {
+            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
+            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: None,
+            clock: 21,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E8],
+            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, EMPTY],
+            castle_rights: CastleZoneSet::NONE,
+            white_status: None,
+            black_status: None,
+            active: Side::Black,
+            enpassant: None,
+            clock: 0,
+            hash_offset: 12,
+        },
+    })
+}
+
+#[test]
+fn test_black_king_takes_white_king() {
+    check_case(TestCase {
+        action: Move::Standard(pieces::BK, square::constants::E8, square::constants::E1),
+
+        start: TestBoard {
+            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
+            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::Black,
+            enpassant: None,
+            clock: 21,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, EMPTY],
+            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E1],
+            castle_rights: CastleZoneSet::NONE,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: None,
+            clock: 0,
+            hash_offset: 12,
+        },
+    })
+}
+
+#[test]
+fn test_white_enpassant() {
+    check_case(TestCase {
+        action: Move::Enpassant(square::constants::D5),
+
+        start: TestBoard {
+            whites: vec![D5 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
+            blacks: vec![E5 | F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: Some(square::constants::E6),
+            clock: 21,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![E6 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
+            blacks: vec![F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::Black,
+            enpassant: None,
+            clock: 0,
+            hash_offset: 12,
+        },
+    })
+}
+
+#[test]
+fn test_black_enpassant() {
+    check_case(TestCase {
+        action: Move::Enpassant(square::constants::E4),
+
+        start: TestBoard {
+            whites: vec![D4 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
+            blacks: vec![E4 | F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::Black,
+            enpassant: Some(square::constants::D3),
+            clock: 21,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
+            blacks: vec![D3 | F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: None,
+            clock: 0,
+            hash_offset: 12,
+        },
+    })
+}
+
+#[test]
+fn test_white_promotion() {
+    check_case(TestCase {
+        action: Move::Promotion(square::constants::C7, square::constants::B8, pieces::WQ),
+
+        start: TestBoard {
+            whites: vec![C7 | F2 | G2, EMPTY, F3, B1, EMPTY, E1],
+            blacks: vec![C2 | F7 | G7 | H7, EMPTY, G6, B8, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: Some(square::constants::D4),
+            clock: 21,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![F2 | G2, EMPTY, F3, B1, B8, E1],
+            blacks: vec![C2 | F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::Black,
+            enpassant: None,
+            clock: 0,
+            hash_offset: 12,
+        },
+    })
+}
+
+#[test]
+fn test_black_promotion() {
+    check_case(TestCase {
+        action: Move::Promotion(square::constants::C2, square::constants::B1, pieces::BN),
+
+        start: TestBoard {
+            whites: vec![C7 | F2 | G2, EMPTY, F3, B1, EMPTY, E1],
+            blacks: vec![C2 | F7 | G7 | H7, EMPTY, G6, B8, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::Black,
+            enpassant: None,
+            clock: 21,
+            hash_offset: 11,
+        },
+
+        end: TestBoard {
+            whites: vec![C7 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
+            blacks: vec![F7 | G7 | H7, B1, G6, B8, EMPTY, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            enpassant: None,
+            clock: 0,
+            hash_offset: 12,
+        },
+    })
+}
