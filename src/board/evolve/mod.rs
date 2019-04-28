@@ -52,7 +52,7 @@ impl Board {
         let discarded_rights = self.castling.remove_rights(source | target);
         let rev_data = self.create_rev_data(discarded_piece, discarded_rights);
         self.pieces.toggle_piece(piece, &[source, target]);
-        self.clock = if discarded_piece.is_some() || piece.is_pawn() {self.clock + 1} else {0};
+        self.clock = if discarded_piece.is_some() || piece.is_pawn() {0} else {self.clock + 1};
         self.enpassant = Board::compute_enpassant(source, target, piece);
         self.switch_side_and_update_hash();
         rev_data
@@ -111,7 +111,7 @@ impl Board {
 
     fn evolve_e(&mut self, source: Square) -> RD {
         let discarded_piece = match self.active {Side::White => BP, _ => WP};
-        let rev_data = self.create_rev_data(Some(discarded_piece), CastleZoneSet::none());
+        let rev_data = self.create_rev_data(Some(discarded_piece), CastleZoneSet::NONE);
         self.toggle_enpassant_pieces(source, self.enpassant.unwrap());
         self.enpassant = None;
         self.clock = 0;
@@ -136,7 +136,7 @@ impl Board {
 
     fn evolve_p(&mut self, source: Square, target: Square, promotion_result: PieceRef) -> RD {
         let discarded_piece = self.pieces.erase_square(target);
-        let rev_data = self.create_rev_data(discarded_piece, CastleZoneSet::none());
+        let rev_data = self.create_rev_data(discarded_piece, CastleZoneSet::NONE);
         let moved_pawn = match self.active { Side::White => WP, _ => BP, };
         self.pieces.toggle_piece(moved_pawn, &[source]);
         self.pieces.toggle_piece(promotion_result, &[target]);

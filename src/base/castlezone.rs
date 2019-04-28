@@ -46,30 +46,6 @@ impl CastleZone {
         (KINGS[i / 2], CastleZone::KING_SOURCES[i], CastleZone::KING_TARGETS[i])
     }
 
-//    pub fn king_source(self) -> Square {
-//        CastleZone::KING_SOURCES[self.i]
-//    }
-//
-//    pub fn king_target(self) -> Square {
-//        CastleZone::KING_TARGETS[self.i]
-//    }
-//
-//    pub fn rook_source(self) -> Square {
-//        CastleZone::ROOK_SOURCES[self.i]
-//    }
-//
-//    pub fn rook_target(self) -> Square {
-//        CastleZone::ROOK_TARGETS[self.i]
-//    }
-//
-//    pub fn king(self) -> &'static dyn Piece {
-//        KINGS[self. i / 2]
-//    }
-//
-//    pub fn rook(self) -> &'static dyn Piece {
-//        ROOKS[self. i / 2]
-//    }
-
     pub fn lift(&self) -> CastleZoneSet {
         CastleZoneSet {data: 1usize << self.i}
     }
@@ -98,22 +74,6 @@ pub struct CastleZoneSet {
 }
 
 impl CastleZoneSet {
-    pub fn all() -> CastleZoneSet {
-        CastleZoneSet {data: 0b1111}
-    }
-
-    pub fn none() -> CastleZoneSet {
-        CastleZoneSet {data: 0}
-    }
-
-    pub fn white() -> CastleZoneSet {
-        CastleZoneSet {data: 0b11}
-    }
-
-    pub fn black() -> CastleZoneSet {
-        CastleZoneSet {data: 0b1100}
-    }
-
     pub fn contains(self, zone: CastleZone) -> bool {
         (1usize << zone.i) & self.data != 0
     }
@@ -123,6 +83,15 @@ impl CastleZoneSet {
             .map(|i| hash::castle_feature(CastleZone::ALL[i]))
             .fold(0u64, |a, b| a ^ b)
     }
+
+    pub const ALL: CastleZoneSet = CastleZoneSet {data: 0b1111};
+    pub const NONE: CastleZoneSet = CastleZoneSet {data: 0};
+    pub const WHITE: CastleZoneSet = CastleZoneSet {data: 0b11};
+    pub const BLACK: CastleZoneSet = CastleZoneSet {data: 0b1100};
+    pub const WK: CastleZoneSet = CastleZoneSet {data: 0b1};
+    pub const WQ: CastleZoneSet = CastleZoneSet {data: 0b10};
+    pub const BK: CastleZoneSet = CastleZoneSet {data: 0b100};
+    pub const BQ: CastleZoneSet = CastleZoneSet {data: 0b1000};
 }
 
 impl FromIterator<CastleZone> for CastleZoneSet {
@@ -174,7 +143,7 @@ mod set_test {
 
     #[test]
     fn test_all() {
-        let all = CastleZoneSet::all();
+        let all = CastleZoneSet::ALL;
         for &zone in &CastleZone::ALL {
             assert!(all.contains(zone));
         }
@@ -182,7 +151,7 @@ mod set_test {
 
     #[test]
     fn test_none() {
-        let none = CastleZoneSet::none();
+        let none = CastleZoneSet::NONE;
         for &zone in &CastleZone::ALL {
             assert!(!none.contains(zone));
         }
@@ -192,6 +161,6 @@ mod set_test {
     fn test_collect() {
         let source = vec![CastleZone::BK, CastleZone::WK, CastleZone::WQ, CastleZone::BQ];
         let collected: CastleZoneSet = source.into_iter().collect();
-        assert_eq!(CastleZoneSet::all(), collected);
+        assert_eq!(CastleZoneSet::ALL, collected);
     }
 }

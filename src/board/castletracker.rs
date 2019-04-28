@@ -37,8 +37,8 @@ impl CastleTracker {
         };
         let rights_removed = self.remaining_rights
             & match side {
-                Side::White => CastleZoneSet::white(),
-                Side::Black => CastleZoneSet::black(),
+                Side::White => CastleZoneSet::WHITE,
+                Side::Black => CastleZoneSet::BLACK,
             };
         self.remaining_rights -= rights_removed;
         rights_removed
