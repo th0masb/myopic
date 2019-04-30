@@ -165,16 +165,6 @@ impl Board {
         self.clock = discards.discarded_clock;
     }
 
-    /// Combines the various components of the hash together and pushes the
-    /// result onto the head of the cache, returning the overwritten value.
-    fn update_hash(&mut self) {
-        let next_hash = self.pieces.hash()
-            ^ self.castling.hash()
-            ^ hash::side_feature(self.active)
-            ^ self.enpassant.map_or(0u64, |x| hash::enpassant_feature(x));
-        self.hashes.push_head(next_hash)
-    }
-
     /// Determines the enpassant square for the next board state given a
     /// piece which has just moved from the source to the target.
     fn compute_enpassant(source: Square, target: Square, piece: PieceRef) -> Option<Square> {

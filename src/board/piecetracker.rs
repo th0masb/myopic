@@ -26,6 +26,11 @@ impl PieceTracker {
             hash: initial_hash,
         }
     }
+
+    pub fn locations(&self, piece: PieceRef) -> BitBoard {
+        self.boards[piece.index()]
+    }
+
     pub fn erase_square(&mut self, square: Square) -> Option<PieceRef> {
         let mut erased_piece = None;
         for (i, &p) in PS.iter().enumerate() {

@@ -9,12 +9,17 @@ use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 
 pub mod hash;
-pub mod tables;// To be removed
+//pub mod tables;// To be removed
 pub mod evolve;
+pub mod moves;
+
 
 mod piecetracker;
 mod castletracker;
 mod hashcache;
+
+#[cfg(test)]
+mod testutils;
 
 
 
@@ -33,6 +38,16 @@ pub struct Board {
 impl Board {
     fn switch_side(&mut self) {
         self.active = self.active.other();
+    }
+
+    /// Combines the various components of the hash together and pushes the
+    /// result onto the head of the cache, returning the overwritten value.
+    fn update_hash(&mut self) {
+        let next_hash = self.pieces.hash()
+            ^ self.castling.hash()
+            ^ hash::side_feature(self.active)
+            ^ self.enpassant.map_or(0u64, |x| hash::enpassant_feature(x));
+        self.hashes.push_head(next_hash)
     }
 }
 

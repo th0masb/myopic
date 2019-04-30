@@ -13,41 +13,7 @@ use crate::board::hashcache::HashCache;
 use crate::board::Move;
 use crate::board::piecetracker::PieceTracker;
 use crate::pieces;
-
-#[derive(Debug, Clone)]
-struct TestBoard {
-    whites: Vec<BitBoard>,
-    blacks: Vec<BitBoard>,
-    castle_rights: CastleZoneSet,
-    white_status: Option<CastleZone>,
-    black_status: Option<CastleZone>,
-    active: Side,
-    clock: usize,
-    enpassant: Option<Square>,
-    hash_offset: usize,
-}
-
-impl TestBoard {
-    fn to_board(self) -> Board {
-        let pieces = PieceTracker::new(vec![self.whites, self.blacks].iter()
-            .flat_map(|x| x.into_iter()).map(|&x| x).collect());
-        let castling = CastleTracker::new(self.castle_rights, self.white_status, self.black_status);
-        let mut hashes = HashCache::new(0u64);
-        for i in 0..self.hash_offset {
-            hashes.push_head(i as u64);
-        }
-        let mut result = Board {
-            hashes,
-            pieces,
-            castling,
-            active: self.active,
-            enpassant: self.enpassant,
-            clock: self.clock,
-        };
-        result.update_hash();
-        result
-    }
-}
+use crate::board::testutils::TestBoard;
 
 #[derive(Debug, Clone)]
 struct TestCase {
@@ -55,6 +21,7 @@ struct TestCase {
     start: TestBoard,
     end: TestBoard,
 }
+
 
 fn check_case(test_case: TestCase) {
     let action = test_case.action.clone();
@@ -76,7 +43,6 @@ fn check_constrained_board_equality(left: Board, right: Board) {
     assert_eq!(left.castling, right.castling);
     assert_eq!(left.hashes.head(), right.hashes.head());
 }
-
 
 const EMPTY: BitBoard = BitBoard::EMPTY;
 

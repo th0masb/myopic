@@ -32,7 +32,6 @@ fn main() {
 //    println!("{:#?}", squares);
 //    println!("{}", base.square::H1);
 
-    println!("{:?}", base::bitboard::create_ranks().iter().map(|x| x.0).collect::<Vec<_>>());
 //    let x = pieces::pawns::BLACK_CONTROL.clone().into_iter().map(|x| x.0).collect::<Vec<_>>();
 //    println!("{:?}", x);
 }
