@@ -18,12 +18,20 @@ impl Square {
         NAMES[self.i as usize]
     }
 
-    pub const fn rank(self) -> usize {
+    pub const fn rank_index(self) -> usize {
         self.rank as usize
     }
 
-    pub const fn file(self) -> usize {
+    pub const fn file_index(self) -> usize {
         self.file as usize
+    }
+
+    pub fn rank(self) -> BitBoard {
+        BitBoard::RANKS[self.rank as usize]
+    }
+
+    pub fn file(self) -> BitBoard {
+        unimplemented!()
     }
 
     pub const fn lift(self) -> BitBoard {
@@ -63,7 +71,6 @@ impl Square {
     }
 
     const fn new(index: u8) -> Square {
-
         Square {
             i: index,
             rank: index / 8,
@@ -78,6 +85,13 @@ mod impl_tests {
     use crate::base::dir::*;
 
     use super::constants::*;
+
+    #[test]
+    fn test_rank() {
+        assert_eq!(A1 | B1 | C1 | D1 | E1 | F1 | G1 | H1, F1.rank());
+        assert_eq!(A4 | B4 | C4 | D4 | E4 | F4 | G4 | H4, D4.rank());
+        assert_eq!(A8 | B8 | C8 | D8 | E8 | F8 | G8 | H8, A8.rank());
+    }
 
     #[test]
     fn test_partial_ord() {

@@ -38,7 +38,7 @@ pub fn side_feature(side: Side) -> u64 {
 }
 
 pub fn enpassant_feature(square: Square) -> u64 {
-    FEATURES[N_FEATURES - 6 - square.file()]
+    FEATURES[N_FEATURES - 6 - square.file_index()]
 }
 
 pub fn castle_feature(zone: CastleZone) -> u64 {

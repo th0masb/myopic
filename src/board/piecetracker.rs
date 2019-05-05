@@ -5,6 +5,7 @@ use crate::pieces;
 use crate::pieces::Piece;
 use crate::board::PieceRef;
 use crate::board::Board;
+use crate::base::Side;
 
 const PS: [PieceRef; 12] = pieces::ALL;
 
@@ -27,8 +28,27 @@ impl PieceTracker {
         }
     }
 
+    pub fn side_locations(&self, side: Side) -> BitBoard {
+        match side {
+            Side::White => self.whites(),
+            Side::Black => self.blacks(),
+        }
+    }
+
+    pub fn whites(&self) -> BitBoard {
+        self.boards.iter().take(6).fold(BitBoard::EMPTY, |a, &b| a | b)
+    }
+
+    pub fn blacks(&self) -> BitBoard {
+        self.boards.iter().skip(6).fold(BitBoard::EMPTY, |a, &b| a | b)
+    }
+
     pub fn locations(&self, piece: PieceRef) -> BitBoard {
         self.boards[piece.index()]
+    }
+
+    pub fn piece_at(&self, square: Square) -> Option<PieceRef> {
+        self.boards.iter().zip(&PS).find(|(&b, _)| b.contains(square)).map(|(_, &p)| p)
     }
 
     pub fn erase_square(&mut self, square: Square) -> Option<PieceRef> {
