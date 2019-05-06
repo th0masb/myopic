@@ -8,33 +8,12 @@ use crate::pieces;
 
 type PinnedPiece = (PieceRef, Square, BitBoard);
 type PinnedSet = (BitBoard, Vec<PinnedPiece>);
+type PinnedComputationInput = (BitBoard, BitBoard, Square);
+
+const WHITE_SLIDERS: [PieceRef; 3] = [pieces::WB, pieces::WR, pieces::WQ];
+const BLACK_SLIDERS: [PieceRef; 3] = [pieces::BB, pieces::BR, pieces::BQ];
 
 impl Board {
-    fn compute_pinned(&self) -> PinnedSet {
-        let mut pinned: Vec<PinnedPiece> = Vec::with_capacity(2);
-        let mut pinned_locs = BitBoard::EMPTY;
-
-        unimplemented!()
-    }
-
-    fn compute_rook_pinned(&self, active_army: BitBoard, active_king: Square) -> PinnedSet {
-        let mut pinned: Vec<PinnedPiece> = Vec::with_capacity(2);
-        let mut pinned_locs = BitBoard::EMPTY;
-        let passive_rook = match self.active {Side::White => pieces::BR, _ => pieces::WR};
-        for rook_loc in self.pieces.locations(passive_rook) {
-
-        }
-
-        unimplemented!()
-    }
-
-    fn compute_cord(source: Square, target: Square) -> BitBoard {
-        unimplemented!()
-    }
-
-    fn compute_bishop_pinned(&self, active_army: BitBoard, active_king: BitBoard) -> PinnedSet {
-        unimplemented!()
-    }
 
     pub fn compute_moves(&self) -> Vec<Move> {
         unimplemented!()
@@ -48,5 +27,28 @@ impl Board {
         unimplemented!()
     }
 
+    /// Computes the set of all active pieces which are pinned to the king,
+    /// i.e have their movement areas constrained so that they do not move
+    /// and leave the king in check.
+    ///
+    fn compute_pinned(&self, input: PinnedComputationInput) -> PinnedSet {
+        let (active, passive, king_loc) = input;
+        let mut pinned: Vec<PinnedPiece> = Vec::with_capacity(2);
+        let mut pinned_locs = BitBoard::EMPTY;
+        for potential_pinner in self.compute_potential_pinners(king_loc) {
+            let cord = BitBoard::cord(king_loc, potential_pinner);
+            if (cord & active).size() == 2 && (cord & passive).size() == 1 {
+                let pinned_loc = ((cord & active) - king_loc).into_iter().next().unwrap();
+                pinned.push((self.pieces.piece_at(pinned_loc).unwrap(), pinned_loc, cord));
+                pinned_locs |= pinned_loc;
+            }
+        }
+        (pinned_locs, pinned)
+    }
 
+    fn compute_potential_pinners(&self, king_loc: Square) -> BitBoard {
+        let passive_sliders = match self.active {Side::White => BLACK_SLIDERS, _ => WHITE_SLIDERS};
+        let locs = |p: PieceRef| self.pieces.locations(p);
+        passive_sliders.iter().flat_map(|&p| locs(p) & p.empty_control(king_loc)).collect()
+    }
 }

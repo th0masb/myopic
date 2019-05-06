@@ -103,3 +103,15 @@ impl ops::BitXorAssign<Square> for BitBoard {
         self.0 = self.0 ^ (1u64 << rhs.i);
     }
 }
+
+impl ops::BitOrAssign<BitBoard> for BitBoard {
+    fn bitor_assign(&mut self, rhs: BitBoard) {
+        self.0 = self.0 | rhs.0;
+    }
+}
+
+impl ops::BitOrAssign<Square> for BitBoard {
+    fn bitor_assign(&mut self, rhs: Square) {
+        self.0 = self.0 | (1u64 << rhs.i);
+    }
+}

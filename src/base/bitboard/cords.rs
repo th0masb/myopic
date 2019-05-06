@@ -23,7 +23,7 @@ lazy_static! {
     static ref OFFSETS: Vec<usize> = compute_offsets();
 }
 
-pub fn compute_offsets() -> Vec<usize> {
+fn compute_offsets() -> Vec<usize> {
     let mut dest: Vec<usize> = Vec::with_capacity(63);
     dest.push(0);
     for i in 1..63 {
