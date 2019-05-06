@@ -6,6 +6,7 @@ use crate::base::dir::Dir;
 pub mod constants;
 mod traits;
 
+/// Value type representing a square on a chessboard.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Square {
     pub i: u8,
@@ -14,30 +15,40 @@ pub struct Square {
 }
 
 impl Square {
+    /// Retrieve a string identifier for this square.
     pub const fn name(self) -> &'static str {
         NAMES[self.i as usize]
     }
 
+    /// Return the index of the rank on which this square resides.
     pub const fn rank_index(self) -> usize {
         self.rank as usize
     }
 
+    /// Return the index of the file on which this square resides.
     pub const fn file_index(self) -> usize {
         self.file as usize
     }
 
+    /// Return a bitboard representing the rank on which this square
+    /// resides.
     pub fn rank(self) -> BitBoard {
         BitBoard::RANKS[self.rank as usize]
     }
 
+    /// Return a bitboard representing the file on which this square
+    /// resides.
     pub fn file(self) -> BitBoard {
         unimplemented!()
     }
 
+    /// 'Lifts' this square to a singleton set of squares.
     pub const fn lift(self) -> BitBoard {
         BitBoard(1u64 << self.i)
     }
 
+    /// Finds the next square on a chessboard from this square in a
+    /// given direction if it exists.
     pub fn next(self, dir: Dir) -> Option<Square> {
         let new_rank = (self.rank as i8) + dir.dr;
         let new_file = (self.file as i8) + dir.df;
@@ -48,10 +59,15 @@ impl Square {
         }
     }
 
+    /// Find all squares in a given direction from this square and
+    /// returns them as a set.
     pub fn search(self, dir: Dir) -> BitBoard {
         self.search_vec(dir).into_iter().collect()
     }
 
+    /// Find all squares in a given direction from this square and
+    /// returns them as a vector where the squares are ordered in
+    /// increasing distance from this square.
     pub fn search_vec(self, dir: Dir) -> Vec<Square> {
         iterate(Some(self), |op| op.and_then(|sq| sq.next(dir)))
             .skip(1)
@@ -60,10 +76,14 @@ impl Square {
             .collect()
     }
 
+    /// Find all squares in all directions in a given vector and
+    /// returns them as a set.
     pub fn search_all(self, dirs: &Vec<Dir>) -> BitBoard {
         dirs.iter().flat_map(|&dir| self.search(dir)).collect()
     }
 
+    /// Find the squares adjacent to this square in all of the
+    /// given directions and returns them as a set.
     pub fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
         dirs.iter()
             .flat_map(|&dir| self.next(dir).into_iter())
@@ -80,7 +100,7 @@ impl Square {
 }
 
 #[cfg(test)]
-mod impl_tests {
+mod test {
     use crate::base::bitboard::*;
     use crate::base::dir::*;
 
