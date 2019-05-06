@@ -26,6 +26,10 @@ pub trait Piece {
     fn is_pawn(&self) -> bool {
         self.index() % 6 == 0
     }
+
+    fn empty_control(&self, location: Square) -> BitBoard {
+        self.control(location, BitBoard::EMPTY, BitBoard::EMPTY)
+    }
 }
 
 impl Debug for Piece {
@@ -39,16 +43,6 @@ impl PartialEq<Piece> for Piece {
         self.index() == other.index()
     }
 }
-
-//#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-//pub enum PieceClass {
-//    Pawn,
-//    Knight,
-//    Bishop,
-//    Rook,
-//    Queen,
-//    King,
-//}
 
 /// Constant static references to each white piece.
 pub const WP: &'static dyn Piece = &WhitePawn;

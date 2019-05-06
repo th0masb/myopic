@@ -17,7 +17,7 @@ impl Board {
         unimplemented!()
     }
 
-    fn compute_rook_pinned(&self, active_army: BitBoard, active_king: BitBoard) -> PinnedSet {
+    fn compute_rook_pinned(&self, active_army: BitBoard, active_king: Square) -> PinnedSet {
         let mut pinned: Vec<PinnedPiece> = Vec::with_capacity(2);
         let mut pinned_locs = BitBoard::EMPTY;
         let passive_rook = match self.active {Side::White => pieces::BR, _ => pieces::WR};
@@ -25,6 +25,10 @@ impl Board {
 
         }
 
+        unimplemented!()
+    }
+
+    fn compute_cord(source: Square, target: Square) -> BitBoard {
         unimplemented!()
     }
 

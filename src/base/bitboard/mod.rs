@@ -7,6 +7,7 @@ use crate::base::square::constants::H1;
 use crate::base::square::Square;
 
 pub mod constants;
+mod cords;
 mod iterator;
 mod operators;
 
@@ -52,6 +53,10 @@ impl BitBoard {
             count += 1;
         }
         count
+    }
+
+    pub fn cord(source: Square, target: Square) -> BitBoard {
+        unimplemented!()
     }
 
     pub const EMPTY: BitBoard = BitBoard(0u64);

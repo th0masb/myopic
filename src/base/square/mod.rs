@@ -6,7 +6,7 @@ use crate::base::dir::Dir;
 pub mod constants;
 mod traits;
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Square {
     pub i: u8,
     rank: u8,
@@ -48,7 +48,13 @@ impl Square {
         }
     }
 
-    pub fn search_vec(self, dir: Dir) -> Vec<Square> {
+    pub fn unsafe_next(self, dir: Dir) -> Square {
+        let new_rank = (self.rank as i8) + dir.dr;
+        let new_file = (self.file as i8) + dir.df;
+        constants::SQUARES[(8 * new_rank + new_file) as usize]
+    }
+
+    pub fn search(self, dir: Dir) -> BitBoard {
         iterate(Some(self), |op| op.and_then(|sq| sq.next(dir)))
             .skip(1)
             .take_while(|op| op.is_some())
@@ -56,8 +62,8 @@ impl Square {
             .collect()
     }
 
-    pub fn search(self, dir: Dir) -> BitBoard {
-        self.search_vec(dir).into_iter().collect()
+    pub fn search_vec(self, dir: Dir) -> Vec<Square> {
+        self.search(dir).into_iter().collect()
     }
 
     pub fn search_all(self, dirs: &Vec<Dir>) -> BitBoard {
