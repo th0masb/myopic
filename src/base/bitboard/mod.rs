@@ -7,7 +7,7 @@ use crate::base::square::constants::H1;
 use crate::base::square::Square;
 
 pub mod constants;
-mod cords;
+pub mod cords;
 mod iterator;
 mod operators;
 
