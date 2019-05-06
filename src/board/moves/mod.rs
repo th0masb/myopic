@@ -16,6 +16,8 @@ const BLACK_SLIDERS: [PieceRef; 3] = [pieces::BB, pieces::BR, pieces::BQ];
 impl Board {
 
     pub fn compute_moves(&self) -> Vec<Move> {
+        let mut dest: Vec<Move> = Vec::with_capacity(40);
+
         unimplemented!()
     }
 
@@ -31,8 +33,10 @@ impl Board {
     /// i.e have their movement areas constrained so that they do not move
     /// and leave the king in check.
     ///
-    fn compute_pinned(&self, input: PinnedComputationInput) -> PinnedSet {
-        let (active, passive, king_loc) = input;
+    fn compute_pinned(&self) -> PinnedSet {
+        let locs = |side: Side| self.pieces.side_locations(side);
+        let (active, passive) = (locs(self.active), locs(self.active.other()));
+        let king_loc = self.pieces.king_location(self.active);
         let mut pinned: Vec<PinnedPiece> = Vec::with_capacity(2);
         let mut pinned_locs = BitBoard::EMPTY;
         for potential_pinner in self.compute_potential_pinners(king_loc) {

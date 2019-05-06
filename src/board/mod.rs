@@ -7,6 +7,7 @@ use crate::board::castletracker::CastleTracker;
 use crate::base::Side;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::pieces::PieceRef;
 
 pub mod hash;
 //pub mod tables;// To be removed
@@ -22,8 +23,6 @@ mod hashcache;
 mod testutils;
 
 
-
-pub type PieceRef = &'static dyn Piece;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {

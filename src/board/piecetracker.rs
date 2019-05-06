@@ -35,6 +35,10 @@ impl PieceTracker {
         }
     }
 
+    pub fn king_location(&self, side: Side) -> Square {
+        self.locations(pieces::king(side)).into_iter().next().unwrap()
+    }
+
     pub fn whites(&self) -> BitBoard {
         self.boards.iter().take(6).fold(BitBoard::EMPTY, |a, &b| a | b)
     }

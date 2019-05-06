@@ -10,6 +10,7 @@ mod knights;
 mod pawns;
 mod sliding;
 
+pub type PieceRef = &'static dyn Piece;
 pub trait Piece {
     fn index(&self) -> usize;
 
@@ -44,34 +45,62 @@ impl PartialEq<Piece> for Piece {
     }
 }
 
+pub fn king(side: Side) -> PieceRef {
+    match side {
+        Side::White => WK,
+        Side::Black => BK,
+    }
+}
+
+pub fn pawn(side: Side) -> PieceRef {
+    match side {
+        Side::White => WP,
+        Side::Black => BP,
+    }
+}
+
+pub fn pieces(side: Side) -> &'static [PieceRef] {
+    match side {
+        Side::White => &WHITE,
+        Side::Black => &BLACK,
+    }
+}
+
+pub fn army(side: Side) -> [PieceRef; 5] {
+    match side {
+        Side::White => [WP, WN, WB, WR, WQ],
+        Side::Black => [BP, BN, BB, BR, BQ],
+    }
+}
+
 /// Constant static references to each white piece.
-pub const WP: &'static dyn Piece = &WhitePawn;
-pub const WN: &'static dyn Piece = &WhiteKnight;
-pub const WB: &'static dyn Piece = &WhiteBishop;
-pub const WR: &'static dyn Piece = &WhiteRook;
-pub const WQ: &'static dyn Piece = &WhiteQueen;
-pub const WK: &'static dyn Piece = &WhiteKing;
+pub const WP: PieceRef = &WhitePawn;
+pub const WN: PieceRef = &WhiteKnight;
+pub const WB: PieceRef = &WhiteBishop;
+pub const WR: PieceRef = &WhiteRook;
+pub const WQ: PieceRef = &WhiteQueen;
+pub const WK: PieceRef = &WhiteKing;
 
 /// Constant static references to each black piece.
-pub const BP: &'static dyn Piece = &BlackPawn;
-pub const BN: &'static dyn Piece = &BlackKnight;
-pub const BB: &'static dyn Piece = &BlackBishop;
-pub const BR: &'static dyn Piece = &BlackRook;
-pub const BQ: &'static dyn Piece = &BlackQueen;
-pub const BK: &'static dyn Piece = &BlackKing;
+pub const BP: PieceRef = &BlackPawn;
+pub const BN: PieceRef = &BlackKnight;
+pub const BB: PieceRef = &BlackBishop;
+pub const BR: PieceRef = &BlackRook;
+pub const BQ: PieceRef = &BlackQueen;
+pub const BK: PieceRef = &BlackKing;
 
 /// Constant piece groupings.
-pub const ALL: [&'static dyn Piece; 12] = [WP, WN, WB, WR, WQ, WK, BP, BN, BB, BR, BQ, BK];
+pub const ALL: [PieceRef; 12] = [WP, WN, WB, WR, WQ, WK, BP, BN, BB, BR, BQ, BK];
 
-pub const WHITE: [&'static dyn Piece; 6] = [WP, WN, WB, WR, WQ, WK];
-pub const BLACK: [&'static dyn Piece; 6] = [BP, BN, BB, BR, BQ, BK];
+pub const WHITE: [PieceRef; 6] = [WP, WN, WB, WR, WQ, WK];
+pub const BLACK: [PieceRef; 6] = [BP, BN, BB, BR, BQ, BK];
 
-pub const PAWNS: [&'static dyn Piece; 2] = [WP, BP];
-pub const KNIGHTS: [&'static dyn Piece; 2] = [WN, BN];
-pub const BISHOPS: [&'static dyn Piece; 2] = [WB, BB];
-pub const ROOKS: [&'static dyn Piece; 2] = [WR, BR];
-pub const QUEENS: [&'static dyn Piece; 2] = [WQ, BQ];
-pub const KINGS: [&'static dyn Piece; 2] = [WK, BK];
+pub const PAWNS:   [PieceRef; 2] = [WP, BP];
+pub const KNIGHTS: [PieceRef; 2] = [WN, BN];
+pub const BISHOPS: [PieceRef; 2] = [WB, BB];
+pub const ROOKS:   [PieceRef; 2] = [WR, BR];
+pub const QUEENS:  [PieceRef; 2] = [WQ, BQ];
+pub const KINGS:   [PieceRef; 2] = [WK, BK];
 
 
 /// Encapsulated singleton structs for each piece type.
