@@ -7,43 +7,37 @@ use crate::base::square::constants::H1;
 use crate::base::square::Square;
 
 pub mod constants;
-pub mod cords;
+mod cords;
 mod iterator;
 mod operators;
 
-fn loc(sq: Square) -> u64 {
-    1u64 << sq.i
-}
-
-pub fn create_files() -> Vec<BitBoard> {
-    (H1.search(dir::W) | H1)
-        .into_iter()
-        .map(|sq| sq.search(dir::N) | sq)
-        .collect()
-}
-
-pub fn create_ranks() -> Vec<BitBoard> {
-    (H1.search(dir::N) | H1)
-        .into_iter()
-        .map(|sq| sq.search(dir::W) | sq)
-        .collect()
-}
-
+/// A bitboard is a value type wrapping a 64 bit integer which represents
+/// a set of squares on a chess board. Each bit is mapped to a particular
+/// square on the board, 0 -> H1, 1 -> G1,..., 8 -> H2,..., 63 -> A8. For
+/// example if we know a piece to reside on a particular square we can
+/// use a bitboard to to capture the available moves for that piece.
+///
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Hash)]
 pub struct BitBoard(pub u64);
 impl BitBoard {
+    /// Check if this bitboard contains a particular square.
     pub fn contains(self, square: Square) -> bool {
         self.0 & (1u64 << square.i) != 0
     }
 
+    /// Check if this bitboard is empty, i.e contains no squares.
     pub fn is_empty(self) -> bool {
         self.0 == 0
     }
 
+    /// Check if the intersection of this bitboard and the other is
+    /// non-empty.
     pub fn intersects(self, other: BitBoard) -> bool {
         !(self & other).is_empty()
     }
 
+    /// Computes the number of squares in this bitboard using the
+    /// popcount algorithm.
     pub fn size(self) -> usize {
         // Uses popcount algorithm.
         let mut x = self.0;
@@ -55,13 +49,22 @@ impl BitBoard {
         count
     }
 
+    /// Computes the 'cord' between two squares. Imagine a queen sat
+    /// on the source square on and empty board. If the queen can move
+    /// to the target square then this method returns the set of
+    /// squares which the queen slides along to get to this target
+    /// square (inclusive of both ends) otherwise the empty bitboard
+    /// is returned.
     pub fn cord(source: Square, target: Square) -> BitBoard {
-        unimplemented!()
+        cords::get_cord(source, target)
     }
 
+    /// The empty bitboard (set of no squares).
     pub const EMPTY: BitBoard = BitBoard(0u64);
+    /// The complete bitboard (set of all squares).
     pub const ALL: BitBoard = BitBoard(!0u64);
 
+    /// Array of bitboards represented the eight ranks, ordered 1 to 8.
     pub const RANKS: [BitBoard; 8] = [
         BitBoard(255),
         BitBoard(65280),
@@ -72,6 +75,24 @@ impl BitBoard {
         BitBoard(71776119061217280),
         BitBoard(18374686479671623680),
     ];
+}
+
+fn loc(sq: Square) -> u64 {
+    1u64 << sq.i
+}
+
+fn create_files() -> Vec<BitBoard> {
+    (H1.search(dir::W) | H1)
+        .into_iter()
+        .map(|sq| sq.search(dir::N) | sq)
+        .collect()
+}
+
+fn create_ranks() -> Vec<BitBoard> {
+    (H1.search(dir::N) | H1)
+        .into_iter()
+        .map(|sq| sq.search(dir::W) | sq)
+        .collect()
 }
 
 impl fmt::Debug for BitBoard {

@@ -116,6 +116,11 @@ mod impl_tests {
     }
 
     #[test]
+    fn test_search_vec() {
+        assert_eq!(D3.search_vec(S), vec![D2, D1])
+    }
+
+    #[test]
     fn test_search_one() {
         assert_eq!(D3.search_one(&vec!(S, E)), D2 | E3);
         assert_eq!(A8.search_one(&vec!(N, NWW, SE)), B7.lift());
