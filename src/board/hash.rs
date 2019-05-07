@@ -6,26 +6,6 @@ use rand_pcg::Mcg128Xsl64;
 use std::iter;
 use crate::base::Side;
 
-const SEED: u64 = 0x110894u64;
-const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
-
-/// O(n^2) complexity but hey ho.
-pub fn gen_unique(count: usize) -> Vec<u64> {
-    let mut prng = Mcg128Xsl64::seed_from_u64(SEED);
-    let mut dest: Vec<u64> = Vec::with_capacity(count);
-    while dest.len() < count {
-        let attempt = prng.gen();
-        if !dest.contains(&attempt) {
-            dest.push(attempt);
-        }
-    }
-    dest
-}
-
-lazy_static! {
-    static ref FEATURES: Vec<u64> = gen_unique(N_FEATURES);
-}
-
 pub fn piece_feature(piece: &dyn Piece, square: Square) -> u64 {
     FEATURES[piece.index() * 64 + square.i as usize]
 }
@@ -43,6 +23,27 @@ pub fn enpassant_feature(square: Square) -> u64 {
 
 pub fn castle_feature(zone: CastleZone) -> u64 {
     FEATURES[N_FEATURES - 2 - zone.i()]
+}
+
+
+const SEED: u64 = 0x110894u64;
+const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
+
+/// O(n^2) complexity but hey ho.
+fn gen_unique(count: usize) -> Vec<u64> {
+    let mut prng = Mcg128Xsl64::seed_from_u64(SEED);
+    let mut dest: Vec<u64> = Vec::with_capacity(count);
+    while dest.len() < count {
+        let attempt = prng.gen();
+        if !dest.contains(&attempt) {
+            dest.push(attempt);
+        }
+    }
+    dest
+}
+
+lazy_static! {
+    static ref FEATURES: Vec<u64> = gen_unique(N_FEATURES);
 }
 
 #[cfg(test)]

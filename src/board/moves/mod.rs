@@ -31,6 +31,17 @@ impl Board {
         unimplemented!()
     }
 
+    /// Computes the total area of control on the board for a given side.
+    /// TODO Improve effeciency by treated all pawns as a block
+    fn compute_control(&self, side: Side) -> BitBoard {
+        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
+        let locs = |piece: PieceRef| self.pieces.locations(piece);
+        let control = |piece: PieceRef, square: Square| piece.control(square, whites, blacks);
+        pieces::on_side(side).iter()
+            .flat_map(|&p| locs(p).into_iter().map(move |sq| control(p, sq)))
+            .collect()
+    }
+
     /// Computes the set of all active pieces which are pinned to the king,
     /// i.e have their movement areas constrained so that they do not move
     /// and leave the king in check.

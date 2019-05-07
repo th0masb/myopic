@@ -59,7 +59,7 @@ pub fn pawn(side: Side) -> PieceRef {
     }
 }
 
-pub fn pieces(side: Side) -> &'static [PieceRef] {
+pub fn on_side(side: Side) -> &'static [PieceRef] {
     match side {
         Side::White => &WHITE,
         Side::Black => &BLACK,

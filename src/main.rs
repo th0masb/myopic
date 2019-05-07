@@ -11,7 +11,6 @@ use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::dir;
 use crate::base::square::constants::*;
-use crate::board::hash::gen_unique;
 use crate::pieces::PieceRef;
 
 mod base;
