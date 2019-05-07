@@ -49,6 +49,11 @@ impl BitBoard {
         count
     }
 
+    /// Finds the first square in this set if it is non-empty.
+    pub fn first(self) -> Option<Square> {
+        self.into_iter().next()
+    }
+
     /// Computes the 'cord' between two squares. Imagine a queen sat
     /// on the source square on and empty board. If the queen can move
     /// to the target square then this method returns the set of

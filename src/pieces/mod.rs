@@ -35,7 +35,7 @@ pub trait Piece {
 
 impl Debug for Piece {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        unimplemented!()
+        write!(f, "{}", self.id())
     }
 }
 

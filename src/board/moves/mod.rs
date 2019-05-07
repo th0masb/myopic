@@ -1,14 +1,16 @@
 use crate::board::Board;
 use crate::board::Move;
-use crate::board::PieceRef;
+use crate::pieces::PieceRef;
 use crate::base::square::Square;
 use crate::base::bitboard::BitBoard;
 use crate::base::Side;
 use crate::pieces;
 
+#[cfg(test)]
+mod pin_test;
+
 type PinnedPiece = (PieceRef, Square, BitBoard);
 type PinnedSet = (BitBoard, Vec<PinnedPiece>);
-type PinnedComputationInput = (BitBoard, BitBoard, Square);
 
 const WHITE_SLIDERS: [PieceRef; 3] = [pieces::WB, pieces::WR, pieces::WQ];
 const BLACK_SLIDERS: [PieceRef; 3] = [pieces::BB, pieces::BR, pieces::BQ];
