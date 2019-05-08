@@ -8,6 +8,8 @@ use crate::pieces;
 
 #[cfg(test)]
 mod pin_test;
+#[cfg(test)]
+mod control_test;
 
 type PinnedPiece = (PieceRef, Square, BitBoard);
 type PinnedSet = (BitBoard, Vec<PinnedPiece>);
