@@ -1,12 +1,12 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::castlezone::CastleZoneSet;
 use crate::base::castlezone::CastleZone;
-use crate::base::Side;
+use crate::base::castlezone::CastleZoneSet;
 use crate::base::square::Square;
-use crate::board::Board;
-use crate::board::piecetracker::PieceTracker;
+use crate::base::Side;
 use crate::board::castletracker::CastleTracker;
 use crate::board::hashcache::HashCache;
+use crate::board::piecetracker::PieceTracker;
+use crate::board::Board;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {
@@ -23,8 +23,13 @@ pub struct TestBoard {
 
 impl TestBoard {
     pub fn to_board(self) -> Board {
-        let pieces = PieceTracker::new(vec![self.whites, self.blacks].iter()
-            .flat_map(|x| x.into_iter()).map(|&x| x).collect());
+        let pieces = PieceTracker::new(
+            vec![self.whites, self.blacks]
+                .iter()
+                .flat_map(|x| x.into_iter())
+                .map(|&x| x)
+                .collect(),
+        );
         let castling = CastleTracker::new(self.castle_rights, self.white_status, self.black_status);
         let mut hashes = HashCache::new(0u64);
         for i in 0..self.hash_offset {

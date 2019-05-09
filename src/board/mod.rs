@@ -1,12 +1,12 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::pieces::Piece;
-use crate::board::hashcache::HashCache;
-use crate::board::piecetracker::PieceTracker;
-use crate::board::castletracker::CastleTracker;
-use crate::base::Side;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::square::Square;
+use crate::base::Side;
+use crate::board::castletracker::CastleTracker;
+use crate::board::hashcache::HashCache;
+use crate::board::piecetracker::PieceTracker;
+use crate::pieces::Piece;
 use crate::pieces::PieceRef;
 
 pub mod hash;
@@ -14,15 +14,12 @@ pub mod hash;
 pub mod evolve;
 pub mod moves;
 
-
-mod piecetracker;
 mod castletracker;
 mod hashcache;
+mod piecetracker;
 
 #[cfg(test)]
 mod testutils;
-
-
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
@@ -68,8 +65,14 @@ pub enum Move {
 }
 
 impl Move {
-    pub fn standard(moving_piece: PieceRef, source: Square, target: Square) -> Move {
-        Move::Standard(moving_piece, source, target)
+    pub fn standards(
+        moving_piece: PieceRef,
+        source: Square,
+        targets: BitBoard,
+    ) -> impl Iterator<Item = Move> {
+        targets
+            .into_iter()
+            .map(move |target| Move::Standard(moving_piece, source, target))
     }
 
     pub fn enpassant(source: Square) -> Move {
@@ -84,5 +87,3 @@ impl Move {
         Move::Castle(zone)
     }
 }
-
-

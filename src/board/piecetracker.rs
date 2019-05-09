@@ -1,11 +1,11 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
+use crate::base::Side;
 use crate::board::hash;
+use crate::board::Board;
+use crate::board::PieceRef;
 use crate::pieces;
 use crate::pieces::Piece;
-use crate::board::PieceRef;
-use crate::board::Board;
-use crate::base::Side;
 
 const PS: [PieceRef; 12] = pieces::ALL;
 
@@ -18,7 +18,9 @@ pub struct PieceTracker {
 impl PieceTracker {
     pub fn new(initial_boards: Vec<BitBoard>) -> PieceTracker {
         assert_eq!(12, initial_boards.len());
-        let initial_hash = initial_boards.iter().zip(&pieces::ALL)
+        let initial_hash = initial_boards
+            .iter()
+            .zip(&pieces::ALL)
             .flat_map(|(&b, &p)| b.into_iter().map(move |sq| hash::piece_feature(p, sq)))
             .fold(0u64, |a, b| a ^ b);
 
@@ -36,15 +38,24 @@ impl PieceTracker {
     }
 
     pub fn king_location(&self, side: Side) -> Square {
-        self.locations(pieces::king(side)).into_iter().next().unwrap()
+        self.locations(pieces::king(side))
+            .into_iter()
+            .next()
+            .unwrap()
     }
 
     pub fn whites(&self) -> BitBoard {
-        self.boards.iter().take(6).fold(BitBoard::EMPTY, |a, &b| a | b)
+        self.boards
+            .iter()
+            .take(6)
+            .fold(BitBoard::EMPTY, |a, &b| a | b)
     }
 
     pub fn blacks(&self) -> BitBoard {
-        self.boards.iter().skip(6).fold(BitBoard::EMPTY, |a, &b| a | b)
+        self.boards
+            .iter()
+            .skip(6)
+            .fold(BitBoard::EMPTY, |a, &b| a | b)
     }
 
     pub fn locations(&self, piece: PieceRef) -> BitBoard {
@@ -52,7 +63,11 @@ impl PieceTracker {
     }
 
     pub fn piece_at(&self, square: Square) -> Option<PieceRef> {
-        self.boards.iter().zip(&PS).find(|(&b, _)| b.contains(square)).map(|(_, &p)| p)
+        self.boards
+            .iter()
+            .zip(&PS)
+            .find(|(&b, _)| b.contains(square))
+            .map(|(_, &p)| p)
     }
 
     pub fn erase_square(&mut self, square: Square) -> Option<PieceRef> {
@@ -89,9 +104,9 @@ mod test {
     use crate::pieces;
 
     use super::*;
-    use crate::base::square::constants::E5;
     use crate::base::square::constants::C3;
     use crate::base::square::constants::E4;
+    use crate::base::square::constants::E5;
 
     #[test]
     fn test_erase_square() {

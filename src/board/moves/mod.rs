@@ -1,28 +1,49 @@
+use crate::base::bitboard::BitBoard;
+use crate::base::square::Square;
+use crate::base::Side;
 use crate::board::Board;
 use crate::board::Move;
-use crate::pieces::PieceRef;
-use crate::base::square::Square;
-use crate::base::bitboard::BitBoard;
-use crate::base::Side;
 use crate::pieces;
+use crate::pieces::PieceRef;
 
-#[cfg(test)]
-mod pin_test;
 #[cfg(test)]
 mod control_test;
+#[cfg(test)]
+mod pin_test;
 
-type PinnedPiece = (PieceRef, Square, BitBoard);
+type PinnedPiece = (Square, BitBoard);
 type PinnedSet = (BitBoard, Vec<PinnedPiece>);
 
 const WHITE_SLIDERS: [PieceRef; 3] = [pieces::WB, pieces::WR, pieces::WQ];
 const BLACK_SLIDERS: [PieceRef; 3] = [pieces::BB, pieces::BR, pieces::BQ];
 
 impl Board {
-
     pub fn compute_moves(&self) -> Vec<Move> {
+        let pinned = self.compute_pinned();
+        let passive_control = self.compute_control(self.active.other());
+        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let mut dest: Vec<Move> = Vec::with_capacity(40);
+        // Add standard moves for pieces which aren't pawns or king
+        for &piece in Board::knight_and_sliders(self.active).iter() {
+            for location in self.pieces.locations(piece) {
+                let constraint = Board::compute_constraint_area(location, &pinned);
+                let moves = piece.moves(location, whites, blacks) & constraint;
+                dest.extend(Move::standards(piece, location, moves));
+            }
+        }
 
         unimplemented!()
+    }
+
+//    fn compute_knight_and_slider_moves(&self) -> impl Iterator<Item = Move> {
+//
+//    }
+
+    fn knight_and_sliders(side: Side) -> [PieceRef; 4] {
+        match side {
+            Side::White => [pieces::WN, pieces::WB, pieces::WR, pieces::WQ],
+            _ => [pieces::BN, pieces::BB, pieces::BR, pieces::BQ],
+        }
     }
 
     pub fn compute_attacks(&self) -> Vec<Move> {
@@ -33,13 +54,27 @@ impl Board {
         unimplemented!()
     }
 
+    fn compute_constraint_area(piece_loc: Square, pinned: &PinnedSet) -> BitBoard {
+        let (all_pinned_locs, pinned_pieces) = pinned;
+        if all_pinned_locs.contains(piece_loc) {
+            pinned_pieces
+                .into_iter()
+                .find(|(sq, _)| *sq == piece_loc)
+                .unwrap()
+                .1
+        } else {
+            BitBoard::ALL
+        }
+    }
+
     /// Computes the total area of control on the board for a given side.
-    /// TODO Improve effeciency by treated all pawns as a block
+    /// TODO Improve efficiency by treated all pawns as a block
     fn compute_control(&self, side: Side) -> BitBoard {
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let locs = |piece: PieceRef| self.pieces.locations(piece);
         let control = |piece: PieceRef, square: Square| piece.control(square, whites, blacks);
-        pieces::on_side(side).iter()
+        pieces::on_side(side)
+            .iter()
             .flat_map(|&p| locs(p).into_iter().map(move |sq| control(p, sq)))
             .collect()
     }
@@ -58,7 +93,7 @@ impl Board {
             let cord = BitBoard::cord(king_loc, potential_pinner);
             if (cord & active).size() == 2 && (cord & passive).size() == 1 {
                 let pinned_loc = ((cord & active) - king_loc).into_iter().next().unwrap();
-                pinned.push((self.pieces.piece_at(pinned_loc).unwrap(), pinned_loc, cord));
+                pinned.push((pinned_loc, cord));
                 pinned_locs |= pinned_loc;
             }
         }
@@ -66,8 +101,14 @@ impl Board {
     }
 
     fn compute_potential_pinners(&self, king_loc: Square) -> BitBoard {
-        let passive_sliders = match self.active {Side::White => BLACK_SLIDERS, _ => WHITE_SLIDERS};
+        let passive_sliders = match self.active {
+            Side::White => BLACK_SLIDERS,
+            _ => WHITE_SLIDERS,
+        };
         let locs = |p: PieceRef| self.pieces.locations(p);
-        passive_sliders.iter().flat_map(|&p| locs(p) & p.empty_control(king_loc)).collect()
+        passive_sliders
+            .iter()
+            .flat_map(|&p| locs(p) & p.empty_control(king_loc))
+            .collect()
     }
 }

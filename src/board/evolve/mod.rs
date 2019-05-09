@@ -1,12 +1,10 @@
 use std::io::repeat;
 
-use crate::{pieces, pieces::Piece};
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::dir::N;
 use crate::base::dir::S;
-use crate::base::Side;
 use crate::base::square::constants::A1;
 use crate::base::square::constants::A8;
 use crate::base::square::constants::E1;
@@ -14,14 +12,16 @@ use crate::base::square::constants::E8;
 use crate::base::square::constants::H1;
 use crate::base::square::constants::H8;
 use crate::base::square::Square;
-use crate::board::Board;
+use crate::base::Side;
 use crate::board::hash;
+use crate::board::Board;
 use crate::board::Move;
 use crate::board::Move::*;
 use crate::board::ReversalData;
+use crate::pieces::PieceRef;
 use crate::pieces::BP;
 use crate::pieces::WP;
-use crate::pieces::PieceRef;
+use crate::{pieces, pieces::Piece};
 
 #[cfg(test)]
 mod test;
@@ -52,7 +52,11 @@ impl Board {
         let discarded_rights = self.castling.remove_rights(source | target);
         let rev_data = self.create_rev_data(discarded_piece, discarded_rights);
         self.pieces.toggle_piece(piece, &[source, target]);
-        self.clock = if discarded_piece.is_some() || piece.is_pawn() {0} else {self.clock + 1};
+        self.clock = if discarded_piece.is_some() || piece.is_pawn() {
+            0
+        } else {
+            self.clock + 1
+        };
         self.enpassant = Board::compute_enpassant(source, target, piece);
         self.switch_side_and_update_hash();
         rev_data
@@ -63,7 +67,11 @@ impl Board {
         self.update_hash();
     }
 
-    fn create_rev_data(&self, discarded_piece: Option<PieceRef>, discarded_rights: CastleZoneSet) -> RD {
+    fn create_rev_data(
+        &self,
+        discarded_piece: Option<PieceRef>,
+        discarded_rights: CastleZoneSet,
+    ) -> RD {
         ReversalData {
             discarded_piece,
             discarded_rights,
@@ -82,7 +90,6 @@ impl Board {
         };
         self.replace_metadata(discards);
     }
-
 
     fn evolve_c(&mut self, zone: CastleZone) -> RD {
         let discarded_rights = self.castling.set_status(self.active, zone);
@@ -108,7 +115,6 @@ impl Board {
         self.pieces.toggle_piece(king, &[k_source, k_target]);
     }
 
-
     fn evolve_e(&mut self, source: Square) -> RD {
         let discarded_piece = pieces::pawn(self.active.other());
         let rev_data = self.create_rev_data(Some(discarded_piece), CastleZoneSet::NONE);
@@ -127,12 +133,14 @@ impl Board {
 
     fn toggle_enpassant_pieces(&mut self, source: Square, enpassant: Square) {
         let active = self.active;
-        let (active_pawn, passive_pawn) = match active { Side::White => (WP, BP), _ => (BP, WP), };
+        let (active_pawn, passive_pawn) = match active {
+            Side::White => (WP, BP),
+            _ => (BP, WP),
+        };
         let removal_square = enpassant.next(active.pawn_dir().opposite()).unwrap();
         self.pieces.toggle_piece(active_pawn, &[source, enpassant]);
         self.pieces.toggle_piece(passive_pawn, &[removal_square]);
     }
-
 
     fn evolve_p(&mut self, source: Square, target: Square, promotion_result: PieceRef) -> RD {
         let discarded_piece = self.pieces.erase_square(target);

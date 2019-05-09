@@ -1,14 +1,14 @@
 use itertools::Itertools;
 
-use crate::base::bitboard::BitBoard;
 use crate::base::bitboard::constants::*;
+use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::square;
 use crate::base::Side;
-use crate::board::Board;
 use crate::board::testutils::TestBoard;
+use crate::board::Board;
 use crate::pieces;
 use crate::pieces::PieceRef;
-use crate::base::square;
 
 use super::{PinnedPiece, PinnedSet};
 
@@ -38,11 +38,13 @@ fn case_one() {
             hash_offset: 10,
         },
 
-        expected: (C5 | D5 | E4, vec![
-            (pieces::BP, square::constants::E4, D4 | E4 | F4 | G4),
-            (pieces::BB, square::constants::C5, B6 | C5 | D4),
-            (pieces::BQ, square::constants::D5, D4 | D5 | D6 | D7 | D8)
-        ]),
+        expected: (
+            C5 | D5 | E4,
+            vec![
+                (square::constants::E4, D4 | E4 | F4 | G4),
+                (square::constants::C5, B6 | C5 | D4),
+                (square::constants::D5, D4 | D5 | D6 | D7 | D8),
+            ],
+        ),
     })
 }
-

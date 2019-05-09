@@ -20,7 +20,7 @@ impl HashCache {
     pub fn new(initial_hash: u64) -> HashCache {
         let mut cache: Vec<_> = iter::repeat(0u64).take(CACHE_SIZE).collect();
         cache[0] = initial_hash;
-        HashCache { pop_dist: 0, cache}
+        HashCache { pop_dist: 0, cache }
     }
 
     fn head_index(&self) -> usize {
@@ -61,15 +61,15 @@ impl HashCache {
             let mut count = 1;
             let mut last = cache[0];
             for hash in cache.into_iter().skip(1) {
-               if hash == last {
-                   count += 1;
-                   if count == 3 {
-                       break;
-                   }
-               }  else {
-                   count = 1;
-                   last = hash;
-               }
+                if hash == last {
+                    count += 1;
+                    if count == 3 {
+                        break;
+                    }
+                } else {
+                    count = 1;
+                    last = hash;
+                }
             }
             count == 3
         }

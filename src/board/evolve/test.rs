@@ -1,27 +1,26 @@
 use std::iter;
 
-use crate::base::bitboard::BitBoard;
 use crate::base::bitboard::constants::*;
+use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::Side;
 use crate::base::square;
 use crate::base::square::Square;
-use crate::board::Board;
+use crate::base::Side;
 use crate::board::castletracker::CastleTracker;
 use crate::board::hashcache::HashCache;
-use crate::board::Move;
 use crate::board::piecetracker::PieceTracker;
-use crate::pieces;
 use crate::board::testutils::TestBoard;
+use crate::board::Board;
+use crate::board::Move;
+use crate::pieces;
 
 #[derive(Debug, Clone)]
 struct TestCase {
-    action : Move,
+    action: Move,
     start: TestBoard,
     end: TestBoard,
 }
-
 
 fn check_case(test_case: TestCase) {
     let action = test_case.action.clone();
@@ -173,7 +172,6 @@ fn test_black_queenside_castling() {
         },
     })
 }
-
 
 #[test]
 fn test_white_rook_taking_black_rook_removing_kingside_rights() {
