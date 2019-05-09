@@ -20,9 +20,8 @@ const BLACK_SLIDERS: [PieceRef; 3] = [pieces::BB, pieces::BR, pieces::BQ];
 const FILES: [BitBoard; 8] = BitBoard::FILES;
 
 fn compute_constraint_area(piece_loc: Square, pinned: &PinnedSet, existing: BitBoard) -> BitBoard {
-    let (all_pinned_locs, pinned_pieces) = pinned;
-    if all_pinned_locs.contains(piece_loc) {
-        pinned_pieces
+    if pinned.0.contains(piece_loc) {
+        (&pinned.1)
             .into_iter()
             .find(|(sq, _)| *sq == piece_loc)
             .unwrap()

@@ -102,6 +102,12 @@ pub const ROOKS:   [PieceRef; 2] = [WR, BR];
 pub const QUEENS:  [PieceRef; 2] = [WQ, BQ];
 pub const KINGS:   [PieceRef; 2] = [WK, BK];
 
+const TEST: [fn(Square, BitBoard, BitBoard) -> BitBoard; 1] = [example];
+
+pub fn example(square: Square, left: BitBoard, right: BitBoard) -> BitBoard {
+    unimplemented!()
+}
+
 
 /// Encapsulated singleton structs for each piece type.
 #[derive(Copy, Clone, PartialEq, Eq)]

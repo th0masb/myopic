@@ -30,6 +30,7 @@ fn main() {
     println!("{}", bitboard);
     let x: PieceRef = pieces::WP;
     println!("{:?}", x);
+    pieces::example(E2, BitBoard::EMPTY, BitBoard::EMPTY);
 
 //    let squares = base.square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
