@@ -1,14 +1,14 @@
-use crate::base::square::{Square, constants::SQUARES};
 use crate::base::bitboard::BitBoard;
 use crate::base::dir::Dir;
-use crate::base::dir::N;
 use crate::base::dir::E;
-use crate::base::dir::S;
-use crate::base::dir::W;
+use crate::base::dir::N;
 use crate::base::dir::NE;
+use crate::base::dir::NW;
+use crate::base::dir::S;
 use crate::base::dir::SE;
 use crate::base::dir::SW;
-use crate::base::dir::NW;
+use crate::base::dir::W;
+use crate::base::square::{constants::SQUARES, Square};
 
 use std::cmp;
 
@@ -43,14 +43,21 @@ fn compute_cord_cache() -> Vec<BitBoard> {
 }
 
 fn compute_cord_impl(source: Square, target: Square) -> BitBoard {
-    [N, NE, E, SE, S, SW, W, NW].iter()
+    [N, NE, E, SE, S, SW, W, NW]
+        .iter()
         .find(|&d| source.search(*d).contains(target))
-        .map_or(BitBoard::EMPTY, |&d| takewhile_inc(source, target, d) | source)
+        .map_or(BitBoard::EMPTY, |&d| {
+            takewhile_inc(source, target, d) | source
+        })
 }
 
 fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {
-    source.search_vec(dir).into_iter()
-        .take_while(|&sq| sq != target).collect::<BitBoard>() | target
+    source
+        .search_vec(dir)
+        .into_iter()
+        .take_while(|&sq| sq != target)
+        .collect::<BitBoard>()
+        | target
 }
 
 #[cfg(test)]

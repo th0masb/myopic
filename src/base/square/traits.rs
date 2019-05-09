@@ -40,7 +40,7 @@ impl ops::BitOr<BitBoard> for Square {
 }
 
 impl ops::BitAnd<BitBoard> for Square {
-   type Output = BitBoard;
+    type Output = BitBoard;
 
     fn bitand(self, other: BitBoard) -> Self::Output {
         self.lift() & other

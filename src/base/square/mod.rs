@@ -148,10 +148,7 @@ mod test {
 
     #[test]
     fn test_search_all() {
-        assert_eq!(
-            C3.search_all(&vec!(SSW, SWW, S)),
-            B1 | A2 | C2 | C1
-        );
+        assert_eq!(C3.search_all(&vec!(SSW, SWW, S)), B1 | A2 | C2 | C1);
     }
 
     #[test]

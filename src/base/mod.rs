@@ -1,12 +1,12 @@
+use crate::base::bitboard::BitBoard;
 use crate::base::dir::Dir;
 use crate::base::dir::N;
 use crate::base::dir::S;
-use crate::base::bitboard::BitBoard;
 
 pub mod bitboard;
-pub mod square;
-pub mod dir;
 pub mod castlezone;
+pub mod dir;
+pub mod square;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
 pub enum Side {
@@ -43,5 +43,10 @@ impl Side {
         }
     }
 
+    pub fn pawn_last_rank(self) -> BitBoard {
+        match self {
+            Side::White => BitBoard::RANKS[6],
+            Side::Black => BitBoard::RANKS[1],
+        }
+    }
 }
-

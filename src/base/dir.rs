@@ -5,7 +5,10 @@ pub struct Dir {
 }
 impl Dir {
     pub fn opposite(self) -> Dir {
-        Dir {dr: -self.dr, df: -self.df}
+        Dir {
+            dr: -self.dr,
+            df: -self.df,
+        }
     }
 }
 

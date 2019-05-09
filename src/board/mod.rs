@@ -6,6 +6,7 @@ use crate::base::Side;
 use crate::board::castletracker::CastleTracker;
 use crate::board::hashcache::HashCache;
 use crate::board::piecetracker::PieceTracker;
+use crate::pieces;
 use crate::pieces::Piece;
 use crate::pieces::PieceRef;
 
@@ -64,6 +65,14 @@ pub enum Move {
     Castle(CastleZone),
 }
 
+fn promotion_targets<'a>(side: Side) -> &'a [PieceRef; 4] {
+    match side {
+        Side::White => &[pieces::WQ, pieces::WR, pieces::WB, pieces::WN],
+        Side::Black => &[pieces::BQ, pieces::BR, pieces::BB, pieces::BN],
+    }
+}
+
+
 impl Move {
     pub fn standards(
         moving_piece: PieceRef,
@@ -79,8 +88,12 @@ impl Move {
         Move::Enpassant(source)
     }
 
-    pub fn promotion(source: Square, target: Square, piece: PieceRef) -> Move {
-        Move::Promotion(source, target, piece)
+    pub fn promotions(side: Side, source: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
+        targets.into_iter().flat_map(move |target| {
+            promotion_targets(side)
+                .iter()
+                .map(move |&piece| Move::Promotion(source, target, piece))
+        })
     }
 
     pub fn castle(zone: CastleZone) -> Move {

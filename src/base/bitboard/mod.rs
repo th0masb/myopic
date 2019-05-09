@@ -80,6 +80,18 @@ impl BitBoard {
         BitBoard(71776119061217280),
         BitBoard(18374686479671623680),
     ];
+
+    /// Array of bitboards represented the eight files, ordered H to A.
+    pub const FILES: [BitBoard; 8] = [
+        BitBoard(72340172838076673),
+        BitBoard(144680345676153346),
+        BitBoard(289360691352306692),
+        BitBoard(578721382704613384),
+        BitBoard(1157442765409226768),
+        BitBoard(2314885530818453536),
+        BitBoard(4629771061636907072),
+        BitBoard(9259542123273814144),
+    ];
 }
 
 fn loc(sq: Square) -> u64 {

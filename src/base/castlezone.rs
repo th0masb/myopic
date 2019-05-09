@@ -20,7 +20,7 @@ use crate::base::square::constants::H1;
 use crate::base::square::constants::H8;
 use crate::base::square::Square;
 use crate::board::hash;
-use crate::pieces::{KINGS, Piece, ROOKS};
+use crate::pieces::{Piece, KINGS, ROOKS};
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
 pub struct CastleZone {
@@ -38,28 +38,38 @@ impl CastleZone {
 
     pub fn rook_data(self) -> (&'static dyn Piece, Square, Square) {
         let i = self.i;
-        (ROOKS[i / 2], CastleZone::ROOK_SOURCES[i], CastleZone::ROOK_TARGETS[i])
+        (
+            ROOKS[i / 2],
+            CastleZone::ROOK_SOURCES[i],
+            CastleZone::ROOK_TARGETS[i],
+        )
     }
 
     pub fn king_data(self) -> (&'static dyn Piece, Square, Square) {
         let i = self.i;
-        (KINGS[i / 2], CastleZone::KING_SOURCES[i], CastleZone::KING_TARGETS[i])
+        (
+            KINGS[i / 2],
+            CastleZone::KING_SOURCES[i],
+            CastleZone::KING_TARGETS[i],
+        )
     }
 
     pub fn lift(&self) -> CastleZoneSet {
-        CastleZoneSet {data: 1usize << self.i}
+        CastleZoneSet {
+            data: 1usize << self.i,
+        }
     }
 
-    pub const WK: CastleZone = CastleZone {i: 0};
-    pub const WQ: CastleZone = CastleZone {i: 1};
-    pub const BK: CastleZone = CastleZone {i: 2};
-    pub const BQ: CastleZone = CastleZone {i: 3};
+    pub const WK: CastleZone = CastleZone { i: 0 };
+    pub const WQ: CastleZone = CastleZone { i: 1 };
+    pub const BK: CastleZone = CastleZone { i: 2 };
+    pub const BQ: CastleZone = CastleZone { i: 3 };
 
     pub const ALL: [CastleZone; 4] = [
         CastleZone::WK,
         CastleZone::WQ,
         CastleZone::BK,
-        CastleZone::BQ
+        CastleZone::BQ,
     ];
 
     const KING_SOURCES: [Square; 4] = [E1, E1, E8, E8];
@@ -79,30 +89,41 @@ impl CastleZoneSet {
     }
 
     pub fn hash(self) -> u64 {
-        (0..4).filter(|i| (1usize << i) & self.data != 0)
+        (0..4)
+            .filter(|i| (1usize << i) & self.data != 0)
             .map(|i| hash::castle_feature(CastleZone::ALL[i]))
             .fold(0u64, |a, b| a ^ b)
     }
 
-    pub const ALL: CastleZoneSet = CastleZoneSet {data: 0b1111};
-    pub const NONE: CastleZoneSet = CastleZoneSet {data: 0};
-    pub const WHITE: CastleZoneSet = CastleZoneSet {data: 0b11};
-    pub const BLACK: CastleZoneSet = CastleZoneSet {data: 0b1100};
-    pub const WK: CastleZoneSet = CastleZoneSet {data: 0b1};
-    pub const WQ: CastleZoneSet = CastleZoneSet {data: 0b10};
-    pub const BK: CastleZoneSet = CastleZoneSet {data: 0b100};
-    pub const BQ: CastleZoneSet = CastleZoneSet {data: 0b1000};
+    pub const ALL: CastleZoneSet = CastleZoneSet { data: 0b1111 };
+    pub const NONE: CastleZoneSet = CastleZoneSet { data: 0 };
+    pub const WHITE: CastleZoneSet = CastleZoneSet { data: 0b11 };
+    pub const BLACK: CastleZoneSet = CastleZoneSet { data: 0b1100 };
+    pub const WK: CastleZoneSet = CastleZoneSet { data: 0b1 };
+    pub const WQ: CastleZoneSet = CastleZoneSet { data: 0b10 };
+    pub const BK: CastleZoneSet = CastleZoneSet { data: 0b100 };
+    pub const BQ: CastleZoneSet = CastleZoneSet { data: 0b1000 };
 }
 
 impl FromIterator<CastleZone> for CastleZoneSet {
-    fn from_iter<T: IntoIterator<Item=CastleZone>>(iter: T) -> Self {
-        CastleZoneSet{data: iter.into_iter().map(|cz| 1usize << cz.i).fold(0, |a, b| a | b)}
+    fn from_iter<T: IntoIterator<Item = CastleZone>>(iter: T) -> Self {
+        CastleZoneSet {
+            data: iter
+                .into_iter()
+                .map(|cz| 1usize << cz.i)
+                .fold(0, |a, b| a | b),
+        }
     }
 }
 
 impl<'a> FromIterator<&'a CastleZone> for CastleZoneSet {
-    fn from_iter<T: IntoIterator<Item=&'a CastleZone>>(iter: T) -> Self {
-        CastleZoneSet{data: iter.into_iter().map(|cz| 1usize << cz.i).fold(0, |a, b| a | b)}
+    fn from_iter<T: IntoIterator<Item = &'a CastleZone>>(iter: T) -> Self {
+        CastleZoneSet {
+            data: iter
+                .into_iter()
+                .map(|cz| 1usize << cz.i)
+                .fold(0, |a, b| a | b),
+        }
     }
 }
 
@@ -110,7 +131,9 @@ impl ops::Sub<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
 
     fn sub(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet {data: self.data & !rhs.data}
+        CastleZoneSet {
+            data: self.data & !rhs.data,
+        }
     }
 }
 
@@ -124,7 +147,9 @@ impl ops::BitOr<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
 
     fn bitor(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet{data: self.data | rhs.data}
+        CastleZoneSet {
+            data: self.data | rhs.data,
+        }
     }
 }
 
@@ -132,10 +157,11 @@ impl ops::BitAnd<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
 
     fn bitand(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet{data: self.data & rhs.data}
+        CastleZoneSet {
+            data: self.data & rhs.data,
+        }
     }
 }
-
 
 #[cfg(test)]
 mod set_test {
@@ -159,7 +185,12 @@ mod set_test {
 
     #[test]
     fn test_collect() {
-        let source = vec![CastleZone::BK, CastleZone::WK, CastleZone::WQ, CastleZone::BQ];
+        let source = vec![
+            CastleZone::BK,
+            CastleZone::WK,
+            CastleZone::WQ,
+            CastleZone::BQ,
+        ];
         let collected: CastleZoneSet = source.into_iter().collect();
         assert_eq!(CastleZoneSet::ALL, collected);
     }
