@@ -50,47 +50,50 @@ fn enpassant_source_squares(enpassant_target: Square) -> BitBoard {
 }
 
 impl Board {
-    pub fn compute_moves(&self, constraint: BitBoard) -> Vec<Move> {
+    pub fn compute_moves(&self, force_attacks_constraint: BitBoard) -> Vec<Move> {
         let pinned = self.compute_pinned();
-        let armies = (self.pieces.whites(), self.pieces.blacks());
+        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let mut dest: Vec<Move> = Vec::with_capacity(50);
-        dest.extend(self.compute_knight_and_slider_moves(armies, &pinned, constraint));
+        let compute_moves = |p: PieceRef, loc: Square| p.moves(loc, whites, blacks);
 
-        let passive_control = self.compute_control(self.active.other());
+        dest.extend(
+            self.compute_knight_and_slider_moves(&compute_moves, &|loc: Square| {
+                compute_constraint_area(loc, &pinned, force_attacks_constraint)
+            }),
+        );
+
+        let pawn_constraint =
+            force_attacks_constraint | self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift());
+        dest.extend(self.compute_pawn_moves(&compute_moves, &|loc: Square| {
+            compute_constraint_area(loc, &pinned, pawn_constraint)
+        }));
+
+        let king_constraint = force_attacks_constraint - self.compute_control(self.active.other());
 
         unimplemented!()
     }
 
     fn compute_pawn_moves(
         &self,
-        armies: ArmyLocations,
-        pinned: &PinnedSet,
-        initial_constraint: BitBoard,
+        compute_moves: &Fn(PieceRef, Square) -> BitBoard,
+        compute_constraint: &Fn(Square) -> BitBoard,
     ) -> Vec<Move> {
-        let (whites, blacks) = armies;
         let mut dest: Vec<Move> = Vec::with_capacity(20);
         let (standard, enpassant, promotion) = self.separate_pawn_locs();
         let active_pawn = pieces::pawn(self.active);
 
-        // TODO Would be nice if we could inject these functions as arguments.
-        let compute_constraint =
-            |location: Square| compute_constraint_area(location, pinned, initial_constraint);
-        let moves = |piece: PieceRef, location: Square| piece.moves(location, whites, blacks);
-
         // Add moves for pawns which can only produce standard moves.
         for location in standard | enpassant {
-            let targets = moves(active_pawn, location) & compute_constraint(location);
+            let targets = compute_moves(active_pawn, location) & compute_constraint(location);
             dest.extend(Move::standards(active_pawn, location, targets));
         }
-
         for location in enpassant {
             if compute_constraint(location).contains(self.enpassant.unwrap()) {
                 dest.push(Move::Enpassant(location));
             }
         }
-
         for location in promotion {
-            let targets = moves(active_pawn, location) & compute_constraint(location);
+            let targets = compute_moves(active_pawn, location) & compute_constraint(location);
             dest.extend(Move::promotions(self.active, location, targets));
         }
 
@@ -110,19 +113,18 @@ impl Board {
         )
     }
 
+    /// TODO Could reduce the arguments of this further to compute_targets
     fn compute_knight_and_slider_moves(
         &self,
-        armies: ArmyLocations,
-        pinned: &PinnedSet,
-        total_constraint: BitBoard,
+        compute_moves: &Fn(PieceRef, Square) -> BitBoard,
+        compute_constraint: &Fn(Square) -> BitBoard,
     ) -> Vec<Move> {
-        let (whites, blacks) = armies;
         let mut dest: Vec<Move> = Vec::with_capacity(50);
         // Add standard moves for pieces which aren't pawns or king
         for &piece in Board::knight_and_sliders(self.active).iter() {
             for location in self.pieces.locations(piece) {
-                let constraint = compute_constraint_area(location, pinned, total_constraint);
-                let moves = piece.moves(location, whites, blacks) & constraint;
+                let constraint = compute_constraint(location);
+                let moves = compute_moves(piece, location) & constraint;
                 dest.extend(Move::standards(piece, location, moves));
             }
         }
