@@ -2,63 +2,18 @@ use crate::base::bitboard::BitBoard;
 use crate::base::dir::*;
 use crate::base::square::{constants::SQUARES, Square};
 
-use super::{BlackKnight, Piece, WhiteKnight};
 use crate::base::Side;
 
-/// Piece trait implementation for the white knight struct. It simply queries
-/// a static vector of moves for each base.square.
-impl Piece for WhiteKnight {
-    fn index(&self) -> usize {
-        1
-    }
-
-    fn id(&self) -> &'static str {
-        "wn"
-    }
-
-    fn side(&self) -> Side {
-        Side::White
-    }
-
-    fn control(&self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize]
-    }
-
-    fn moves(&self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize] - white
-    }
-
-    fn attacks(&self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize] & black
-    }
+pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    CONTROL[loc.i as usize]
 }
 
-/// Piece trait implementation for the black knight struct. It simply queries
-/// a static vector of moves for each base.square.
-impl Piece for BlackKnight {
-    fn index(&self) -> usize {
-        7
-    }
+pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    CONTROL[loc.i as usize] - whites
+}
 
-    fn id(&self) -> &'static str {
-        "bn"
-    }
-
-    fn side(&self) -> Side {
-        Side::Black
-    }
-
-    fn control(&self, location: Square, _white: BitBoard, _black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize]
-    }
-
-    fn moves(&self, location: Square, _white: BitBoard, black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize] - black
-    }
-
-    fn attacks(&self, location: Square, white: BitBoard, _black: BitBoard) -> BitBoard {
-        CONTROL[location.i as usize] & white
-    }
+pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    CONTROL[loc.i as usize] - blacks
 }
 
 const CONTROL: [BitBoard; 64] = [
@@ -139,57 +94,57 @@ const CONTROL: [BitBoard; 64] = [
 #[cfg(test)]
 mod white_test {
     use crate::base::square::constants::*;
+    use crate::pieces::{WN};
 
     use super::*;
 
     #[test]
     fn test_control() {
-        let (wn, zero) = (WhiteKnight, BitBoard::EMPTY);
+        let zero = BitBoard::EMPTY;
         assert_eq!(
             D1 | C2 | C4 | D5 | F5 | G4 | G2 | F1,
-            wn.control(E3, zero, zero)
+            WN.control(E3, zero, zero)
         );
-        assert_eq!(A4 | C4 | D3 | D1, wn.control(B2, zero, zero));
+        assert_eq!(A4 | C4 | D3 | D1, WN.control(B2, zero, zero));
     }
 
     #[test]
     fn test_moves() {
-        let wn = WhiteKnight;
-        assert_eq!(A4 | C4 | D3, wn.moves(B2, D1 | B1, A4 | D7));
+        assert_eq!(A4 | C4 | D3, WN.moves(B2, D1 | B1, A4 | D7));
     }
 
-    #[test]
-    fn test_attacks() {
-        let wn = WhiteKnight;
-        assert_eq!(A4.lift(), wn.attacks(B2, D1 | B1, A4 | D7));
-    }
+//    #[test]
+//    fn test_attacks() {
+//        let wn = WhiteKnight;
+//        assert_eq!(A4.lift(), wn.attacks(B2, D1 | B1, A4 | D7));
+//    }
 }
 
 #[cfg(test)]
 mod black_test {
     use crate::base::square::constants::*;
+    use pieces::BN;
 
     use super::*;
 
     #[test]
     fn test_control() {
-        let (bn, zero) = (BlackKnight, BitBoard::EMPTY);
+        let zero = BitBoard::EMPTY;
         assert_eq!(
             D1 | C2 | C4 | D5 | F5 | G4 | G2 | F1,
-            bn.control(E3, zero, zero)
+            BN.control(E3, zero, zero)
         );
-        assert_eq!(A4 | C4 | D3 | D1, bn.control(B2, zero, zero));
+        assert_eq!(A4 | C4 | D3 | D1, BN.control(B2, zero, zero));
     }
 
     #[test]
     fn test_moves() {
-        let bn = BlackKnight;
-        assert_eq!(C4 | D3 | D1, bn.moves(B2, D1 | B1, A4 | D7));
+        assert_eq!(C4 | D3 | D1, BN.moves(B2, D1 | B1, A4 | D7));
     }
 
-    #[test]
-    fn test_attacks() {
-        let bn = BlackKnight;
-        assert_eq!(D1.lift(), bn.attacks(B2, D1 | B1, A4 | D7));
-    }
+//    #[test]
+//    fn test_attacks() {
+//        let bn = BlackKnight;
+//        assert_eq!(D1.lift(), bn.attacks(B2, D1 | B1, A4 | D7));
+//    }
 }

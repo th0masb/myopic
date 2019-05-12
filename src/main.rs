@@ -11,7 +11,6 @@ use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::dir;
 use crate::base::square::constants::*;
-use crate::pieces::PieceRef;
 
 mod base;
 mod pieces;
@@ -28,9 +27,6 @@ fn main() {
     println!("{}", G1 > H1);
     let bitboard: BitBoard = vec!(A1, G5).into_iter().collect();
     println!("{}", bitboard);
-    let x: PieceRef = pieces::WP;
-    println!("{:?}", x);
-    pieces::example(E2, BitBoard::EMPTY, BitBoard::EMPTY);
 
 //    let squares = base.square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
