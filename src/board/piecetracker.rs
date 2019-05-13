@@ -1,8 +1,7 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
 use crate::base::Side;
+use crate::base::square::Square;
 use crate::board::hash;
-use crate::board::Board;
 use crate::pieces;
 use crate::pieces::Piece;
 
@@ -98,14 +97,12 @@ impl PieceTracker {
 mod test {
     use std::iter;
 
-    use crate::base::square::constants::C5;
-    use crate::base::square::constants::E3;
-    use crate::pieces;
-
-    use super::*;
     use crate::base::square::constants::C3;
     use crate::base::square::constants::E4;
     use crate::base::square::constants::E5;
+    use crate::pieces;
+
+    use super::*;
 
     #[test]
     fn test_erase_square() {

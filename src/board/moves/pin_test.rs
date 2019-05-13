@@ -1,16 +1,11 @@
-use itertools::Itertools;
-
 use crate::base::bitboard::constants::*;
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::square;
 use crate::base::Side;
 use crate::board::testutils::TestBoard;
-use crate::board::Board;
-use crate::pieces;
-use crate::pieces::Piece;
 
-use super::{PinnedPiece, PinnedSet};
+use super::PinnedSet;
 
 struct TestCase {
     input: TestBoard,

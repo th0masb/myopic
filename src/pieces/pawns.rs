@@ -3,7 +3,7 @@ use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
 use crate::base::{Side, Side::Black, Side::White};
 
-pub fn white_control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+pub fn white_control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
     WHITE_CONTROL[loc.i as usize]
 }
 
@@ -16,7 +16,7 @@ pub fn white_moves(loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
     result | (white_control(loc, white, black) & black)
 }
 
-pub fn black_control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+pub fn black_control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
     BLACK_CONTROL[loc.i as usize]
 }
 

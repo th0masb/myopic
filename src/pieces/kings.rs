@@ -4,15 +4,15 @@ use crate::base::square::{constants::SQUARES, Square};
 
 use crate::base::Side;
 
-pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+pub fn control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
     CONTROL[loc.i as usize]
 }
 
-pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+pub fn white_moves(loc: Square, whites: BitBoard, _blacks: BitBoard) -> BitBoard {
     CONTROL[loc.i as usize] - whites
 }
 
-pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+pub fn black_moves(loc: Square, _whites: BitBoard, blacks: BitBoard) -> BitBoard {
     CONTROL[loc.i as usize] - blacks
 }
 

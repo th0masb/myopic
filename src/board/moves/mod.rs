@@ -13,7 +13,6 @@ mod pin_test;
 
 type PinnedPiece = (Square, BitBoard);
 type PinnedSet = (BitBoard, Vec<PinnedPiece>);
-type ArmyLocations = (BitBoard, BitBoard);
 
 const WHITE_SLIDERS: [Piece; 3] = [pieces::WB, pieces::WR, pieces::WQ];
 const BLACK_SLIDERS: [Piece; 3] = [pieces::BB, pieces::BR, pieces::BQ];
@@ -32,51 +31,87 @@ fn compute_constraint_area(piece_loc: Square, pinned: &PinnedSet, existing: BitB
     }
 }
 
-/// TODO We want to just calculate the exact two squares from which an enpassant can be made.
-fn enpassant_source_squares(enpassant_target: Square) -> BitBoard {
-    unimplemented!()
-    //    let fi = enpassant_target.file_index() as usize;
-    //    match fi % 7 {
-    //        0 => {
-    //            if fi == 0 {
-    //                FILES[1]
-    //            } else {
-    //                FILES[6]
-    //            }
-    //        }
-    //        _ => FILES[fi + 1] | FILES[fi - 1],
-    //    }
+/// TODO Could have adjacent files in a constant array
+fn enpassant_source_squares(active: Side, enpassant_target: Square) -> BitBoard {
+    let fi = enpassant_target.file_index() as usize;
+    let adjacent_files = match fi % 7 {
+        0 => {
+            if fi == 0 {
+                FILES[1]
+            } else {
+                FILES[6]
+            }
+        }
+        _ => FILES[fi + 1] | FILES[fi - 1],
+    };
+    adjacent_files & active.other().pawn_third_rank()
+}
+
+fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
+    match side {
+        Side::White => &[pieces::WN, pieces::WB, pieces::WR, pieces::WQ],
+        Side::Black => &[pieces::BN, pieces::BB, pieces::BR, pieces::BQ],
+    }
 }
 
 impl Board {
-    pub fn compute_moves(&self, force_attacks_constraint: BitBoard) -> Vec<Move> {
-        let pinned = self.compute_pinned();
-        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
-        let mut dest: Vec<Move> = Vec::with_capacity(50);
-        let compute_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
-
-        dest.extend(
-            self.compute_knight_and_slider_moves(&compute_moves, &|loc: Square| {
-                compute_constraint_area(loc, &pinned, force_attacks_constraint)
-            }),
-        );
-
-        let pawn_constraint =
-            force_attacks_constraint | self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift());
-        dest.extend(self.compute_pawn_moves(&compute_moves, &|loc: Square| {
-            compute_constraint_area(loc, &pinned, pawn_constraint)
-        }));
-
-        let king_constraint = force_attacks_constraint - self.compute_control(self.active.other());
-
+    pub fn compute_moves(&self) -> Vec<Move> {
         unimplemented!()
     }
 
-    fn compute_pawn_moves(
+    pub fn compute_attacks(&self) -> Vec<Move> {
+        unimplemented!()
+    }
+
+    pub fn has_legal_move(&self) -> bool {
+        unimplemented!()
+    }
+
+    // TODO need to do castle moves
+    fn compute_moves_impl(
         &self,
-        compute_moves: &Fn(Piece, Square) -> BitBoard,
-        compute_constraint: &Fn(Square) -> BitBoard,
+        constraints: (BitBoard, BitBoard, BitBoard),
+        passive_control: BitBoard,
     ) -> Vec<Move> {
+        let mut dest: Vec<Move> = Vec::with_capacity(50);
+        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
+        let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
+        let (nbrq_constraint, pawn_constraint, king_constraint) = constraints;
+        let pinned = self.compute_pinned();
+        let active = self.active;
+
+
+
+        if pinned.0.is_empty() {
+            dest.extend(self.legal_moves(nbrq(active), &unchecked_moves, |_| nbrq_constraint));
+            dest.extend(self.pawn_moves(&unchecked_moves, |_| pawn_constraint));
+        } else {
+            dest.extend(self.legal_moves(nbrq(active), &unchecked_moves, |loc| {
+                compute_constraint_area(loc, &pinned, nbrq_constraint)
+            }));
+            dest.extend(self.pawn_moves(&unchecked_moves, |loc| {
+                compute_constraint_area(loc, &pinned, pawn_constraint)
+            }));
+        }
+
+        let king = &[pieces::king(active)];
+        dest.extend(self.legal_moves(king, &unchecked_moves, |_| king_constraint));
+        dest
+    }
+
+    fn compute_castle_moves(&self, passive_control: BitBoard, piece_locs: BitBoard) -> Vec<Move> {
+        unimplemented!()
+    }
+
+    //    fn enpassant_bitboard(&self) -> BitBoard {
+    //        self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift())
+    //    }
+
+    fn pawn_moves<F, G>(&self, compute_moves: F, compute_constraint: G) -> Vec<Move>
+    where
+        F: Fn(Piece, Square) -> BitBoard,
+        G: Fn(Square) -> BitBoard,
+    {
         let mut dest: Vec<Move> = Vec::with_capacity(20);
         let (standard, enpassant, promotion) = self.separate_pawn_locs();
         let active_pawn = pieces::pawn(self.active);
@@ -100,49 +135,33 @@ impl Board {
     }
 
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
-        let enpassant_files = self
-            .enpassant
-            .map_or(BitBoard::EMPTY, |sq| enpassant_source_squares(sq));
+        let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
+            enpassant_source_squares(self.active, sq)
+        });
         let promotion_rank = self.active.pawn_last_rank();
         let pawn_locs = self.pieces.locations(pieces::pawn(self.active));
         (
-            pawn_locs - enpassant_files - promotion_rank,
-            pawn_locs & enpassant_files,
+            pawn_locs - enpassant_source - promotion_rank,
+            pawn_locs & enpassant_source,
             pawn_locs & promotion_rank,
         )
     }
 
     /// TODO Could reduce the arguments of this further to compute_targets
-    fn compute_knight_and_slider_moves(
-        &self,
-        compute_moves: &Fn(Piece, Square) -> BitBoard,
-        compute_constraint: &Fn(Square) -> BitBoard,
-    ) -> Vec<Move> {
-        let mut dest: Vec<Move> = Vec::with_capacity(50);
+    fn legal_moves<F, G>(&self, pieces: &[Piece], unchecked_moves: F, constraint: G) -> Vec<Move>
+    where
+        F: Fn(Piece, Square) -> BitBoard,
+        G: Fn(Square) -> BitBoard,
+    {
+        let mut dest: Vec<Move> = Vec::with_capacity(40);
         // Add standard moves for pieces which aren't pawns or king
-        for &piece in Board::knight_and_sliders(self.active).iter() {
+        for &piece in pieces.iter() {
             for location in self.pieces.locations(piece) {
-                let constraint = compute_constraint(location);
-                let moves = compute_moves(piece, location) & constraint;
+                let moves = unchecked_moves(piece, location) & constraint(location);
                 dest.extend(Move::standards(piece, location, moves));
             }
         }
         dest
-    }
-
-    fn knight_and_sliders(side: Side) -> [Piece; 4] {
-        match side {
-            Side::White => [pieces::WN, pieces::WB, pieces::WR, pieces::WQ],
-            Side::Black => [pieces::BN, pieces::BB, pieces::BR, pieces::BQ],
-        }
-    }
-
-    pub fn compute_attacks(&self) -> Vec<Move> {
-        unimplemented!()
-    }
-
-    pub fn has_legal_move(&self) -> bool {
-        unimplemented!()
     }
 
     /// Computes the total area of control on the board for a given side.
