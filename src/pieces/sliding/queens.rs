@@ -1,62 +1,20 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::Side;
 use crate::base::square::Square;
-use crate::pieces::BlackBishop;
-use crate::pieces::BlackQueen;
-use crate::pieces::BlackRook;
-use crate::pieces::Piece;
-use crate::pieces::WhiteBishop;
-use crate::pieces::WhiteQueen;
-use crate::pieces::WhiteRook;
 
-impl Piece for WhiteQueen {
-    fn index(&self) -> usize {
-        4
-    }
+use super::bishops;
+use super::rooks;
 
-    fn id(&self) -> &'static str {
-        "wq"
-    }
-
-    fn side(&self) -> Side {
-        Side::White
-    }
-
-    fn control(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        WhiteBishop.control(loc, white, black) | WhiteRook.control(loc, white, black)
-    }
-
-    fn moves(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        WhiteBishop.moves(loc, white, black) | WhiteRook.moves(loc, white, black)
-    }
-
-    fn attacks(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        WhiteBishop.attacks(loc, white, black) | WhiteRook.attacks(loc, white, black)
-    }
+pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    bishops::control(loc, whites, blacks) | rooks::control(loc, whites, blacks)
 }
 
-impl Piece for BlackQueen {
-    fn index(&self) -> usize {
-        10
-    }
-
-    fn id(&self) -> &'static str {
-        "bq"
-    }
-
-    fn side(&self) -> Side {
-        Side::Black
-    }
-
-    fn control(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        BlackBishop.control(loc, white, black) | BlackRook.control(loc, white, black)
-    }
-
-    fn moves(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        BlackBishop.moves(loc, white, black) | BlackRook.moves(loc, white, black)
-    }
-
-    fn attacks(&self, loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        BlackBishop.attacks(loc, white, black) | BlackRook.attacks(loc, white, black)
-    }
+pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    bishops::white_moves(loc, whites, blacks) | rooks::white_moves(loc, whites, blacks)
 }
+
+pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    bishops::black_moves(loc, whites, blacks) | rooks::black_moves(loc, whites, blacks)
+}
+
+

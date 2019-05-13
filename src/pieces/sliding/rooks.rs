@@ -1,71 +1,22 @@
 use std::iter::repeat;
 
 use crate::base::bitboard::BitBoard;
+use crate::base::Side;
 use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
-use crate::pieces::BlackRook;
-use crate::pieces::Piece;
-use crate::pieces::WhiteRook;
 
 use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, ROOK_MASKS};
-use crate::base::Side;
 
-/// Piece trait implementation for the white rook singleton struct.
-/// The move database is cached in the static memory and the code for
-/// that is at the bottom of this file.
-impl Piece for WhiteRook {
-    fn index(&self) -> usize {
-        3
-    }
-
-    fn id(&self) -> &'static str {
-        "wr"
-    }
-
-    fn side(&self) -> Side {
-        Side::White
-    }
-
-    fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        MOVES[location.i as usize][compute_rook_index(location, white | black)]
-    }
-
-    fn moves(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.control(location, white, black) - white
-    }
-
-    fn attacks(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.control(location, white, black) & black
-    }
+pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    MOVES[loc.i as usize][compute_rook_index(loc, whites | blacks)]
 }
 
-/// Piece trait implementation for the black rook singleton struct.
-/// The move database is cached in the static memory and the code for
-/// that is at the bottom of this file.
-impl Piece for BlackRook {
-    fn index(&self) -> usize {
-        9
-    }
+pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    control(loc, whites, blacks) - whites
+}
 
-    fn id(&self) -> &'static str {
-        "br"
-    }
-
-    fn side(&self) -> Side {
-        Side::Black
-    }
-
-    fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        MOVES[location.i as usize][compute_rook_index(location, white | black)]
-    }
-
-    fn moves(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.control(location, white, black) - black
-    }
-
-    fn attacks(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.control(location, white, black) & white
-    }
+pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    control(loc, whites, blacks) - blacks
 }
 
 /// Implementation and tests for the static magic move database.

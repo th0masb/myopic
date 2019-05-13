@@ -1,71 +1,24 @@
 use std::iter::repeat;
 
 use crate::base::bitboard::BitBoard;
+use crate::base::Side;
 use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
-use crate::pieces::BlackBishop;
+use crate::pieces::pawns::black_control;
 use crate::pieces::Piece;
-use crate::pieces::WhiteBishop;
 
-use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
-use crate::base::Side;
+use super::{bishop_dirs, BISHOP_MASKS, compute_bishop_index, compute_control, compute_powerset};
 
-/// Piece trait implementation for the white bishop singleton struct.
-/// The move database is cached in the static memory and the code for
-/// that is at the bottom of this file.
-impl Piece for WhiteBishop {
-    fn index(&self) -> usize {
-        2
-    }
-
-    fn id(&self) -> &'static str {
-        "wb"
-    }
-
-    fn side(&self) -> Side {
-        Side::White
-    }
-
-    fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        MOVES[location.i as usize][compute_bishop_index(location, white | black)]
-    }
-
-    fn moves(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.control(location, white, black) - white
-    }
-
-    fn attacks(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.control(location, white, black) & black
-    }
+pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    MOVES[loc.i as usize][compute_bishop_index(loc, whites | blacks)]
 }
 
-/// Piece trait implementation for the black bishop singleton struct.
-/// The move database is cached in the static memory and the code for
-/// that is at the bottom of this file.
-impl Piece for BlackBishop {
-    fn index(&self) -> usize {
-        8
-    }
+pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    control(loc, whites, blacks) - whites
+}
 
-    fn id(&self) -> &'static str {
-        "bb"
-    }
-
-    fn side(&self) -> Side {
-        Side::Black
-    }
-
-    fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        MOVES[location.i as usize][compute_bishop_index(location, white | black)]
-    }
-
-    fn moves(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.control(location, white, black) - black
-    }
-
-    fn attacks(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard {
-        self.control(location, white, black) & white
-    }
+pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    control(loc, whites, blacks) - blacks
 }
 
 /// Implementation and tests for the static magic move database.

@@ -4,7 +4,7 @@ use crate::base::Side;
 use crate::board::Board;
 use crate::board::Move;
 use crate::pieces;
-use crate::pieces::PieceRef;
+use crate::pieces::Piece;
 
 #[cfg(test)]
 mod control_test;
@@ -15,8 +15,8 @@ type PinnedPiece = (Square, BitBoard);
 type PinnedSet = (BitBoard, Vec<PinnedPiece>);
 type ArmyLocations = (BitBoard, BitBoard);
 
-const WHITE_SLIDERS: [PieceRef; 3] = [pieces::WB, pieces::WR, pieces::WQ];
-const BLACK_SLIDERS: [PieceRef; 3] = [pieces::BB, pieces::BR, pieces::BQ];
+const WHITE_SLIDERS: [Piece; 3] = [pieces::WB, pieces::WR, pieces::WQ];
+const BLACK_SLIDERS: [Piece; 3] = [pieces::BB, pieces::BR, pieces::BQ];
 const FILES: [BitBoard; 8] = BitBoard::FILES;
 
 fn compute_constraint_area(piece_loc: Square, pinned: &PinnedSet, existing: BitBoard) -> BitBoard {
@@ -53,7 +53,7 @@ impl Board {
         let pinned = self.compute_pinned();
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let mut dest: Vec<Move> = Vec::with_capacity(50);
-        let compute_moves = |p: PieceRef, loc: Square| p.moves(loc, whites, blacks);
+        let compute_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
 
         dest.extend(
             self.compute_knight_and_slider_moves(&compute_moves, &|loc: Square| {
@@ -74,7 +74,7 @@ impl Board {
 
     fn compute_pawn_moves(
         &self,
-        compute_moves: &Fn(PieceRef, Square) -> BitBoard,
+        compute_moves: &Fn(Piece, Square) -> BitBoard,
         compute_constraint: &Fn(Square) -> BitBoard,
     ) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(20);
@@ -115,7 +115,7 @@ impl Board {
     /// TODO Could reduce the arguments of this further to compute_targets
     fn compute_knight_and_slider_moves(
         &self,
-        compute_moves: &Fn(PieceRef, Square) -> BitBoard,
+        compute_moves: &Fn(Piece, Square) -> BitBoard,
         compute_constraint: &Fn(Square) -> BitBoard,
     ) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(50);
@@ -130,7 +130,7 @@ impl Board {
         dest
     }
 
-    fn knight_and_sliders(side: Side) -> [PieceRef; 4] {
+    fn knight_and_sliders(side: Side) -> [Piece; 4] {
         match side {
             Side::White => [pieces::WN, pieces::WB, pieces::WR, pieces::WQ],
             Side::Black => [pieces::BN, pieces::BB, pieces::BR, pieces::BQ],
@@ -149,8 +149,8 @@ impl Board {
     /// TODO Improve efficiency by treated all pawns as a block
     fn compute_control(&self, side: Side) -> BitBoard {
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
-        let locs = |piece: PieceRef| self.pieces.locations(piece);
-        let control = |piece: PieceRef, square: Square| piece.control(square, whites, blacks);
+        let locs = |piece: Piece| self.pieces.locations(piece);
+        let control = |piece: Piece, square: Square| piece.control(square, whites, blacks);
         pieces::on_side(side)
             .iter()
             .flat_map(|&p| locs(p).into_iter().map(move |sq| control(p, sq)))
@@ -183,10 +183,10 @@ impl Board {
             Side::White => BLACK_SLIDERS,
             Side::Black => WHITE_SLIDERS,
         };
-        let locs = |p: PieceRef| self.pieces.locations(p);
+        let locs = |p: Piece| self.pieces.locations(p);
         passive_sliders
             .iter()
-            .flat_map(|&p| locs(p) & p.empty_control(king_loc))
+            .flat_map(|&p| locs(p) & p.control(king_loc, BitBoard::EMPTY, BitBoard::EMPTY))
             .collect()
     }
 }

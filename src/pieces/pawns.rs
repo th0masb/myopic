@@ -3,8 +3,31 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
 
-pub mod black;
-pub mod white;
+pub fn white_control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    WHITE_CONTROL[loc.i as usize]
+}
+
+pub fn white_moves(loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    let all = white | black;
+    let mut result = ((loc - BitBoard::RANKS[7]) << 8) - all;
+    if Side::White.pawn_first_rank().contains(loc) && !result.is_empty() {
+        result = result | ((loc.lift() << 16) - all)
+    }
+    result | (white_control(loc, white, black) & black)
+}
+
+pub fn black_control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
+    BLACK_CONTROL[loc.i as usize]
+}
+
+pub fn black_moves(loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
+    let all = white | black;
+    let mut result = ((loc - BitBoard::RANKS[0]) >> 8) - all;
+    if Side::Black.pawn_first_rank().contains(loc) && !result.is_empty() {
+        result = result | ((loc.lift() >> 16) - all)
+    }
+    result | (black_control(loc, white, black) & white)
+}
 
 ///  Control sets for all squares for the white pawn.
 const WHITE_CONTROL: [BitBoard; 64] = [
@@ -156,3 +179,53 @@ const BLACK_CONTROL: [BitBoard; 64] = [
 //        Black => ((x - left) >> 7u8) | ((x - right) >> 9u8),
 //    }
 //}
+#[cfg(test)]
+mod black_test {
+    use crate::base::square::constants::*;
+    use crate::pieces;
+
+    use super::*;
+
+    #[test]
+    fn test_control() {
+        assert_eq!(D2 | F2, pieces::BP.control(E3, A1 | B6, D8 | D4));
+        assert_eq!(F7 | D7, pieces::BP.control(E8, A1 | B6, D8 | D4));
+        assert_eq!(B2.lift(), pieces::BP.control(A3, A4 | C5, F4 | H8));
+        assert_eq!(G2.lift(), pieces::BP.control(H3, A4 | C5, F4 | H8));
+    }
+
+    #[test]
+    fn test_moves() {
+        assert_eq!(D1.lift(), pieces::BP.moves(D2, E2 | D5, G1 | F7));
+        assert_eq!(G6 | G5, pieces::BP.moves(G7, A1 | F5, H6 | B3));
+        assert_eq!(BitBoard::EMPTY, pieces::BP.moves(G7, A1 | G6, H6 | B3));
+        assert_eq!(G6.lift(), pieces::BP.moves(G7, A1 | G8, G5 | B3));
+    }
+}
+
+#[cfg(test)]
+mod white_test {
+    use crate::base::square::constants::*;
+    use crate::pieces;
+
+    use super::*;
+
+    #[test]
+    fn test_control() {
+        assert_eq!(D4 | F4, pieces::WP.control(E3, A1 | B6, D8 | D4));
+        assert_eq!(BitBoard::EMPTY, pieces::WP.control(E8, A1 | B6, D8 | D4));
+        assert_eq!(B4.lift(), pieces::WP.control(A3, A4 | C5, F4 | H8));
+        assert_eq!(G4.lift(), pieces::WP.control(H3, A4 | C5, F4 | H8));
+    }
+
+    #[test]
+    fn test_moves() {
+        assert_eq!(D3 | D4 | E3, pieces::WP.moves(D2, E2 | D5, G1 | F7 | E3));
+        assert_eq!(D3.lift(), pieces::WP.moves(D2, D4 | G6, A2 | D7));
+        assert_eq!(BitBoard::EMPTY, pieces::WP.moves(D2, D3 | A1, B5 | D5));
+        assert_eq!(G7.lift(), pieces::WP.moves(G6, A1 | F5, H6 | B3));
+        assert_eq!(BitBoard::EMPTY, pieces::WP.moves(G6, A1 | G7, H6 | B3));
+        assert_eq!(BitBoard::EMPTY, pieces::WP.moves(G6, A1 | A5, H6 | G7));
+        assert_eq!(BitBoard::EMPTY, pieces::WP.moves(A8, D3 | H7, F4 | C3));
+    }
+}

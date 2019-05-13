@@ -36,7 +36,7 @@ impl CastleZone {
         CastleZone::KING_SOURCES[self.i] | CastleZone::ROOK_SOURCES[self.i]
     }
 
-    pub fn rook_data(self) -> (&'static dyn Piece, Square, Square) {
+    pub fn rook_data(self) -> (Piece, Square, Square) {
         let i = self.i;
         (
             ROOKS[i / 2],
@@ -45,7 +45,7 @@ impl CastleZone {
         )
     }
 
-    pub fn king_data(self) -> (&'static dyn Piece, Square, Square) {
+    pub fn king_data(self) -> (Piece, Square, Square) {
         let i = self.i;
         (
             KINGS[i / 2],

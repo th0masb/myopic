@@ -123,7 +123,7 @@ mod white_test {
 #[cfg(test)]
 mod black_test {
     use crate::base::square::constants::*;
-    use pieces::BN;
+    use crate::pieces::BN;
 
     use super::*;
 

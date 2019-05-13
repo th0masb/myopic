@@ -1,9 +1,10 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::Side;
 use std::fmt::Debug;
-use std::fmt::Formatter;
 use std::fmt::Error;
+use std::fmt::Formatter;
+
+use crate::base::bitboard::BitBoard;
+use crate::base::Side;
+use crate::base::square::Square;
 
 mod kings;
 mod knights;
@@ -38,51 +39,36 @@ impl Piece {
         Piece::MOVE_FN[self.0](loc, whites, blacks)
     }
 
-    const CONTROL_FN: [fn(Square, BitBoard, BitBoard) -> BitBoard; 2] = [
+    const CONTROL_FN: [fn(Square, BitBoard, BitBoard) -> BitBoard; 12] = [
+        pawns::white_control,
         knights::control,
-        kings::control
+        sliding::bishops::control,
+        sliding::rooks::control,
+        sliding::queens::control,
+        kings::control,
+        pawns::black_control,
+        knights::control,
+        sliding::bishops::control,
+        sliding::rooks::control,
+        sliding::queens::control,
+        kings::control,
     ];
 
-    const MOVE_FN: [fn(Square, BitBoard, BitBoard) -> BitBoard; 2] = [
+    const MOVE_FN: [fn(Square, BitBoard, BitBoard) -> BitBoard; 12] = [
+        pawns::white_moves,
         knights::white_moves,
-        kings::control
+        sliding::bishops::white_moves,
+        sliding::rooks::white_moves,
+        sliding::queens::white_moves,
+        kings::white_moves,
+        pawns::black_moves,
+        knights::black_moves,
+        sliding::bishops::black_moves,
+        sliding::rooks::black_moves,
+        sliding::queens::black_moves,
+        kings::black_moves,
     ];
 }
-
-//pub type PieceRef = &'static dyn Piece;
-//pub trait Piece {
-//    fn index(&self) -> usize;
-//
-//    fn id(&self) -> &str;
-//
-//    fn side(&self) -> Side;
-//
-//    fn control(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
-//
-//    fn moves(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
-//
-//    fn attacks(&self, location: Square, white: BitBoard, black: BitBoard) -> BitBoard;
-//
-//    fn is_pawn(&self) -> bool {
-//        self.index() % 6 == 0
-//    }
-//
-//    fn empty_control(&self, location: Square) -> BitBoard {
-//        self.control(location, BitBoard::EMPTY, BitBoard::EMPTY)
-//    }
-//}
-//
-//impl Debug for Piece {
-//    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-//        write!(f, "{}", self.id())
-//    }
-//}
-//
-//impl PartialEq<Piece> for Piece {
-//    fn eq(&self, other: &Piece) -> bool {
-//        self.index() == other.index()
-//    }
-//}
 
 pub fn king(side: Side) -> Piece {
     match side {
@@ -105,7 +91,7 @@ pub fn on_side(side: Side) -> &'static [Piece] {
     }
 }
 
-pub fn army(side: Side) -> [PieceRef; 5] {
+pub fn army(side: Side) -> [Piece; 5] {
     match side {
         Side::White => [WP, WN, WB, WR, WQ],
         Side::Black => [BP, BN, BB, BR, BQ],
@@ -140,55 +126,3 @@ pub const BISHOPS: [Piece; 2] = [WB, BB];
 pub const ROOKS:   [Piece; 2] = [WR, BR];
 pub const QUEENS:  [Piece; 2] = [WQ, BQ];
 pub const KINGS:   [Piece; 2] = [WK, BK];
-
-///// Encapsulated singleton structs for each piece type.
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct WhitePawn;
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct BlackPawn;
-//
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct WhiteKnight;
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct BlackKnight;
-//
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct WhiteBishop;
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct BlackBishop;
-//
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct WhiteRook;
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct BlackRook;
-//
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct WhiteQueen;
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct BlackQueen;
-//
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct WhiteKing;
-//#[derive(Copy, Clone, PartialEq, Eq)]
-//struct BlackKing;
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_indices() {
-        assert_eq!("wp", ALL[WhitePawn.index()].id());
-        assert_eq!("wn", ALL[WhiteKnight.index()].id());
-        assert_eq!("wb", ALL[WhiteBishop.index()].id());
-        assert_eq!("wr", ALL[WhiteRook.index()].id());
-        assert_eq!("wq", ALL[WhiteQueen.index()].id());
-        assert_eq!("wk", ALL[WhiteKing.index()].id());
-        assert_eq!("bp", ALL[BlackPawn.index()].id());
-        assert_eq!("bn", ALL[BlackKnight.index()].id());
-        assert_eq!("bb", ALL[BlackBishop.index()].id());
-        assert_eq!("br", ALL[BlackRook.index()].id());
-        assert_eq!("bq", ALL[BlackQueen.index()].id());
-        assert_eq!("bk", ALL[BlackKing.index()].id());
-    }
-}

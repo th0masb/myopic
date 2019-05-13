@@ -8,7 +8,6 @@ use crate::board::hashcache::HashCache;
 use crate::board::piecetracker::PieceTracker;
 use crate::pieces;
 use crate::pieces::Piece;
-use crate::pieces::PieceRef;
 
 pub mod hash;
 //pub mod tables;// To be removed
@@ -51,7 +50,7 @@ impl Board {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {
     discarded_rights: CastleZoneSet,
-    discarded_piece: Option<PieceRef>,
+    discarded_piece: Option<Piece>,
     discarded_enpassant: Option<Square>,
     discarded_hash: u64,
     discarded_clock: usize,
@@ -59,13 +58,13 @@ pub struct ReversalData {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Move {
-    Standard(PieceRef, Square, Square),
+    Standard(Piece, Square, Square),
     Enpassant(Square),
-    Promotion(Square, Square, PieceRef),
+    Promotion(Square, Square, Piece),
     Castle(CastleZone),
 }
 
-fn promotion_targets<'a>(side: Side) -> &'a [PieceRef; 4] {
+fn promotion_targets<'a>(side: Side) -> &'a [Piece; 4] {
     match side {
         Side::White => &[pieces::WQ, pieces::WR, pieces::WB, pieces::WN],
         Side::Black => &[pieces::BQ, pieces::BR, pieces::BB, pieces::BN],
@@ -75,7 +74,7 @@ fn promotion_targets<'a>(side: Side) -> &'a [PieceRef; 4] {
 
 impl Move {
     pub fn standards(
-        moving_piece: PieceRef,
+        moving_piece: Piece,
         source: Square,
         targets: BitBoard,
     ) -> impl Iterator<Item = Move> {

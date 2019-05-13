@@ -18,7 +18,6 @@ use crate::board::Board;
 use crate::board::Move;
 use crate::board::Move::*;
 use crate::board::ReversalData;
-use crate::pieces::PieceRef;
 use crate::pieces::BP;
 use crate::pieces::WP;
 use crate::{pieces, pieces::Piece};
@@ -47,7 +46,7 @@ impl Board {
         }
     }
 
-    fn evolve_s(&mut self, piece: PieceRef, source: Square, target: Square) -> RD {
+    fn evolve_s(&mut self, piece: Piece, source: Square, target: Square) -> RD {
         let discarded_piece = self.pieces.erase_square(target);
         let discarded_rights = self.castling.remove_rights(source | target);
         let rev_data = self.create_rev_data(discarded_piece, discarded_rights);
@@ -69,7 +68,7 @@ impl Board {
 
     fn create_rev_data(
         &self,
-        discarded_piece: Option<PieceRef>,
+        discarded_piece: Option<Piece>,
         discarded_rights: CastleZoneSet,
     ) -> RD {
         ReversalData {
@@ -81,7 +80,7 @@ impl Board {
         }
     }
 
-    fn devolve_s(&mut self, piece: PieceRef, source: Square, target: Square, discards: RD) {
+    fn devolve_s(&mut self, piece: Piece, source: Square, target: Square, discards: RD) {
         self.switch_side();
         self.pieces.toggle_piece(piece, &[target, source]);
         match discards.discarded_piece {
@@ -142,7 +141,7 @@ impl Board {
         self.pieces.toggle_piece(passive_pawn, &[removal_square]);
     }
 
-    fn evolve_p(&mut self, source: Square, target: Square, promotion_result: PieceRef) -> RD {
+    fn evolve_p(&mut self, source: Square, target: Square, promotion_result: Piece) -> RD {
         let discarded_piece = self.pieces.erase_square(target);
         let rev_data = self.create_rev_data(discarded_piece, CastleZoneSet::NONE);
         let moved_pawn = pieces::pawn(self.active);
@@ -154,7 +153,7 @@ impl Board {
         rev_data
     }
 
-    fn devolve_p(&mut self, source: Square, target: Square, piece: PieceRef, discards: RD) {
+    fn devolve_p(&mut self, source: Square, target: Square, piece: Piece, discards: RD) {
         self.switch_side();
         let moved_pawn = pieces::pawn(self.active);
         self.pieces.toggle_piece(moved_pawn, &[source]);
@@ -175,7 +174,7 @@ impl Board {
 
     /// Determines the enpassant square for the next board state given a
     /// piece which has just moved from the source to the target.
-    fn compute_enpassant(source: Square, target: Square, piece: PieceRef) -> Option<Square> {
+    fn compute_enpassant(source: Square, target: Square, piece: Piece) -> Option<Square> {
         if piece.is_pawn() {
             let side = piece.side();
             if side.pawn_first_rank().contains(source) && side.pawn_third_rank().contains(target) {

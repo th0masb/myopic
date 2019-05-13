@@ -6,7 +6,7 @@ use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 use std::iter;
 
-pub fn piece_feature(piece: &dyn Piece, square: Square) -> u64 {
+pub fn piece_feature(piece: Piece, square: Square) -> u64 {
     FEATURES[piece.index() * 64 + square.i as usize]
 }
 

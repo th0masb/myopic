@@ -3,11 +3,10 @@ use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::hash;
 use crate::board::Board;
-use crate::board::PieceRef;
 use crate::pieces;
 use crate::pieces::Piece;
 
-const PS: [PieceRef; 12] = pieces::ALL;
+const PS: [Piece; 12] = pieces::ALL;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct PieceTracker {
@@ -58,11 +57,11 @@ impl PieceTracker {
             .fold(BitBoard::EMPTY, |a, &b| a | b)
     }
 
-    pub fn locations(&self, piece: PieceRef) -> BitBoard {
+    pub fn locations(&self, piece: Piece) -> BitBoard {
         self.boards[piece.index()]
     }
 
-    pub fn piece_at(&self, square: Square) -> Option<PieceRef> {
+    pub fn piece_at(&self, square: Square) -> Option<Piece> {
         self.boards
             .iter()
             .zip(&PS)
@@ -70,7 +69,7 @@ impl PieceTracker {
             .map(|(_, &p)| p)
     }
 
-    pub fn erase_square(&mut self, square: Square) -> Option<PieceRef> {
+    pub fn erase_square(&mut self, square: Square) -> Option<Piece> {
         let mut erased_piece = None;
         for (i, &p) in PS.iter().enumerate() {
             if self.boards[i].contains(square) {
@@ -83,7 +82,7 @@ impl PieceTracker {
         erased_piece
     }
 
-    pub fn toggle_piece(&mut self, piece: PieceRef, locations: &[Square]) {
+    pub fn toggle_piece(&mut self, piece: Piece, locations: &[Square]) {
         for &location in locations.iter() {
             self.boards[piece.index()] ^= location;
             self.hash ^= hash::piece_feature(piece, location);

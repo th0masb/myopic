@@ -8,7 +8,7 @@ use crate::base::Side;
 use crate::board::testutils::TestBoard;
 use crate::board::Board;
 use crate::pieces;
-use crate::pieces::PieceRef;
+use crate::pieces::Piece;
 
 use super::{PinnedPiece, PinnedSet};
 

@@ -96,7 +96,7 @@ const CONTROL: [BitBoard; 64] = [
 mod white_test {
     use crate::base::bitboard::constants::*;
     use crate::base::square;
-    use pieces;
+    use crate::pieces;
 
     use super::*;
 
@@ -126,7 +126,7 @@ mod white_test {
 mod black_test {
     use crate::base::square::constants::*;
     use crate::base::square;
-    use pieces;
+    use crate::pieces;
 
     use super::*;
 
