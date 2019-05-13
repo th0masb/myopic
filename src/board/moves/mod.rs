@@ -56,56 +56,73 @@ fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
 
 impl Board {
     pub fn compute_moves(&self) -> Vec<Move> {
-        unimplemented!()
+        self.compute_moves_impl(false)
     }
 
     pub fn compute_attacks(&self) -> Vec<Move> {
-        unimplemented!()
+        self.compute_moves_impl(true)
     }
 
     pub fn has_legal_move(&self) -> bool {
         unimplemented!()
     }
 
-    // TODO need to do castle moves
-    fn compute_moves_impl(
-        &self,
-        constraints: (BitBoard, BitBoard, BitBoard),
-        passive_control: BitBoard,
-    ) -> Vec<Move> {
+    fn compute_moves_impl(&self, force_attacks: bool) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(50);
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
-        let (nbrq_constraint, pawn_constraint, king_constraint) = constraints;
-        let pinned = self.compute_pinned();
         let active = self.active;
+        let passive_control = self.compute_control(active.other());
+        let (nbrq_cons, pawn_cons, king_cons) =
+            self.compute_area_constraints(force_attacks, (whites, blacks), passive_control);
 
+        if !force_attacks {
+            dest.extend(self.compute_castle_moves(passive_control, whites | blacks));
+        }
 
-
+        let pinned = self.compute_pinned();
         if pinned.0.is_empty() {
-            dest.extend(self.legal_moves(nbrq(active), &unchecked_moves, |_| nbrq_constraint));
-            dest.extend(self.pawn_moves(&unchecked_moves, |_| pawn_constraint));
+            dest.extend(self.legal_moves(nbrq(active), &unchecked_moves, |_| nbrq_cons));
+            dest.extend(self.pawn_moves(&unchecked_moves, |_| pawn_cons));
         } else {
             dest.extend(self.legal_moves(nbrq(active), &unchecked_moves, |loc| {
-                compute_constraint_area(loc, &pinned, nbrq_constraint)
+                compute_constraint_area(loc, &pinned, nbrq_cons)
             }));
             dest.extend(self.pawn_moves(&unchecked_moves, |loc| {
-                compute_constraint_area(loc, &pinned, pawn_constraint)
+                compute_constraint_area(loc, &pinned, pawn_cons)
             }));
         }
 
         let king = &[pieces::king(active)];
-        dest.extend(self.legal_moves(king, &unchecked_moves, |_| king_constraint));
+        dest.extend(self.legal_moves(king, &unchecked_moves, |_| king_cons));
         dest
+    }
+
+    fn compute_area_constraints(
+        &self,
+        force_attacks: bool,
+        locations: (BitBoard, BitBoard),
+        passive_control: BitBoard,
+    ) -> (BitBoard, BitBoard, BitBoard) {
+        let (whites, blacks) = locations;
+        let nbrq_cons = if force_attacks {
+            match self.active {
+                Side::White => blacks,
+                Side::Black => whites,
+            }
+        } else {
+            BitBoard::ALL
+        };
+        (
+            nbrq_cons,
+            nbrq_cons | self.enpassant.map_or(BitBoard::EMPTY, |x| x.lift()),
+            nbrq_cons - passive_control,
+        )
     }
 
     fn compute_castle_moves(&self, passive_control: BitBoard, piece_locs: BitBoard) -> Vec<Move> {
         unimplemented!()
     }
-
-    //    fn enpassant_bitboard(&self) -> BitBoard {
-    //        self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift())
-    //    }
 
     fn pawn_moves<F, G>(&self, compute_moves: F, compute_constraint: G) -> Vec<Move>
     where
