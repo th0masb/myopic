@@ -94,7 +94,7 @@ const CONTROL: [BitBoard; 64] = [
 #[cfg(test)]
 mod white_test {
     use crate::base::square::constants::*;
-    use crate::pieces::{WN};
+    use crate::pieces::WN;
 
     use super::*;
 
@@ -113,11 +113,11 @@ mod white_test {
         assert_eq!(A4 | C4 | D3, WN.moves(B2, D1 | B1, A4 | D7));
     }
 
-//    #[test]
-//    fn test_attacks() {
-//        let wn = WhiteKnight;
-//        assert_eq!(A4.lift(), wn.attacks(B2, D1 | B1, A4 | D7));
-//    }
+    //    #[test]
+    //    fn test_attacks() {
+    //        let wn = WhiteKnight;
+    //        assert_eq!(A4.lift(), wn.attacks(B2, D1 | B1, A4 | D7));
+    //    }
 }
 
 #[cfg(test)]
@@ -142,9 +142,9 @@ mod black_test {
         assert_eq!(C4 | D3 | D1, BN.moves(B2, D1 | B1, A4 | D7));
     }
 
-//    #[test]
-//    fn test_attacks() {
-//        let bn = BlackKnight;
-//        assert_eq!(D1.lift(), bn.attacks(B2, D1 | B1, A4 | D7));
-//    }
+    //    #[test]
+    //    fn test_attacks() {
+    //        let bn = BlackKnight;
+    //        assert_eq!(D1.lift(), bn.attacks(B2, D1 | B1, A4 | D7));
+    //    }
 }

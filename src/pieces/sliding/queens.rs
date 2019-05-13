@@ -1,6 +1,6 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::Side;
 use crate::base::square::Square;
+use crate::base::Side;
 
 use super::bishops;
 use super::rooks;
@@ -16,5 +16,3 @@ pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard 
 pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
     bishops::black_moves(loc, whites, blacks) | rooks::black_moves(loc, whites, blacks)
 }
-
-

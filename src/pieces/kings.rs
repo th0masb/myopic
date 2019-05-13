@@ -107,25 +107,31 @@ mod white_test {
             D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3,
             pieces::WK.control(square::constants::E3, zero, zero)
         );
-        assert_eq!(B1 | B2 | C2 | D2 | D1, pieces::WK.control(square::constants::C1, zero, zero));
+        assert_eq!(
+            B1 | B2 | C2 | D2 | D1,
+            pieces::WK.control(square::constants::C1, zero, zero)
+        );
     }
 
     #[test]
     fn test_moves() {
-        assert_eq!(B2 | C2 | D2 | D1, pieces::WK.moves(square::constants::C1, B1, C2));
+        assert_eq!(
+            B2 | C2 | D2 | D1,
+            pieces::WK.moves(square::constants::C1, B1, C2)
+        );
     }
 
-//    #[test]
-//    fn test_attacks() {
-//        let wk = WhiteKing;
-//        assert_eq!(C2, wk.attacks(C1, B1, C2));
-//    }
+    //    #[test]
+    //    fn test_attacks() {
+    //        let wk = WhiteKing;
+    //        assert_eq!(C2, wk.attacks(C1, B1, C2));
+    //    }
 }
 
 #[cfg(test)]
 mod black_test {
-    use crate::base::square::constants::*;
     use crate::base::square;
+    use crate::base::square::constants::*;
     use crate::pieces;
 
     use super::*;
@@ -142,11 +148,14 @@ mod black_test {
 
     #[test]
     fn test_moves() {
-        assert_eq!(B2 | B1 | D2 | D1, pieces::BK.moves(C1, B1.lift(), C2.lift()));
+        assert_eq!(
+            B2 | B1 | D2 | D1,
+            pieces::BK.moves(C1, B1.lift(), C2.lift())
+        );
     }
 
-//    #[test]
-//    fn test_attacks() {
-//        assert_eq!(B1, bk.attacks(C1, B1, C2));
-//    }
+    //    #[test]
+    //    fn test_attacks() {
+    //        assert_eq!(B1, bk.attacks(C1, B1, C2));
+    //    }
 }

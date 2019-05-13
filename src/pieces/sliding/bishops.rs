@@ -1,13 +1,13 @@
 use std::iter::repeat;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::Side;
 use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
+use crate::base::Side;
 use crate::pieces::pawns::black_control;
 use crate::pieces::Piece;
 
-use super::{bishop_dirs, BISHOP_MASKS, compute_bishop_index, compute_control, compute_powerset};
+use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
 
 pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
     MOVES[loc.i as usize][compute_bishop_index(loc, whites | blacks)]
