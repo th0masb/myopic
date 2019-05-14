@@ -54,7 +54,15 @@ impl CastleZone {
         )
     }
 
-    pub fn lift(&self) -> CastleZoneSet {
+    pub fn unoccupied_requirement(self) -> BitBoard {
+        CastleZone::REQ_UNOCCUPIED[self.i]
+    }
+
+    pub fn uncontrolled_requirement(self) -> BitBoard {
+        CastleZone::REQ_UNCONTROLLED[self.i]
+    }
+
+    pub fn lift(self) -> CastleZoneSet {
         CastleZoneSet {
             data: 1usize << self.i,
         }
@@ -76,6 +84,24 @@ impl CastleZone {
     const KING_TARGETS: [Square; 4] = [G1, C1, G8, C8];
     const ROOK_SOURCES: [Square; 4] = [H1, A1, H8, A8];
     const ROOK_TARGETS: [Square; 4] = [F1, D1, F8, D8];
+
+    const REQ_UNCONTROLLED: [BitBoard; 4] = [
+        BitBoard(sq(1) | sq(2) | sq(3)),
+        BitBoard(sq(3) | sq(4) | sq(5) | sq(6)),
+        BitBoard(sq(57) | sq(58) | sq(59)),
+        BitBoard(sq(59) | sq(60) | sq(61) | sq(62)),
+    ];
+
+    const REQ_UNOCCUPIED: [BitBoard; 4] = [
+        BitBoard(sq(1) | sq(2)),
+        BitBoard(sq(4) | sq(5) | sq(6)),
+        BitBoard(sq(57) | sq(58)),
+        BitBoard(sq(60) | sq(61) | sq(62)),
+    ];
+}
+
+const fn sq(i: usize) -> u64 {
+    1u64 << i
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]
@@ -93,6 +119,10 @@ impl CastleZoneSet {
             .filter(|i| (1usize << i) & self.data != 0)
             .map(|i| hash::castle_feature(CastleZone::ALL[i]))
             .fold(0u64, |a, b| a ^ b)
+    }
+
+    pub fn iter(self) -> impl Iterator<Item = CastleZone> {
+        CastleZone::ALL.iter().map(|&z| z).filter(move |&z| self.contains(z))
     }
 
     pub const ALL: CastleZoneSet = CastleZoneSet { data: 0b1111 };

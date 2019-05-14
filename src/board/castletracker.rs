@@ -65,4 +65,8 @@ impl CastleTracker {
     pub fn hash(&self) -> u64 {
         self.remaining_rights.hash()
     }
+
+    pub fn rights(&self) -> CastleZoneSet {
+        self.remaining_rights
+    }
 }

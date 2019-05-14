@@ -5,6 +5,7 @@ use crate::board::Board;
 use crate::board::Move;
 use crate::pieces;
 use crate::pieces::Piece;
+use crate::base::castlezone::CastleZone;
 
 #[cfg(test)]
 mod control_test;
@@ -71,8 +72,7 @@ impl Board {
         let mut dest: Vec<Move> = Vec::with_capacity(50);
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
-        let active = self.active;
-        let passive_control = self.compute_control(active.other());
+        let passive_control = self.compute_control(self.active.other());
         let (nbrq_cons, pawn_cons, king_cons) =
             self.compute_area_constraints(force_attacks, (whites, blacks), passive_control);
 
@@ -82,18 +82,18 @@ impl Board {
 
         let pinned = self.compute_pinned();
         if pinned.0.is_empty() {
-            dest.extend(self.legal_moves(nbrq(active), &unchecked_moves, |_| nbrq_cons));
-            dest.extend(self.pawn_moves(&unchecked_moves, |_| pawn_cons));
+            dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |_| nbrq_cons));
+            dest.extend(self.legal_pawn_moves(&unchecked_moves, |_| pawn_cons));
         } else {
-            dest.extend(self.legal_moves(nbrq(active), &unchecked_moves, |loc| {
+            dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |loc| {
                 compute_constraint_area(loc, &pinned, nbrq_cons)
             }));
-            dest.extend(self.pawn_moves(&unchecked_moves, |loc| {
+            dest.extend(self.legal_pawn_moves(&unchecked_moves, |loc| {
                 compute_constraint_area(loc, &pinned, pawn_cons)
             }));
         }
 
-        let king = &[pieces::king(active)];
+        let king = &[pieces::king(self.active)];
         dest.extend(self.legal_moves(king, &unchecked_moves, |_| king_cons));
         dest
     }
@@ -121,10 +121,12 @@ impl Board {
     }
 
     fn compute_castle_moves(&self, passive_control: BitBoard, piece_locs: BitBoard) -> Vec<Move> {
-        unimplemented!()
+        let p1 = |z: CastleZone| !passive_control.intersects(z.uncontrolled_requirement());
+        let p2 = |z: CastleZone| !piece_locs.intersects(z.unoccupied_requirement());
+        self.castling.rights().iter().filter(|&z| p1(z) && p2(z)).map(Move::Castle).collect()
     }
 
-    fn pawn_moves<F, G>(&self, compute_moves: F, compute_constraint: G) -> Vec<Move>
+    fn legal_pawn_moves<F, G>(&self, compute_moves: F, compute_constraint: G) -> Vec<Move>
     where
         F: Fn(Piece, Square) -> BitBoard,
         G: Fn(Square) -> BitBoard,
