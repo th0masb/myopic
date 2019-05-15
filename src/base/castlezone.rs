@@ -22,7 +22,7 @@ use crate::base::square::Square;
 use crate::board::hash;
 use crate::pieces::{Piece, KINGS, ROOKS};
 
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
 pub struct CastleZone {
     i: usize,
 }

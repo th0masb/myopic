@@ -16,7 +16,7 @@ mod sliding;
 /// directly but each one of the 12 possible values is available as
 /// a constant defined in this module.
 ///
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct Piece(usize);
 impl Piece {
     /// The unique integer identifier for this piece. They are assigned

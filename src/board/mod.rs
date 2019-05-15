@@ -56,7 +56,7 @@ pub struct ReversalData {
     discarded_clock: usize,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum Move {
     Standard(Piece, Square, Square),
     Enpassant(Square),
