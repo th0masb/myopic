@@ -50,6 +50,24 @@ fn enpassant_source_squares(active: Side, enpassant_target: Square) -> BitBoard 
     adjacent_files & active.other().pawn_third_rank()
 }
 
+#[cfg(test)]
+mod test_enpassant_source_squares {
+    use crate::base::bitboard::constants::*;
+    use crate::base::square::constants;
+    use super::enpassant_source_squares;
+    use crate::base::Side;
+
+    #[test]
+    fn test() {
+        assert_eq!(H4 | F4, enpassant_source_squares(Side::Black, constants::G3));
+        assert_eq!(G4, enpassant_source_squares(Side::Black, constants::H3));
+        assert_eq!(B4, enpassant_source_squares(Side::Black, constants::A3));
+        assert_eq!(H5 | F5, enpassant_source_squares(Side::White, constants::G6));
+        assert_eq!(G5, enpassant_source_squares(Side::White, constants::H6));
+        assert_eq!(B5, enpassant_source_squares(Side::White, constants::A6));
+    }
+}
+
 fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
     match side {
         Side::White => &[pieces::WN, pieces::WB, pieces::WR, pieces::WQ],
