@@ -1,11 +1,11 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
+use crate::base::castlezone::CastleZone;
 use crate::base::Side;
+use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::Move;
 use crate::pieces;
 use crate::pieces::Piece;
-use crate::base::castlezone::CastleZone;
 
 #[cfg(test)]
 mod test;
@@ -53,9 +53,10 @@ fn enpassant_source_squares(active: Side, enpassant_target: Square) -> BitBoard 
 #[cfg(test)]
 mod test_enpassant_source_squares {
     use crate::base::bitboard::constants::*;
-    use crate::base::square::constants;
-    use super::enpassant_source_squares;
     use crate::base::Side;
+    use crate::base::square::constants;
+
+    use super::enpassant_source_squares;
 
     #[test]
     fn test() {
@@ -160,6 +161,8 @@ impl Board {
             let targets = compute_moves(active_pawn, location) & compute_constraint(location);
             dest.extend(Move::standards(active_pawn, location, targets));
         }
+
+        println!("{:?}", enpassant);
         for location in enpassant {
             if compute_constraint(location).contains(self.enpassant.unwrap()) {
                 dest.push(Move::Enpassant(location));

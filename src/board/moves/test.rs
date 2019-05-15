@@ -100,18 +100,18 @@ fn case_1() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::White,
-            whites: vec![B3 | F4 | F2 | G2, C3, A3 | F3, A1 | H1, C2, E1],
-            blacks: vec![C6 | E4 | F7 | G7 | H7, B8, B5 | G6, A8 | H8, C7, E8],
+            whites: vec![B3 | F5 | F2 | G2, C3, A3 | F3, A1 | H1, C2, E1],
+            blacks: vec![C6 | E5 | F7 | G7 | H7, B8, B5 | G6, A8 | H8, C7, E8],
             clock: 20,
             hash_offset: 20,
             castle_rights: CastleZoneSet::ALL,
             white_status: None,
             black_status: None,
-            enpassant: Some(sq(E5)),
+            enpassant: Some(sq(E6)),
         },
 
         expected_castle_moves: vec![CastleZone::WQ],
-        expected_enpassant_moves: vec![F4],
+        expected_enpassant_moves: vec![F5],
 
         expected_promotion_moves: vec![],
         expected_promotion_attacks: vec![],
@@ -124,7 +124,7 @@ fn case_1() {
             (C2, B2 | B1 | A2 | C1 | D1 | D2 | E2 | D3 | E4),
             (E1, D1 | D2),
             (F3, E2 | D1 | E4 | G4 | H5),
-            (F4, F5),
+            (F5, F6 | G6),
             (G2, G3 | G4),
             (H1, G1 | F1 | E1 | D1 | C1 | B1 | A1),
         ],
