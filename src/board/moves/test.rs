@@ -10,8 +10,10 @@ use crate::base::Side;
 use crate::board::testutils::TestBoard;
 use crate::board::Board;
 use crate::board::Move;
+use std::cmp;
 
 type PrototypeMoveSet = (BitBoard, BitBoard);
+type MoveSet = BTreeSet<Move>;
 
 struct TestCase {
     board: TestBoard,
@@ -30,9 +32,8 @@ fn sq(set: BitBoard) -> Square {
     set.into_iter().next().unwrap()
 }
 
-fn convert_case(case: TestCase) -> (Board, BTreeSet<Move>, BTreeSet<Move>) {
+fn convert_case(case: TestCase) -> (Board, MoveSet, MoveSet) {
     let board = case.board.to_board();
-    let piece_at = |sq: Square| board.pieces.piece_at(sq).unwrap();
 
     let enpassant_moves = case
         .expected_enpassant_moves
@@ -63,7 +64,7 @@ fn convert_case(case: TestCase) -> (Board, BTreeSet<Move>, BTreeSet<Move>) {
     (board, expected_moves, expected_attacks)
 }
 
-fn combine(moves: Vec<Vec<Move>>) -> BTreeSet<Move> {
+fn combine(moves: Vec<Vec<Move>>) -> MoveSet {
     itertools::concat(moves).into_iter().collect()
 }
 
@@ -85,14 +86,29 @@ fn convert_standard(board: &Board, source: Vec<PrototypeMoveSet>) -> Vec<Move> {
 
 fn execute_test(case: TestCase) {
     let (board, expected_moves, expected_attacks) = convert_case(case);
+    let actual_moves = board.compute_moves().into_iter().collect::<BTreeSet<_>>();
     assert_eq!(
-        expected_moves,
-        board.compute_moves().into_iter().collect::<BTreeSet<_>>()
+        expected_moves.clone(),
+        actual_moves.clone(),
+        "Differences are: {:?}",
+        compute_difference(expected_moves, actual_moves)
     );
+
+    let actual_attacks = board.compute_attacks().into_iter().collect::<BTreeSet<_>>();
     assert_eq!(
-        expected_attacks,
-        board.compute_attacks().into_iter().collect::<BTreeSet<_>>()
+        expected_attacks.clone(),
+        actual_attacks.clone(),
+        "Differences are: {:?}",
+        compute_difference(expected_attacks, actual_attacks)
     );
+}
+
+fn compute_difference(left: MoveSet, right: MoveSet) -> (MoveSet, MoveSet)
+{
+    (
+        left.clone().difference(&right).map(|m| m.clone()).collect(),
+        right.clone().difference(&left).map(|m| m.clone()).collect(),
+    )
 }
 
 #[test]
@@ -118,19 +134,17 @@ fn case_1() {
 
         expected_standard_moves: vec![
             (A1, A2 | B1 | C1 | D1),
-            (A3, C1 | F8),
+            (A3, B2 | C1 | B4 | C5 | D6 | E7 | F8),
             (B3, B4),
             (C3, A2 | A4 | B5 | D5 | E4 | E2 | B1 | D1),
             (C2, B2 | B1 | A2 | C1 | D1 | D2 | E2 | D3 | E4),
             (E1, D1 | D2),
-            (F3, E2 | D1 | E4 | G4 | H5),
+            (F3, E2 | D1 | E4 | D5 | C6 | G4 | H5),
             (F5, F6 | G6),
             (G2, G3 | G4),
-            (H1, G1 | F1 | E1 | D1 | C1 | B1 | A1),
+            (H1, G1 | F1 | H2 | H3 | H4 | H5 | H6 | H7),
         ],
 
-        expected_standard_attacks: vec![
-            (C3, E4 | B5), (F3, E4), (C2, E4), (H1, H7)
-        ],
+        expected_standard_attacks: vec![(C3, B5), (F5, G6), (F3, C6), (H1, H7)],
     });
 }

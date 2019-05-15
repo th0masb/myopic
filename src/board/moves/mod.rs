@@ -162,7 +162,6 @@ impl Board {
             dest.extend(Move::standards(active_pawn, location, targets));
         }
 
-        println!("{:?}", enpassant);
         for location in enpassant {
             if compute_constraint(location).contains(self.enpassant.unwrap()) {
                 dest.push(Move::Enpassant(location));
