@@ -8,6 +8,8 @@ use crate::pieces::Piece;
 use crate::base::castlezone::CastleZone;
 
 #[cfg(test)]
+mod test;
+#[cfg(test)]
 mod control_test;
 #[cfg(test)]
 mod pin_test;
