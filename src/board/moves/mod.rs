@@ -1,18 +1,18 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
-use crate::base::Side;
 use crate::base::square::Square;
+use crate::base::Side;
 use crate::board::Board;
 use crate::board::Move;
 use crate::pieces;
 use crate::pieces::Piece;
 
 #[cfg(test)]
-mod test;
-#[cfg(test)]
 mod control_test;
 #[cfg(test)]
 mod pin_test;
+#[cfg(test)]
+mod test;
 
 type PinnedPiece = (Square, BitBoard);
 type PinnedSet = (BitBoard, Vec<PinnedPiece>);
@@ -53,17 +53,23 @@ fn enpassant_source_squares(active: Side, enpassant_target: Square) -> BitBoard 
 #[cfg(test)]
 mod test_enpassant_source_squares {
     use crate::base::bitboard::constants::*;
-    use crate::base::Side;
     use crate::base::square::constants;
+    use crate::base::Side;
 
     use super::enpassant_source_squares;
 
     #[test]
     fn test() {
-        assert_eq!(H4 | F4, enpassant_source_squares(Side::Black, constants::G3));
+        assert_eq!(
+            H4 | F4,
+            enpassant_source_squares(Side::Black, constants::G3)
+        );
         assert_eq!(G4, enpassant_source_squares(Side::Black, constants::H3));
         assert_eq!(B4, enpassant_source_squares(Side::Black, constants::A3));
-        assert_eq!(H5 | F5, enpassant_source_squares(Side::White, constants::G6));
+        assert_eq!(
+            H5 | F5,
+            enpassant_source_squares(Side::White, constants::G6)
+        );
         assert_eq!(G5, enpassant_source_squares(Side::White, constants::H6));
         assert_eq!(B5, enpassant_source_squares(Side::White, constants::A6));
     }
@@ -77,23 +83,32 @@ fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
 }
 
 impl Board {
+    /// Computes all legal moves for the active side at this position.
     pub fn compute_moves(&self) -> Vec<Move> {
-        self.compute_moves_impl(false)
+        let passive_control = self.compute_control(self.active.other());
+        self.compute_moves_no_check(passive_control, false)
     }
 
-    pub fn compute_attacks(&self) -> Vec<Move> {
-        self.compute_moves_impl(true)
+    /// Used in quiescent search to find quiet positions, if the king is
+    /// in check this method calculates any legal move otherwise we just
+    /// compute legal moves which result in the capture of an enemy piece.
+    pub fn compute_attacks_or_escapes(&self) -> Vec<Move> {
+        let passive_control = self.compute_control(self.active.other());
+        self.compute_moves_no_check(passive_control, true)
     }
 
-    pub fn has_legal_move(&self) -> bool {
+    //    pub fn has_legal_move(&self) -> bool {
+    //        unimplemented!()
+    //    }
+
+    fn compute_moves_in_check(&self, passive_control: BitBoard) -> Vec<Move> {
         unimplemented!()
     }
 
-    fn compute_moves_impl(&self, force_attacks: bool) -> Vec<Move> {
+    fn compute_moves_no_check(&self, passive_control: BitBoard, force_attacks: bool) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(50);
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
-        let passive_control = self.compute_control(self.active.other());
         let (nbrq_cons, pawn_cons, king_cons) =
             self.compute_area_constraints(force_attacks, (whites, blacks), passive_control);
 
@@ -106,9 +121,11 @@ impl Board {
             dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |_| nbrq_cons));
             dest.extend(self.legal_pawn_moves(&unchecked_moves, |_| pawn_cons));
         } else {
-            dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |loc| {
-                compute_constraint_area(loc, &pinned, nbrq_cons)
-            }));
+            dest.extend(
+                self.legal_moves(nbrq(self.active), &unchecked_moves, |loc| {
+                    compute_constraint_area(loc, &pinned, nbrq_cons)
+                }),
+            );
             dest.extend(self.legal_pawn_moves(&unchecked_moves, |loc| {
                 compute_constraint_area(loc, &pinned, pawn_cons)
             }));
@@ -144,7 +161,12 @@ impl Board {
     fn compute_castle_moves(&self, passive_control: BitBoard, piece_locs: BitBoard) -> Vec<Move> {
         let p1 = |z: CastleZone| !passive_control.intersects(z.uncontrolled_requirement());
         let p2 = |z: CastleZone| !piece_locs.intersects(z.unoccupied_requirement());
-        self.castling.rights().iter().filter(|&z| p1(z) && p2(z)).map(Move::Castle).collect()
+        self.castling
+            .rights()
+            .iter()
+            .filter(|&z| p1(z) && p2(z))
+            .map(Move::Castle)
+            .collect()
     }
 
     fn legal_pawn_moves<F, G>(&self, compute_moves: F, compute_constraint: G) -> Vec<Move>
