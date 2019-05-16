@@ -1,16 +1,16 @@
-use itertools;
 use std::collections::btree_set::BTreeSet;
 
-use crate::base::bitboard::constants::*;
+use itertools;
+
 use crate::base::bitboard::BitBoard;
+use crate::base::bitboard::constants::*;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::square::Square;
 use crate::base::Side;
-use crate::board::testutils::TestBoard;
+use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::Move;
-use std::cmp;
+use crate::board::testutils::TestBoard;
 
 type PrototypeMoveSet = (BitBoard, BitBoard);
 type MoveSet = BTreeSet<Move>;
@@ -146,5 +146,38 @@ fn case_1() {
         ],
 
         expected_standard_attacks: vec![(C3, B5), (F5, G6), (F3, C6), (H1, H7)],
+    });
+}
+
+#[test]
+fn case_2() {
+    execute_test(TestCase {
+        board: TestBoard {
+            active: Side::Black,
+            whites: vec![B3 | D4 | F2 | G2, C3, A3 | F3, A1 | H1, C2, E1],
+            blacks: vec![C6 | E4 | F7 | G7 | H7, B8, B5 | G6, A8 | H8, C7, E8],
+            clock: 20,
+            hash_offset: 20,
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            enpassant: Some(sq(D3)),
+        },
+
+        expected_castle_moves: vec![],
+        expected_enpassant_moves: vec![E4],
+
+        expected_promotion_moves: vec![],
+        expected_promotion_attacks: vec![],
+
+        expected_standard_moves: vec![
+            (A8, A7 | A6 | A5 | A4 | A3),
+            (B8, A6 | D7), (B5, A6 | A4 | C4 | D3 | E2 | F1),
+            (C7, C8 | D8 | D7 | E7 | D6 | E5 | F4 | G3 | H2 | B6 | A5 | B7 | A7),
+            (C6, C5), (E8, D8 | D7), (E4, E3 | F3), (F7, F6 | F5), (G6, H5 | F5),
+            (H7, H6 | H5), (H8, G8 | F8)
+        ],
+
+        expected_standard_attacks: vec![(E4, F3), (A8, A3)],
     });
 }
