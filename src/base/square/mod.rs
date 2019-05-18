@@ -2,6 +2,7 @@ use itertools::iterate;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::dir::Dir;
+use crate::base::Reflectable;
 
 pub mod constants;
 mod traits;
@@ -96,6 +97,13 @@ impl Square {
             rank: index / 8,
             file: index % 8,
         }
+    }
+}
+
+impl Reflectable for Square {
+    fn reflect(&self) -> Self {
+        let (fi, ri) = (self.file_index(), self.rank_index());
+        constants::SQUARES[(8 * (7 - ri) + fi) as usize]
     }
 }
 

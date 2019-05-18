@@ -21,6 +21,7 @@ use crate::base::square::constants::H8;
 use crate::base::square::Square;
 use crate::board::hash;
 use crate::pieces::{Piece, KINGS, ROOKS};
+use crate::base::Reflectable;
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
 pub struct CastleZone {
@@ -98,6 +99,12 @@ impl CastleZone {
         BitBoard(sq(57) | sq(58)),
         BitBoard(sq(60) | sq(61) | sq(62)),
     ];
+}
+
+impl Reflectable for CastleZone {
+    fn reflect(&self) -> Self {
+        CastleZone::ALL[(self.i() + 2) % 4]
+    }
 }
 
 const fn sq(i: usize) -> u64 {
@@ -190,6 +197,12 @@ impl ops::BitAnd<CastleZoneSet> for CastleZoneSet {
         CastleZoneSet {
             data: self.data & rhs.data,
         }
+    }
+}
+
+impl Reflectable for CastleZoneSet {
+    fn reflect(&self) -> Self {
+        self.iter().map(|z| z.reflect()).collect()
     }
 }
 

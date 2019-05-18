@@ -5,6 +5,7 @@ use std::fmt::Formatter;
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
+use crate::base::Reflectable;
 
 mod kings;
 mod knights;
@@ -100,6 +101,13 @@ impl Piece {
     ];
 }
 
+/// We reflect a piece to it's correspondent on the opposite side.
+impl Reflectable for Piece {
+    fn reflect(&self) -> Self {
+        ALL[(self.index() + 6) % 12]
+    }
+}
+
 /// Returns the king which belongs to the given side.
 pub fn king(side: Side) -> Piece {
     match side {
@@ -123,13 +131,6 @@ pub fn on_side<'a>(side: Side) -> &'a [Piece] {
         Side::Black => &BLACK,
     }
 }
-
-//pub fn army(side: Side) -> [Piece; 5] {
-//    match side {
-//        Side::White => [WP, WN, WB, WR, WQ],
-//        Side::Black => [BP, BN, BB, BR, BQ],
-//    }
-//}
 
 /// Constant static references to each white piece.
 pub const WP: Piece = Piece(0);

@@ -2,6 +2,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::dir::Dir;
 use crate::base::dir::N;
 use crate::base::dir::S;
+use std::cell::Ref;
 
 pub mod bitboard;
 pub mod castlezone;
@@ -50,3 +51,23 @@ impl Side {
         }
     }
 }
+
+pub trait Reflectable {
+    fn reflect(&self) -> Self;
+}
+
+impl<T: Reflectable> Reflectable for Vec<T> {
+    fn reflect(&self) -> Self {
+        self.into_iter().map(|t| t.reflect()).collect()
+    }
+}
+
+impl<T: Reflectable> Reflectable for Option<T> {
+    fn reflect(&self) -> Self {
+        match self {
+            Some(t) => Some(t.reflect()),
+            _ => None,
+        }
+    }
+}
+

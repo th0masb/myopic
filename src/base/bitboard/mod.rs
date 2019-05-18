@@ -5,6 +5,7 @@ use itertools::Itertools;
 use crate::base::dir;
 use crate::base::square::constants::H1;
 use crate::base::square::Square;
+use crate::base::Reflectable;
 
 pub mod constants;
 mod cords;
@@ -92,6 +93,12 @@ impl BitBoard {
         BitBoard(4629771061636907072),
         BitBoard(9259542123273814144),
     ];
+}
+
+impl Reflectable for BitBoard {
+    fn reflect(&self) -> Self {
+        self.into_iter().map(|sq| sq.reflect()).collect()
+    }
 }
 
 fn loc(sq: Square) -> u64 {

@@ -8,6 +8,7 @@ use crate::board::hashcache::HashCache;
 use crate::board::piecetracker::PieceTracker;
 use crate::pieces;
 use crate::pieces::Piece;
+use crate::base::Reflectable;
 
 pub mod hash;
 //pub mod tables;// To be removed
@@ -62,6 +63,17 @@ pub enum Move {
     Enpassant(Square),
     Promotion(Square, Square, Piece),
     Castle(CastleZone),
+}
+
+impl Reflectable for Move {
+    fn reflect(&self) -> Self {
+        match self {
+            Move::Castle(zone) => Move::castle(zone.reflect()),
+            Move::Enpassant(square) => Move::Enpassant(square.reflect()),
+            Move::Standard(p, s, t) => Move::Standard(p.reflect(), s.reflect(), t.reflect()),
+            Move::Promotion(s, t, p) => Move::Promotion(s.reflect(), t.reflect(), p.reflect()),
+        }
+    }
 }
 
 fn promotion_targets<'a>(side: Side) -> &'a [Piece; 4] {

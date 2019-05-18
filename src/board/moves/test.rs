@@ -11,6 +11,7 @@ use crate::base::Side;
 use crate::board::testutils::TestBoard;
 use crate::board::Board;
 use crate::board::Move;
+use crate::base::Reflectable;
 
 type PrototypeMoveSet = (BitBoard, BitBoard);
 type MoveSet = BTreeSet<Move>;
@@ -26,6 +27,17 @@ struct TestCase {
     expected_enpassant_attacks: Vec<BitBoard>,
     expected_promotion_attacks: Vec<PrototypeMoveSet>,
     expected_standard_attacks: Vec<PrototypeMoveSet>,
+}
+
+impl Reflectable for TestCase {
+    fn reflect(&self) -> Self {
+        //let reflect_moveset = |(left, right)| (reflect_bitboard(*left), reflect_bitboard(*right));
+//        TestCase {
+//            board: self.board.reflect(),
+//
+//        }
+        unimplemented!()
+    }
 }
 
 fn sq(set: BitBoard) -> Square {
