@@ -20,10 +20,10 @@ struct TestCase {
 
     expected_castle_moves: Vec<CastleZone>,
     expected_enpassant_moves: Vec<BitBoard>,
-
     expected_promotion_moves: Vec<PrototypeMoveSet>,
     expected_standard_moves: Vec<PrototypeMoveSet>,
 
+    expected_enpassant_attacks: Vec<BitBoard>,
     expected_promotion_attacks: Vec<PrototypeMoveSet>,
     expected_standard_attacks: Vec<PrototypeMoveSet>,
 }
@@ -35,21 +35,24 @@ fn sq(set: BitBoard) -> Square {
 fn convert_case(case: TestCase) -> (Board, MoveSet, MoveSet) {
     let board = case.board.to_board();
 
-    let enpassant_moves = case
-        .expected_enpassant_moves
-        .iter()
-        .map(|&set| Move::Enpassant(sq(set)))
-        .collect::<Vec<_>>();
-
     let castle_moves = case
         .expected_castle_moves
         .iter()
-        .map(|&sq| Move::Castle(sq))
+        .map(|&zone| Move::Castle(zone))
         .collect::<Vec<_>>();
 
+    let convert_enpassant = |source: Vec<BitBoard>| {
+        source
+            .iter()
+            .map(|&set| Move::Enpassant(sq(set)))
+            .collect::<Vec<_>>()
+    };
+
+    let enpassant_moves = convert_enpassant(case.expected_enpassant_moves);
     let promotion_moves = convert_promotion(&board, case.expected_promotion_moves);
     let standard_moves = convert_standard(&board, case.expected_standard_moves);
 
+    let enpassant_attacks = convert_enpassant(case.expected_enpassant_attacks);
     let promotion_attacks = convert_promotion(&board, case.expected_promotion_attacks);
     let standard_attacks = convert_standard(&board, case.expected_standard_attacks);
 
@@ -59,7 +62,7 @@ fn convert_case(case: TestCase) -> (Board, MoveSet, MoveSet) {
         promotion_moves,
         standard_moves,
     ]);
-    let expected_attacks = combine(vec![enpassant_moves, promotion_attacks, standard_attacks]);
+    let expected_attacks = combine(vec![enpassant_attacks, promotion_attacks, standard_attacks]);
 
     (board, expected_moves, expected_attacks)
 }
@@ -129,7 +132,9 @@ fn case_1() {
         },
 
         expected_castle_moves: vec![CastleZone::WQ],
+
         expected_enpassant_moves: vec![F5],
+        expected_enpassant_attacks: vec![F5],
 
         expected_promotion_moves: vec![],
         expected_promotion_attacks: vec![],
@@ -167,7 +172,9 @@ fn case_2() {
         },
 
         expected_castle_moves: vec![],
+
         expected_enpassant_moves: vec![E4],
+        expected_enpassant_attacks: vec![E4],
 
         expected_promotion_moves: vec![],
         expected_promotion_attacks: vec![],
@@ -216,7 +223,9 @@ fn case_3() {
         },
 
         expected_castle_moves: vec![CastleZone::WK],
+
         expected_enpassant_moves: vec![],
+        expected_enpassant_attacks: vec![],
 
         expected_promotion_moves: vec![(A7, A8 | B8)],
         expected_promotion_attacks: vec![(A7, B8)],
@@ -259,6 +268,7 @@ fn case_4() {
 
         expected_castle_moves: vec![CastleZone::BK],
         expected_enpassant_moves: vec![],
+        expected_enpassant_attacks: vec![],
 
         expected_promotion_moves: vec![(A2, A1 | B1)],
         expected_promotion_attacks: vec![(A2, B1)],
@@ -294,13 +304,14 @@ fn case_5() {
         },
 
         expected_castle_moves: vec![],
+
         expected_enpassant_moves: vec![],
+        expected_enpassant_attacks: vec![],
 
         expected_promotion_moves: vec![],
         expected_promotion_attacks: vec![],
 
-        expected_standard_moves: vec![(F1, G1), (E1, E2), (C2, D3 | E2), (F3, E2), (C3, E2 | B6)],
-
-        expected_standard_attacks: vec![(C3, B5)],
+        expected_standard_moves: vec![(F1, G1), (E1, E2), (C2, D3 | E2), (F3, E2), (C3, E2 | B5)],
+        expected_standard_attacks: vec![(F1, G1), (E1, E2), (C2, D3 | E2), (F3, E2), (C3, E2 | B5)],
     });
 }

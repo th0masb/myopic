@@ -8,29 +8,26 @@ use crate::pieces;
 use crate::pieces::Piece;
 
 #[cfg(test)]
-mod control_test;
-#[cfg(test)]
-mod pin_test;
-#[cfg(test)]
 mod test;
 
-type PinnedPiece = (Square, BitBoard);
-type PinnedSet = (BitBoard, Vec<PinnedPiece>);
+mod pinning;
+mod control;
+
+type PinnedSet = (BitBoard, Vec<(Square, BitBoard)>);
 
 const WHITE_SLIDERS: [Piece; 3] = [pieces::WB, pieces::WR, pieces::WQ];
 const BLACK_SLIDERS: [Piece; 3] = [pieces::BB, pieces::BR, pieces::BQ];
 const FILES: [BitBoard; 8] = BitBoard::FILES;
 
 fn compute_constraint_area(piece_loc: Square, pinned: &PinnedSet, existing: BitBoard) -> BitBoard {
-    if pinned.0.contains(piece_loc) {
+    existing & if pinned.0.contains(piece_loc) {
         (&pinned.1)
             .into_iter()
             .find(|(sq, _)| *sq == piece_loc)
             .unwrap()
             .1
-            & existing
     } else {
-        BitBoard::ALL & existing
+        BitBoard::ALL
     }
 }
 
@@ -82,29 +79,103 @@ fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
     }
 }
 
+fn pnbrq<'a>(side: Side) -> &'a [Piece; 5] {
+    match side {
+        Side::White => &[pieces::WP, pieces::WN, pieces::WB, pieces::WR, pieces::WQ],
+        Side::Black => &[pieces::BP, pieces::BN, pieces::BB, pieces::BR, pieces::BQ],
+    }
+}
+
 impl Board {
     /// Computes all legal moves for the active side at this position.
     pub fn compute_moves(&self) -> Vec<Move> {
-        let passive_control = self.compute_control(self.active.other());
-        self.compute_moves_no_check(passive_control, false)
+        self.compute_moves_impl(false)
     }
 
     /// Used in quiescent search to find quiet positions, if the king is
     /// in check this method calculates any legal move otherwise we just
     /// compute legal moves which result in the capture of an enemy piece.
     pub fn compute_attacks_or_escapes(&self) -> Vec<Move> {
+        self.compute_moves_impl(true)
+    }
+
+    fn compute_moves_impl(&self, force_attacks: bool) -> Vec<Move> {
         let passive_control = self.compute_control(self.active.other());
-        self.compute_moves_no_check(passive_control, true)
+        if passive_control.intersects(self.pieces.locations(pieces::king(self.active))) {
+            self.compute_moves_in_check(passive_control)
+        } else {
+            self.compute_moves_no_check(passive_control, force_attacks)
+        }
     }
 
-    //    pub fn has_legal_move(&self) -> bool {
-    //        unimplemented!()
-    //    }
-
+    /// Assuming the active side is in check, compute the legal escape moves.
     fn compute_moves_in_check(&self, passive_control: BitBoard) -> Vec<Move> {
-        unimplemented!()
+        let mut dest: Vec<Move> = Vec::with_capacity(10);
+        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
+        let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
+        let active_king = pieces::king(self.active);
+        let king_loc = self.pieces.king_location(self.active);
+        dest.extend(Move::standards(
+            active_king,
+            king_loc,
+            unchecked_moves(active_king, king_loc) - passive_control,
+        ));
+
+        let attackers = self.compute_king_attackers(whites, blacks);
+        if attackers.len() == 1 {
+            let (attacker, loc) = attackers[0];
+            let block_constraint = if attacker.is_knight() {
+                loc.lift()
+            } else {
+                BitBoard::cord(loc, king_loc)
+            };
+            dest.extend(self.compute_pnbrq_moves(
+                unchecked_moves,
+                block_constraint,
+                block_constraint,
+            ));
+        }
+        dest
     }
 
+    fn compute_king_attackers(&self, whites: BitBoard, blacks: BitBoard) -> Vec<(Piece, Square)> {
+        let king_loc = self.pieces.king_location(self.active);
+        pnbrq(self.active.other())
+            .iter()
+            .flat_map(|&p| self.pieces.locations(p).into_iter().map(move |s| (p, s)))
+            .filter(|(p, s)| p.control(*s, whites, blacks).contains(king_loc))
+            .collect()
+    }
+
+
+    fn compute_pnbrq_moves<F>(
+        &self,
+        unchecked_moves: F,
+        nbrq_constraint: BitBoard,
+        pawn_constraint: BitBoard,
+    ) -> Vec<Move>
+    where
+        F: Fn(Piece, Square) -> BitBoard,
+    {
+        let mut dest: Vec<Move> = Vec::with_capacity(40);
+        let pinned = self.compute_pinned();
+        if pinned.0.is_empty() {
+            dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |_| nbrq_constraint));
+            dest.extend(self.legal_pawn_moves(&unchecked_moves, |_| pawn_constraint));
+        } else {
+            let nbrq = nbrq(self.active);
+            let compute_nbrq_constraint =
+                |loc: Square| compute_constraint_area(loc, &pinned, nbrq_constraint);
+            dest.extend(self.legal_moves(nbrq, &unchecked_moves, &compute_nbrq_constraint));
+            let compute_pawn_constraint =
+                |loc: Square| compute_constraint_area(loc, &pinned, pawn_constraint);
+            dest.extend(self.legal_pawn_moves(&unchecked_moves, &compute_pawn_constraint));
+        }
+        dest
+    }
+
+    /// Assuming the active side is not in check, compute the legal moves
+    /// with the option of forcing moves which result in an enemy capture.
     fn compute_moves_no_check(&self, passive_control: BitBoard, force_attacks: bool) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(50);
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
@@ -115,22 +186,7 @@ impl Board {
         if !force_attacks {
             dest.extend(self.compute_castle_moves(passive_control, whites | blacks));
         }
-
-        let pinned = self.compute_pinned();
-        if pinned.0.is_empty() {
-            dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |_| nbrq_cons));
-            dest.extend(self.legal_pawn_moves(&unchecked_moves, |_| pawn_cons));
-        } else {
-            dest.extend(
-                self.legal_moves(nbrq(self.active), &unchecked_moves, |loc| {
-                    compute_constraint_area(loc, &pinned, nbrq_cons)
-                }),
-            );
-            dest.extend(self.legal_pawn_moves(&unchecked_moves, |loc| {
-                compute_constraint_area(loc, &pinned, pawn_cons)
-            }));
-        }
-
+        dest.extend(self.compute_pnbrq_moves(&unchecked_moves, nbrq_cons, pawn_cons));
         let king = &[pieces::king(self.active)];
         dest.extend(self.legal_moves(king, &unchecked_moves, |_| king_cons));
         dest
@@ -210,7 +266,6 @@ impl Board {
         )
     }
 
-    /// TODO Could reduce the arguments of this further to compute_targets
     fn legal_moves<F, G>(&self, pieces: &[Piece], unchecked_moves: F, constraint: G) -> Vec<Move>
     where
         F: Fn(Piece, Square) -> BitBoard,
@@ -225,50 +280,5 @@ impl Board {
             }
         }
         dest
-    }
-
-    /// Computes the total area of control on the board for a given side.
-    /// TODO Improve efficiency by treated all pawns as a block
-    fn compute_control(&self, side: Side) -> BitBoard {
-        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
-        let locs = |piece: Piece| self.pieces.locations(piece);
-        let control = |piece: Piece, square: Square| piece.control(square, whites, blacks);
-        pieces::on_side(side)
-            .iter()
-            .flat_map(|&p| locs(p).into_iter().map(move |sq| control(p, sq)))
-            .collect()
-    }
-
-    /// Computes the set of all active pieces which are pinned to the king,
-    /// i.e have their movement areas constrained so that they do not move
-    /// and leave the king in check.
-    ///
-    fn compute_pinned(&self) -> PinnedSet {
-        let locs = |side: Side| self.pieces.side_locations(side);
-        let (active, passive) = (locs(self.active), locs(self.active.other()));
-        let king_loc = self.pieces.king_location(self.active);
-        let mut pinned: Vec<PinnedPiece> = Vec::with_capacity(2);
-        let mut pinned_locs = BitBoard::EMPTY;
-        for potential_pinner in self.compute_potential_pinners(king_loc) {
-            let cord = BitBoard::cord(king_loc, potential_pinner);
-            if (cord & active).size() == 2 && (cord & passive).size() == 1 {
-                let pinned_loc = ((cord & active) - king_loc).into_iter().next().unwrap();
-                pinned.push((pinned_loc, cord));
-                pinned_locs |= pinned_loc;
-            }
-        }
-        (pinned_locs, pinned)
-    }
-
-    fn compute_potential_pinners(&self, king_loc: Square) -> BitBoard {
-        let passive_sliders = match self.active {
-            Side::White => BLACK_SLIDERS,
-            Side::Black => WHITE_SLIDERS,
-        };
-        let locs = |p: Piece| self.pieces.locations(p);
-        passive_sliders
-            .iter()
-            .flat_map(|&p| locs(p) & p.control(king_loc, BitBoard::EMPTY, BitBoard::EMPTY))
-            .collect()
     }
 }

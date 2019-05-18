@@ -49,6 +49,11 @@ impl Piece {
         self.0 % 6 == 0
     }
 
+    /// Checks whether this piece is either a white or black knight.
+    pub fn is_knight(self) -> bool {
+        self.0 % 6 == 1
+    }
+
     /// Computes the control set for this piece given it's location and the
     /// locations of all the white and black pieces on the board.
     pub fn control(self, loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {

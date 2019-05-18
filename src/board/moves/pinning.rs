@@ -4,12 +4,10 @@ use crate::base::castlezone::CastleZoneSet;
 use crate::base::square;
 use crate::base::Side;
 
-use super::{PinnedSet, WHITE_SLIDERS, BLACK_SLIDERS};
-use crate::board::Board;
+use super::{PinnedSet, BLACK_SLIDERS, WHITE_SLIDERS};
 use crate::base::square::Square;
+use crate::board::Board;
 use crate::pieces::Piece;
-
-// TODO Move pinned stuff into the same file as it's test
 
 impl Board {
     /// Computes the set of all active pieces which are pinned to the king,
@@ -48,8 +46,8 @@ impl Board {
 
 #[cfg(test)]
 mod test {
-    use crate::board::testutils::TestBoard;
     use super::*;
+    use crate::board::testutils::TestBoard;
 
     struct TestCase {
         input: TestBoard,
@@ -87,5 +85,4 @@ mod test {
             ),
         })
     }
-
 }
