@@ -7,15 +7,16 @@ use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::square::Square;
+use crate::base::Reflectable;
 use crate::base::Side;
 use crate::board::testutils::TestBoard;
 use crate::board::Board;
 use crate::board::Move;
-use crate::base::Reflectable;
 
 type PrototypeMoveSet = (BitBoard, BitBoard);
 type MoveSet = BTreeSet<Move>;
 
+#[derive(Debug, Clone)]
 struct TestCase {
     board: TestBoard,
 
@@ -29,14 +30,24 @@ struct TestCase {
     expected_standard_attacks: Vec<PrototypeMoveSet>,
 }
 
+impl Reflectable for PrototypeMoveSet {
+    fn reflect(&self) -> Self {
+        (self.0.reflect(), self.1.reflect())
+    }
+}
+
 impl Reflectable for TestCase {
     fn reflect(&self) -> Self {
-        //let reflect_moveset = |(left, right)| (reflect_bitboard(*left), reflect_bitboard(*right));
-//        TestCase {
-//            board: self.board.reflect(),
-//
-//        }
-        unimplemented!()
+        TestCase {
+            board: self.board.reflect(),
+            expected_castle_moves: self.expected_castle_moves.reflect(),
+            expected_enpassant_moves: self.expected_enpassant_moves.reflect(),
+            expected_promotion_moves: self.expected_promotion_moves.reflect(),
+            expected_standard_moves: self.expected_standard_moves.reflect(),
+            expected_enpassant_attacks: self.expected_enpassant_attacks.reflect(),
+            expected_promotion_attacks: self.expected_promotion_attacks.reflect(),
+            expected_standard_attacks: self.expected_standard_attacks.reflect(),
+        }
     }
 }
 
@@ -100,6 +111,12 @@ fn convert_standard(board: &Board, source: Vec<PrototypeMoveSet>) -> Vec<Move> {
 }
 
 fn execute_test(case: TestCase) {
+    let reflected_case = case.reflect();
+    execute_test_impl(case);
+    execute_test_impl(reflected_case);
+}
+
+fn execute_test_impl(case: TestCase) {
     let (board, expected_moves, expected_attacks) = convert_case(case);
     let actual_moves = board.compute_moves().into_iter().collect::<BTreeSet<_>>();
     assert_eq!(
@@ -127,6 +144,8 @@ fn compute_difference(left: MoveSet, right: MoveSet) -> (MoveSet, MoveSet) {
         right.clone().difference(&left).map(|m| m.clone()).collect(),
     )
 }
+
+const EMPTY: BitBoard = BitBoard::EMPTY;
 
 #[test]
 fn case_1() {
@@ -365,5 +384,33 @@ fn case_6() {
             (C7, E5 | E7),
             (F4, E2 | E6),
         ],
+    });
+}
+
+#[test]
+fn case_7() {
+    execute_test(TestCase {
+        board: TestBoard {
+            active: Side::Black,
+            whites: vec![EMPTY, EMPTY, A1, E3, EMPTY, H1],
+            blacks: vec![EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, C3],
+            clock: 20,
+            hash_offset: 20,
+            castle_rights: CastleZoneSet::NONE,
+            white_status: None,
+            black_status: None,
+            enpassant: None,
+        },
+
+        expected_castle_moves: vec![],
+
+        expected_enpassant_moves: vec![],
+        expected_enpassant_attacks: vec![],
+
+        expected_promotion_moves: vec![],
+        expected_promotion_attacks: vec![],
+
+        expected_standard_moves: vec![(C3, C4 | C2 | B4 | D2)],
+        expected_standard_attacks: vec![(C3, C4 | C2 | B4 | D2)],
     });
 }

@@ -21,6 +21,7 @@ use crate::board::ReversalData;
 use crate::pieces::BP;
 use crate::pieces::WP;
 use crate::{pieces, pieces::Piece};
+use crate::base::Reflectable;
 
 #[cfg(test)]
 mod test;
@@ -115,7 +116,7 @@ impl Board {
     }
 
     fn evolve_e(&mut self, source: Square) -> RD {
-        let discarded_piece = pieces::pawn(self.active.other());
+        let discarded_piece = pieces::pawn(self.active.reflect());
         let rev_data = self.create_rev_data(Some(discarded_piece), CastleZoneSet::NONE);
         self.toggle_enpassant_pieces(source, self.enpassant.unwrap());
         self.enpassant = None;

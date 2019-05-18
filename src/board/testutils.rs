@@ -1,17 +1,17 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::square::Square;
-use crate::base::square;
+use crate::base::Reflectable;
 use crate::base::Side;
+use crate::base::square;
+use crate::base::square::Square;
+use crate::board::Board;
 use crate::board::castletracker::CastleTracker;
 use crate::board::hashcache::HashCache;
-use crate::board::piecetracker::PieceTracker;
-use crate::board::Board;
 use crate::board::Move;
-use crate::pieces::Piece;
+use crate::board::piecetracker::PieceTracker;
 use crate::pieces;
-use crate::base::Reflectable;
+use crate::pieces::Piece;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {
@@ -34,7 +34,7 @@ impl Reflectable for TestBoard {
             castle_rights: self.castle_rights.reflect(),
             white_status: self.black_status.reflect(),
             black_status: self.white_status.reflect(),
-            active: self.active.other(),
+            active: self.active.reflect(),
             clock: self.clock,
             enpassant: self.enpassant.reflect(),
             hash_offset: self.hash_offset

@@ -16,13 +16,6 @@ pub enum Side {
 }
 
 impl Side {
-    pub fn other(self) -> Side {
-        match self {
-            Side::White => Side::Black,
-            _ => Side::White,
-        }
-    }
-
     pub fn pawn_dir(self) -> Dir {
         match self {
             Side::White => N,
@@ -54,6 +47,15 @@ impl Side {
 
 pub trait Reflectable {
     fn reflect(&self) -> Self;
+}
+
+impl Reflectable for Side {
+    fn reflect(&self) -> Self {
+        match self {
+            Side::White => Side::Black,
+            Side::Black => Side::White,
+        }
+    }
 }
 
 impl<T: Reflectable> Reflectable for Vec<T> {

@@ -6,6 +6,7 @@ use crate::board::Board;
 use crate::board::Move;
 use crate::pieces;
 use crate::pieces::Piece;
+use crate::base::Reflectable;
 
 #[cfg(test)]
 mod test;
@@ -44,7 +45,7 @@ fn enpassant_source_squares(active: Side, enpassant_target: Square) -> BitBoard 
         }
         _ => FILES[fi + 1] | FILES[fi - 1],
     };
-    adjacent_files & active.other().pawn_third_rank()
+    adjacent_files & active.reflect().pawn_third_rank()
 }
 
 #[cfg(test)]
@@ -100,7 +101,7 @@ impl Board {
     }
 
     fn compute_moves_impl(&self, force_attacks: bool) -> Vec<Move> {
-        let passive_control = self.compute_control(self.active.other());
+        let passive_control = self.compute_control(self.active.reflect());
         if passive_control.intersects(self.pieces.locations(pieces::king(self.active))) {
             self.compute_moves_in_check(passive_control)
         } else {
@@ -140,7 +141,7 @@ impl Board {
 
     fn compute_king_attackers(&self, whites: BitBoard, blacks: BitBoard) -> Vec<(Piece, Square)> {
         let king_loc = self.pieces.king_location(self.active);
-        pnbrq(self.active.other())
+        pnbrq(self.active.reflect())
             .iter()
             .flat_map(|&p| self.pieces.locations(p).into_iter().map(move |s| (p, s)))
             .filter(|(p, s)| p.control(*s, whites, blacks).contains(king_loc))

@@ -1,13 +1,14 @@
-use crate::base::bitboard::constants::*;
 use crate::base::bitboard::BitBoard;
+use crate::base::bitboard::constants::*;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::square;
+use crate::base::Reflectable;
 use crate::base::Side;
-
-use super::{PinnedSet, BLACK_SLIDERS, WHITE_SLIDERS};
+use crate::base::square;
 use crate::base::square::Square;
 use crate::board::Board;
 use crate::pieces::Piece;
+
+use super::{BLACK_SLIDERS, PinnedSet, WHITE_SLIDERS};
 
 impl Board {
     /// Computes the set of all active pieces which are pinned to the king,
@@ -16,7 +17,7 @@ impl Board {
     ///
     pub fn compute_pinned(&self) -> PinnedSet {
         let locs = |side: Side| self.pieces.side_locations(side);
-        let (active, passive) = (locs(self.active), locs(self.active.other()));
+        let (active, passive) = (locs(self.active), locs(self.active.reflect()));
         let king_loc = self.pieces.king_location(self.active);
         let mut pinned: Vec<(Square, BitBoard)> = Vec::with_capacity(2);
         let mut pinned_locs = BitBoard::EMPTY;
@@ -46,8 +47,9 @@ impl Board {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use crate::board::testutils::TestBoard;
+
+    use super::*;
 
     struct TestCase {
         input: TestBoard,

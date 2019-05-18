@@ -34,7 +34,7 @@ pub struct Board {
 
 impl Board {
     fn switch_side(&mut self) {
-        self.active = self.active.other();
+        self.active = self.active.reflect();
     }
 
     /// Combines the various components of the hash together and pushes the
