@@ -3,6 +3,7 @@ use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::Board;
 use crate::pieces::Piece;
+use crate::pieces;
 
 impl Board {
     /// Computes the total area of control on the board for a given side. Note that the

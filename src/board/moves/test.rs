@@ -315,3 +315,43 @@ fn case_5() {
         expected_standard_attacks: vec![(F1, G1), (E1, E2), (C2, D3 | E2), (F3, E2), (C3, E2 | B5)],
     });
 }
+
+#[test]
+fn case_6() {
+    execute_test(TestCase {
+        board: TestBoard {
+            active: Side::Black,
+            whites: vec![B3 | F2 | G2, C3, F3, A1 | E1, C2, F1],
+            blacks: vec![C6 | F7 | G7, F4, B5 | G6, A8 | H8, C7, E8],
+            clock: 20,
+            hash_offset: 20,
+            castle_rights: CastleZoneSet::BK | CastleZoneSet::BQ,
+            white_status: Some(CastleZone::WK),
+            black_status: None,
+            enpassant: None,
+        },
+
+        expected_castle_moves: vec![],
+
+        expected_enpassant_moves: vec![],
+        expected_enpassant_attacks: vec![],
+
+        expected_promotion_moves: vec![],
+        expected_promotion_attacks: vec![],
+
+        expected_standard_moves: vec![
+            (E8, F8 | D7 | D8),
+            (B5, E2),
+            (G6, E4),
+            (C7, E5 | E7),
+            (F4, E2 | E6),
+        ],
+        expected_standard_attacks: vec![
+            (E8, F8 | D7 | D8),
+            (B5, E2),
+            (G6, E4),
+            (C7, E5 | E7),
+            (F4, E2 | E6),
+        ],
+    });
+}
