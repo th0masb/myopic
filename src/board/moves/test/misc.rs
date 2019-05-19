@@ -325,3 +325,31 @@ fn case_9() {
         standard_attacks: vec![],
     });
 }
+
+#[test]
+fn case_10() {
+    execute_test(TestCase {
+        board: TestBoard {
+            active: Side::White,
+            whites: vec![C6, EMPTY, EMPTY, EMPTY, EMPTY, B7],
+            blacks: vec![D6, EMPTY, E4, EMPTY, EMPTY, G8],
+            clock: 20,
+            hash_offset: 20,
+            castle_rights: CastleZoneSet::NONE,
+            white_status: None,
+            black_status: None,
+            enpassant: Some(sq(D7)),
+        },
+
+        castle_moves: vec![],
+
+        enpassant_moves: vec![],
+        enpassant_attacks: vec![],
+
+        promotion_moves: vec![],
+        promotion_attacks: vec![],
+
+        standard_moves: vec![(B7, B6 | A6 | A7 | A8 | B8 | C8 | C7)],
+        standard_attacks: vec![],
+    });
+}
