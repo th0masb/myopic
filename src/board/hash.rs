@@ -22,7 +22,7 @@ pub fn enpassant_feature(square: Square) -> u64 {
 }
 
 pub fn castle_feature(zone: CastleZone) -> u64 {
-    FEATURES[N_FEATURES - 2 - zone.i()]
+    FEATURES[N_FEATURES - 2 - zone.id()]
 }
 
 const SEED: u64 = 0x110894u64;

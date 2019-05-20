@@ -23,20 +23,30 @@ use crate::board::hash;
 use crate::pieces::{Piece, KINGS, ROOKS};
 use crate::base::Reflectable;
 
+/// Represents one of the four different areas on a chessboard where
+/// the special castling move can take place (two for each side).
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
 pub struct CastleZone {
     i: usize,
 }
 
 impl CastleZone {
-    pub fn i(self) -> usize {
+    /// Retrieve the unique integer identifier for this zone which lies
+    /// in the range 0-4.
+    pub fn id(self) -> usize {
         self.i
     }
 
+    /// Returns a set of exactly two squares which denote the required
+    /// locations of the king and rook in order for the corresponding
+    /// castle move to take place.
     pub fn source_squares(self) -> BitBoard {
         CastleZone::KING_SOURCES[self.i] | CastleZone::ROOK_SOURCES[self.i]
     }
 
+    /// Returns a triple containing the rook which moves in the corresponding
+    /// castle move along with it's required start square followed by the
+    /// square it will finish on.
     pub fn rook_data(self) -> (Piece, Square, Square) {
         let i = self.i;
         (
@@ -46,6 +56,9 @@ impl CastleZone {
         )
     }
 
+    /// Returns a triple containing the king which moves in the corresponding
+    /// castle move along with it's required start square followed by the
+    /// square it will finish on.
     pub fn king_data(self) -> (Piece, Square, Square) {
         let i = self.i;
         (
@@ -55,25 +68,37 @@ impl CastleZone {
         )
     }
 
+    /// Returns a set containing the squares which are required to be
+    /// free of any other pieces in order for the corresponding castle
+    /// move to be legal.
     pub fn unoccupied_requirement(self) -> BitBoard {
         CastleZone::REQ_UNOCCUPIED[self.i]
     }
 
+    /// Returns a set containing the squares which are required to be
+    /// free of enemy control in order for the corresponding castle move
+    /// to be legal.
     pub fn uncontrolled_requirement(self) -> BitBoard {
         CastleZone::REQ_UNCONTROLLED[self.i]
     }
 
+    /// Lifts this zone to a set of one element.
     pub fn lift(self) -> CastleZoneSet {
         CastleZoneSet {
             data: 1usize << self.i,
         }
     }
 
+    /// The white kingside castle zone.
     pub const WK: CastleZone = CastleZone { i: 0 };
+    /// The white queenside castle zone.
     pub const WQ: CastleZone = CastleZone { i: 1 };
+    /// The black kingside castle zone.
     pub const BK: CastleZone = CastleZone { i: 2 };
+    /// The black queenside castle zone.
     pub const BQ: CastleZone = CastleZone { i: 3 };
 
+    /// All the four different castle zones ordered by their id.
     pub const ALL: [CastleZone; 4] = [
         CastleZone::WK,
         CastleZone::WQ,
@@ -101,9 +126,12 @@ impl CastleZone {
     ];
 }
 
+/// A castle is reflected by it's side, i.e.
+///  - WK <==> BK
+///  - WQ <==> BQ
 impl Reflectable for CastleZone {
     fn reflect(&self) -> Self {
-        CastleZone::ALL[(self.i() + 2) % 4]
+        CastleZone::ALL[(self.i + 2) % 4]
     }
 }
 

@@ -5,7 +5,6 @@ extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 extern crate rand;
-//extern crate bitwise;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;

@@ -9,6 +9,7 @@ pub mod castlezone;
 pub mod dir;
 pub mod square;
 
+/// Represents the two different teams in a game of chess.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
 pub enum Side {
     White,
@@ -16,6 +17,8 @@ pub enum Side {
 }
 
 impl Side {
+    /// Get the vertical direction in which a pawn on this side moves
+    /// (north or south).
     pub fn pawn_dir(self) -> Dir {
         match self {
             Side::White => N,
@@ -23,6 +26,7 @@ impl Side {
         }
     }
 
+    /// Get the rank on which a pawn on this side starts the game.
     pub fn pawn_first_rank(self) -> BitBoard {
         match self {
             Side::White => BitBoard::RANKS[1],
@@ -30,6 +34,8 @@ impl Side {
         }
     }
 
+    /// Get the rank to which a pawn on this side moves to following
+    /// it's special two rank first move.
     pub fn pawn_third_rank(self) -> BitBoard {
         match self {
             Side::White => BitBoard::RANKS[3],
@@ -37,6 +43,8 @@ impl Side {
         }
     }
 
+    /// Get the rank a pawn on this side must be on for it to be able
+    /// to promote on it's next move.
     pub fn pawn_last_rank(self) -> BitBoard {
         match self {
             Side::White => BitBoard::RANKS[6],
@@ -45,6 +53,9 @@ impl Side {
     }
 }
 
+
+/// Chess is a symmetric game and this trait represents a component of
+/// the game which can be reflected to it's symmetric opposite component.
 pub trait Reflectable {
     fn reflect(&self) -> Self;
 }
