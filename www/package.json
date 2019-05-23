@@ -1,7 +1,7 @@
 {
-  "name": "create-wasm-app",
+  "name": "jenjinn3",
   "version": "0.1.0",
-  "description": "create an app to consume rust-generated wasm packages",
+  "description": "WebAssembly chess engine",
   "main": "index.js",
   "bin": {
     "create-wasm-app": ".bin/create-wasm-app.js"

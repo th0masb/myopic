@@ -1,3 +1,7 @@
+'use-strict';
+
+import {SQUARES} from './module.js';
+
 let canvas = document.getElementById("board-canvas");
 const ctx = canvas.getContext("2d");
 let windowWidth = () => window.innerWidth;
@@ -18,5 +22,5 @@ let renderOp = () => {
     ctx.fillRect(0, 0, w, h);
     requestAnimationFrame(renderOp);
 }
-
+console.log(SQUARES);
 requestAnimationFrame(renderOp);
