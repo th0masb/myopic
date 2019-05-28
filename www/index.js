@@ -1,6 +1,6 @@
 'use-strict';
 
-import {SQUARES} from './module.js';
+import {computeSquareLocations} from './module.js';
 
 let canvas = document.getElementById("board-canvas");
 const ctx = canvas.getContext("2d");
@@ -22,5 +22,5 @@ let renderOp = () => {
     ctx.fillRect(0, 0, w, h);
     requestAnimationFrame(renderOp);
 }
-console.log(SQUARES);
+console.log(computeSquareLocations(560, 300, 10, "w"))
 requestAnimationFrame(renderOp);
