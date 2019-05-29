@@ -1,10 +1,12 @@
 'use-strict';
 
-import {computeBoardGeometry} from './module.js';
+import {computeBoardGeometry} from './geometry.js';
+import {IMAGES} from './images.js';
 
 let canvas = document.getElementById("board-canvas");
 const ctx = canvas.getContext("2d");
 ctx.drawBounds = b => ctx.fillRect(b.minx, b.miny, b.width, b.height);
+ctx.drawImageInBounds = (im, b) => ctx.drawImage(im, b.minx, b.miny, b.width, b.height);
 let windowWidth = () => window.innerWidth;
 let windowHeight = () => window.innerHeight;
 
@@ -18,6 +20,7 @@ function isLightIndex(index) {
 }
 
 
+
 let renderOp = () => {
     clearCanvas(canvas)
     let w = windowWidth();
@@ -28,7 +31,7 @@ let renderOp = () => {
     //ctx.fillRect(0, 0, w, h);
 
     let [lightFill, darkFill] = ["#e5c9ae", "#442100"]
-    let geometry = computeBoardGeometry(w, h, 50, "w");
+    let geometry = computeBoardGeometry(w, h, 64, "b");
     ctx.fillStyle = darkFill;
     ctx.drawBounds(geometry.back);
     ctx.fillStyle = lightFill;
@@ -37,6 +40,10 @@ let renderOp = () => {
     		ctx.drawBounds(geometry.squares[i]);
     	}
     }
+    if (IMAGES.loaded) {
+    	ctx.drawImageInBounds(IMAGES.images[0], geometry.squares[0]);
+    }
+
     requestAnimationFrame(renderOp);
 }
 requestAnimationFrame(renderOp);
