@@ -15,24 +15,9 @@ mod control;
 mod enpassant_source;
 mod pinning;
 
-type PinnedSet = (BitBoard, Vec<(Square, BitBoard)>);
-
 const WHITE_SLIDERS: [Piece; 3] = [pieces::WB, pieces::WR, pieces::WQ];
 const BLACK_SLIDERS: [Piece; 3] = [pieces::BB, pieces::BR, pieces::BQ];
 const FILES: [BitBoard; 8] = BitBoard::FILES;
-
-fn compute_constraint_area(piece_loc: Square, pinned: &PinnedSet, existing: BitBoard) -> BitBoard {
-    existing
-        & if pinned.0.contains(piece_loc) {
-            (&pinned.1)
-                .into_iter()
-                .find(|(sq, _)| *sq == piece_loc)
-                .unwrap()
-                .1
-        } else {
-            BitBoard::ALL
-        }
-}
 
 fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
     match side {
@@ -120,16 +105,16 @@ impl Board {
     {
         let mut dest: Vec<Move> = Vec::with_capacity(40);
         let pinned = self.compute_pinned();
-        if pinned.0.is_empty() {
+        if pinned.pinned_locations.is_empty() {
             dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |_| nbrq_constraint));
             dest.extend(self.legal_pawn_moves(&unchecked_moves, |_| pawn_constraint));
         } else {
             let nbrq = nbrq(self.active);
             let compute_nbrq_constraint =
-                |loc: Square| compute_constraint_area(loc, &pinned, nbrq_constraint);
+                |loc: Square| pinned.compute_constraint_area(loc, nbrq_constraint);
             dest.extend(self.legal_moves(nbrq, &unchecked_moves, &compute_nbrq_constraint));
             let compute_pawn_constraint =
-                |loc: Square| compute_constraint_area(loc, &pinned, pawn_constraint);
+                |loc: Square| pinned.compute_constraint_area(loc, pawn_constraint);
             dest.extend(self.legal_pawn_moves(&unchecked_moves, &compute_pawn_constraint));
         }
         dest
@@ -137,7 +122,11 @@ impl Board {
 
     /// Assuming the active side is not in check, compute the legal moves
     /// with the option of forcing moves which result in an enemy capture.
-    fn compute_moves_assuming_no_check(&self, passive_control: BitBoard, force_attacks: bool) -> Vec<Move> {
+    fn compute_moves_assuming_no_check(
+        &self,
+        passive_control: BitBoard,
+        force_attacks: bool,
+    ) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(50);
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
