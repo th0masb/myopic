@@ -2,16 +2,16 @@ use std::collections::btree_set::BTreeSet;
 
 use itertools;
 
-use crate::base::bitboard::BitBoard;
 use crate::base::bitboard::constants::*;
+use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
+use crate::board::testutils::TestBoard;
 use crate::board::Board;
 use crate::board::Move;
-use crate::board::testutils::TestBoard;
 
 type PrototypeMoveSet = (BitBoard, BitBoard);
 type MoveSet = BTreeSet<Move>;
@@ -149,4 +149,3 @@ fn compute_difference(left: MoveSet, right: MoveSet) -> (MoveSet, MoveSet) {
         right.clone().difference(&left).map(|m| m.clone()).collect(),
     )
 }
-

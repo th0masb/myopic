@@ -2,15 +2,15 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::Board;
-use crate::pieces::Piece;
 use crate::pieces;
+use crate::pieces::Piece;
 
 impl Board {
     /// Computes the total area of control on the board for a given side. Note that the
     /// passive king is treated as invisible so that if it is in check it cannot create
     /// it's own escape squares by blocking the control ray of an attacking slider.
     /// TODO Improve efficiency by treated all pawns as a block
-    pub fn compute_control(&self, side: Side) -> BitBoard {
+    pub(super) fn compute_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
             Side::White => (

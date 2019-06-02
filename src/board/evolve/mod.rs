@@ -28,7 +28,12 @@ mod test;
 
 type RD = ReversalData;
 
+/// Implementation of board evolution/devolution via some given Move
+/// instance which is assumed to be legal for this board.
 impl Board {
+    /// Public API for evolving a board. All that is required is a reference to
+    /// a move which is assumed to be legal. The information required to reverse
+    /// this same move is returned and the board is mutated to the next state.
     pub fn evolve(&mut self, action: &Move) -> RD {
         match action {
             Standard(piece, source, target) => self.evolve_s(*piece, *source, *target),
@@ -38,6 +43,8 @@ impl Board {
         }
     }
 
+    /// Public API for devolving a move, the information lost at evolve time is
+    /// required as an input here to recover the lost state exactly.
     pub fn devolve(&mut self, action: &Move, discards: RD) {
         match action {
             Standard(piece, source, target) => self.devolve_s(*piece, *source, *target, discards),

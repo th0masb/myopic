@@ -1,18 +1,19 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
+use crate::base::Reflectable;
 use crate::base::Side;
 use crate::board::Board;
 use crate::board::Move;
 use crate::pieces;
 use crate::pieces::Piece;
-use crate::base::Reflectable;
 
 #[cfg(test)]
 mod test;
 
-mod pinning;
 mod control;
+mod enpassant_source;
+mod pinning;
 
 type PinnedSet = (BitBoard, Vec<(Square, BitBoard)>);
 
@@ -21,56 +22,16 @@ const BLACK_SLIDERS: [Piece; 3] = [pieces::BB, pieces::BR, pieces::BQ];
 const FILES: [BitBoard; 8] = BitBoard::FILES;
 
 fn compute_constraint_area(piece_loc: Square, pinned: &PinnedSet, existing: BitBoard) -> BitBoard {
-    existing & if pinned.0.contains(piece_loc) {
-        (&pinned.1)
-            .into_iter()
-            .find(|(sq, _)| *sq == piece_loc)
-            .unwrap()
-            .1
-    } else {
-        BitBoard::ALL
-    }
-}
-
-/// TODO Could have adjacent files in a constant array
-fn enpassant_source_squares(active: Side, enpassant_target: Square) -> BitBoard {
-    let fi = enpassant_target.file_index() as usize;
-    let adjacent_files = match fi % 7 {
-        0 => {
-            if fi == 0 {
-                FILES[1]
-            } else {
-                FILES[6]
-            }
+    existing
+        & if pinned.0.contains(piece_loc) {
+            (&pinned.1)
+                .into_iter()
+                .find(|(sq, _)| *sq == piece_loc)
+                .unwrap()
+                .1
+        } else {
+            BitBoard::ALL
         }
-        _ => FILES[fi + 1] | FILES[fi - 1],
-    };
-    adjacent_files & active.reflect().pawn_third_rank()
-}
-
-#[cfg(test)]
-mod test_enpassant_source_squares {
-    use crate::base::bitboard::constants::*;
-    use crate::base::square::constants;
-    use crate::base::Side;
-
-    use super::enpassant_source_squares;
-
-    #[test]
-    fn test() {
-        assert_eq!(
-            H4 | F4,
-            enpassant_source_squares(Side::Black, constants::G3)
-        );
-        assert_eq!(G4, enpassant_source_squares(Side::Black, constants::H3));
-        assert_eq!(B4, enpassant_source_squares(Side::Black, constants::A3));
-        assert_eq!(
-            H5 | F5,
-            enpassant_source_squares(Side::White, constants::G6)
-        );
-        assert_eq!(G5, enpassant_source_squares(Side::White, constants::H6));
-        assert_eq!(B5, enpassant_source_squares(Side::White, constants::A6));
-    }
 }
 
 fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
@@ -103,14 +64,14 @@ impl Board {
     fn compute_moves_impl(&self, force_attacks: bool) -> Vec<Move> {
         let passive_control = self.compute_control(self.active.reflect());
         if passive_control.intersects(self.pieces.locations(pieces::king(self.active))) {
-            self.compute_moves_in_check(passive_control)
+            self.compute_moves_assuming_in_check(passive_control)
         } else {
-            self.compute_moves_no_check(passive_control, force_attacks)
+            self.compute_moves_assuming_no_check(passive_control, force_attacks)
         }
     }
 
     /// Assuming the active side is in check, compute the legal escape moves.
-    fn compute_moves_in_check(&self, passive_control: BitBoard) -> Vec<Move> {
+    fn compute_moves_assuming_in_check(&self, passive_control: BitBoard) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(10);
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
@@ -148,7 +109,6 @@ impl Board {
             .collect()
     }
 
-
     fn compute_pnbrq_moves<F>(
         &self,
         unchecked_moves: F,
@@ -177,7 +137,7 @@ impl Board {
 
     /// Assuming the active side is not in check, compute the legal moves
     /// with the option of forcing moves which result in an enemy capture.
-    fn compute_moves_no_check(&self, passive_control: BitBoard, force_attacks: bool) -> Vec<Move> {
+    fn compute_moves_assuming_no_check(&self, passive_control: BitBoard, force_attacks: bool) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(50);
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
@@ -193,6 +153,8 @@ impl Board {
         dest
     }
 
+    /// Computes the constraint areas for nbrq, pawn and king pieces returning
+    /// the three results as a triple in that order.
     fn compute_area_constraints(
         &self,
         force_attacks: bool,
@@ -200,7 +162,8 @@ impl Board {
         passive_control: BitBoard,
     ) -> (BitBoard, BitBoard, BitBoard) {
         let (whites, blacks) = locations;
-        let nbrq_cons = if force_attacks {
+        // Constraint for nbrq
+        let nbrq = if force_attacks {
             match self.active {
                 Side::White => blacks,
                 Side::Black => whites,
@@ -208,11 +171,8 @@ impl Board {
         } else {
             BitBoard::ALL
         };
-        (
-            nbrq_cons,
-            nbrq_cons | self.enpassant.map_or(BitBoard::EMPTY, |x| x.lift()),
-            nbrq_cons - passive_control,
-        )
+        let enpassant = self.enpassant.map_or(BitBoard::EMPTY, |x| x.lift());
+        (nbrq, nbrq | enpassant, nbrq - passive_control)
     }
 
     fn compute_castle_moves(&self, passive_control: BitBoard, piece_locs: BitBoard) -> Vec<Move> {
@@ -256,7 +216,7 @@ impl Board {
 
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
         let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
-            enpassant_source_squares(self.active, sq)
+            enpassant_source::squares(self.active, sq)
         });
         let promotion_rank = self.active.pawn_last_rank();
         let pawn_locs = self.pieces.locations(pieces::pawn(self.active));
