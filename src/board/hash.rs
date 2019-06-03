@@ -7,7 +7,7 @@ use rand_pcg::Mcg128Xsl64;
 use std::iter;
 
 pub fn piece_feature(piece: Piece, square: Square) -> u64 {
-    FEATURES[piece.index() * 64 + square.i as usize]
+    FEATURES[piece as usize * 64 + square.i as usize]
 }
 
 pub fn side_feature(side: Side) -> u64 {

@@ -15,6 +15,7 @@ mod base;
 mod pieces;
 mod board;
 mod utils;
+mod search;
 
 use wasm_bindgen::prelude::*;
 

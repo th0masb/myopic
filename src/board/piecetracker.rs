@@ -57,7 +57,7 @@ impl PieceTracker {
     }
 
     pub fn locations(&self, piece: Piece) -> BitBoard {
-        self.boards[piece.index()]
+        self.boards[piece as usize]
     }
 
     pub fn piece_at(&self, square: Square) -> Option<Piece> {
@@ -83,7 +83,7 @@ impl PieceTracker {
 
     pub fn toggle_piece(&mut self, piece: Piece, locations: &[Square]) {
         for &location in locations.iter() {
-            self.boards[piece.index()] ^= location;
+            self.boards[piece as usize] ^= location;
             self.hash ^= hash::piece_feature(piece, location);
         }
     }
@@ -100,7 +100,7 @@ mod test {
     use crate::base::square::constants::C3;
     use crate::base::square::constants::E4;
     use crate::base::square::constants::E5;
-    use crate::pieces;
+    use crate::pieces::Piece;
 
     use super::*;
 
@@ -108,7 +108,7 @@ mod test {
     fn test_erase_square() {
         let mut board = init_tracker(Some(E5), Some(C3));
         let result = board.erase_square(E5);
-        assert_eq!(Some(pieces::WP), result);
+        assert_eq!(Some(Piece::WP), result);
         assert_eq!(init_tracker(None, Some(C3)), board);
         let result2 = board.erase_square(E4);
         assert_eq!(None, result2);
@@ -118,16 +118,16 @@ mod test {
     #[test]
     fn test_toggle_square() {
         let mut board = init_tracker(Some(E5), Some(C3));
-        board.toggle_piece(pieces::WP, &[E5, E4]);
+        board.toggle_piece(Piece::WP, &[E5, E4]);
         assert_eq!(init_tracker(Some(E4), Some(C3)), board);
     }
 
     fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> PieceTracker {
         let mut boards: Vec<_> = iter::repeat(BitBoard::EMPTY).take(12).collect();
-        boards[pieces::WP.index()] = pawn_loc.map_or(BitBoard::EMPTY, |x| x.lift());
-        boards[pieces::BN.index()] = knight_loc.map_or(BitBoard::EMPTY, |x| x.lift());
-        let p_hash = pawn_loc.map_or(0u64, |x| hash::piece_feature(pieces::WP, x));
-        let n_hash = knight_loc.map_or(0u64, |x| hash::piece_feature(pieces::BN, x));
+        boards[Piece::WP as usize] = pawn_loc.map_or(BitBoard::EMPTY, |x| x.lift());
+        boards[Piece::BN as usize] = knight_loc.map_or(BitBoard::EMPTY, |x| x.lift());
+        let p_hash = pawn_loc.map_or(0u64, |x| hash::piece_feature(Piece::WP, x));
+        let n_hash = knight_loc.map_or(0u64, |x| hash::piece_feature(Piece::BN, x));
         PieceTracker {
             boards,
             hash: p_hash ^ n_hash,

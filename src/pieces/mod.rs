@@ -4,8 +4,8 @@ use std::fmt::Formatter;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
-use crate::base::Side;
 use crate::base::Reflectable;
+use crate::base::Side;
 
 mod kings;
 mod knights;
@@ -13,32 +13,27 @@ mod pawns;
 mod sliding;
 
 /// Value type wrapping a single integer representing one of the 12
-/// different pieces in a game of chess. These cannot be constructed
-/// directly but each one of the 12 possible values is available as
-/// a constant defined in this module.
-///
+/// different pieces in a game of chess.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-pub struct Piece(usize);
-impl Piece {
-    /// The unique integer identifier for this piece. They are assigned
-    /// as follows:
-    ///    0 -> White pawn,
-    ///    1 -> white knight,
-    ///    2 -> white bishop,
-    ///    3 -> white rook,
-    ///    4 -> white queen,
-    ///    5 -> white king,
-    ///    6 -> black pawn,
-    ///    ...
-    ///   11 -> black king,
-    ///
-    pub fn index(self) -> usize {
-        self.0
-    }
+pub enum Piece {
+    WP = 0,
+    WN = 1,
+    WB = 2,
+    WR = 3,
+    WQ = 4,
+    WK = 5,
 
+    BP = 6,
+    BN = 7,
+    BB = 8,
+    BR = 9,
+    BQ = 10,
+    BK = 11,
+}
+impl Piece {
     /// Returns the side that this piece belongs to.
     pub fn side(self) -> Side {
-        if self.0 < 6 {
+        if (self as u8) < 6 {
             Side::White
         } else {
             Side::Black
@@ -47,18 +42,18 @@ impl Piece {
 
     /// Checks whether this piece is either a white or black pawn.
     pub fn is_pawn(self) -> bool {
-        self.0 % 6 == 0
+        (self as u8) % 6 == 0
     }
 
     /// Checks whether this piece is either a white or black knight.
     pub fn is_knight(self) -> bool {
-        self.0 % 6 == 1
+        (self as u8) % 6 == 1
     }
 
     /// Computes the control set for this piece given it's location and the
     /// locations of all the white and black pieces on the board.
     pub fn control(self, loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-        Piece::CONTROL_FN[self.0](loc, whites, blacks)
+        Piece::CONTROL_FN[self as usize](loc, whites, blacks)
     }
 
     /// Computes the set of legal moves for this piece given it's location
@@ -67,7 +62,7 @@ impl Piece {
     /// for or due to the king, e.g. can't move in such a way to put the king
     /// into check.
     pub fn moves(self, loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-        Piece::MOVE_FN[self.0](loc, whites, blacks)
+        Piece::MOVE_FN[self as usize](loc, whites, blacks)
     }
 
     const CONTROL_FN: [fn(Square, BitBoard, BitBoard) -> BitBoard; 12] = [
@@ -104,23 +99,23 @@ impl Piece {
 /// We reflect a piece to it's correspondent on the opposite side.
 impl Reflectable for Piece {
     fn reflect(&self) -> Self {
-        ALL[(self.index() + 6) % 12]
+        ALL[(*self as usize + 6) % 12]
     }
 }
 
 /// Returns the king which belongs to the given side.
 pub fn king(side: Side) -> Piece {
     match side {
-        Side::White => WK,
-        Side::Black => BK,
+        Side::White => Piece::WK,
+        Side::Black => Piece::BK,
     }
 }
 
 /// Returns the pawn which belongs to the given side.
 pub fn pawn(side: Side) -> Piece {
     match side {
-        Side::White => WP,
-        Side::Black => BP,
+        Side::White => Piece::WP,
+        Side::Black => Piece::BP,
     }
 }
 
@@ -132,31 +127,58 @@ pub fn on_side<'a>(side: Side) -> &'a [Piece] {
     }
 }
 
-/// Constant static references to each white piece.
-pub const WP: Piece = Piece(0);
-pub const WN: Piece = Piece(1);
-pub const WB: Piece = Piece(2);
-pub const WR: Piece = Piece(3);
-pub const WQ: Piece = Piece(4);
-pub const WK: Piece = Piece(5);
-
-/// Constant static references to each black piece.
-pub const BP: Piece = Piece(6);
-pub const BN: Piece = Piece(7);
-pub const BB: Piece = Piece(8);
-pub const BR: Piece = Piece(9);
-pub const BQ: Piece = Piece(10);
-pub const BK: Piece = Piece(11);
+///// Constant static references to each white piece.
+//pub const WP: Piece = Piece(0);
+//pub const WN: Piece = Piece(1);
+//pub const WB: Piece = Piece(2);
+//pub const WR: Piece = Piece(3);
+//pub const WQ: Piece = Piece(4);
+//pub const WK: Piece = Piece(5);
+//
+///// Constant static references to each black piece.
+//pub const BP: Piece = Piece(6);
+//pub const BN: Piece = Piece(7);
+//pub const BB: Piece = Piece(8);
+//pub const BR: Piece = Piece(9);
+//pub const BQ: Piece = Piece(10);
+//pub const BK: Piece = Piece(11);
 
 /// Constant piece groupings.
-pub const ALL: [Piece; 12] = [WP, WN, WB, WR, WQ, WK, BP, BN, BB, BR, BQ, BK];
+pub const ALL: [Piece; 12] = [
+    Piece::WP,
+    Piece::WN,
+    Piece::WB,
+    Piece::WR,
+    Piece::WQ,
+    Piece::WK,
+    Piece::BP,
+    Piece::BN,
+    Piece::BB,
+    Piece::BR,
+    Piece::BQ,
+    Piece::BK,
+];
 
-pub const WHITE: [Piece; 6] = [WP, WN, WB, WR, WQ, WK];
-pub const BLACK: [Piece; 6] = [BP, BN, BB, BR, BQ, BK];
+pub const WHITE: [Piece; 6] = [
+    Piece::WP,
+    Piece::WN,
+    Piece::WB,
+    Piece::WR,
+    Piece::WQ,
+    Piece::WK,
+];
+pub const BLACK: [Piece; 6] = [
+    Piece::BP,
+    Piece::BN,
+    Piece::BB,
+    Piece::BR,
+    Piece::BQ,
+    Piece::BK,
+];
 
-pub const PAWNS: [Piece; 2] = [WP, BP];
-pub const KNIGHTS: [Piece; 2] = [WN, BN];
-pub const BISHOPS: [Piece; 2] = [WB, BB];
-pub const ROOKS: [Piece; 2] = [WR, BR];
-pub const QUEENS: [Piece; 2] = [WQ, BQ];
-pub const KINGS: [Piece; 2] = [WK, BK];
+pub const PAWNS: [Piece; 2] = [Piece::WP, Piece::BP];
+pub const KNIGHTS: [Piece; 2] = [Piece::WN, Piece::BN];
+pub const BISHOPS: [Piece; 2] = [Piece::WB, Piece::BB];
+pub const ROOKS: [Piece; 2] = [Piece::WR, Piece::BR];
+pub const QUEENS: [Piece; 2] = [Piece::WQ, Piece::BQ];
+pub const KINGS: [Piece; 2] = [Piece::WK, Piece::BK];

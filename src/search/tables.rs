@@ -1,94 +1,89 @@
+use crate::base::Reflectable;
+use crate::base::Side;
 use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
-use crate::base::Side;
 use crate::pieces::Piece;
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the midgame.
-pub fn midgame_eval(piece: &dyn Piece, location: Square) -> i32 {
+pub fn midgame_eval(piece: Piece, location: Square) -> i32 {
     let (table_index, parity) = compute_index_and_parity(piece, location);
-    parity * MIDGAME[piece.index() % 6][table_index]
+    parity * MIDGAME[piece as usize % 6][table_index]
 }
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the endgame.
-pub fn endgame_eval(piece: &dyn Piece, location: Square) -> i32 {
+pub fn endgame_eval(piece: Piece, location: Square) -> i32 {
     let (table_index, parity) = compute_index_and_parity(piece, location);
-    parity * ENDGAME[piece.index() % 6][table_index]
+    parity * ENDGAME[piece as usize % 6][table_index]
 }
 
 /// Computes the table index alongside the parity multiplier according to the
 /// piece side.
-fn compute_index_and_parity(piece: &dyn Piece, location: Square) -> (usize, i32) {
+fn compute_index_and_parity(piece: Piece, location: Square) -> (usize, i32) {
     match piece.side() {
         Side::White => (63 - location.i as usize, 1),
-        Side::Black => (63 - reflect(location).i as usize, -1),
+        Side::Black => (63 - location.reflect().i as usize, -1),
     }
-}
-
-/// Reflects a square through the horizontal line bisecting the chess board.
-fn reflect(loc: Square) -> Square {
-    let (rank, file) = (loc.rank(), loc.file());
-    SQUARES[(7 - rank) * 8 + file]
 }
 
 #[cfg(test)]
 mod test {
+    use crate::base::Reflectable;
     use crate::base::square::constants::*;
     use crate::base::square::Square;
-    use crate::board::tables::{endgame_eval, midgame_eval};
-    use crate::pieces::*;
+    use crate::pieces::Piece;
 
-    use super::reflect;
+    use super::{endgame_eval, midgame_eval};
 
     #[test]
     fn test_reflect() {
-        assert_eq!(A8, reflect(A1));
-        assert_eq!(H1, reflect(H8));
-        assert_eq!(D3, reflect(D6));
-        assert_eq!(D5, reflect(D4));
+        assert_eq!(A8, A1.reflect());
+        assert_eq!(H1, H8.reflect());
+        assert_eq!(D3, D6.reflect());
+        assert_eq!(D5, D4.reflect());
     }
 
     #[test]
     fn test_midgame() {
-        assert_eq!(30, midgame_eval(WP, C6));
-        assert_eq!(-30, midgame_eval(BP, C3));
+        assert_eq!(30, midgame_eval(Piece::WP, C6));
+        assert_eq!(-30, midgame_eval(Piece::BP, C3));
 
-        assert_eq!(10, midgame_eval(WN, D3));
-        assert_eq!(-10, midgame_eval(BN, D6));
+        assert_eq!(10, midgame_eval(Piece::WN, D3));
+        assert_eq!(-10, midgame_eval(Piece::BN, D6));
 
-        assert_eq!(25, midgame_eval(WB, D4));
-        assert_eq!(-25, midgame_eval(BB, D5));
+        assert_eq!(25, midgame_eval(Piece::WB, D4));
+        assert_eq!(-25, midgame_eval(Piece::BB, D5));
 
-        assert_eq!(5, midgame_eval(WR, D2));
-        assert_eq!(-5, midgame_eval(BR, D7));
+        assert_eq!(5, midgame_eval(Piece::WR, D2));
+        assert_eq!(-5, midgame_eval(Piece::BR, D7));
 
-        assert_eq!(5, midgame_eval(WQ, B3));
-        assert_eq!(-5, midgame_eval(BQ, B6));
+        assert_eq!(5, midgame_eval(Piece::WQ, B3));
+        assert_eq!(-5, midgame_eval(Piece::BQ, B6));
 
-        assert_eq!(50, midgame_eval(WK, B1));
-        assert_eq!(-50, midgame_eval(BK, B8));
+        assert_eq!(50, midgame_eval(Piece::WK, B1));
+        assert_eq!(-50, midgame_eval(Piece::BK, B8));
     }
 
     #[test]
     fn test_endgame() {
-        assert_eq!(80, endgame_eval(WP, C6));
-        assert_eq!(-80, endgame_eval(BP, C3));
+        assert_eq!(80, endgame_eval(Piece::WP, C6));
+        assert_eq!(-80, endgame_eval(Piece::BP, C3));
 
-        assert_eq!(-40, endgame_eval(WN, E1));
-        assert_eq!(40, endgame_eval(BN, E8));
+        assert_eq!(-40, endgame_eval(Piece::WN, E1));
+        assert_eq!(40, endgame_eval(Piece::BN, E8));
 
-        assert_eq!(25, endgame_eval(WB, D4));
-        assert_eq!(-25, endgame_eval(BB, D5));
+        assert_eq!(25, endgame_eval(Piece::WB, D4));
+        assert_eq!(-25, endgame_eval(Piece::BB, D5));
 
-        assert_eq!(10, endgame_eval(WR, D3));
-        assert_eq!(-10, endgame_eval(BR, D6));
+        assert_eq!(10, endgame_eval(Piece::WR, D3));
+        assert_eq!(-10, endgame_eval(Piece::BR, D6));
 
-        assert_eq!(-30, endgame_eval(WQ, A4));
-        assert_eq!(30, endgame_eval(BQ, A5));
+        assert_eq!(-30, endgame_eval(Piece::WQ, A4));
+        assert_eq!(30, endgame_eval(Piece::BQ, A5));
 
-        assert_eq!(10, endgame_eval(WK, D7));
-        assert_eq!(-10, endgame_eval(BK, D2));
+        assert_eq!(10, endgame_eval(Piece::WK, D7));
+        assert_eq!(-10, endgame_eval(Piece::BK, D2));
     }
 }
 

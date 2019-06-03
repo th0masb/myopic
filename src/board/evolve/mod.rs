@@ -18,8 +18,6 @@ use crate::board::Board;
 use crate::board::Move;
 use crate::board::Move::*;
 use crate::board::ReversalData;
-use crate::pieces::BP;
-use crate::pieces::WP;
 use crate::{pieces, pieces::Piece};
 use crate::base::Reflectable;
 
@@ -141,8 +139,8 @@ impl Board {
     fn toggle_enpassant_pieces(&mut self, source: Square, enpassant: Square) {
         let active = self.active;
         let (active_pawn, passive_pawn) = match active {
-            Side::White => (WP, BP),
-            _ => (BP, WP),
+            Side::White => (Piece::WP, Piece::BP),
+            _ => (Piece::BP, Piece::WP),
         };
         let removal_square = enpassant.next(active.pawn_dir().opposite()).unwrap();
         self.pieces.toggle_piece(active_pawn, &[source, enpassant]);

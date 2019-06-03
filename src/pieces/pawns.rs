@@ -182,50 +182,50 @@ const BLACK_CONTROL: [BitBoard; 64] = [
 #[cfg(test)]
 mod black_test {
     use crate::base::square::constants::*;
-    use crate::pieces;
+    use crate::pieces::Piece;
 
     use super::*;
 
     #[test]
     fn test_control() {
-        assert_eq!(D2 | F2, pieces::BP.control(E3, A1 | B6, D8 | D4));
-        assert_eq!(F7 | D7, pieces::BP.control(E8, A1 | B6, D8 | D4));
-        assert_eq!(B2.lift(), pieces::BP.control(A3, A4 | C5, F4 | H8));
-        assert_eq!(G2.lift(), pieces::BP.control(H3, A4 | C5, F4 | H8));
+        assert_eq!(D2 | F2, Piece::BP.control(E3, A1 | B6, D8 | D4));
+        assert_eq!(F7 | D7, Piece::BP.control(E8, A1 | B6, D8 | D4));
+        assert_eq!(B2.lift(), Piece::BP.control(A3, A4 | C5, F4 | H8));
+        assert_eq!(G2.lift(), Piece::BP.control(H3, A4 | C5, F4 | H8));
     }
 
     #[test]
     fn test_moves() {
-        assert_eq!(D1.lift(), pieces::BP.moves(D2, E2 | D5, G1 | F7));
-        assert_eq!(G6 | G5, pieces::BP.moves(G7, A1 | F5, H6 | B3));
-        assert_eq!(BitBoard::EMPTY, pieces::BP.moves(G7, A1 | G6, H6 | B3));
-        assert_eq!(G6.lift(), pieces::BP.moves(G7, A1 | G8, G5 | B3));
+        assert_eq!(D1.lift(), Piece::BP.moves(D2, E2 | D5, G1 | F7));
+        assert_eq!(G6 | G5, Piece::BP.moves(G7, A1 | F5, H6 | B3));
+        assert_eq!(BitBoard::EMPTY, Piece::BP.moves(G7, A1 | G6, H6 | B3));
+        assert_eq!(G6.lift(), Piece::BP.moves(G7, A1 | G8, G5 | B3));
     }
 }
 
 #[cfg(test)]
 mod white_test {
     use crate::base::square::constants::*;
-    use crate::pieces;
+    use crate::pieces::Piece;
 
     use super::*;
 
     #[test]
     fn test_control() {
-        assert_eq!(D4 | F4, pieces::WP.control(E3, A1 | B6, D8 | D4));
-        assert_eq!(BitBoard::EMPTY, pieces::WP.control(E8, A1 | B6, D8 | D4));
-        assert_eq!(B4.lift(), pieces::WP.control(A3, A4 | C5, F4 | H8));
-        assert_eq!(G4.lift(), pieces::WP.control(H3, A4 | C5, F4 | H8));
+        assert_eq!(D4 | F4, Piece::WP.control(E3, A1 | B6, D8 | D4));
+        assert_eq!(BitBoard::EMPTY, Piece::WP.control(E8, A1 | B6, D8 | D4));
+        assert_eq!(B4.lift(), Piece::WP.control(A3, A4 | C5, F4 | H8));
+        assert_eq!(G4.lift(), Piece::WP.control(H3, A4 | C5, F4 | H8));
     }
 
     #[test]
     fn test_moves() {
-        assert_eq!(D3 | D4 | E3, pieces::WP.moves(D2, E2 | D5, G1 | F7 | E3));
-        assert_eq!(D3.lift(), pieces::WP.moves(D2, D4 | G6, A2 | D7));
-        assert_eq!(BitBoard::EMPTY, pieces::WP.moves(D2, D3 | A1, B5 | D5));
-        assert_eq!(G7.lift(), pieces::WP.moves(G6, A1 | F5, H6 | B3));
-        assert_eq!(BitBoard::EMPTY, pieces::WP.moves(G6, A1 | G7, H6 | B3));
-        assert_eq!(BitBoard::EMPTY, pieces::WP.moves(G6, A1 | A5, H6 | G7));
-        assert_eq!(BitBoard::EMPTY, pieces::WP.moves(A8, D3 | H7, F4 | C3));
+        assert_eq!(D3 | D4 | E3, Piece::WP.moves(D2, E2 | D5, G1 | F7 | E3));
+        assert_eq!(D3.lift(), Piece::WP.moves(D2, D4 | G6, A2 | D7));
+        assert_eq!(BitBoard::EMPTY, Piece::WP.moves(D2, D3 | A1, B5 | D5));
+        assert_eq!(G7.lift(), Piece::WP.moves(G6, A1 | F5, H6 | B3));
+        assert_eq!(BitBoard::EMPTY, Piece::WP.moves(G6, A1 | G7, H6 | B3));
+        assert_eq!(BitBoard::EMPTY, Piece::WP.moves(G6, A1 | A5, H6 | G7));
+        assert_eq!(BitBoard::EMPTY, Piece::WP.moves(A8, D3 | H7, F4 | C3));
     }
 }

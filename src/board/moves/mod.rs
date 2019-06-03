@@ -15,21 +15,21 @@ mod control;
 mod enpassant_source;
 mod pinning;
 
-const WHITE_SLIDERS: [Piece; 3] = [pieces::WB, pieces::WR, pieces::WQ];
-const BLACK_SLIDERS: [Piece; 3] = [pieces::BB, pieces::BR, pieces::BQ];
+const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
+const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
 const FILES: [BitBoard; 8] = BitBoard::FILES;
 
 fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
     match side {
-        Side::White => &[pieces::WN, pieces::WB, pieces::WR, pieces::WQ],
-        Side::Black => &[pieces::BN, pieces::BB, pieces::BR, pieces::BQ],
+        Side::White => &[Piece::WN, Piece::WB, Piece::WR, Piece::WQ],
+        Side::Black => &[Piece::BN, Piece::BB, Piece::BR, Piece::BQ],
     }
 }
 
 fn pnbrq<'a>(side: Side) -> &'a [Piece; 5] {
     match side {
-        Side::White => &[pieces::WP, pieces::WN, pieces::WB, pieces::WR, pieces::WQ],
-        Side::Black => &[pieces::BP, pieces::BN, pieces::BB, pieces::BR, pieces::BQ],
+        Side::White => &[Piece::WP, Piece::WN, Piece::WB, Piece::WR, Piece::WQ],
+        Side::Black => &[Piece::BP, Piece::BN, Piece::BB, Piece::BR, Piece::BQ],
     }
 }
 
@@ -42,6 +42,8 @@ impl Board {
     /// Used in quiescent search to find quiet positions, if the king is
     /// in check this method calculates any legal move otherwise we just
     /// compute legal moves which result in the capture of an enemy piece.
+    ///
+    /// TODO Add method which additionally computes checking moves.
     pub fn compute_attacks_or_escapes(&self) -> Vec<Move> {
         self.compute_moves_impl(true)
     }

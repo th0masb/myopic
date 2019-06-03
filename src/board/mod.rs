@@ -32,6 +32,16 @@ pub struct Board {
     clock: usize,
 }
 
+enum X {
+    First = 1,
+    Second = 2,
+}
+
+fn xtest() {
+    let first = X::First;
+    assert_eq!(first as u8, 1);
+}
+
 impl Board {
     fn switch_side(&mut self) {
         self.active = self.active.reflect();
@@ -78,8 +88,8 @@ impl Reflectable for Move {
 
 fn promotion_targets<'a>(side: Side) -> &'a [Piece; 4] {
     match side {
-        Side::White => &[pieces::WQ, pieces::WR, pieces::WB, pieces::WN],
-        Side::Black => &[pieces::BQ, pieces::BR, pieces::BB, pieces::BN],
+        Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN],
+        Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN],
     }
 }
 

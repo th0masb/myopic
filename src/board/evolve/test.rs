@@ -13,7 +13,7 @@ use crate::board::piecetracker::PieceTracker;
 use crate::board::testutils::TestBoard;
 use crate::board::Board;
 use crate::board::Move;
-use crate::pieces;
+use crate::pieces::Piece;
 
 #[derive(Debug, Clone)]
 struct TestCase {
@@ -176,7 +176,7 @@ fn test_black_queenside_castling() {
 #[test]
 fn test_white_rook_taking_black_rook_removing_kingside_rights() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WR, square::constants::H1, square::constants::H8),
+        action: Move::Standard(Piece::WR, square::constants::H1, square::constants::H8),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -207,7 +207,7 @@ fn test_white_rook_taking_black_rook_removing_kingside_rights() {
 #[test]
 fn test_black_rook_taking_white_rook_removing_kingside_rights() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BR, square::constants::H8, square::constants::H1),
+        action: Move::Standard(Piece::BR, square::constants::H8, square::constants::H1),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -238,7 +238,7 @@ fn test_black_rook_taking_white_rook_removing_kingside_rights() {
 #[test]
 fn test_white_rook_taking_black_rook_removing_queenside_rights() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WR, square::constants::A1, square::constants::A8),
+        action: Move::Standard(Piece::WR, square::constants::A1, square::constants::A8),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -269,7 +269,7 @@ fn test_white_rook_taking_black_rook_removing_queenside_rights() {
 #[test]
 fn test_black_rook_taking_white_rook_removing_queenside_rights() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BR, square::constants::A8, square::constants::A1),
+        action: Move::Standard(Piece::BR, square::constants::A8, square::constants::A1),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -300,7 +300,7 @@ fn test_black_rook_taking_white_rook_removing_queenside_rights() {
 #[test]
 fn test_white_king_moving_removes_castling_rights() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WK, square::constants::E1, square::constants::F1),
+        action: Move::Standard(Piece::WK, square::constants::E1, square::constants::F1),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -331,7 +331,7 @@ fn test_white_king_moving_removes_castling_rights() {
 #[test]
 fn test_black_king_moving_removes_castling_rights() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BK, square::constants::E8, square::constants::F8),
+        action: Move::Standard(Piece::BK, square::constants::E8, square::constants::F8),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -362,7 +362,7 @@ fn test_black_king_moving_removes_castling_rights() {
 #[test]
 fn test_white_pawn_moves_forward_two() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WP, square::constants::F2, square::constants::F4),
+        action: Move::Standard(Piece::WP, square::constants::F2, square::constants::F4),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -393,7 +393,7 @@ fn test_white_pawn_moves_forward_two() {
 #[test]
 fn test_black_pawn_moves_forward_two() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BP, square::constants::F7, square::constants::F5),
+        action: Move::Standard(Piece::BP, square::constants::F7, square::constants::F5),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -424,7 +424,7 @@ fn test_black_pawn_moves_forward_two() {
 #[test]
 fn test_white_pawn_moves_forward_one() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WP, square::constants::F2, square::constants::F3),
+        action: Move::Standard(Piece::WP, square::constants::F2, square::constants::F3),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -455,7 +455,7 @@ fn test_white_pawn_moves_forward_one() {
 #[test]
 fn test_black_pawn_moves_forward_one() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BP, square::constants::F7, square::constants::F6),
+        action: Move::Standard(Piece::BP, square::constants::F7, square::constants::F6),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -487,7 +487,7 @@ fn test_black_pawn_moves_forward_one() {
 #[test]
 fn test_white_knight_takes_black_knight() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WN, square::constants::B3, square::constants::B6),
+        action: Move::Standard(Piece::WN, square::constants::B3, square::constants::B6),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -518,7 +518,7 @@ fn test_white_knight_takes_black_knight() {
 #[test]
 fn test_black_knight_takes_white_knight() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BN, square::constants::B6, square::constants::B3),
+        action: Move::Standard(Piece::BN, square::constants::B6, square::constants::B3),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -549,7 +549,7 @@ fn test_black_knight_takes_white_knight() {
 #[test]
 fn test_white_bishop_takes_black_bishop() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WB, square::constants::C4, square::constants::D6),
+        action: Move::Standard(Piece::WB, square::constants::C4, square::constants::D6),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -580,7 +580,7 @@ fn test_white_bishop_takes_black_bishop() {
 #[test]
 fn test_black_bishop_takes_white_bishop() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BB, square::constants::D6, square::constants::C4),
+        action: Move::Standard(Piece::BB, square::constants::D6, square::constants::C4),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -611,7 +611,7 @@ fn test_black_bishop_takes_white_bishop() {
 #[test]
 fn test_white_pawn_takes_black_pawn() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WP, square::constants::F2, square::constants::C5),
+        action: Move::Standard(Piece::WP, square::constants::F2, square::constants::C5),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -642,7 +642,7 @@ fn test_white_pawn_takes_black_pawn() {
 #[test]
 fn test_black_pawn_takes_white_bishop() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BP, square::constants::C5, square::constants::C4),
+        action: Move::Standard(Piece::BP, square::constants::C5, square::constants::C4),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -674,7 +674,7 @@ fn test_black_pawn_takes_white_bishop() {
 #[test]
 fn test_white_queen_takes_black_queen() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WQ, square::constants::C2, square::constants::D7),
+        action: Move::Standard(Piece::WQ, square::constants::C2, square::constants::D7),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -705,7 +705,7 @@ fn test_white_queen_takes_black_queen() {
 #[test]
 fn test_black_queen_takes_white_queen() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BQ, square::constants::D7, square::constants::C2),
+        action: Move::Standard(Piece::BQ, square::constants::D7, square::constants::C2),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -736,7 +736,7 @@ fn test_black_queen_takes_white_queen() {
 #[test]
 fn test_white_king_takes_black_king() {
     check_case(TestCase {
-        action: Move::Standard(pieces::WK, square::constants::E1, square::constants::E8),
+        action: Move::Standard(Piece::WK, square::constants::E1, square::constants::E8),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -767,7 +767,7 @@ fn test_white_king_takes_black_king() {
 #[test]
 fn test_black_king_takes_white_king() {
     check_case(TestCase {
-        action: Move::Standard(pieces::BK, square::constants::E8, square::constants::E1),
+        action: Move::Standard(Piece::BK, square::constants::E8, square::constants::E1),
 
         start: TestBoard {
             whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
@@ -860,7 +860,7 @@ fn test_black_enpassant() {
 #[test]
 fn test_white_promotion() {
     check_case(TestCase {
-        action: Move::Promotion(square::constants::C7, square::constants::B8, pieces::WQ),
+        action: Move::Promotion(square::constants::C7, square::constants::B8, Piece::WQ),
 
         start: TestBoard {
             whites: vec![C7 | F2 | G2, EMPTY, F3, B1, EMPTY, E1],
@@ -891,7 +891,7 @@ fn test_white_promotion() {
 #[test]
 fn test_black_promotion() {
     check_case(TestCase {
-        action: Move::Promotion(square::constants::C2, square::constants::B1, pieces::BN),
+        action: Move::Promotion(square::constants::C2, square::constants::B1, Piece::BN),
 
         start: TestBoard {
             whites: vec![C7 | F2 | G2, EMPTY, F3, B1, EMPTY, E1],

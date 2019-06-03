@@ -94,7 +94,7 @@ const CONTROL: [BitBoard; 64] = [
 #[cfg(test)]
 mod white_test {
     use crate::base::square::constants::*;
-    use crate::pieces::WN;
+    use crate::pieces::Piece;
 
     use super::*;
 
@@ -103,14 +103,14 @@ mod white_test {
         let zero = BitBoard::EMPTY;
         assert_eq!(
             D1 | C2 | C4 | D5 | F5 | G4 | G2 | F1,
-            WN.control(E3, zero, zero)
+            Piece::WN.control(E3, zero, zero)
         );
-        assert_eq!(A4 | C4 | D3 | D1, WN.control(B2, zero, zero));
+        assert_eq!(A4 | C4 | D3 | D1, Piece::WN.control(B2, zero, zero));
     }
 
     #[test]
     fn test_moves() {
-        assert_eq!(A4 | C4 | D3, WN.moves(B2, D1 | B1, A4 | D7));
+        assert_eq!(A4 | C4 | D3, Piece::WN.moves(B2, D1 | B1, A4 | D7));
     }
 
     //    #[test]
@@ -123,7 +123,7 @@ mod white_test {
 #[cfg(test)]
 mod black_test {
     use crate::base::square::constants::*;
-    use crate::pieces::BN;
+    use crate::pieces::Piece;
 
     use super::*;
 
@@ -132,14 +132,14 @@ mod black_test {
         let zero = BitBoard::EMPTY;
         assert_eq!(
             D1 | C2 | C4 | D5 | F5 | G4 | G2 | F1,
-            BN.control(E3, zero, zero)
+            Piece::BN.control(E3, zero, zero)
         );
-        assert_eq!(A4 | C4 | D3 | D1, BN.control(B2, zero, zero));
+        assert_eq!(A4 | C4 | D3 | D1, Piece::BN.control(B2, zero, zero));
     }
 
     #[test]
     fn test_moves() {
-        assert_eq!(C4 | D3 | D1, BN.moves(B2, D1 | B1, A4 | D7));
+        assert_eq!(C4 | D3 | D1, Piece::BN.moves(B2, D1 | B1, A4 | D7));
     }
 
     //    #[test]
