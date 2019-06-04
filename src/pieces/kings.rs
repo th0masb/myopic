@@ -1,19 +1,19 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::dir::*;
-use crate::base::square::{constants::SQUARES, Square};
+use crate::base::square::Square;
 
 use crate::base::Side;
 
 pub fn control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
-    CONTROL[loc.i as usize]
+    CONTROL[loc as usize]
 }
 
 pub fn white_moves(loc: Square, whites: BitBoard, _blacks: BitBoard) -> BitBoard {
-    CONTROL[loc.i as usize] - whites
+    CONTROL[loc as usize] - whites
 }
 
 pub fn black_moves(loc: Square, _whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    CONTROL[loc.i as usize] - blacks
+    CONTROL[loc as usize] - blacks
 }
 
 const CONTROL: [BitBoard; 64] = [
@@ -105,11 +105,11 @@ mod white_test {
         let zero = BitBoard::EMPTY;
         assert_eq!(
             D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3,
-            Piece::WK.control(square::constants::E3, zero, zero)
+            Piece::WK.control(Square::E3, zero, zero)
         );
         assert_eq!(
             B1 | B2 | C2 | D2 | D1,
-            Piece::WK.control(square::constants::C1, zero, zero)
+            Piece::WK.control(Square::C1, zero, zero)
         );
     }
 
@@ -117,7 +117,7 @@ mod white_test {
     fn test_moves() {
         assert_eq!(
             B2 | C2 | D2 | D1,
-            Piece::WK.moves(square::constants::C1, B1, C2)
+            Piece::WK.moves(Square::C1, B1, C2)
         );
     }
 
@@ -130,8 +130,7 @@ mod white_test {
 
 #[cfg(test)]
 mod black_test {
-    use crate::base::square;
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
     use crate::pieces::Piece;
 
     use super::*;

@@ -8,14 +8,14 @@ use crate::base::dir::S;
 use crate::base::dir::SE;
 use crate::base::dir::SW;
 use crate::base::dir::W;
-use crate::base::square::{constants::SQUARES, Square};
+use crate::base::square::Square;
 
 use std::cmp;
 
 pub fn get_cord(source: Square, target: Square) -> BitBoard {
     debug_assert!(source != target);
     let (min, max) = (cmp::min(source, target), cmp::max(source, target));
-    CACHE[OFFSETS[min.i as usize] + (max.i - min.i - 1) as usize]
+    CACHE[OFFSETS[min as usize] + (max as usize) - (min as usize) - 1]
 }
 
 lazy_static! {
@@ -36,7 +36,7 @@ fn compute_cord_cache() -> Vec<BitBoard> {
     let mut dest: Vec<BitBoard> = Vec::with_capacity(2016);
     for i in 0..63 {
         for j in i + 1..64 {
-            dest.push(compute_cord_impl(SQUARES[i], SQUARES[j]))
+            dest.push(compute_cord_impl(Square::from_index(i), Square::from_index(j)));
         }
     }
     dest
@@ -63,7 +63,7 @@ fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
 
     #[test]
     fn test_compute_cord() {

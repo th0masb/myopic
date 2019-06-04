@@ -1,7 +1,6 @@
 use std::iter::repeat;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
 use crate::base::Side;
 use crate::pieces::pawns::black_control;
@@ -10,7 +9,7 @@ use crate::pieces::Piece;
 use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
 
 pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    MOVES[loc.i as usize][compute_bishop_index(loc, whites | blacks)]
+    MOVES[loc as usize][compute_bishop_index(loc, whites | blacks)]
 }
 
 pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
@@ -32,7 +31,7 @@ lazy_static! {
 fn compute_move_database() -> Moves {
     let mut dest = Vec::with_capacity(64);
     let dirs = bishop_dirs();
-    for (&sq, bb) in izip!(SQUARES.iter(), BISHOP_MASKS.iter().map(|&m| BitBoard(m))) {
+    for (sq, bb) in izip!(Square::iter(), BISHOP_MASKS.iter().map(|&m| BitBoard(m))) {
         let dest_size = 1 << bb.size();
         let mut sq_dest: Vec<BitBoard> = repeat(BitBoard::ALL).take(dest_size).collect();
         for occ_var in compute_powerset(&bb.into_iter().collect()) {
@@ -48,7 +47,7 @@ fn compute_move_database() -> Moves {
 
 #[cfg(test)]
 mod test {
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
 
     use super::{compute_bishop_index, compute_move_database, Moves};
 
@@ -64,7 +63,7 @@ mod test {
         let expected = E2 | C2 | B1 | C4 | B5 | A6 | E4 | F5;
         assert_eq!(
             expected,
-            moves[sq.i as usize][compute_bishop_index(sq, occ)]
+            moves[sq as usize][compute_bishop_index(sq, occ)]
         )
     }
 
@@ -73,7 +72,7 @@ mod test {
         let expected = G4 | F3 | E2 | G6;
         assert_eq!(
             expected,
-            moves[sq.i as usize][compute_bishop_index(sq, occ)]
+            moves[sq as usize][compute_bishop_index(sq, occ)]
         )
     }
 }

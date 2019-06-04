@@ -7,7 +7,7 @@ use rand_pcg::Mcg128Xsl64;
 use std::iter;
 
 pub fn piece_feature(piece: Piece, square: Square) -> u64 {
-    FEATURES[piece as usize * 64 + square.i as usize]
+    FEATURES[(piece as usize) * 64 + (square as usize)]
 }
 
 pub fn side_feature(side: Side) -> u64 {
@@ -48,7 +48,7 @@ lazy_static! {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::base::square::constants::SQUARES;
+    use crate::base::square::Square;
     use crate::pieces;
 
     #[test]
@@ -56,14 +56,14 @@ mod test {
         let mut dest: Vec<u64> = Vec::new();
         // add piece-square features
         for &piece in pieces::ALL.iter() {
-            for &square in SQUARES.iter() {
+            for square in Square::iter() {
                 unique_add(&mut dest, piece_feature(piece, square));
             }
         }
         for &zone in CastleZone::ALL.iter() {
             unique_add(&mut dest, castle_feature(zone));
         }
-        for &square in &SQUARES[..8] {
+        for square in Square::iter().take(8) {
             unique_add(&mut dest, enpassant_feature(square));
         }
         unique_add(&mut dest, side_feature(Side::Black));

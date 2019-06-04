@@ -97,9 +97,9 @@ impl PieceTracker {
 mod test {
     use std::iter;
 
-    use crate::base::square::constants::C3;
-    use crate::base::square::constants::E4;
-    use crate::base::square::constants::E5;
+    use crate::base::square::Square::C3;
+    use crate::base::square::Square::E4;
+    use crate::base::square::Square::E5;
     use crate::pieces::Piece;
 
     use super::*;

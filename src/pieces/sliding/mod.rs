@@ -1,10 +1,9 @@
 use std::num::Wrapping;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::dir::Dir;
 use crate::base::dir::{E, N, S, W};
 use crate::base::dir::{NE, NW, SE, SW};
-use crate::base::square::constants::SQUARES;
+use crate::base::dir::Dir;
 use crate::base::square::Square;
 
 pub mod bishops;
@@ -14,7 +13,7 @@ pub mod rooks;
 /// API for computing the magic index for a bishop positioned at a given
 /// location with the given piece arrangement on the board.
 fn compute_bishop_index(location: Square, pieces: BitBoard) -> usize {
-    let i = location.i as usize;
+    let i = location as usize;
     compute_magic_index(
         pieces.0 & BISHOP_MASKS[i],
         BISHOP_MAGICS[i],
@@ -25,7 +24,7 @@ fn compute_bishop_index(location: Square, pieces: BitBoard) -> usize {
 /// API for computing the magic index for a rook positioned at a given
 /// location with the given piece arrangement on the board.
 fn compute_rook_index(location: Square, pieces: BitBoard) -> usize {
-    let i = location.i as usize;
+    let i = location as usize;
     compute_magic_index(pieces.0 & ROOK_MASKS[i], ROOK_MAGICS[i], ROOK_SHIFTS[i])
 }
 
@@ -53,9 +52,8 @@ fn rook_dirs() -> Vec<Dir> {
 /// locations a piece could move to on an empty board excluding the last
 /// base.square in each of the direction 'rays'.
 fn compute_masks(dirs: &Vec<Dir>) -> Vec<u64> {
-    SQUARES
-        .iter()
-        .map(|&sq| {
+        Square::iter()
+        .map(|sq| {
             dirs.iter()
                 .map(|&dir| search_remove_last(sq, dir))
                 .collect()
@@ -76,18 +74,18 @@ fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
 
 #[cfg(test)]
 mod mask_tests {
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
 
     use super::*;
 
     #[test]
     fn test_bishop_masks() {
         let bmasks = compute_masks(&bishop_dirs());
-        assert_eq!(C7 | C5 | D4 | E3 | F2, BitBoard(bmasks[B6.i as usize]));
+        assert_eq!(C7 | C5 | D4 | E3 | F2, BitBoard(bmasks[B6 as usize]));
         let rmasks = compute_masks(&rook_dirs());
         assert_eq!(
             A2 | A3 | A5 | A6 | A7 | B4 | C4 | D4 | E4 | F4 | G4,
-            BitBoard(rmasks[A4.i as usize])
+            BitBoard(rmasks[A4 as usize])
         );
     }
 }
@@ -120,7 +118,7 @@ fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
 mod powerset_test {
     use std::collections::HashSet;
 
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
 
     use super::*;
 
@@ -150,7 +148,7 @@ fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
     let mut res = 0u64;
     for &dir in dirs {
         for sq in loc.search_vec(dir) {
-            res |= 1u64 << sq.i;
+            res |= 1u64 << (sq as usize);
             if !(occ & sq).is_empty() {
                 break;
             }
@@ -161,7 +159,7 @@ fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
 
 #[cfg(test)]
 mod control_tests {
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
 
     use super::*;
 

@@ -1,6 +1,5 @@
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
 use crate::pieces::Piece;
 
@@ -8,29 +7,29 @@ use crate::pieces::Piece;
 /// in the midgame.
 pub fn midgame_eval(piece: Piece, location: Square) -> i32 {
     let (table_index, parity) = compute_index_and_parity(piece, location);
-    parity * MIDGAME[piece as usize % 6][table_index]
+    parity * MIDGAME[(piece as usize) % 6][table_index]
 }
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the endgame.
 pub fn endgame_eval(piece: Piece, location: Square) -> i32 {
     let (table_index, parity) = compute_index_and_parity(piece, location);
-    parity * ENDGAME[piece as usize % 6][table_index]
+    parity * ENDGAME[(piece as usize) % 6][table_index]
 }
 
 /// Computes the table index alongside the parity multiplier according to the
 /// piece side.
 fn compute_index_and_parity(piece: Piece, location: Square) -> (usize, i32) {
     match piece.side() {
-        Side::White => (63 - location.i as usize, 1),
-        Side::Black => (63 - location.reflect().i as usize, -1),
+        Side::White => (63 - (location as usize), 1),
+        Side::Black => (63 - (location.reflect() as usize), -1),
     }
 }
 
 #[cfg(test)]
 mod test {
     use crate::base::Reflectable;
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
     use crate::base::square::Square;
     use crate::pieces::Piece;
 

@@ -3,7 +3,7 @@ use std::fmt;
 use itertools::Itertools;
 
 use crate::base::dir;
-use crate::base::square::constants::H1;
+use crate::base::square::Square::H1;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 
@@ -23,7 +23,7 @@ pub struct BitBoard(pub u64);
 impl BitBoard {
     /// Check if this bitboard contains a particular square.
     pub fn contains(self, square: Square) -> bool {
-        self.0 & (1u64 << square.i) != 0
+        self.0 & (1u64 << (square as usize)) != 0
     }
 
     /// Check if this bitboard is empty, i.e contains no squares.
@@ -102,7 +102,7 @@ impl Reflectable for BitBoard {
 }
 
 fn loc(sq: Square) -> u64 {
-    1u64 << sq.i
+    1u64 << (sq as usize)
 }
 
 fn create_files() -> Vec<BitBoard> {
@@ -134,7 +134,7 @@ impl fmt::Display for BitBoard {
 #[cfg(test)]
 mod test {
     use crate::base::bitboard::BitBoard;
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
 
     use super::*;
 

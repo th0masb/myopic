@@ -20,10 +20,12 @@ pub enum Square {
 }
 
 impl Square {
+    /// Return an iterator traversing all squares in order.
     pub fn iter() -> impl Iterator<Item = Square> {
         ALL.iter().cloned()
     }
 
+    /// Retrieve a square by it's corresponding index.
     pub fn from_index(i: usize) -> Square {
         ALL[i]
     }
@@ -58,8 +60,8 @@ impl Square {
     /// Finds the next square on a chessboard from this square in a
     /// given direction if it exists.
     pub fn next(self, dir: Dir) -> Option<Square> {
-        let new_rank = (self.rank as i8) + dir.dr;
-        let new_file = (self.file as i8) + dir.df;
+        let new_rank = (self.rank_index() as i8) + dir.dr;
+        let new_file = (self.file_index() as i8) + dir.df;
         if -1 < new_rank && new_rank < 8 && -1 < new_file && new_file < 8 {
             Some(ALL[(8 * new_rank + new_file) as usize])
         } else {
@@ -177,6 +179,7 @@ const ALL: [Square; 64] = [
 mod test {
     use crate::base::bitboard::*;
     use crate::base::dir::*;
+
     use super::Square::*;
     use super::Square;
 
@@ -190,8 +193,8 @@ mod test {
     #[test]
     fn test_partial_ord() {
         for i in 0..64 {
-            let prev: Vec<_> = Square::iter().take(i).cloned().collect();
-            let next: Vec<_> = Square::iter().skip(i + 1).map(|x| *x).collect();
+            let prev: Vec<_> = Square::iter().take(i).collect();
+            let next: Vec<_> = Square::iter().skip(i + 1).collect();
             let pivot = Square::from_index(i);
 
             for smaller in prev {
@@ -250,10 +253,3 @@ mod test {
         assert_eq!(A4.next(W), None);
     }
 }
-
-const NAMES: [&str; 64] = [
-    "H1", "G1", "F1", "E1", "D1", "C1", "B1", "A1", "H2", "G2", "F2", "E2", "D2", "C2", "B2", "A2",
-    "H3", "G3", "F3", "E3", "D3", "C3", "B3", "A3", "H4", "G4", "F4", "E4", "D4", "C4", "B4", "A4",
-    "H5", "G5", "F5", "E5", "D5", "C5", "B5", "A5", "H6", "G6", "F6", "E6", "D6", "C6", "B6", "A6",
-    "H7", "G7", "F7", "E7", "D7", "C7", "B7", "A7", "H8", "G8", "F8", "E8", "D8", "C8", "B8", "A8",
-];

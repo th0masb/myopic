@@ -2,7 +2,6 @@ use std::iter::{FromIterator, IntoIterator};
 use std::num::Wrapping;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
 
 /// A bitboard is a set of squares and is therefore iterable.
@@ -33,7 +32,7 @@ impl FromIterator<BitBoard> for BitBoard {
 #[cfg(test)]
 mod iter_test {
     use crate::base::bitboard::{loc, BitBoard};
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
     use crate::base::square::Square;
 
     fn new_set(a: Square, b: Square) -> BitBoard {
@@ -72,7 +71,7 @@ impl Iterator for BitBoardIterator {
         } else {
             let lsb = bitscan(self.src);
             self.src ^= 1u64 << lsb;
-            Some(SQUARES[lsb])
+            Some(Square::from_index(lsb))
         }
     }
 }

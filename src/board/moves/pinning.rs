@@ -111,9 +111,9 @@ mod test {
             expected: PinnedSet {
                 pinned_locations: C5 | D5 | E4,
                 constraint_areas: vec![
-                    (square::constants::E4, D4 | E4 | F4 | G4),
-                    (square::constants::C5, B6 | C5 | D4),
-                    (square::constants::D5, D4 | D5 | D6 | D7 | D8),
+                    (Square::E4, D4 | E4 | F4 | G4),
+                    (Square::C5, B6 | C5 | D4),
+                    (Square::D5, D4 | D5 | D6 | D7 | D8),
                 ],
             },
         })

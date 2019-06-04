@@ -100,7 +100,7 @@ impl ops::BitXorAssign<BitBoard> for BitBoard {
 
 impl ops::BitXorAssign<Square> for BitBoard {
     fn bitxor_assign(&mut self, rhs: Square) {
-        self.0 = self.0 ^ (1u64 << rhs.i);
+        self.0 = self.0 ^ (1u64 << (rhs as usize));
     }
 }
 
@@ -112,6 +112,6 @@ impl ops::BitOrAssign<BitBoard> for BitBoard {
 
 impl ops::BitOrAssign<Square> for BitBoard {
     fn bitor_assign(&mut self, rhs: Square) {
-        self.0 = self.0 | (1u64 << rhs.i);
+        self.0 = self.0 | (1u64 << (rhs as usize));
     }
 }

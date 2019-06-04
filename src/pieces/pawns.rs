@@ -1,10 +1,9 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::square::constants::SQUARES;
 use crate::base::square::Square;
 use crate::base::{Side, Side::Black, Side::White};
 
 pub fn white_control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
-    WHITE_CONTROL[loc.i as usize]
+    WHITE_CONTROL[loc as usize]
 }
 
 pub fn white_moves(loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
@@ -17,7 +16,7 @@ pub fn white_moves(loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
 }
 
 pub fn black_control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
-    BLACK_CONTROL[loc.i as usize]
+    BLACK_CONTROL[loc as usize]
 }
 
 pub fn black_moves(loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
@@ -181,7 +180,7 @@ const BLACK_CONTROL: [BitBoard; 64] = [
 //}
 #[cfg(test)]
 mod black_test {
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
     use crate::pieces::Piece;
 
     use super::*;
@@ -205,7 +204,7 @@ mod black_test {
 
 #[cfg(test)]
 mod white_test {
-    use crate::base::square::constants::*;
+    use crate::base::square::Square::*;
     use crate::pieces::Piece;
 
     use super::*;

@@ -9,7 +9,7 @@ extern crate rand;
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::dir;
-use crate::base::square::constants::*;
+use crate::base::square::Square::*;
 
 mod base;
 mod pieces;
