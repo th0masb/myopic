@@ -127,22 +127,6 @@ pub fn on_side<'a>(side: Side) -> &'a [Piece] {
     }
 }
 
-///// Constant static references to each white piece.
-//pub const WP: Piece = Piece(0);
-//pub const WN: Piece = Piece(1);
-//pub const WB: Piece = Piece(2);
-//pub const WR: Piece = Piece(3);
-//pub const WQ: Piece = Piece(4);
-//pub const WK: Piece = Piece(5);
-//
-///// Constant static references to each black piece.
-//pub const BP: Piece = Piece(6);
-//pub const BN: Piece = Piece(7);
-//pub const BB: Piece = Piece(8);
-//pub const BR: Piece = Piece(9);
-//pub const BQ: Piece = Piece(10);
-//pub const BK: Piece = Piece(11);
-
 /// Constant piece groupings.
 pub const ALL: [Piece; 12] = [
     Piece::WP,
@@ -167,6 +151,7 @@ pub const WHITE: [Piece; 6] = [
     Piece::WQ,
     Piece::WK,
 ];
+
 pub const BLACK: [Piece; 6] = [
     Piece::BP,
     Piece::BN,

@@ -4,37 +4,44 @@ use crate::base::bitboard::BitBoard;
 use crate::base::dir::Dir;
 use crate::base::Reflectable;
 
-pub mod constants;
 mod traits;
 
-/// Value type representing a square on a chessboard.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct Square {
-    pub i: u8,
-    rank: u8,
-    file: u8,
+/// Type representing a square on a chessboard.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum Square {
+    H1, G1, F1, E1, D1, C1, B1, A1,
+    H2, G2, F2, E2, D2, C2, B2, A2,
+    H3, G3, F3, E3, D3, C3, B3, A3,
+    H4, G4, F4, E4, D4, C4, B4, A4,
+    H5, G5, F5, E5, D5, C5, B5, A5,
+    H6, G6, F6, E6, D6, C6, B6, A6,
+    H7, G7, F7, E7, D7, C7, B7, A7,
+    H8, G8, F8, E8, D8, C8, B8, A8,
 }
 
 impl Square {
-    /// Retrieve a string identifier for this square.
-    pub const fn name(self) -> &'static str {
-        NAMES[self.i as usize]
+    pub fn iter() -> impl Iterator<Item = Square> {
+        ALL.iter().cloned()
+    }
+
+    pub fn from_index(i: usize) -> Square {
+        ALL[i]
     }
 
     /// Return the index of the rank on which this square resides.
     pub const fn rank_index(self) -> usize {
-        self.rank as usize
+        (self as usize) / 8
     }
 
     /// Return the index of the file on which this square resides.
     pub const fn file_index(self) -> usize {
-        self.file as usize
+        (self as usize) % 8
     }
 
     /// Return a bitboard representing the rank on which this square
     /// resides.
     pub fn rank(self) -> BitBoard {
-        BitBoard::RANKS[self.rank as usize]
+        BitBoard::RANKS[self.rank_index()]
     }
 
     /// Return a bitboard representing the file on which this square
@@ -45,7 +52,7 @@ impl Square {
 
     /// 'Lifts' this square to a singleton set of squares.
     pub const fn lift(self) -> BitBoard {
-        BitBoard(1u64 << self.i)
+        BitBoard(1u64 << (self as usize))
     }
 
     /// Finds the next square on a chessboard from this square in a
@@ -54,7 +61,7 @@ impl Square {
         let new_rank = (self.rank as i8) + dir.dr;
         let new_file = (self.file as i8) + dir.df;
         if -1 < new_rank && new_rank < 8 && -1 < new_file && new_file < 8 {
-            Some(constants::SQUARES[(8 * new_rank + new_file) as usize])
+            Some(ALL[(8 * new_rank + new_file) as usize])
         } else {
             None
         }
@@ -90,29 +97,88 @@ impl Square {
             .flat_map(|&dir| self.next(dir).into_iter())
             .collect()
     }
-
-    const fn new(index: u8) -> Square {
-        Square {
-            i: index,
-            rank: index / 8,
-            file: index % 8,
-        }
-    }
 }
 
 impl Reflectable for Square {
     fn reflect(&self) -> Self {
         let (fi, ri) = (self.file_index(), self.rank_index());
-        constants::SQUARES[(8 * (7 - ri) + fi) as usize]
+        Square::from_index((8 * (7 - ri) + fi) as usize)
     }
 }
+
+const ALL: [Square; 64] = [
+    Square::H1,
+    Square::G1,
+    Square::F1,
+    Square::E1,
+    Square::D1,
+    Square::C1,
+    Square::B1,
+    Square::A1,
+    Square::H2,
+    Square::G2,
+    Square::F2,
+    Square::E2,
+    Square::D2,
+    Square::C2,
+    Square::B2,
+    Square::A2,
+    Square::H3,
+    Square::G3,
+    Square::F3,
+    Square::E3,
+    Square::D3,
+    Square::C3,
+    Square::B3,
+    Square::A3,
+    Square::H4,
+    Square::G4,
+    Square::F4,
+    Square::E4,
+    Square::D4,
+    Square::C4,
+    Square::B4,
+    Square::A4,
+    Square::H5,
+    Square::G5,
+    Square::F5,
+    Square::E5,
+    Square::D5,
+    Square::C5,
+    Square::B5,
+    Square::A5,
+    Square::H6,
+    Square::G6,
+    Square::F6,
+    Square::E6,
+    Square::D6,
+    Square::C6,
+    Square::B6,
+    Square::A6,
+    Square::H7,
+    Square::G7,
+    Square::F7,
+    Square::E7,
+    Square::D7,
+    Square::C7,
+    Square::B7,
+    Square::A7,
+    Square::H8,
+    Square::G8,
+    Square::F8,
+    Square::E8,
+    Square::D8,
+    Square::C8,
+    Square::B8,
+    Square::A8,
+];
 
 #[cfg(test)]
 mod test {
     use crate::base::bitboard::*;
     use crate::base::dir::*;
-
-    use super::constants::*;
+    use super::Square::*;
+    use super::Square;
 
     #[test]
     fn test_rank() {
@@ -124,9 +190,9 @@ mod test {
     #[test]
     fn test_partial_ord() {
         for i in 0..64 {
-            let prev: Vec<_> = SQUARES.iter().take(i).map(|x| *x).collect();
-            let next: Vec<_> = SQUARES.iter().skip(i + 1).map(|x| *x).collect();
-            let pivot = SQUARES[i];
+            let prev: Vec<_> = Square::iter().take(i).cloned().collect();
+            let next: Vec<_> = Square::iter().skip(i + 1).map(|x| *x).collect();
+            let pivot = Square::from_index(i);
 
             for smaller in prev {
                 assert_eq!(true, smaller < pivot);

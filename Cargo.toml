@@ -4,8 +4,8 @@ version = "0.1.0"
 authors = ["Tom <tomoliverball@gmail.com>"]
 edition = "2018"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
+#[lib]
+##crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["console_error_panic_hook"]

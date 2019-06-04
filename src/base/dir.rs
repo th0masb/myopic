@@ -1,10 +1,12 @@
+use crate::base::Reflectable;
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Dir {
     pub dr: i8,
     pub df: i8,
 }
-impl Dir {
-    pub fn opposite(self) -> Dir {
+impl Reflectable for Dir {
+    fn reflect(&self) -> Dir {
         Dir {
             dr: -self.dr,
             df: -self.df,

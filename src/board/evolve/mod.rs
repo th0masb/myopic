@@ -142,7 +142,7 @@ impl Board {
             Side::White => (Piece::WP, Piece::BP),
             _ => (Piece::BP, Piece::WP),
         };
-        let removal_square = enpassant.next(active.pawn_dir().opposite()).unwrap();
+        let removal_square = enpassant.next(active.pawn_dir().reflect()).unwrap();
         self.pieces.toggle_piece(active_pawn, &[source, enpassant]);
         self.pieces.toggle_piece(passive_pawn, &[removal_square]);
     }

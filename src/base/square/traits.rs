@@ -3,17 +3,17 @@ use std::{fmt, ops};
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 
-impl fmt::Debug for Square {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.name())
-    }
-}
+//impl fmt::Debug for Square {
+//    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//        write!(f, "{}", self.name())
+//    }
+//}
 
-impl fmt::Display for Square {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.name())
-    }
-}
+//impl fmt::Display for Square {
+//    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//        write!(f, "{}", self.name())
+//    }
+//}
 
 impl ops::Not for Square {
     type Output = BitBoard;

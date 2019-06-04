@@ -35,6 +35,10 @@ pub fn greet() {
     alert("Hello, jenjinn3tmp!");
 }
 
+#[derive(Copy, Clone)]
+enum Test {
+    X, Y, Z
+}
 
 fn main() {
     let _dirs = vec!(&dir::N);
@@ -47,6 +51,7 @@ fn main() {
     println!("{}", G1 > H1);
     let bitboard: BitBoard = vec!(A1, G5).into_iter().collect();
     println!("{}", bitboard);
+    println!("{}", Test::Y as usize)
 
 //    let squares = base.square::H1.search_one(dirs);
 //    println!("{:#?}", squares);

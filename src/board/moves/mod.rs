@@ -43,7 +43,9 @@ impl Board {
     /// in check this method calculates any legal move otherwise we just
     /// compute legal moves which result in the capture of an enemy piece.
     ///
-    /// TODO Add method which additionally computes checking moves.
+    /// TODO Add method which additionally computes checking moves. In quiescent
+    ///      search we would allow attacks + checks + escapes until certain depth
+    ///      then just attacks + escapes.
     pub fn compute_attacks_or_escapes(&self) -> Vec<Move> {
         self.compute_moves_impl(true)
     }
