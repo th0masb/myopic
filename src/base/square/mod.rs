@@ -2,7 +2,6 @@ use itertools::iterate;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::dir::Dir;
-use crate::base::Reflectable;
 
 mod traits;
 
@@ -98,13 +97,6 @@ impl Square {
         dirs.iter()
             .flat_map(|&dir| self.next(dir).into_iter())
             .collect()
-    }
-}
-
-impl Reflectable for Square {
-    fn reflect(&self) -> Self {
-        let (fi, ri) = (self.file_index(), self.rank_index());
-        Square::from_index((8 * (7 - ri) + fi) as usize)
     }
 }
 

@@ -1,7 +1,15 @@
 use std::{fmt, ops};
 
 use crate::base::bitboard::BitBoard;
+use crate::base::Reflectable;
 use crate::base::square::Square;
+
+impl Reflectable for Square {
+    fn reflect(&self) -> Self {
+        let (fi, ri) = (self.file_index(), self.rank_index());
+        Square::from_index((8 * (7 - ri) + fi) as usize)
+    }
+}
 
 impl fmt::Display for Square {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
