@@ -22,7 +22,7 @@ pub fn enpassant_feature(square: Square) -> u64 {
 }
 
 pub fn castle_feature(zone: CastleZone) -> u64 {
-    FEATURES[N_FEATURES - 2 - zone.id()]
+    FEATURES[N_FEATURES - 2 - zone as usize]
 }
 
 const SEED: u64 = 0x110894u64;
@@ -55,12 +55,12 @@ mod test {
     fn test_uniqueness() {
         let mut dest: Vec<u64> = Vec::new();
         // add piece-square features
-        for &piece in pieces::ALL.iter() {
+        for piece in Piece::iter() {
             for square in Square::iter() {
                 unique_add(&mut dest, piece_feature(piece, square));
             }
         }
-        for &zone in CastleZone::ALL.iter() {
+        for zone in CastleZone::iter() {
             unique_add(&mut dest, castle_feature(zone));
         }
         for square in Square::iter().take(8) {

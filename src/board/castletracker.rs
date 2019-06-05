@@ -24,9 +24,8 @@ impl CastleTracker {
     }
 
     fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
-        CastleZone::ALL
-            .iter()
-            .filter(|&x| move_components.intersects(x.source_squares()))
+        CastleZone::iter()
+            .filter(|x| move_components.intersects(x.source_squares()))
             .collect()
     }
 

@@ -5,7 +5,7 @@ use crate::board::hash;
 use crate::pieces;
 use crate::pieces::Piece;
 
-const PS: [Piece; 12] = pieces::ALL;
+//const PS: [Piece; 12] = pieces::ALL;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct PieceTracker {
@@ -18,8 +18,8 @@ impl PieceTracker {
         assert_eq!(12, initial_boards.len());
         let initial_hash = initial_boards
             .iter()
-            .zip(&pieces::ALL)
-            .flat_map(|(&b, &p)| b.into_iter().map(move |sq| hash::piece_feature(p, sq)))
+            .zip(Piece::iter())
+            .flat_map(|(&b, p)| b.into_iter().map(move |sq| hash::piece_feature(p, sq)))
             .fold(0u64, |a, b| a ^ b);
 
         PieceTracker {
@@ -63,14 +63,14 @@ impl PieceTracker {
     pub fn piece_at(&self, square: Square) -> Option<Piece> {
         self.boards
             .iter()
-            .zip(&PS)
+            .zip(Piece::iter())
             .find(|(&b, _)| b.contains(square))
-            .map(|(_, &p)| p)
+            .map(|(_, p)| p)
     }
 
     pub fn erase_square(&mut self, square: Square) -> Option<Piece> {
         let mut erased_piece = None;
-        for (i, &p) in PS.iter().enumerate() {
+        for (i, p) in Piece::iter().enumerate() {
             if self.boards[i].contains(square) {
                 erased_piece = Some(p);
                 self.boards[i] ^= square;

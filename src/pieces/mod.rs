@@ -31,6 +31,11 @@ pub enum Piece {
     BK = 11,
 }
 impl Piece {
+    /// Create an iterator traversing over all pieces in order.
+    pub fn iter() -> impl Iterator<Item = Piece> {
+        ALL.iter().cloned()
+    }
+
     /// Returns the side that this piece belongs to.
     pub fn side(self) -> Side {
         if (self as u8) < 6 {
@@ -128,7 +133,7 @@ pub fn on_side<'a>(side: Side) -> &'a [Piece] {
 }
 
 /// Constant piece groupings.
-pub const ALL: [Piece; 12] = [
+const ALL: [Piece; 12] = [
     Piece::WP,
     Piece::WN,
     Piece::WB,
@@ -143,7 +148,7 @@ pub const ALL: [Piece; 12] = [
     Piece::BK,
 ];
 
-pub const WHITE: [Piece; 6] = [
+const WHITE: [Piece; 6] = [
     Piece::WP,
     Piece::WN,
     Piece::WB,
@@ -152,7 +157,7 @@ pub const WHITE: [Piece; 6] = [
     Piece::WK,
 ];
 
-pub const BLACK: [Piece; 6] = [
+const BLACK: [Piece; 6] = [
     Piece::BP,
     Piece::BN,
     Piece::BB,
@@ -161,9 +166,9 @@ pub const BLACK: [Piece; 6] = [
     Piece::BK,
 ];
 
-pub const PAWNS: [Piece; 2] = [Piece::WP, Piece::BP];
-pub const KNIGHTS: [Piece; 2] = [Piece::WN, Piece::BN];
-pub const BISHOPS: [Piece; 2] = [Piece::WB, Piece::BB];
-pub const ROOKS: [Piece; 2] = [Piece::WR, Piece::BR];
-pub const QUEENS: [Piece; 2] = [Piece::WQ, Piece::BQ];
-pub const KINGS: [Piece; 2] = [Piece::WK, Piece::BK];
+const PAWNS: [Piece; 2] = [Piece::WP, Piece::BP];
+const KNIGHTS: [Piece; 2] = [Piece::WN, Piece::BN];
+const BISHOPS: [Piece; 2] = [Piece::WB, Piece::BB];
+const ROOKS: [Piece; 2] = [Piece::WR, Piece::BR];
+const QUEENS: [Piece; 2] = [Piece::WQ, Piece::BQ];
+const KINGS: [Piece; 2] = [Piece::WK, Piece::BK];
