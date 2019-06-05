@@ -1,6 +1,7 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::board::implementation::hash;
 use crate::base::Side;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
@@ -62,7 +63,7 @@ impl CastleTracker {
     }
 
     pub fn hash(&self) -> u64 {
-        self.remaining_rights.hash()
+        hash::castle_features(self.remaining_rights)
     }
 
     pub fn rights(&self) -> CastleZoneSet {

@@ -9,8 +9,7 @@ use crate::base::castlezone::CastleZoneSet;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::testutils::TestBoard;
-use crate::board::Board;
+use crate::board::implementation::{Board, testutils::TestBoard};
 use crate::board::Move;
 
 type PrototypeMoveSet = (BitBoard, BitBoard);

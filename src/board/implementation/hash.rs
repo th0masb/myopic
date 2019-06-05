@@ -5,6 +5,7 @@ use crate::pieces::Piece;
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 use std::iter;
+use crate::base::castlezone::CastleZoneSet;
 
 pub fn piece_feature(piece: Piece, square: Square) -> u64 {
     FEATURES[(piece as usize) * 64 + (square as usize)]
@@ -23,6 +24,10 @@ pub fn enpassant_feature(square: Square) -> u64 {
 
 pub fn castle_feature(zone: CastleZone) -> u64 {
     FEATURES[N_FEATURES - 2 - zone as usize]
+}
+
+pub fn castle_features(zones: CastleZoneSet) -> u64 {
+    zones.iter().fold(0u64, |l, r| l ^ castle_feature(r))
 }
 
 const SEED: u64 = 0x110894u64;

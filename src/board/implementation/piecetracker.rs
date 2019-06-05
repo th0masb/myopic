@@ -1,11 +1,9 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::Side;
 use crate::base::square::Square;
-use crate::board::hash;
+use crate::board::implementation::hash;
 use crate::pieces;
 use crate::pieces::Piece;
-
-//const PS: [Piece; 12] = pieces::ALL;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct PieceTracker {

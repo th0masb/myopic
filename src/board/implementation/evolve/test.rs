@@ -7,11 +7,10 @@ use crate::base::castlezone::CastleZoneSet;
 use crate::base::square;
 use crate::base::square::Square;
 use crate::base::Side;
-use crate::board::castletracker::CastleTracker;
-use crate::board::hashcache::HashCache;
-use crate::board::piecetracker::PieceTracker;
-use crate::board::testutils::TestBoard;
-use crate::board::Board;
+use crate::board::implementation::{
+    castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker,
+    testutils::TestBoard, Board,
+};
 use crate::board::Move;
 use crate::pieces::Piece;
 

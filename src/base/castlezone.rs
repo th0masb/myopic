@@ -20,7 +20,6 @@ use crate::base::square::Square::G8;
 use crate::base::square::Square::H1;
 use crate::base::square::Square::H8;
 use crate::base::Reflectable;
-use crate::board::hash;
 use crate::pieces::Piece;
 
 /// Represents one of the four different areas on a chessboard where
@@ -34,8 +33,7 @@ pub enum CastleZone {
 }
 
 impl CastleZone {
-    ///
-    ///
+    /// Create an iterator traversing all zones in order.
     pub fn iter() -> impl Iterator<Item = CastleZone> {
         CastleZone::ALL.iter().cloned()
     }
@@ -151,17 +149,15 @@ impl CastleZoneSet {
         (1usize << zone as usize) & self.data != 0
     }
 
-    pub fn hash(self) -> u64 {
-        (0..4)
-            .filter(|i| (1usize << i) & self.data != 0)
-            .map(|i| hash::castle_feature(CastleZone::ALL[i]))
-            .fold(0u64, |a, b| a ^ b)
-    }
+//    pub fn hash(self) -> u64 {
+//        (0..4)
+//            .filter(|i| (1usize << i) & self.data != 0)
+//            .map(|i| hash::castle_feature(CastleZone::ALL[i]))
+//            .fold(0u64, |a, b| a ^ b)
+//    }
 
     pub fn iter(self) -> impl Iterator<Item = CastleZone> {
-        CastleZone::ALL
-            .iter()
-            .map(|&z| z)
+        CastleZone::iter()
             .filter(move |&z| self.contains(z))
     }
 
@@ -185,17 +181,6 @@ impl FromIterator<CastleZone> for CastleZoneSet {
         }
     }
 }
-
-//impl<'a> FromIterator<&'a CastleZone> for CastleZoneSet {
-//    fn from_iter<T: IntoIterator<Item = &'a CastleZone>>(iter: T) -> Self {
-//        CastleZoneSet {
-//            data: iter
-//                .into_iter()
-//                .map(|cz| 1usize << cz.i)
-//                .fold(0, |a, b| a | b),
-//        }
-//    }
-//}
 
 impl ops::Sub<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;

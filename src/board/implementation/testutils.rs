@@ -1,15 +1,14 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::Reflectable;
-use crate::base::Side;
 use crate::base::square;
 use crate::base::square::Square;
-use crate::board::Board;
-use crate::board::castletracker::CastleTracker;
-use crate::board::hashcache::HashCache;
+use crate::base::Reflectable;
+use crate::base::Side;
+use crate::board::implementation::{
+    castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker, Board,
+};
 use crate::board::Move;
-use crate::board::piecetracker::PieceTracker;
 use crate::pieces;
 use crate::pieces::Piece;
 
@@ -37,7 +36,7 @@ impl Reflectable for TestBoard {
             active: self.active.reflect(),
             clock: self.clock,
             enpassant: self.enpassant.reflect(),
-            hash_offset: self.hash_offset
+            hash_offset: self.hash_offset,
         }
     }
 }

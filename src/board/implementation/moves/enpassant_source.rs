@@ -2,7 +2,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square::Square;
-use crate::board::moves::FILES;
+use crate::board::implementation::moves::FILES;
 
 /// TODO Could have adjacent files in a constant array
 pub(super) fn squares(active: Side, enpassant_target: Square) -> BitBoard {

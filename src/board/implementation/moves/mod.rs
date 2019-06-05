@@ -1,9 +1,9 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
-use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::Board;
+use crate::base::square::Square;
+use crate::board::implementation::Board;
 use crate::board::Move;
 use crate::pieces;
 use crate::pieces::Piece;

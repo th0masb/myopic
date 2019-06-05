@@ -1,7 +1,7 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
-use crate::board::Board;
+use crate::board::implementation::Board;
 use crate::pieces;
 use crate::pieces::Piece;
 
@@ -37,7 +37,7 @@ mod test {
     use crate::base::bitboard::BitBoard;
     use crate::base::castlezone::CastleZoneSet;
     use crate::base::Side;
-    use crate::board::testutils::TestBoard;
+    use crate::board::implementation::testutils::TestBoard;
 
     struct TestCase {
         board: TestBoard,

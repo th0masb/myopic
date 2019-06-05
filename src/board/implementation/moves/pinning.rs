@@ -1,11 +1,11 @@
-use crate::base::bitboard::constants::*;
 use crate::base::bitboard::BitBoard;
+use crate::base::bitboard::constants::*;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::square;
-use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::Board;
+use crate::base::square;
+use crate::base::square::Square;
+use crate::board::implementation::Board;
 use crate::pieces::Piece;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
@@ -78,7 +78,7 @@ impl Board {
 
 #[cfg(test)]
 mod test {
-    use crate::board::testutils::TestBoard;
+    use crate::board::implementation::testutils::TestBoard;
 
     use super::*;
 
