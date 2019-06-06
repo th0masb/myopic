@@ -50,6 +50,10 @@ impl BitBoard {
         count
     }
 
+    pub fn iter(self) -> impl Iterator<Item = Square> {
+        self.into_iter()
+    }
+
     /// Finds the first square in this set if it is non-empty.
     pub fn first(self) -> Option<Square> {
         self.into_iter().next()
