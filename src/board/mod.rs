@@ -51,7 +51,7 @@ pub trait Board: Clone + Eq + Reflectable {
 
     fn piece_locations(&self, piece: Piece) -> BitBoard;
 
-    fn side_locations(&self, side: Side) -> BitBoard;
+    fn side_locations(&self) -> (BitBoard, BitBoard);
 
     fn piece_at(&self, location: Square) -> Option<Piece>;
 

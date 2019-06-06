@@ -5,14 +5,14 @@ use crate::pieces::Piece;
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the midgame.
-pub fn midgame_eval(piece: Piece, location: Square) -> i32 {
+pub fn midgame(piece: Piece, location: Square) -> i32 {
     let (table_index, parity) = compute_index_and_parity(piece, location);
     parity * MIDGAME[(piece as usize) % 6][table_index]
 }
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the endgame.
-pub fn endgame_eval(piece: Piece, location: Square) -> i32 {
+pub fn endgame(piece: Piece, location: Square) -> i32 {
     let (table_index, parity) = compute_index_and_parity(piece, location);
     parity * ENDGAME[(piece as usize) % 6][table_index]
 }
@@ -32,7 +32,7 @@ mod test {
     use crate::base::square::Square::*;
     use crate::pieces::Piece;
 
-    use super::{endgame_eval, midgame_eval};
+    use super::{endgame, midgame};
 
     #[test]
     fn test_reflect() {
@@ -44,44 +44,44 @@ mod test {
 
     #[test]
     fn test_midgame() {
-        assert_eq!(30, midgame_eval(Piece::WP, C6));
-        assert_eq!(-30, midgame_eval(Piece::BP, C3));
+        assert_eq!(30, midgame(Piece::WP, C6));
+        assert_eq!(-30, midgame(Piece::BP, C3));
 
-        assert_eq!(10, midgame_eval(Piece::WN, D3));
-        assert_eq!(-10, midgame_eval(Piece::BN, D6));
+        assert_eq!(10, midgame(Piece::WN, D3));
+        assert_eq!(-10, midgame(Piece::BN, D6));
 
-        assert_eq!(25, midgame_eval(Piece::WB, D4));
-        assert_eq!(-25, midgame_eval(Piece::BB, D5));
+        assert_eq!(25, midgame(Piece::WB, D4));
+        assert_eq!(-25, midgame(Piece::BB, D5));
 
-        assert_eq!(5, midgame_eval(Piece::WR, D2));
-        assert_eq!(-5, midgame_eval(Piece::BR, D7));
+        assert_eq!(5, midgame(Piece::WR, D2));
+        assert_eq!(-5, midgame(Piece::BR, D7));
 
-        assert_eq!(5, midgame_eval(Piece::WQ, B3));
-        assert_eq!(-5, midgame_eval(Piece::BQ, B6));
+        assert_eq!(5, midgame(Piece::WQ, B3));
+        assert_eq!(-5, midgame(Piece::BQ, B6));
 
-        assert_eq!(50, midgame_eval(Piece::WK, B1));
-        assert_eq!(-50, midgame_eval(Piece::BK, B8));
+        assert_eq!(50, midgame(Piece::WK, B1));
+        assert_eq!(-50, midgame(Piece::BK, B8));
     }
 
     #[test]
     fn test_endgame() {
-        assert_eq!(80, endgame_eval(Piece::WP, C6));
-        assert_eq!(-80, endgame_eval(Piece::BP, C3));
+        assert_eq!(80, endgame(Piece::WP, C6));
+        assert_eq!(-80, endgame(Piece::BP, C3));
 
-        assert_eq!(-40, endgame_eval(Piece::WN, E1));
-        assert_eq!(40, endgame_eval(Piece::BN, E8));
+        assert_eq!(-40, endgame(Piece::WN, E1));
+        assert_eq!(40, endgame(Piece::BN, E8));
 
-        assert_eq!(25, endgame_eval(Piece::WB, D4));
-        assert_eq!(-25, endgame_eval(Piece::BB, D5));
+        assert_eq!(25, endgame(Piece::WB, D4));
+        assert_eq!(-25, endgame(Piece::BB, D5));
 
-        assert_eq!(10, endgame_eval(Piece::WR, D3));
-        assert_eq!(-10, endgame_eval(Piece::BR, D6));
+        assert_eq!(10, endgame(Piece::WR, D3));
+        assert_eq!(-10, endgame(Piece::BR, D6));
 
-        assert_eq!(-30, endgame_eval(Piece::WQ, A4));
-        assert_eq!(30, endgame_eval(Piece::BQ, A5));
+        assert_eq!(-30, endgame(Piece::WQ, A4));
+        assert_eq!(30, endgame(Piece::BQ, A5));
 
-        assert_eq!(10, endgame_eval(Piece::WK, D7));
-        assert_eq!(-10, endgame_eval(Piece::BK, D2));
+        assert_eq!(10, endgame(Piece::WK, D7));
+        assert_eq!(-10, endgame(Piece::BK, D2));
     }
 }
 
