@@ -1,7 +1,7 @@
 use crate::base::bitboard::BitBoard;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
 use crate::board::implementation::moves::FILES;
 
 /// TODO Could have adjacent files in a constant array
@@ -23,8 +23,8 @@ pub(super) fn squares(active: Side, enpassant_target: Square) -> BitBoard {
 #[cfg(test)]
 mod test_enpassant_source_squares {
     use crate::base::bitboard::constants::*;
-    use crate::base::Side;
     use crate::base::square::Square;
+    use crate::base::Side;
 
     use super::squares;
 

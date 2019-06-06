@@ -1,11 +1,11 @@
 use crate::base::castlezone::CastleZone;
+use crate::base::castlezone::CastleZoneSet;
 use crate::base::square::Square;
 use crate::base::Side;
 use crate::pieces::Piece;
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 use std::iter;
-use crate::base::castlezone::CastleZoneSet;
 
 pub fn piece_feature(piece: Piece, square: Square) -> u64 {
     FEATURES[(piece as usize) * 64 + (square as usize)]

@@ -15,7 +15,7 @@ use crate::base::square::Square::E1;
 use crate::base::square::Square::E8;
 use crate::base::square::Square::H1;
 use crate::base::square::Square::H8;
-use crate::board::implementation::Board;
+use crate::board::implementation::BoardImpl;
 use crate::board::implementation::hash;
 use crate::board::Move;
 use crate::board::Move::*;
@@ -28,7 +28,7 @@ type RD = ReversalData;
 
 /// Implementation of board evolution/devolution via some given Move
 /// instance which is assumed to be legal for this board.
-impl Board {
+impl BoardImpl {
     /// Public API for evolving a board. All that is required is a reference to
     /// a move which is assumed to be legal. The information required to reverse
     /// this same move is returned and the board is mutated to the next state.
@@ -62,7 +62,7 @@ impl Board {
         } else {
             self.clock + 1
         };
-        self.enpassant = Board::compute_enpassant(source, target, piece);
+        self.enpassant = BoardImpl::compute_enpassant(source, target, piece);
         self.switch_side_and_update_hash();
         rev_data
     }

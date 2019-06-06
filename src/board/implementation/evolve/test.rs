@@ -9,7 +9,7 @@ use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::implementation::{
     castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker,
-    testutils::TestBoard, Board,
+    testutils::TestBoard, BoardImpl,
 };
 use crate::board::Move;
 use crate::pieces::Piece;
@@ -33,7 +33,7 @@ fn check_case(test_case: TestCase) {
     check_constrained_board_equality(start, forward_subject);
 }
 
-fn check_constrained_board_equality(left: Board, right: Board) {
+fn check_constrained_board_equality(left: BoardImpl, right: BoardImpl) {
     assert_eq!(left.clock, right.clock);
     assert_eq!(left.enpassant, right.enpassant);
     assert_eq!(left.active, right.active);

@@ -1,6 +1,6 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::Side;
 use crate::base::square::Square;
+use crate::base::Side;
 use crate::board::implementation::hash;
 use crate::pieces;
 use crate::pieces::Piece;

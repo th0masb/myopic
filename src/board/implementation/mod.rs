@@ -1,9 +1,9 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
 use crate::board::implementation::{
     castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker,
 };
@@ -22,7 +22,7 @@ mod piecetracker;
 mod testutils;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Board {
+pub struct BoardImpl {
     hashes: HashCache,
     pieces: PieceTracker,
     castling: CastleTracker,
@@ -31,7 +31,7 @@ pub struct Board {
     clock: usize,
 }
 
-impl Board {
+impl BoardImpl {
     fn switch_side(&mut self) {
         self.active = self.active.reflect();
     }

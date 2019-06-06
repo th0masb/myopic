@@ -6,7 +6,7 @@ use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::board::implementation::{
-    castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker, Board,
+    castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker, BoardImpl,
 };
 use crate::board::Move;
 use crate::pieces;
@@ -42,7 +42,7 @@ impl Reflectable for TestBoard {
 }
 
 impl TestBoard {
-    pub fn to_board(self) -> Board {
+    pub fn to_board(self) -> BoardImpl {
         let pieces = PieceTracker::new(
             vec![self.whites, self.blacks]
                 .iter()
@@ -55,7 +55,7 @@ impl TestBoard {
         for i in 0..self.hash_offset {
             hashes.push_head(i as u64);
         }
-        let mut result = Board {
+        let mut result = BoardImpl {
             hashes,
             pieces,
             castling,

@@ -5,7 +5,7 @@ use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square;
 use crate::base::square::Square;
-use crate::board::implementation::Board;
+use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
@@ -38,7 +38,7 @@ impl PinnedSet {
     }
 }
 
-impl Board {
+impl BoardImpl {
     /// Computes the set of all active pieces which are pinned to the king,
     /// i.e have their movement areas constrained so that they do not move
     /// and leave the king in check.

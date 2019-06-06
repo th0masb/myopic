@@ -1,11 +1,11 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
-use crate::board::implementation::Board;
+use crate::board::implementation::BoardImpl;
 use crate::pieces;
 use crate::pieces::Piece;
 
-impl Board {
+impl BoardImpl {
     /// Computes the total area of control on the board for a given side. Note that the
     /// passive king is treated as invisible so that if it is in check it cannot create
     /// it's own escape squares by blocking the control ray of an attacking slider.

@@ -9,7 +9,7 @@ use crate::base::castlezone::CastleZoneSet;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::implementation::{Board, testutils::TestBoard};
+use crate::board::implementation::{BoardImpl, testutils::TestBoard};
 use crate::board::Move;
 
 type PrototypeMoveSet = (BitBoard, BitBoard);
@@ -59,7 +59,7 @@ fn sq(set: BitBoard) -> Square {
     set.into_iter().next().unwrap()
 }
 
-fn convert_case(case: TestCase) -> (Board, MoveSet, MoveSet) {
+fn convert_case(case: TestCase) -> (BoardImpl, MoveSet, MoveSet) {
     let board = case.board.to_board();
 
     let castle_moves = case
@@ -98,14 +98,14 @@ fn combine(moves: Vec<Vec<Move>>) -> MoveSet {
     itertools::concat(moves).into_iter().collect()
 }
 
-fn convert_promotion(board: &Board, source: Vec<PrototypeMoveSet>) -> Vec<Move> {
+fn convert_promotion(board: &BoardImpl, source: Vec<PrototypeMoveSet>) -> Vec<Move> {
     source
         .iter()
         .flat_map(|&(s, ts)| Move::promotions(board.active, sq(s), ts))
         .collect()
 }
 
-fn convert_standard(board: &Board, source: Vec<PrototypeMoveSet>) -> Vec<Move> {
+fn convert_standard(board: &BoardImpl, source: Vec<PrototypeMoveSet>) -> Vec<Move> {
     let piece_at = |sq: Square| board.pieces.piece_at(sq).unwrap();
     source
         .iter()

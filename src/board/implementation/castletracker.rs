@@ -1,8 +1,8 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::board::implementation::hash;
 use crate::base::Side;
+use crate::board::implementation::hash;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct CastleTracker {

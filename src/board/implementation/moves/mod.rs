@@ -3,7 +3,7 @@ use crate::base::castlezone::CastleZone;
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square::Square;
-use crate::board::implementation::Board;
+use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::pieces;
 use crate::pieces::Piece;
@@ -33,7 +33,7 @@ fn pnbrq<'a>(side: Side) -> &'a [Piece; 5] {
     }
 }
 
-impl Board {
+impl BoardImpl {
     /// Computes all legal moves for the active side at this position.
     pub fn compute_moves(&self) -> Vec<Move> {
         self.compute_moves_impl(false)
