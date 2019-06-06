@@ -1,6 +1,7 @@
 use crate::board::Board;
 
 mod tables;
+mod values;
 
 /// Extension of the Board trait which adds a static evaluation function.
 ///
