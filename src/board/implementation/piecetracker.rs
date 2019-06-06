@@ -2,7 +2,6 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::implementation::hash;
-use crate::pieces;
 use crate::pieces::Piece;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
@@ -34,7 +33,7 @@ impl PieceTracker {
     }
 
     pub fn king_location(&self, side: Side) -> Square {
-        self.locations(pieces::king(side))
+        self.locations(Piece::king(side))
             .into_iter()
             .next()
             .unwrap()

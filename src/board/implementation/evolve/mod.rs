@@ -1,4 +1,4 @@
-use crate::{pieces, pieces::Piece};
+use crate::pieces::Piece;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::Reflectable;
@@ -109,7 +109,7 @@ impl BoardImpl {
     }
 
     fn evolve_e(&mut self, source: Square) -> RD {
-        let discarded_piece = pieces::pawn(self.active.reflect());
+        let discarded_piece = Piece::pawn(self.active.reflect());
         let rev_data = self.create_rev_data(Some(discarded_piece), CastleZoneSet::NONE);
         self.toggle_enpassant_pieces(source, self.enpassant.unwrap());
         self.enpassant = None;
@@ -138,7 +138,7 @@ impl BoardImpl {
     fn evolve_p(&mut self, source: Square, target: Square, promotion_result: Piece) -> RD {
         let discarded_piece = self.pieces.erase_square(target);
         let rev_data = self.create_rev_data(discarded_piece, CastleZoneSet::NONE);
-        let moved_pawn = pieces::pawn(self.active);
+        let moved_pawn = Piece::pawn(self.active);
         self.pieces.toggle_piece(moved_pawn, &[source]);
         self.pieces.toggle_piece(promotion_result, &[target]);
         self.enpassant = None;
@@ -149,7 +149,7 @@ impl BoardImpl {
 
     fn devolve_p(&mut self, source: Square, target: Square, piece: Piece, discards: RD) {
         self.switch_side();
-        let moved_pawn = pieces::pawn(self.active);
+        let moved_pawn = Piece::pawn(self.active);
         self.pieces.toggle_piece(moved_pawn, &[source]);
         self.pieces.toggle_piece(piece, &[target]);
         match discards.discarded_piece {

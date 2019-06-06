@@ -5,7 +5,6 @@ use crate::base::Side;
 use crate::base::square::Square;
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
-use crate::pieces;
 use crate::pieces::Piece;
 
 #[cfg(test)]
@@ -52,7 +51,7 @@ impl BoardImpl {
 
     fn compute_moves_impl(&self, force_attacks: bool) -> Vec<Move> {
         let passive_control = self.compute_control(self.active.reflect());
-        if passive_control.intersects(self.pieces.locations(pieces::king(self.active))) {
+        if passive_control.intersects(self.pieces.locations(Piece::king(self.active))) {
             self.compute_moves_assuming_in_check(passive_control)
         } else {
             self.compute_moves_assuming_no_check(passive_control, force_attacks)
@@ -64,7 +63,7 @@ impl BoardImpl {
         let mut dest: Vec<Move> = Vec::with_capacity(10);
         let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
-        let active_king = pieces::king(self.active);
+        let active_king = Piece::king(self.active);
         let king_loc = self.pieces.king_location(self.active);
         dest.extend(Move::standards(
             active_king,
@@ -141,7 +140,7 @@ impl BoardImpl {
             dest.extend(self.compute_castle_moves(passive_control, whites | blacks));
         }
         dest.extend(self.compute_pnbrq_moves(&unchecked_moves, nbrq_cons, pawn_cons));
-        let king = &[pieces::king(self.active)];
+        let king = &[Piece::king(self.active)];
         dest.extend(self.legal_moves(king, &unchecked_moves, |_| king_cons));
         dest
     }
@@ -186,7 +185,7 @@ impl BoardImpl {
     {
         let mut dest: Vec<Move> = Vec::with_capacity(20);
         let (standard, enpassant, promotion) = self.separate_pawn_locs();
-        let active_pawn = pieces::pawn(self.active);
+        let active_pawn = Piece::pawn(self.active);
 
         // Add moves for pawns which can only produce standard moves.
         for location in standard | enpassant {
@@ -212,7 +211,7 @@ impl BoardImpl {
             enpassant_source::squares(self.active, sq)
         });
         let promotion_rank = self.active.pawn_last_rank();
-        let pawn_locs = self.pieces.locations(pieces::pawn(self.active));
+        let pawn_locs = self.pieces.locations(Piece::pawn(self.active));
         (
             pawn_locs - enpassant_source - promotion_rank,
             pawn_locs & enpassant_source,

@@ -2,6 +2,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::board::Board;
 use crate::pieces::Piece;
+use crate::base::Side;
 
 /// Static exchange evaluator
 struct See<'a, B: Board> {
@@ -50,12 +51,16 @@ impl<B: Board> See<'_, B> {
                 .flat_map(|(p, locs)| locs.iter().map(move |loc| (p, loc)))
                 .filter(|(_, loc)| xray.contains(*loc))
                 .filter(|(p, loc)| p.control(*loc, whites, blacks).contains(self.target))
-                .for_each(|(p, loc)| {
+                .for_each(|(_, loc)| {
                     new_xray ^= loc;
                     new_attadef ^= loc;
                 });
             (new_attadef, new_xray)
         }
+    }
+
+    fn least_valuable_piece(&self, options: BitBoard, side: Side) -> BitBoard {
+        unimplemented!()//Piece::on
     }
 }
 

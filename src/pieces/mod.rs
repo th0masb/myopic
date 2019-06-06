@@ -32,6 +32,30 @@ impl Piece {
         ALL.iter().cloned()
     }
 
+    /// Returns the king which belongs to the given side.
+    pub fn king(side: Side) -> Piece {
+        match side {
+            Side::White => Piece::WK,
+            Side::Black => Piece::BK,
+        }
+    }
+
+    /// Returns the pawn which belongs to the given side.
+    pub fn pawn(side: Side) -> Piece {
+        match side {
+            Side::White => Piece::WP,
+            Side::Black => Piece::BP,
+        }
+    }
+
+    /// Returns a slice containing all pieces belonging to the given side.
+    pub fn on_side(side: Side) -> impl Iterator<Item = Piece> {
+        match side {
+            Side::White => (&WHITE).iter().cloned(),
+            Side::Black => (&BLACK).iter().cloned(),
+        }
+    }
+
     /// Returns the side that this piece belongs to.
     pub fn side(self) -> Side {
         if (self as u8) < 6 {
@@ -104,29 +128,6 @@ impl Reflectable for Piece {
     }
 }
 
-/// Returns the king which belongs to the given side.
-pub fn king(side: Side) -> Piece {
-    match side {
-        Side::White => Piece::WK,
-        Side::Black => Piece::BK,
-    }
-}
-
-/// Returns the pawn which belongs to the given side.
-pub fn pawn(side: Side) -> Piece {
-    match side {
-        Side::White => Piece::WP,
-        Side::Black => Piece::BP,
-    }
-}
-
-/// Returns a slice containing all pieces belonging to the given side.
-pub fn on_side<'a>(side: Side) -> &'a [Piece] {
-    match side {
-        Side::White => &WHITE,
-        Side::Black => &BLACK,
-    }
-}
 
 /// Constant piece groupings.
 const ALL: [Piece; 12] = [

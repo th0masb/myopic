@@ -2,7 +2,6 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::implementation::BoardImpl;
-use crate::pieces;
 use crate::pieces::Piece;
 
 impl BoardImpl {
@@ -24,9 +23,8 @@ impl BoardImpl {
         };
         let locs = |piece: Piece| pieces.locations(piece);
         let control = |piece: Piece, square: Square| piece.control(square, whites, blacks);
-        pieces::on_side(side)
-            .iter()
-            .flat_map(|&p| locs(p).into_iter().map(move |sq| control(p, sq)))
+        Piece::on_side(side)
+            .flat_map(|p| locs(p).into_iter().map(move |sq| control(p, sq)))
             .collect()
     }
 }
