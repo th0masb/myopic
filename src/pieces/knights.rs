@@ -1,8 +1,5 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::dir::*;
 use crate::base::square::Square;
-
-use crate::base::Side;
 
 pub fn control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
     CONTROL[loc as usize]

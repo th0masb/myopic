@@ -7,7 +7,6 @@ extern crate lazy_static;
 extern crate rand;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::castlezone::CastleZone;
 use crate::base::dir;
 use crate::base::square::Square::*;
 

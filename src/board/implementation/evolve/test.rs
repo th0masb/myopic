@@ -1,15 +1,11 @@
-use std::iter;
-
-use crate::base::bitboard::constants::*;
 use crate::base::bitboard::BitBoard;
+use crate::base::bitboard::constants::*;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::square;
-use crate::base::square::Square;
 use crate::base::Side;
+use crate::base::square::Square;
 use crate::board::implementation::{
-    castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker,
-    testutils::TestBoard, BoardImpl,
+    BoardImpl, testutils::TestBoard,
 };
 use crate::board::Move;
 use crate::pieces::Piece;

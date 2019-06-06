@@ -2,9 +2,6 @@ use std::iter::repeat;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
-use crate::base::Side;
-use crate::pieces::pawns::black_control;
-use crate::pieces::Piece;
 
 use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
 

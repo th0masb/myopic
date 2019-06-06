@@ -1,22 +1,10 @@
-use std::io::repeat;
-
 use crate::{pieces, pieces::Piece};
-use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::dir::N;
-use crate::base::dir::S;
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square::Square;
-use crate::base::square::Square::A1;
-use crate::base::square::Square::A8;
-use crate::base::square::Square::E1;
-use crate::base::square::Square::E8;
-use crate::base::square::Square::H1;
-use crate::base::square::Square::H8;
 use crate::board::implementation::BoardImpl;
-use crate::board::implementation::hash;
 use crate::board::Move;
 use crate::board::Move::*;
 use crate::board::ReversalData;

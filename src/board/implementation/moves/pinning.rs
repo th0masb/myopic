@@ -1,9 +1,6 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::bitboard::constants::*;
-use crate::base::castlezone::CastleZoneSet;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square;
 use crate::base::square::Square;
 use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
@@ -78,6 +75,8 @@ impl BoardImpl {
 
 #[cfg(test)]
 mod test {
+    use crate::base::bitboard::constants::*;
+    use crate::base::castlezone::CastleZoneSet;
     use crate::board::implementation::testutils::TestBoard;
 
     use super::*;

@@ -2,7 +2,6 @@ use crate::base::bitboard::BitBoard;
 use crate::base::dir::Dir;
 use crate::base::dir::N;
 use crate::base::dir::S;
-use std::cell::Ref;
 
 pub mod bitboard;
 pub mod castlezone;

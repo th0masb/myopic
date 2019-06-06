@@ -5,9 +5,6 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::square::Square::A1;
 use crate::base::square::Square::A8;
-use crate::base::square::Square::B1;
-use crate::base::square::Square::B8;
-use crate::base::square::Square::C1;
 use crate::base::square::Square::C8;
 use crate::base::square::Square::D1;
 use crate::base::square::Square::D8;
@@ -21,6 +18,7 @@ use crate::base::square::Square::H1;
 use crate::base::square::Square::H8;
 use crate::base::Reflectable;
 use crate::pieces::Piece;
+use crate::base::square::Square::C1;
 
 /// Represents one of the four different areas on a chessboard where
 /// the special castling move can take place (two for each side).

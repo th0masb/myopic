@@ -1,6 +1,6 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
-use crate::base::{Side, Side::Black, Side::White};
+use crate::base::Side;
 
 pub fn white_control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
     WHITE_CONTROL[loc as usize]

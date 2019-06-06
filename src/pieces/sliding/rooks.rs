@@ -2,7 +2,6 @@ use std::iter::repeat;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
-use crate::base::Side;
 
 use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, ROOK_MASKS};
 

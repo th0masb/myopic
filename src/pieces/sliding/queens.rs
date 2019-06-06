@@ -1,6 +1,5 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
-use crate::base::Side;
 
 use super::bishops;
 use super::rooks;

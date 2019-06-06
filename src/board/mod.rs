@@ -5,7 +5,6 @@ use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::pieces::Piece;
-use std::hash::Hash;
 
 mod implementation;
 
@@ -40,7 +39,7 @@ pub trait Board: Clone + Eq + Reflectable {
 
     fn devolve(&mut self, action: Move, discards: ReversalData);
 
-    fn compute_moves(&self, computationType: MoveComputationType) -> Vec<Move>;
+    fn compute_moves(&self, computation_type: MoveComputationType) -> Vec<Move>;
 
     fn hash(&self) -> u64;
 

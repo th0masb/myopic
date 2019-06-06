@@ -5,7 +5,6 @@ use crate::base::Side;
 use crate::pieces::Piece;
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
-use std::iter;
 
 pub fn piece_feature(piece: Piece, square: Square) -> u64 {
     FEATURES[(piece as usize) * 64 + (square as usize)]
@@ -54,7 +53,6 @@ lazy_static! {
 mod test {
     use super::*;
     use crate::base::square::Square;
-    use crate::pieces;
 
     #[test]
     fn test_uniqueness() {

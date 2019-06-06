@@ -169,7 +169,6 @@ const ALL: [Square; 64] = [
 
 #[cfg(test)]
 mod test {
-    use crate::base::bitboard::*;
     use crate::base::dir::*;
 
     use super::Square::*;

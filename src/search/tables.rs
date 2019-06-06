@@ -30,7 +30,6 @@ fn compute_index_and_parity(piece: Piece, location: Square) -> (usize, i32) {
 mod test {
     use crate::base::Reflectable;
     use crate::base::square::Square::*;
-    use crate::base::square::Square;
     use crate::pieces::Piece;
 
     use super::{endgame_eval, midgame_eval};

@@ -1,7 +1,3 @@
-use std::fmt::Debug;
-use std::fmt::Error;
-use std::fmt::Formatter;
-
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Reflectable;
