@@ -59,6 +59,13 @@ impl BitBoard {
         self.into_iter().next()
     }
 
+    /// Returns a bitboard with the least set bit of this bitboard
+    /// or nothing if this bitboard is empty.
+    pub fn least_set_bit(self) -> BitBoard {
+        let x = self.0 as i64;
+        BitBoard((x & -x) as u64)
+    }
+
     /// Computes the 'cord' between two squares. Imagine a queen sat
     /// on the source square on and empty board. If the queen can move
     /// to the target square then this method returns the set of

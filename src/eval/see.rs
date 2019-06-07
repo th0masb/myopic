@@ -1,8 +1,28 @@
+use std::cmp;
+
 use crate::base::bitboard::BitBoard;
+use crate::base::Reflectable;
+use crate::base::Side;
 use crate::base::square::Square;
 use crate::board::Board;
+use crate::eval::values;
 use crate::pieces::Piece;
-use crate::base::Side;
+
+/// API function for determining whether an exchange is good on the given
+/// board. The board must have a piece at both the source and target square
+/// otherwise this function will panic. The pieces must be on opposing
+/// sides and the return value is in relation to the side of the attacker,
+/// higher is good, better than 0 is a good exchange. If the pieces are on
+/// different sides the result is undefined.
+///
+pub fn exchange_value<B: Board>(board: &B, source: Square, target: Square) -> i32 {
+    See {
+        board,
+        source,
+        target,
+    }
+    .exchange_value()
+}
 
 /// Static exchange evaluator
 struct See<'a, B: Board> {
@@ -10,9 +30,42 @@ struct See<'a, B: Board> {
     source: Square,
     target: Square,
 }
+
 impl<B: Board> See<'_, B> {
-    fn is_good_exchange(&self) -> bool {
-        unimplemented!()
+    fn exchange_value(&self) -> i32 {
+        let board = self.board;
+        let knights = self.locs(Piece::WN) | self.locs(Piece::BN);
+        let first_attacker = board.piece_at(self.source).unwrap();
+        let first_victim = board.piece_at(self.target).unwrap();
+
+        let mut d = 0;
+        let mut gain: [i32; 32] = [0; 32];
+        gain[d] = values::midgame(first_victim);
+        let mut attacker = first_attacker;
+        let mut active = first_attacker.side();
+        let mut src = self.source.lift();
+        let (mut attadef, mut xray) = self.pieces_involved();
+        loop {
+            d += 1;
+            active = active.reflect();
+            gain[d] = values::midgame(attacker) - gain[d - 1];
+            if cmp::max(-gain[d - 1], gain[d]) < 0 {
+                break;
+            }
+            attadef ^= src;
+            if !src.intersects(knights) {
+                let (new_attadef, new_xray) = self.update_xrays(attadef, xray);
+                attadef = new_attadef;
+                xray = new_xray;
+            }
+            src = self.least_valuable_piece(attadef, active);
+            if src.is_empty() {
+                break;
+            } else {
+                attacker = board.piece_at(src.first().unwrap()).unwrap();
+            }
+        }
+        gain[0]
     }
 
     fn locs(&self, piece: Piece) -> BitBoard {
@@ -45,11 +98,8 @@ impl<B: Board> See<'_, B> {
             let (mut new_attadef, mut new_xray) = (attadef, xray);
             sliders()
                 .iter()
-                .cloned()
-                .map(|p| (p, self.locs(p)))
-                .filter(|(_, locs)| locs.intersects(xray))
+                .map(|&p| (p, self.locs(p) & xray))
                 .flat_map(|(p, locs)| locs.iter().map(move |loc| (p, loc)))
-                .filter(|(_, loc)| xray.contains(*loc))
                 .filter(|(p, loc)| p.control(*loc, whites, blacks).contains(self.target))
                 .for_each(|(_, loc)| {
                     new_xray ^= loc;
@@ -60,7 +110,10 @@ impl<B: Board> See<'_, B> {
     }
 
     fn least_valuable_piece(&self, options: BitBoard, side: Side) -> BitBoard {
-        unimplemented!()//Piece::on
+        Piece::on_side(side)
+            .map(|p| self.locs(p))
+            .find(|locs| locs.intersects(options))
+            .map_or(BitBoard::EMPTY, |locs| locs.least_set_bit())
     }
 }
 
