@@ -6,6 +6,7 @@ use crate::base::square::Square;
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::pieces::Piece;
+use crate::board::MoveComputationType;
 
 #[cfg(test)]
 mod test;
@@ -13,6 +14,7 @@ mod test;
 mod control;
 mod enpassant_source;
 mod pinning;
+mod constraints;
 
 const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
 const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
@@ -35,7 +37,8 @@ fn pnbrq<'a>(side: Side) -> &'a [Piece; 5] {
 impl BoardImpl {
     /// Computes all legal moves for the active side at this position.
     pub fn compute_moves(&self) -> Vec<Move> {
-        self.compute_moves_impl(false)
+        unimplemented!()
+        //self.compute_moves_impl(false)
     }
 
     /// Used in quiescent search to find quiet positions, if the king is
@@ -46,15 +49,23 @@ impl BoardImpl {
     ///      search we would allow attacks + checks + escapes until certain depth
     ///      then just attacks + escapes.
     pub fn compute_attacks_or_escapes(&self) -> Vec<Move> {
-        self.compute_moves_impl(true)
+        unimplemented!()
+        //self.compute_moves_impl(true)
     }
 
-    fn compute_moves_impl(&self, force_attacks: bool) -> Vec<Move> {
+
+    fn compute_moves_impl(&self, computation_type: MoveComputationType) -> Vec<Move> {
         let passive_control = self.compute_control(self.active.reflect());
         if passive_control.intersects(self.pieces.locations(Piece::king(self.active))) {
             self.compute_moves_assuming_in_check(passive_control)
         } else {
-            self.compute_moves_assuming_no_check(passive_control, force_attacks)
+            match computation_type {
+                MoveComputationType::All => unimplemented!(),
+                MoveComputationType::Attacks => unimplemented!(),
+                MoveComputationType::AttacksChecks => unimplemented!(),
+            }
+            unimplemented!()
+            //self.compute_moves_assuming_no_check(passive_control, force_attacks)
         }
     }
 

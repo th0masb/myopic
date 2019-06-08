@@ -1,17 +1,18 @@
 use crate::base::bitboard::BitBoard;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
 use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
+use crate::board::MoveComputationType;
 
 /// A pinned set consisted of the locations of all the pieces which are pinned
 /// alongside a vector containing the constraint area for each of these pinned
 /// pieces.
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub(super) struct PinnedSet {
+pub(in crate::board::implementation) struct PinnedSet {
     pub pinned_locations: BitBoard,
     pub constraint_areas: Vec<(Square, BitBoard)>,
 }
@@ -21,7 +22,7 @@ impl PinnedSet {
     /// account some existing constraint set. If the piece is pinned we perform
     /// a linear search to find the constraint area before returning the intersection
     /// of the two constraints. Otherwise we just return the existing constraint.
-    pub(super) fn compute_constraint_area(&self, loc: Square, existing: BitBoard) -> BitBoard {
+    pub fn compute_constraint_area(&self, loc: Square, existing: BitBoard) -> BitBoard {
         existing
             & if self.pinned_locations.contains(loc) {
                 (&self.constraint_areas)
@@ -33,6 +34,14 @@ impl PinnedSet {
                 BitBoard::ALL
             }
     }
+
+    pub fn constraint(&self, loc: Square) -> BitBoard {
+        if self.pinned_locations.contains(loc) {
+            self.constraint_areas.iter().find(|(sq, _)| *sq == loc).map(|(_, c)| *c).unwrap()
+        } else {
+            BitBoard::ALL
+        }
+    }
 }
 
 impl BoardImpl {
@@ -40,7 +49,7 @@ impl BoardImpl {
     /// i.e have their movement areas constrained so that they do not move
     /// and leave the king in check.
     ///
-    pub(super) fn compute_pinned(&self) -> PinnedSet {
+    pub(in crate::board::implementation) fn compute_pinned(&self) -> PinnedSet {
         let locs = |side: Side| self.pieces.side_locations(side);
         let (active, passive) = (locs(self.active), locs(self.active.reflect()));
         let king_loc = self.pieces.king_location(self.active);

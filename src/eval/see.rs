@@ -75,7 +75,7 @@ impl<B: Board> See<'_, B> {
     /// Get (direct attadef, xray attadef) involved.
     fn pieces_involved(&self) -> (BitBoard, BitBoard) {
         let (board, target) = (self.board, self.target);
-        let (whites, blacks) = board.side_locations();
+        let (whites, blacks) = board.whites_blacks();
         let zero = BitBoard::EMPTY;
         let (mut attadef, mut xray) = (zero, zero);
         for (p, loc) in
@@ -94,7 +94,7 @@ impl<B: Board> See<'_, B> {
         if xray.is_empty() {
             (attadef, xray)
         } else {
-            let (whites, blacks) = self.board.side_locations();
+            let (whites, blacks) = self.board.whites_blacks();
             let (mut new_attadef, mut new_xray) = (attadef, xray);
             sliders()
                 .iter()

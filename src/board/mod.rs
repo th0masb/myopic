@@ -27,7 +27,8 @@ pub enum Move {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum MoveComputationType {
-    All, Attacks, AttacksAndChecks
+    All, Attacks,
+    AttacksChecks
 }
 
 /// Trait representing a mutable state of play of a chess game
@@ -51,7 +52,7 @@ pub trait Board: Clone + Eq + Reflectable {
 
     fn piece_locations(&self, piece: Piece) -> BitBoard;
 
-    fn side_locations(&self) -> (BitBoard, BitBoard);
+    fn whites_blacks(&self) -> (BitBoard, BitBoard);
 
     fn piece_at(&self, location: Square) -> Option<Piece>;
 
