@@ -35,9 +35,9 @@ pub enum MoveComputationType {
 /// compute the set of legal moves and queried for a variety of
 /// properties.
 pub trait Board: Clone + Eq + Reflectable {
-    fn evolve(&mut self, action: Move) -> ReversalData;
+    fn evolve(&mut self, action: &Move) -> ReversalData;
 
-    fn devolve(&mut self, action: Move, discards: ReversalData);
+    fn devolve(&mut self, action: &Move, discards: ReversalData);
 
     fn compute_moves(&self, computation_type: MoveComputationType) -> Vec<Move>;
 
