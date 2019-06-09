@@ -8,6 +8,7 @@ use crate::board::Move;
 use crate::pieces::Piece;
 use crate::board::MoveComputationType;
 use crate::board::Board;
+use crate::board::implementation::moves::constraints::MoveConstraints;
 
 #[cfg(test)]
 mod test;
@@ -56,46 +57,55 @@ impl BoardImpl {
 
 
     fn compute_moves_impl(&self, computation_type: MoveComputationType) -> Vec<Move> {
-        let passive_control = self.compute_control(self.active.reflect());
-        if passive_control.intersects(self.pieces.locations(Piece::king(self.active))) {
-            self.compute_moves_assuming_in_check(passive_control)
-        } else {
-            match computation_type {
-                MoveComputationType::All => unimplemented!(),
-                MoveComputationType::Attacks => unimplemented!(),
-                MoveComputationType::AttacksChecks => unimplemented!(),
-            }
-        }
+        let constraints = self.constraints(computation_type);
+        let pawn_moves = self.compute_pawn_moves(&constraints);
+        let nbrqk_moves = self.compute_nbrqk_moves(&constraints);
+        let castle_moves = match computation_type {
+            MoveComputationType::All => self.compute_castle_moves(&constraints),
+            _ => Vec::with_capacity(0),
+        };
+        unimplemented!()
     }
 
-    /// Assuming the active side is in check, compute the legal escape moves.
-    fn compute_moves_assuming_in_check(&self, passive_control: BitBoard) -> Vec<Move> {
-        let mut dest: Vec<Move> = Vec::with_capacity(10);
-        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
-        let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
-        let active_king = Piece::king(self.active);
-        let king_loc = self.pieces.king_location(self.active);
-        dest.extend(Move::standards(
-            active_king,
-            king_loc,
-            unchecked_moves(active_king, king_loc) - passive_control,
-        ));
+    fn compute_nbrqk_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
+        unimplemented!()
+    }
 
-        let attackers = self.compute_king_attackers();
-        if attackers.len() == 1 {
-            let (attacker, loc) = attackers[0];
-            let block_constraint = if attacker.is_knight() {
-                loc.lift()
-            } else {
-                BitBoard::cord(loc, king_loc)
-            };
-            dest.extend(self.compute_pnbrq_moves(
-                unchecked_moves,
-                block_constraint,
-                block_constraint,
-            ));
+    fn compute_pawn_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
+        let mut dest: Vec<Move> = Vec::with_capacity(20);
+        let (standard, enpassant, promotion) = self.separate_pawn_locs();
+        let (active_pawn, (whites, blacks)) = (Piece::pawn(self.active), self.whites_blacks());
+        let compute_moves = |loc: Square| active_pawn.moves(loc, whites, blacks);
+
+        // Add moves for pawns which can only produce standard moves.
+        for location in standard | enpassant {
+            let targets = compute_moves(location) & constraints.get(location);
+            dest.extend(Move::standards(active_pawn, location, targets));
         }
+        for location in enpassant {
+            if constraints.get(location).contains(self.enpassant.unwrap()) {
+                dest.push(Move::Enpassant(location));
+            }
+        }
+        for location in promotion {
+            let targets = compute_moves(location) & constraints.get(location);
+            dest.extend(Move::promotions(self.active, location, targets));
+        }
+
         dest
+    }
+
+    fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
+        let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
+            enpassant_source::squares(self.active, sq)
+        });
+        let promotion_rank = self.active.pawn_last_rank();
+        let pawn_locs = self.piece_locations(Piece::pawn(self.active));
+        (
+            pawn_locs - enpassant_source - promotion_rank,
+            pawn_locs & enpassant_source,
+            pawn_locs & promotion_rank,
+        )
     }
 
     fn compute_king_attackers(&self) -> Vec<(Piece, Square)> {
@@ -134,53 +144,11 @@ impl BoardImpl {
         dest
     }
 
-    /// Assuming the active side is not in check, compute the legal moves
-    /// with the option of forcing moves which result in an enemy capture.
-    fn compute_moves_assuming_no_check(
-        &self,
-        passive_control: BitBoard,
-        force_attacks: bool,
-    ) -> Vec<Move> {
-        let mut dest: Vec<Move> = Vec::with_capacity(50);
-        let (whites, blacks) = (self.pieces.whites(), self.pieces.blacks());
-        let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
-        let (nbrq_cons, pawn_cons, king_cons) =
-            self.compute_area_constraints(force_attacks, (whites, blacks), passive_control);
-
-        if !force_attacks {
-            dest.extend(self.compute_castle_moves(passive_control, whites | blacks));
-        }
-        dest.extend(self.compute_pnbrq_moves(&unchecked_moves, nbrq_cons, pawn_cons));
-        let king = &[Piece::king(self.active)];
-        dest.extend(self.legal_moves(king, &unchecked_moves, |_| king_cons));
-        dest
-    }
-
-    /// Computes the constraint areas for nbrq, pawn and king pieces returning
-    /// the three results as a triple in that order.
-    fn compute_area_constraints(
-        &self,
-        force_attacks: bool,
-        locations: (BitBoard, BitBoard),
-        passive_control: BitBoard,
-    ) -> (BitBoard, BitBoard, BitBoard) {
-        let (whites, blacks) = locations;
-        // Constraint for nbrq
-        let nbrq = if force_attacks {
-            match self.active {
-                Side::White => blacks,
-                Side::Black => whites,
-            }
-        } else {
-            BitBoard::ALL
-        };
-        let enpassant = self.enpassant.map_or(BitBoard::EMPTY, |x| x.lift());
-        (nbrq, nbrq | enpassant, nbrq - passive_control)
-    }
-
-    fn compute_castle_moves(&self, passive_control: BitBoard, piece_locs: BitBoard) -> Vec<Move> {
-        let p1 = |z: CastleZone| !passive_control.intersects(z.uncontrolled_requirement());
-        let p2 = |z: CastleZone| !piece_locs.intersects(z.unoccupied_requirement());
+    fn compute_castle_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
+        let king_constraint = constraints.get(self.king_location(self.active));
+        let (whites, blacks) = self.whites_blacks();
+        let p1 = |z: CastleZone| king_constraint.subsumes(z.uncontrolled_requirement());
+        let p2 = |z: CastleZone| !(whites | blacks).intersects(z.unoccupied_requirement());
         self.castling
             .rights()
             .iter()
@@ -189,10 +157,9 @@ impl BoardImpl {
             .collect()
     }
 
-    fn legal_pawn_moves<F, G>(&self, compute_moves: F, compute_constraint: G) -> Vec<Move>
+    fn legal_pawn_moves<F>(&self, compute_moves: F, constraints: &MoveConstraints) -> Vec<Move>
     where
         F: Fn(Piece, Square) -> BitBoard,
-        G: Fn(Square) -> BitBoard,
     {
         let mut dest: Vec<Move> = Vec::with_capacity(20);
         let (standard, enpassant, promotion) = self.separate_pawn_locs();
@@ -200,34 +167,20 @@ impl BoardImpl {
 
         // Add moves for pawns which can only produce standard moves.
         for location in standard | enpassant {
-            let targets = compute_moves(active_pawn, location) & compute_constraint(location);
+            let targets = compute_moves(active_pawn, location) & constraints.get(location);
             dest.extend(Move::standards(active_pawn, location, targets));
         }
-
         for location in enpassant {
-            if compute_constraint(location).contains(self.enpassant.unwrap()) {
+            if constraints.get(location).contains(self.enpassant.unwrap()) {
                 dest.push(Move::Enpassant(location));
             }
         }
         for location in promotion {
-            let targets = compute_moves(active_pawn, location) & compute_constraint(location);
+            let targets = compute_moves(active_pawn, location) & constraints.get(location);
             dest.extend(Move::promotions(self.active, location, targets));
         }
 
         dest
-    }
-
-    fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
-        let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
-            enpassant_source::squares(self.active, sq)
-        });
-        let promotion_rank = self.active.pawn_last_rank();
-        let pawn_locs = self.pieces.locations(Piece::pawn(self.active));
-        (
-            pawn_locs - enpassant_source - promotion_rank,
-            pawn_locs & enpassant_source,
-            pawn_locs & promotion_rank,
-        )
     }
 
     fn legal_moves<F, G>(&self, pieces: &[Piece], unchecked_moves: F, constraint: G) -> Vec<Move>

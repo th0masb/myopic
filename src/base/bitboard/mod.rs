@@ -26,6 +26,11 @@ impl BitBoard {
         self.0 & (1u64 << (square as usize)) != 0
     }
 
+    /// Check if this set is a superset of the other.
+    pub fn subsumes(self, other: BitBoard) -> bool {
+        (other - self).is_empty()
+    }
+
     /// Check if this bitboard is empty, i.e contains no squares.
     pub fn is_empty(self) -> bool {
         self.0 == 0

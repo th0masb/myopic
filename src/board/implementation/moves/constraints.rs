@@ -14,7 +14,7 @@ pub struct MoveConstraints {
 }
 
 impl MoveConstraints {
-    pub fn constraint(&self, location: Square) -> BitBoard {
+    pub fn get(&self, location: Square) -> BitBoard {
         self.data[location as usize]
     }
 
@@ -89,14 +89,16 @@ impl BoardImpl {
             constraints.intersect(*loc, *constraint);
         }
         // Add attack constraints
+        let enpassant_set = self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift());
         for piece in Piece::on_side(active) {
             // We reflect the piece here to correctly account for pawns.
+            let enpassant = if piece.is_pawn() { enpassant_set } else { BitBoard::EMPTY };
             let check_squares = piece.reflect().control(passive_king_loc, whites, blacks);
             for loc in self.piece_locations(piece) {
                 if checks {
-                    constraints.intersect(loc, passive_locs | check_squares);
+                    constraints.intersect(loc, passive_locs | check_squares | enpassant);
                 } else {
-                    constraints.intersect(loc, passive_locs);
+                    constraints.intersect(loc, passive_locs | enpassant);
                 }
             }
         }

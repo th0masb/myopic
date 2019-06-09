@@ -147,13 +147,6 @@ impl CastleZoneSet {
         (1usize << zone as usize) & self.data != 0
     }
 
-//    pub fn hash(self) -> u64 {
-//        (0..4)
-//            .filter(|i| (1usize << i) & self.data != 0)
-//            .map(|i| hash::castle_feature(CastleZone::ALL[i]))
-//            .fold(0u64, |a, b| a ^ b)
-//    }
-
     pub fn iter(self) -> impl Iterator<Item = CastleZone> {
         CastleZone::iter()
             .filter(move |&z| self.contains(z))
