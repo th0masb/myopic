@@ -69,4 +69,11 @@ impl CastleTracker {
     pub fn rights(&self) -> CastleZoneSet {
         self.remaining_rights
     }
+
+    pub fn status(&self, side: Side) -> Option<CastleZone> {
+        match side {
+            Side::White => self.white_status,
+            Side::Black => self.black_status,
+        }
+    }
 }

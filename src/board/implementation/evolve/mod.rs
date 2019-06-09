@@ -1,13 +1,13 @@
-use crate::pieces::Piece;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::board::Move::*;
 use crate::board::ReversalData;
+use crate::pieces::Piece;
 
 #[cfg(test)]
 mod test;

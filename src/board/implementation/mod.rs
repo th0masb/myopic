@@ -1,3 +1,5 @@
+use crate::base::bitboard::BitBoard;
+use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
@@ -6,11 +8,9 @@ use crate::board::implementation::{
 };
 use crate::board::Board;
 use crate::board::Move;
-use crate::board::ReversalData;
 use crate::board::MoveComputationType;
-use crate::base::castlezone::CastleZone;
+use crate::board::ReversalData;
 use crate::pieces::Piece;
-use crate::base::bitboard::BitBoard;
 
 pub mod evolve;
 pub mod hash;
@@ -43,43 +43,46 @@ impl Board for BoardImpl {
     }
 
     fn compute_moves(&self, computation_type: MoveComputationType) -> Vec<Move> {
-        unimplemented!()
+        self.compute_moves_impl(computation_type)
     }
 
     fn hash(&self) -> u64 {
-        unimplemented!()
+        self.hashes.head()
     }
 
     fn active(&self) -> Side {
-        unimplemented!()
+        self.active
     }
 
     fn enpassant_square(&self) -> Option<Square> {
-        unimplemented!()
+        self.enpassant
     }
 
     fn castle_status(&self, side: Side) -> Option<CastleZone> {
-        unimplemented!()
+        self.castling.status(side)
     }
 
     fn piece_locations(&self, piece: Piece) -> BitBoard {
-        unimplemented!()
+        self.pieces.locations(piece)
     }
 
     fn king_location(&self, side: Side) -> Square {
-        unimplemented!()
+        self.pieces.king_location(side)
     }
 
     fn whites_blacks(&self) -> (BitBoard, BitBoard) {
-        unimplemented!()
+        (
+            self.pieces.side_locations(Side::White),
+            self.pieces.side_locations(Side::Black),
+        )
     }
 
     fn piece_at(&self, location: Square) -> Option<Piece> {
-        unimplemented!()
+        self.pieces.piece_at(location)
     }
 
     fn half_move_clock(&self) -> usize {
-        unimplemented!()
+        self.clock
     }
 
     fn game_counter(&self) -> usize {
@@ -108,8 +111,8 @@ impl BoardImpl {
         self.hashes.push_head(next_hash)
     }
 
-//    fn king_locations(&self) -> (Square, Square) {
-//        let (active, passive) = (self.active, self.active.reflect());
-//        (self.pieces.king_location(active), self.pieces.king_location(passive))
-//    }
+    //    fn king_locations(&self) -> (Square, Square) {
+    //        let (active, passive) = (self.active, self.active.reflect());
+    //        (self.pieces.king_location(active), self.pieces.king_location(passive))
+    //    }
 }

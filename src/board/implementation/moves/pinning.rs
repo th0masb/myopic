@@ -37,7 +37,11 @@ impl PinnedSet {
 
     pub fn constraint(&self, loc: Square) -> BitBoard {
         if self.pinned_locations.contains(loc) {
-            self.constraint_areas.iter().find(|(sq, _)| *sq == loc).map(|(_, c)| *c).unwrap()
+            self.constraint_areas
+                .iter()
+                .find(|(sq, _)| *sq == loc)
+                .map(|(_, c)| *c)
+                .unwrap()
         } else {
             BitBoard::ALL
         }

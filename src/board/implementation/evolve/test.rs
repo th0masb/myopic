@@ -1,12 +1,10 @@
-use crate::base::bitboard::BitBoard;
 use crate::base::bitboard::constants::*;
+use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::Side;
 use crate::base::square::Square;
-use crate::board::implementation::{
-    BoardImpl, testutils::TestBoard,
-};
+use crate::base::Side;
+use crate::board::implementation::{testutils::TestBoard, BoardImpl};
 use crate::board::Move;
 use crate::pieces::Piece;
 

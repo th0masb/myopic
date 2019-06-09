@@ -1,22 +1,22 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
-use crate::board::implementation::BoardImpl;
-use crate::board::Move;
-use crate::pieces::Piece;
-use crate::board::MoveComputationType;
-use crate::board::Board;
 use crate::board::implementation::moves::constraints::MoveConstraints;
+use crate::board::implementation::BoardImpl;
+use crate::board::Board;
+use crate::board::Move;
+use crate::board::MoveComputationType;
+use crate::pieces::Piece;
 
 #[cfg(test)]
 mod test;
 
+mod constraints;
 mod control;
 mod enpassant_source;
 mod pinning;
-mod constraints;
 
 const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
 const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
@@ -55,8 +55,10 @@ impl BoardImpl {
         //self.compute_moves_impl(true)
     }
 
-
-    fn compute_moves_impl(&self, computation_type: MoveComputationType) -> Vec<Move> {
+    pub(in crate::board::implementation) fn compute_moves_impl(
+        &self,
+        computation_type: MoveComputationType,
+    ) -> Vec<Move> {
         let constraints = self.constraints(computation_type);
         let pawn_moves = self.compute_pawn_moves(&constraints);
         let nbrqk_moves = self.compute_nbrqk_moves(&constraints);
@@ -64,11 +66,25 @@ impl BoardImpl {
             MoveComputationType::All => self.compute_castle_moves(&constraints),
             _ => Vec::with_capacity(0),
         };
-        unimplemented!()
+        pawn_moves
+            .into_iter()
+            .chain(nbrqk_moves.into_iter())
+            .chain(castle_moves.into_iter())
+            .collect()
     }
 
     fn compute_nbrqk_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
-        unimplemented!()
+        let mut dest: Vec<Move> = Vec::with_capacity(40);
+        let (whites, blacks) = self.whites_blacks();
+        let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
+        // Add standard moves for pieces which aren't pawns or king
+        for piece in Piece::on_side(self.active).skip(1) {
+            for location in self.pieces.locations(piece) {
+                let moves = unchecked_moves(piece, location) & constraints.get(location);
+                dest.extend(Move::standards(piece, location, moves));
+            }
+        }
+        dest
     }
 
     fn compute_pawn_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
@@ -118,31 +134,31 @@ impl BoardImpl {
             .collect()
     }
 
-    fn compute_pnbrq_moves<F>(
-        &self,
-        unchecked_moves: F,
-        nbrq_constraint: BitBoard,
-        pawn_constraint: BitBoard,
-    ) -> Vec<Move>
-    where
-        F: Fn(Piece, Square) -> BitBoard,
-    {
-        let mut dest: Vec<Move> = Vec::with_capacity(40);
-        let pinned = self.compute_pinned();
-        if pinned.pinned_locations.is_empty() {
-            dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |_| nbrq_constraint));
-            dest.extend(self.legal_pawn_moves(&unchecked_moves, |_| pawn_constraint));
-        } else {
-            let nbrq = nbrq(self.active);
-            let compute_nbrq_constraint =
-                |loc: Square| pinned.compute_constraint_area(loc, nbrq_constraint);
-            dest.extend(self.legal_moves(nbrq, &unchecked_moves, &compute_nbrq_constraint));
-            let compute_pawn_constraint =
-                |loc: Square| pinned.compute_constraint_area(loc, pawn_constraint);
-            dest.extend(self.legal_pawn_moves(&unchecked_moves, &compute_pawn_constraint));
-        }
-        dest
-    }
+    //    fn compute_pnbrq_moves<F>(
+    //        &self,
+    //        unchecked_moves: F,
+    //        nbrq_constraint: BitBoard,
+    //        pawn_constraint: BitBoard,
+    //    ) -> Vec<Move>
+    //    where
+    //        F: Fn(Piece, Square) -> BitBoard,
+    //    {
+    //        let mut dest: Vec<Move> = Vec::with_capacity(40);
+    //        let pinned = self.compute_pinned();
+    //        if pinned.pinned_locations.is_empty() {
+    //            dest.extend(self.legal_moves(nbrq(self.active), &unchecked_moves, |_| nbrq_constraint));
+    //            dest.extend(self.legal_pawn_moves(&unchecked_moves, |_| pawn_constraint));
+    //        } else {
+    //            let nbrq = nbrq(self.active);
+    //            let compute_nbrq_constraint =
+    //                |loc: Square| pinned.compute_constraint_area(loc, nbrq_constraint);
+    //            dest.extend(self.legal_moves(nbrq, &unchecked_moves, &compute_nbrq_constraint));
+    //            let compute_pawn_constraint =
+    //                |loc: Square| pinned.compute_constraint_area(loc, pawn_constraint);
+    //            dest.extend(self.legal_pawn_moves(&unchecked_moves, &compute_pawn_constraint));
+    //        }
+    //        dest
+    //    }
 
     fn compute_castle_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
         let king_constraint = constraints.get(self.king_location(self.active));
@@ -157,45 +173,45 @@ impl BoardImpl {
             .collect()
     }
 
-    fn legal_pawn_moves<F>(&self, compute_moves: F, constraints: &MoveConstraints) -> Vec<Move>
-    where
-        F: Fn(Piece, Square) -> BitBoard,
-    {
-        let mut dest: Vec<Move> = Vec::with_capacity(20);
-        let (standard, enpassant, promotion) = self.separate_pawn_locs();
-        let active_pawn = Piece::pawn(self.active);
+    //    fn legal_pawn_moves<F>(&self, compute_moves: F, constraints: &MoveConstraints) -> Vec<Move>
+    //    where
+    //        F: Fn(Piece, Square) -> BitBoard,
+    //    {
+    //        let mut dest: Vec<Move> = Vec::with_capacity(20);
+    //        let (standard, enpassant, promotion) = self.separate_pawn_locs();
+    //        let active_pawn = Piece::pawn(self.active);
+    //
+    //        // Add moves for pawns which can only produce standard moves.
+    //        for location in standard | enpassant {
+    //            let targets = compute_moves(active_pawn, location) & constraints.get(location);
+    //            dest.extend(Move::standards(active_pawn, location, targets));
+    //        }
+    //        for location in enpassant {
+    //            if constraints.get(location).contains(self.enpassant.unwrap()) {
+    //                dest.push(Move::Enpassant(location));
+    //            }
+    //        }
+    //        for location in promotion {
+    //            let targets = compute_moves(active_pawn, location) & constraints.get(location);
+    //            dest.extend(Move::promotions(self.active, location, targets));
+    //        }
+    //
+    //        dest
+    //    }
 
-        // Add moves for pawns which can only produce standard moves.
-        for location in standard | enpassant {
-            let targets = compute_moves(active_pawn, location) & constraints.get(location);
-            dest.extend(Move::standards(active_pawn, location, targets));
-        }
-        for location in enpassant {
-            if constraints.get(location).contains(self.enpassant.unwrap()) {
-                dest.push(Move::Enpassant(location));
-            }
-        }
-        for location in promotion {
-            let targets = compute_moves(active_pawn, location) & constraints.get(location);
-            dest.extend(Move::promotions(self.active, location, targets));
-        }
-
-        dest
-    }
-
-    fn legal_moves<F, G>(&self, pieces: &[Piece], unchecked_moves: F, constraint: G) -> Vec<Move>
-    where
-        F: Fn(Piece, Square) -> BitBoard,
-        G: Fn(Square) -> BitBoard,
-    {
-        let mut dest: Vec<Move> = Vec::with_capacity(40);
-        // Add standard moves for pieces which aren't pawns or king
-        for &piece in pieces.iter() {
-            for location in self.pieces.locations(piece) {
-                let moves = unchecked_moves(piece, location) & constraint(location);
-                dest.extend(Move::standards(piece, location, moves));
-            }
-        }
-        dest
-    }
+    //    fn legal_moves<F, G>(&self, pieces: &[Piece], unchecked_moves: F, constraint: G) -> Vec<Move>
+    //    where
+    //        F: Fn(Piece, Square) -> BitBoard,
+    //        G: Fn(Square) -> BitBoard,
+    //    {
+    //        let mut dest: Vec<Move> = Vec::with_capacity(40);
+    //        // Add standard moves for pieces which aren't pawns or king
+    //        for &piece in pieces.iter() {
+    //            for location in self.pieces.locations(piece) {
+    //                let moves = unchecked_moves(piece, location) & constraint(location);
+    //                dest.extend(Move::standards(piece, location, moves));
+    //            }
+    //        }
+    //        dest
+    //    }
 }
