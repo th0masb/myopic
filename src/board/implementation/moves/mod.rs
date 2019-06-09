@@ -7,6 +7,7 @@ use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::pieces::Piece;
 use crate::board::MoveComputationType;
+use crate::board::Board;
 
 #[cfg(test)]
 mod test;
@@ -64,8 +65,6 @@ impl BoardImpl {
                 MoveComputationType::Attacks => unimplemented!(),
                 MoveComputationType::AttacksChecks => unimplemented!(),
             }
-            unimplemented!()
-            //self.compute_moves_assuming_no_check(passive_control, force_attacks)
         }
     }
 
@@ -82,7 +81,7 @@ impl BoardImpl {
             unchecked_moves(active_king, king_loc) - passive_control,
         ));
 
-        let attackers = self.compute_king_attackers(whites, blacks);
+        let attackers = self.compute_king_attackers();
         if attackers.len() == 1 {
             let (attacker, loc) = attackers[0];
             let block_constraint = if attacker.is_knight() {
@@ -99,7 +98,8 @@ impl BoardImpl {
         dest
     }
 
-    fn compute_king_attackers(&self, whites: BitBoard, blacks: BitBoard) -> Vec<(Piece, Square)> {
+    fn compute_king_attackers(&self) -> Vec<(Piece, Square)> {
+        let (whites, blacks) = self.whites_blacks();
         let king_loc = self.pieces.king_location(self.active);
         pnbrq(self.active.reflect())
             .iter()

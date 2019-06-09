@@ -66,6 +66,10 @@ impl Board for BoardImpl {
         unimplemented!()
     }
 
+    fn king_location(&self, side: Side) -> Square {
+        unimplemented!()
+    }
+
     fn whites_blacks(&self) -> (BitBoard, BitBoard) {
         unimplemented!()
     }
@@ -104,8 +108,8 @@ impl BoardImpl {
         self.hashes.push_head(next_hash)
     }
 
-    fn king_locations(&self) -> (Square, Square) {
-        let (active, passive) = (self.active, self.active.reflect());
-        (self.pieces.king_location(active), self.pieces.king_location(passive))
-    }
+//    fn king_locations(&self) -> (Square, Square) {
+//        let (active, passive) = (self.active, self.active.reflect());
+//        (self.pieces.king_location(active), self.pieces.king_location(passive))
+//    }
 }
