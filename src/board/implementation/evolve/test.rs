@@ -4,9 +4,10 @@ use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::square::Square;
 use crate::base::Side;
-use crate::board::implementation::{testutils::TestBoard, BoardImpl};
+use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::pieces::Piece;
+use crate::board::testutils::TestBoard;
 
 #[derive(Debug, Clone)]
 struct TestCase {
@@ -17,8 +18,8 @@ struct TestCase {
 
 fn check_case(test_case: TestCase) {
     let action = test_case.action.clone();
-    let start = test_case.start.clone().to_board();
-    let end = test_case.end.clone().to_board();
+    let start = BoardImpl::from(test_case.start.clone());
+    let end = BoardImpl::from(test_case.end.clone());
 
     let mut forward_subject = start.clone();
     let rev_data = forward_subject.evolve(&action);

@@ -35,7 +35,8 @@ mod test {
     use crate::base::bitboard::BitBoard;
     use crate::base::castlezone::CastleZoneSet;
     use crate::base::Side;
-    use crate::board::implementation::testutils::TestBoard;
+    use crate::board::testutils::TestBoard;
+    use crate::board::implementation::BoardImpl;
 
     struct TestCase {
         board: TestBoard,
@@ -46,7 +47,7 @@ mod test {
     fn execute_test(case: TestCase) {
         assert_eq!(
             case.expected_control,
-            case.board.to_board().compute_control(case.side)
+            BoardImpl::from(case.board).compute_control(case.side)
         );
     }
 

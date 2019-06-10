@@ -9,8 +9,12 @@ use crate::base::castlezone::CastleZoneSet;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::implementation::{testutils::TestBoard, BoardImpl};
+use crate::board::implementation::BoardImpl;
+use crate::board::testutils::TestBoard;
+use crate::board::Board;
 use crate::board::Move;
+use crate::board::MoveComputationType;
+use crate::pieces::Piece;
 
 type PrototypeMoveSet = (BitBoard, BitBoard);
 type MoveSet = BTreeSet<Move>;
@@ -20,18 +24,19 @@ mod misc;
 #[cfg(test)]
 mod szukstra_tal;
 
+struct ExpectedMoves {
+    expected: Vec<Vec<Move>>
+}
+
 #[derive(Debug, Clone)]
 struct TestCase {
     board: TestBoard,
 
-    castle_moves: Vec<CastleZone>,
-    enpassant_moves: Vec<BitBoard>,
-    promotion_moves: Vec<PrototypeMoveSet>,
-    standard_moves: Vec<PrototypeMoveSet>,
-
-    enpassant_attacks: Vec<BitBoard>,
-    promotion_attacks: Vec<PrototypeMoveSet>,
-    standard_attacks: Vec<PrototypeMoveSet>,
+    // We use stacked vectors so we can more easily
+    // write collections of moves shorthand.
+    expected_all: Vec<Vec<Move>>,
+    expected_attacks_checks: Vec<Vec<Move>>,
+    expected_attacks: Vec<Vec<Move>>,
 }
 
 impl Reflectable for PrototypeMoveSet {
@@ -44,74 +49,41 @@ impl Reflectable for TestCase {
     fn reflect(&self) -> Self {
         TestCase {
             board: self.board.reflect(),
-            castle_moves: self.castle_moves.reflect(),
-            enpassant_moves: self.enpassant_moves.reflect(),
-            promotion_moves: self.promotion_moves.reflect(),
-            standard_moves: self.standard_moves.reflect(),
-            enpassant_attacks: self.enpassant_attacks.reflect(),
-            promotion_attacks: self.promotion_attacks.reflect(),
-            standard_attacks: self.standard_attacks.reflect(),
+            expected_all: self.expected_all.reflect(),
+            expected_attacks_checks: self.expected_attacks_checks.reflect(),
+            expected_attacks: self.expected_attacks.reflect(),
         }
     }
+}
+
+fn s(piece: Piece, src: BitBoard, targets: BitBoard) -> Vec<Move> {
+    Move::standards(piece, src.first().unwrap(), targets).collect()
+}
+
+fn p(side: Side, src: BitBoard, targets: BitBoard) -> Vec<Move> {
+    Move::promotions(side, src.first().unwrap(), targets).collect()
+}
+
+fn e(src: BitBoard) -> Vec<Move> {
+    src.iter().map(Move::Enpassant).collect()
+}
+
+fn c(zones: CastleZoneSet) -> Vec<Move> {
+    zones.iter().map(Move::Castle).collect()
+}
+
+fn flatten(moves: Vec<Vec<Move>>) -> MoveSet {
+    moves.into_iter().flat_map(|xs| xs.into_iter()).collect()
 }
 
 fn sq(set: BitBoard) -> Square {
     set.into_iter().next().unwrap()
 }
 
-fn convert_case(case: TestCase) -> (BoardImpl, MoveSet, MoveSet) {
-    let board = case.board.to_board();
-
-    let castle_moves = case
-        .castle_moves
-        .iter()
-        .map(|&zone| Move::Castle(zone))
-        .collect::<Vec<_>>();
-
-    let convert_enpassant = |source: Vec<BitBoard>| {
-        source
-            .iter()
-            .map(|&set| Move::Enpassant(sq(set)))
-            .collect::<Vec<_>>()
-    };
-
-    let enpassant_moves = convert_enpassant(case.enpassant_moves);
-    let promotion_moves = convert_promotion(&board, case.promotion_moves);
-    let standard_moves = convert_standard(&board, case.standard_moves);
-
-    let enpassant_attacks = convert_enpassant(case.enpassant_attacks);
-    let promotion_attacks = convert_promotion(&board, case.promotion_attacks);
-    let standard_attacks = convert_standard(&board, case.standard_attacks);
-
-    let moves = combine(vec![
-        enpassant_moves.clone(),
-        castle_moves,
-        promotion_moves,
-        standard_moves,
-    ]);
-    let attacks = combine(vec![enpassant_attacks, promotion_attacks, standard_attacks]);
-
-    (board, moves, attacks)
-}
-
-fn combine(moves: Vec<Vec<Move>>) -> MoveSet {
-    itertools::concat(moves).into_iter().collect()
-}
-
-fn convert_promotion(board: &BoardImpl, source: Vec<PrototypeMoveSet>) -> Vec<Move> {
-    source
-        .iter()
-        .flat_map(|&(s, ts)| Move::promotions(board.active, sq(s), ts))
-        .collect()
-}
-
-fn convert_standard(board: &BoardImpl, source: Vec<PrototypeMoveSet>) -> Vec<Move> {
-    let piece_at = |sq: Square| board.pieces.piece_at(sq).unwrap();
-    source
-        .iter()
-        .map(|&(s, ts)| (piece_at(sq(s)), sq(s), ts))
-        .flat_map(|(p, s, ts)| Move::standards(p, s, ts))
-        .collect()
+fn convert_case(case: TestCase) -> (BoardImpl, Vec<(MoveComputationType, MoveSet)>) {
+    let board = BoardImpl::from(case.board);
+    let expected = vec![(MoveComputationType::All, flatten(case.expected_all))];
+    (board, expected)
 }
 
 fn execute_test(case: TestCase) {
@@ -121,25 +93,15 @@ fn execute_test(case: TestCase) {
 }
 
 fn execute_test_impl(case: TestCase) {
-    let (board, moves, attacks) = convert_case(case);
-    let actual_moves = board.compute_moves().into_iter().collect::<BTreeSet<_>>();
-    assert_eq!(
-        moves.clone(),
-        actual_moves.clone(),
-        "Differences are: {:?}",
-        compute_difference(moves, actual_moves)
-    );
-
-    let actual_attacks = board
-        .compute_attacks_or_escapes()
-        .into_iter()
-        .collect::<BTreeSet<_>>();
-    assert_eq!(
-        attacks.clone(),
-        actual_attacks.clone(),
-        "Differences are: {:?}",
-        compute_difference(attacks, actual_attacks)
-    );
+    let (board, results) = convert_case(case);
+    for (computation_type, expected_moves) in results.into_iter() {
+        let actual_moves: MoveSet = board.compute_moves(computation_type).into_iter().collect();
+        assert_eq!(expected_moves.clone(),
+                   actual_moves.clone(),
+                   "Differences for {:?} are: {:?}",
+                   computation_type,
+                   compute_difference(expected_moves, actual_moves));
+    }
 }
 
 fn compute_difference(left: MoveSet, right: MoveSet) -> (MoveSet, MoveSet) {

@@ -7,6 +7,9 @@ use crate::base::Side;
 use crate::pieces::Piece;
 
 mod implementation;
+#[cfg(test)]
+mod testutils;
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {

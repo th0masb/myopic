@@ -90,7 +90,7 @@ impl BoardImpl {
 mod test {
     use crate::base::bitboard::constants::*;
     use crate::base::castlezone::CastleZoneSet;
-    use crate::board::implementation::testutils::TestBoard;
+    use crate::board::testutils::TestBoard;
 
     use super::*;
 
@@ -100,7 +100,7 @@ mod test {
     }
 
     fn execute_test(case: TestCase) {
-        assert_eq!(case.expected, case.input.to_board().compute_pinned());
+        assert_eq!(case.expected, BoardImpl::from(case.input).compute_pinned());
     }
 
     const EMPTY: BitBoard = BitBoard::EMPTY;
