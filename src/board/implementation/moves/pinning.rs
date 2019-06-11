@@ -6,7 +6,6 @@ use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
-use crate::board::MoveComputationType;
 
 /// A pinned set consisted of the locations of all the pieces which are pinned
 /// alongside a vector containing the constraint area for each of these pinned

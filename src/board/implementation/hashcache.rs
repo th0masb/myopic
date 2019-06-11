@@ -39,6 +39,10 @@ impl HashCache {
         self.cache[self.tail_index()]
     }
 
+    pub fn pop_dist(&self) -> usize {
+        self.pop_dist
+    }
+
     pub fn push_head(&mut self, new_head: u64) {
         self.pop_dist += 1;
         let index = self.head_index();

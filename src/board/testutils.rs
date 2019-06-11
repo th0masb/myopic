@@ -4,11 +4,6 @@ use crate::base::castlezone::CastleZoneSet;
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square::Square;
-use crate::board::Board;
-use crate::board::Move;
-use crate::board::MoveComputationType;
-use crate::board::ReversalData;
-use crate::pieces::Piece;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {

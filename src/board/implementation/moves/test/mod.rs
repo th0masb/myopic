@@ -1,22 +1,19 @@
 use std::collections::btree_set::BTreeSet;
 
-use itertools;
-
-use crate::base::bitboard::constants::*;
 use crate::base::bitboard::BitBoard;
+use crate::base::bitboard::constants::*;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::implementation::BoardImpl;
-use crate::board::testutils::TestBoard;
+use crate::base::square::Square;
 use crate::board::Board;
+use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::board::MoveComputationType;
+use crate::board::testutils::TestBoard;
 use crate::pieces::Piece;
 
-type PrototypeMoveSet = (BitBoard, BitBoard);
 type MoveSet = BTreeSet<Move>;
 
 #[cfg(test)]
@@ -37,12 +34,6 @@ struct TestCase {
     expected_all: Vec<Vec<Move>>,
     expected_attacks_checks: Vec<Vec<Move>>,
     expected_attacks: Vec<Vec<Move>>,
-}
-
-impl Reflectable for PrototypeMoveSet {
-    fn reflect(&self) -> Self {
-        (self.0.reflect(), self.1.reflect())
-    }
 }
 
 impl Reflectable for TestCase {

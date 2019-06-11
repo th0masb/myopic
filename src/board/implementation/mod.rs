@@ -85,7 +85,7 @@ impl Board for BoardImpl {
     }
 
     fn game_counter(&self) -> usize {
-        unimplemented!()
+        self.hashes.pop_dist()
     }
 }
 
