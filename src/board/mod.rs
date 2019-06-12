@@ -29,7 +29,7 @@ pub enum Move {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub enum MoveComputationType {
+pub enum MoveComputeType {
     All, Attacks,
     AttacksChecks
 }
@@ -43,7 +43,7 @@ pub trait Board: Clone + Eq + Reflectable {
 
     fn devolve(&mut self, action: &Move, discards: ReversalData);
 
-    fn compute_moves(&self, computation_type: MoveComputationType) -> Vec<Move>;
+    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move>;
 
     fn hash(&self) -> u64;
 

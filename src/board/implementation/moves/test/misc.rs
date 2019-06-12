@@ -7,7 +7,7 @@ fn case_1() {
         board: TestBoard {
             active: Side::White,
             whites: vec![B3 | F5 | F2 | G2, C3, A3 | F3, A1 | H1, C2, E1],
-            blacks: vec![C6 | E5 | F7 | G7 | H7, B8, B5 | G6, A8 | H8, C7, E8],
+            blacks: vec![C6 | E5 | F7 | G7 | H7, B8, B5 | G6, A8 | H8, C7, D8],
             clock: 20,
             hash_offset: 20,
             castle_rights: CastleZoneSet::ALL,
@@ -16,37 +16,43 @@ fn case_1() {
             enpassant: Some(sq(E6)),
         },
 
-        expected_all: vec![],
-        expected_attacks: vec![],
-        expected_attacks_checks: vec![],
-//
-//
-//        castle_moves: vec![CastleZone::WQ],
-//
-//        enpassant_moves: vec![F5],
-//        enpassant_attacks: vec![F5],
-//
-//        promotion_moves: vec![],
-//        promotion_attacks: vec![],
-//
-//        standard_moves: vec![
-//            (A1, A2 | B1 | C1 | D1),
-//            (A3, B2 | C1 | B4 | C5 | D6 | E7 | F8),
-//            (B3, B4),
-//            (C3, A2 | A4 | B5 | D5 | E4 | E2 | B1 | D1),
-//            (C2, B2 | B1 | A2 | C1 | D1 | D2 | E2 | D3 | E4),
-//            (E1, D1 | D2),
-//            (F3, E2 | D1 | E4 | D5 | C6 | G4 | H5),
-//            (F5, F6 | G6),
-//            (G2, G3 | G4),
-//            (H1, G1 | F1 | H2 | H3 | H4 | H5 | H6 | H7),
-//        ],
-//
-//        standard_attacks: vec![(C3, B5), (F5, G6), (F3, C6), (H1, H7)],
+        expected_all: vec![
+            s(Piece::WR, A1, A2 | B1 | C1 | D1),
+            s(Piece::WB, A3, B2 | C1 | B4 | C5 | D6 | E7 | F8),
+            s(Piece::WP, B3, B4),
+            s(Piece::WN, C3, A2 | A4 | B5 | D5 | E4 | E2 | B1 | D1),
+            s(Piece::WQ, C2, B2 | B1 | A2 | C1 | D1 | D2 | E2 | D3 | E4),
+            s(Piece::WK, E1, D1 | D2),
+            s(Piece::WB, F3, E2 | D1 | E4 | D5 | C6 | G4 | H5),
+            s(Piece::WP, F5, F6 | G6),
+            s(Piece::WP, G2, G3 | G4),
+            s(Piece::WR, H1, G1 | F1 | H2 | H3 | H4 | H5 | H6 | H7),
+            e(F5),
+            c(CastleZone::WQ.lift())
+        ],
+
+        expected_attacks: vec![
+            s(Piece::WN, C3, B5),
+            s(Piece::WB, F3, C6),
+            s(Piece::WP, F5, G6),
+            s(Piece::WR, H1, H7),
+            e(F5),
+        ],
+
+        expected_attacks_checks: vec![
+            s(Piece::WR, A1, D1),
+            s(Piece::WB, A3, E7),
+            s(Piece::WN, C3, B5),
+            s(Piece::WB, F3, C6),
+            s(Piece::WQ, C2, D1 | D2 | D3),
+            s(Piece::WP, F5, G6),
+            s(Piece::WR, H1, H7),
+            e(F5),
+        ],
     });
 }
 
-#[test]
+//#[test]
 fn case_2() {
     execute_test(TestCase {
         board: TestBoard {
@@ -94,7 +100,7 @@ fn case_2() {
     });
 }
 
-#[test]
+//#[test]
 fn case_3() {
     execute_test(TestCase {
         board: TestBoard {
@@ -142,7 +148,7 @@ fn case_3() {
     });
 }
 
-#[test]
+//#[test]
 fn case_4() {
     execute_test(TestCase {
         board: TestBoard {
@@ -191,7 +197,7 @@ fn case_4() {
     });
 }
 
-#[test]
+//#[test]
 fn case_5() {
     execute_test(TestCase {
         board: TestBoard {
@@ -223,7 +229,7 @@ fn case_5() {
     });
 }
 
-#[test]
+//#[test]
 fn case_6() {
     execute_test(TestCase {
         board: TestBoard {
@@ -267,7 +273,7 @@ fn case_6() {
     });
 }
 
-#[test]
+//#[test]
 fn case_7() {
     execute_test(TestCase {
         board: TestBoard {
@@ -299,7 +305,7 @@ fn case_7() {
     });
 }
 
-#[test]
+//#[test]
 fn case_8() {
     execute_test(TestCase {
         board: TestBoard {
@@ -331,7 +337,7 @@ fn case_8() {
     });
 }
 
-#[test]
+//#[test]
 fn case_9() {
     execute_test(TestCase {
         board: TestBoard {
@@ -363,7 +369,7 @@ fn case_9() {
     });
 }
 
-#[test]
+//#[test]
 fn case_10() {
     execute_test(TestCase {
         board: TestBoard {

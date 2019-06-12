@@ -4,7 +4,7 @@ use crate::base::Reflectable;
 use crate::board::implementation::moves::pinning::PinnedSet;
 use crate::board::implementation::BoardImpl;
 use crate::board::Board;
-use crate::board::MoveComputationType;
+use crate::board::MoveComputeType;
 use crate::pieces::Piece;
 
 pub struct MoveConstraints {
@@ -51,7 +51,7 @@ impl MoveConstraints {
 }
 
 impl BoardImpl {
-    pub fn constraints(&self, computation_type: MoveComputationType) -> MoveConstraints {
+    pub fn constraints(&self, computation_type: MoveComputeType) -> MoveConstraints {
         let passive_control = self.compute_control(self.active.reflect());
         let pinned = self.compute_pinned();
 
@@ -59,9 +59,9 @@ impl BoardImpl {
             self.in_check(passive_control, &pinned)
         } else {
             match computation_type {
-                MoveComputationType::All => self.any(passive_control, &pinned),
-                MoveComputationType::Attacks => self.attacks(passive_control, &pinned, false),
-                MoveComputationType::AttacksChecks => self.attacks(passive_control, &pinned, true),
+                MoveComputeType::All => self.any(passive_control, &pinned),
+                MoveComputeType::Attacks => self.attacks(passive_control, &pinned, false),
+                MoveComputeType::AttacksChecks => self.attacks(passive_control, &pinned, true),
             }
         }
     }

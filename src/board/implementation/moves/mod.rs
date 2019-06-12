@@ -7,7 +7,7 @@ use crate::board::implementation::moves::constraints::MoveConstraints;
 use crate::board::implementation::BoardImpl;
 use crate::board::Board;
 use crate::board::Move;
-use crate::board::MoveComputationType;
+use crate::board::MoveComputeType;
 use crate::pieces::Piece;
 
 #[cfg(test)]
@@ -39,13 +39,13 @@ fn pnbrq<'a>(side: Side) -> &'a [Piece; 5] {
 impl BoardImpl {
     pub(in crate::board::implementation) fn compute_moves_impl(
         &self,
-        computation_type: MoveComputationType,
+        computation_type: MoveComputeType,
     ) -> Vec<Move> {
         let constraints = self.constraints(computation_type);
         let pawn_moves = self.compute_pawn_moves(&constraints);
         let nbrqk_moves = self.compute_nbrqk_moves(&constraints);
         let castle_moves = match computation_type {
-            MoveComputationType::All => self.compute_castle_moves(&constraints),
+            MoveComputeType::All => self.compute_castle_moves(&constraints),
             _ => Vec::with_capacity(0),
         };
         pawn_moves

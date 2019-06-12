@@ -8,7 +8,7 @@ use crate::board::implementation::{
 };
 use crate::board::Board;
 use crate::board::Move;
-use crate::board::MoveComputationType;
+use crate::board::MoveComputeType;
 use crate::board::ReversalData;
 use crate::pieces::Piece;
 
@@ -41,7 +41,7 @@ impl Board for BoardImpl {
         self.devolve(action, discards)
     }
 
-    fn compute_moves(&self, computation_type: MoveComputationType) -> Vec<Move> {
+    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
         self.compute_moves_impl(computation_type)
     }
 

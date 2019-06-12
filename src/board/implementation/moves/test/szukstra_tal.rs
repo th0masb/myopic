@@ -1,6 +1,6 @@
 use super::*;
 
-#[test]
+//#[test]
 fn black_move_eight() {
     execute_test(TestCase {
         board: TestBoard {
@@ -60,7 +60,7 @@ fn black_move_eight() {
     });
 }
 
-#[test]
+//#[test]
 fn white_move_nine() {
     execute_test(TestCase {
         board: TestBoard {
@@ -118,7 +118,7 @@ fn white_move_nine() {
     });
 }
 
-#[test]
+//#[test]
 fn black_move_nine() {
     execute_test(TestCase {
         board: TestBoard {
@@ -176,7 +176,7 @@ fn black_move_nine() {
     });
 }
 
-#[test]
+//#[test]
 fn white_move_ten() {
     execute_test(TestCase {
         board: TestBoard {
@@ -236,7 +236,7 @@ fn white_move_ten() {
     });
 }
 
-#[test]
+//#[test]
 fn black_move_ten() {
     execute_test(TestCase {
         board: TestBoard {
@@ -293,7 +293,7 @@ fn black_move_ten() {
     });
 }
 
-#[test]
+//#[test]
 fn white_move_eleven() {
     execute_test(TestCase {
         board: TestBoard {
@@ -351,7 +351,7 @@ fn white_move_eleven() {
     });
 }
 
-#[test]
+//#[test]
 fn black_move_eleven() {
     execute_test(TestCase {
         board: TestBoard {
@@ -400,7 +400,7 @@ fn black_move_eleven() {
     });
 }
 
-#[test]
+//#[test]
 fn white_move_twelve() {
     execute_test(TestCase {
         board: TestBoard {

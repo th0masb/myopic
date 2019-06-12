@@ -10,7 +10,7 @@ use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
-use crate::board::MoveComputationType;
+use crate::board::MoveComputeType;
 use crate::board::testutils::TestBoard;
 use crate::pieces::Piece;
 
@@ -20,10 +20,6 @@ type MoveSet = BTreeSet<Move>;
 mod misc;
 #[cfg(test)]
 mod szukstra_tal;
-
-struct ExpectedMoves {
-    expected: Vec<Vec<Move>>
-}
 
 #[derive(Debug, Clone)]
 struct TestCase {
@@ -71,9 +67,13 @@ fn sq(set: BitBoard) -> Square {
     set.into_iter().next().unwrap()
 }
 
-fn convert_case(case: TestCase) -> (BoardImpl, Vec<(MoveComputationType, MoveSet)>) {
+fn convert_case(case: TestCase) -> (BoardImpl, Vec<(MoveComputeType, MoveSet)>) {
     let board = BoardImpl::from(case.board);
-    let expected = vec![(MoveComputationType::All, flatten(case.expected_all))];
+    let expected = vec![
+        (MoveComputeType::All, flatten(case.expected_all)),
+        (MoveComputeType::Attacks, flatten(case.expected_attacks)),
+        (MoveComputeType::AttacksChecks, flatten(case.expected_attacks_checks)),
+    ];
     (board, expected)
 }
 
