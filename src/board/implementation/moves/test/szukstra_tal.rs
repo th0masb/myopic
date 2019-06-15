@@ -224,7 +224,7 @@ fn white_move_ten() {
     });
 }
 
-//#[test]
+#[test]
 fn black_move_ten() {
     execute_test(TestCase {
         board: TestBoard {
@@ -257,10 +257,9 @@ fn black_move_ten() {
             s(Piece::BP, A7, A6 | A5),
             s(Piece::BP, B7, B6 | B5),
             s(Piece::BN, B8, A6 | D7),
-            s(Piece::BP, C6, C5),
+            s(Piece::BP, C6, C5 | D5),
             s(Piece::BB, C8, D7 | E6 | F5 | G4 | H3),
-            s(Piece::BP, D6, D5),
-            s(Piece::BQ, D8, C7 | B6 | A5 | D7 | E8 | E7),
+            s(Piece::BQ, D8, C7 | B6 | A5 | D7 | D6 | D5 | E8 | E7),
             s(Piece::BN, F6, D5 | D7 | E8 | H5 | G4 | E4),
             s(Piece::BR, F8, E8),
             s(Piece::BK, G8, H8),
@@ -269,33 +268,21 @@ fn black_move_ten() {
             s(Piece::BP, H7, H6 | H5),
         ],
 
-        expected_attacks: vec![s(Piece::BN, F6, E4)],
-        expected_attacks_checks: vec![s(Piece::BN, F6, E4)],
-        //        castle_moves: vec![],
-        //        enpassant_moves: vec![],
-        //        enpassant_attacks: vec![],
-        //        promotion_moves: vec![],
-        //        promotion_attacks: vec![],
-        //        standard_moves: vec![
-        //            (A7, A6 | A5),
-        //            (B8, A6 | D7),
-        //            (B7, B6 | B5),
-        //            (C8, D7 | E6 | F5 | G4 | H3),
-        //            (C6, D5 | C5),
-        //            (D8, D5 | D6 | C7 | B6 | A5 | D7 | E8 | E7),
-        //            (F8, E8),
-        //            (F6, D5 | E4 | D7 | E8 | H5 | G4),
-        //            (G8, H8),
-        //            (G7, H8 | H6),
-        //            (G6, G5),
-        //            (H7, H6 | H5),
-        //        ],
-        //
-        //        standard_attacks: vec![(F6, E4), (C6, D5), (F6, D5), (D8, D5)],
+        expected_attacks: vec![
+            s(Piece::BN, F6, E4 | D5),
+            s(Piece::BP, C6, D5),
+            s(Piece::BQ, D8, D5),
+        ],
+
+        expected_attacks_checks: vec![
+            s(Piece::BN, F6, E4 | D5),
+            s(Piece::BP, C6, D5),
+            s(Piece::BQ, D8, D5),
+        ],
     });
 }
 
-//#[test]
+#[test]
 fn white_move_eleven() {
     execute_test(TestCase {
         board: TestBoard {
@@ -324,35 +311,37 @@ fn white_move_eleven() {
             enpassant: None,
         },
 
-        expected_all: vec![],
-        expected_attacks: vec![],
-        expected_attacks_checks: vec![],
-        //        castle_moves: vec![CastleZone::WQ],
-        //        enpassant_moves: vec![],
-        //        enpassant_attacks: vec![],
-        //        promotion_moves: vec![],
-        //        promotion_attacks: vec![],
-        //        standard_moves: vec![
-        //            (A1, B1 | C1 | D1),
-        //            (A2, A3 | A4),
-        //            (B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5),
-        //            (C3, E2 | B1 | A4 | B5 | D5 | D1),
-        //            (D4, C2 | E2 | F5 | E6 | B5 | C6),
-        //            (E4, E5 | D5),
-        //            (E1, E2 | D2 | F2 | D1),
-        //            (E3, D2 | C1 | F2 | G1 | F4 | G5 | H6),
-        //            (F1, E2 | D3 | C4 | B5 | A6),
-        //            (F3, F4),
-        //            (G2, G3 | G4),
-        //            (H1, G1),
-        //            (H2, H3 | H4),
-        //        ],
-        //
-        //        standard_attacks: vec![(B3, B7 | D5), (E4, D5), (C3, D5)],
+        expected_all: vec![
+            c(CastleZone::WQ.lift()),
+            s(Piece::WR, A1, B1 | C1 | D1),
+            s(Piece::WP, A2, A3 | A4),
+            s(Piece::WQ, B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5),
+            s(Piece::WN, C3, B1 | D1 | D5 | A4 | B5 | E2),
+            s(Piece::WK, E1, D1 | D2 | F2 | E2),
+            s(Piece::WN, D4, C2 | B5 | E6 | F5 | E2 | C6),
+            s(Piece::WB, E3, D2 | C1 | F4 | G5 | H6 | F2 | G1),
+            s(Piece::WB, F1, E2 | D3 | C4 | B5 | A6),
+            s(Piece::WP, E4, D5 | E5),
+            s(Piece::WP, F3, F4),
+            s(Piece::WP, G2, G3 | G4),
+            s(Piece::WR, H1, G1),
+            s(Piece::WP, H2, H3 | H4),
+        ],
+
+        expected_attacks: vec![
+            s(Piece::WQ, B3, B7 | D5),
+            s(Piece::WP, E4, D5),
+            s(Piece::WN, C3, D5),
+        ],
+        expected_attacks_checks: vec![
+            s(Piece::WQ, B3, B7 | D5),
+            s(Piece::WP, E4, D5),
+            s(Piece::WN, C3, D5),
+        ],
     });
 }
 
-//#[test]
+#[test]
 fn black_move_eleven() {
     execute_test(TestCase {
         board: TestBoard {
@@ -374,33 +363,33 @@ fn black_move_eleven() {
             enpassant: None,
         },
 
-        expected_all: vec![],
-        expected_attacks: vec![],
-        expected_attacks_checks: vec![],
-        //        castle_moves: vec![],
-        //        enpassant_moves: vec![],
-        //        enpassant_attacks: vec![],
-        //        promotion_moves: vec![],
-        //        promotion_attacks: vec![],
-        //        standard_moves: vec![
-        //            (A7, A6 | A5),
-        //            (B8, A6 | D7 | C6),
-        //            (B7, B6 | B5),
-        //            (C8, D7 | E6 | F5 | G4 | H3),
-        //            (D8, D5 | D6 | D7 | C7 | B6 | A5 | E8 | E7),
-        //            (F8, E8),
-        //            (F6, D5 | E4 | D7 | E8 | H5 | G4),
-        //            (G8, H8),
-        //            (G7, H8 | H6),
-        //            (G6, G5),
-        //            (H7, H6 | H5),
-        //        ],
-        //
-        //        standard_attacks: vec![(F6, D5), (F6, D5), (D8, D5)],
+        expected_all: vec![
+            s(Piece::BP, A7, A6 | A5),
+            s(Piece::BP, B7, B6 | B5),
+            s(Piece::BN, B8, A6 | D7 | C6),
+            s(Piece::BB, C8, D7 | E6 | F5 | G4 | H3),
+            s(Piece::BQ, D8, C7 | B6 | A5 | D7 | D6 | D5 | E8 | E7),
+            s(Piece::BN, F6, D5 | D7 | E8 | H5 | G4 | E4),
+            s(Piece::BR, F8, E8),
+            s(Piece::BK, G8, H8),
+            s(Piece::BB, G7, H6 | H8),
+            s(Piece::BP, G6, G5),
+            s(Piece::BP, H7, H6 | H5),
+        ],
+
+        expected_attacks: vec![
+            s(Piece::BN, F6, D5),
+            s(Piece::BQ, D8, D5),
+        ],
+
+        expected_attacks_checks: vec![
+            s(Piece::BN, F6, D5),
+            s(Piece::BQ, D8, D5),
+        ],
     });
 }
 
-//#[test]
+#[test]
 fn white_move_twelve() {
     execute_test(TestCase {
         board: TestBoard {
@@ -422,30 +411,32 @@ fn white_move_twelve() {
             enpassant: None,
         },
 
-        expected_all: vec![],
-        expected_attacks: vec![],
-        expected_attacks_checks: vec![],
-        //        castle_moves: vec![CastleZone::WQ],
-        //        enpassant_moves: vec![],
-        //        enpassant_attacks: vec![],
-        //        promotion_moves: vec![],
-        //        promotion_attacks: vec![],
-        //        standard_moves: vec![
-        //            (A1, B1 | C1 | D1),
-        //            (A2, A3 | A4),
-        //            (B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4),
-        //            (C3, E2 | B1 | A4 | B5 | E4 | D1),
-        //            (D4, C2 | E2 | F5 | E6 | B5 | C6),
-        //            (D5, C6 | D6),
-        //            (E1, E2 | D2 | F2 | D1),
-        //            (E3, D2 | C1 | F2 | G1 | F4 | G5 | H6),
-        //            (F1, E2 | D3 | C4 | B5 | A6),
-        //            (F3, F4),
-        //            (G2, G3 | G4),
-        //            (H1, G1),
-        //            (H2, H3 | H4),
-        //        ],
-        //
-        //        standard_attacks: vec![(B3, B7), (D4, C6), (D5, C6)],
+        expected_all: vec![
+            c(CastleZone::WQ.lift()),
+            s(Piece::WR, A1, B1 | C1 | D1),
+            s(Piece::WP, A2, A3 | A4),
+            s(Piece::WQ, B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4),
+            s(Piece::WN, C3, B1 | D1 | A4 | B5 | E2 | E4),
+            s(Piece::WK, E1, D1 | D2 | F2 | E2),
+            s(Piece::WN, D4, C2 | B5 | E6 | F5 | E2 | C6),
+            s(Piece::WB, E3, D2 | C1 | F4 | G5 | H6 | F2 | G1),
+            s(Piece::WB, F1, E2 | D3 | C4 | B5 | A6),
+            s(Piece::WP, D5, D6 | C6),
+            s(Piece::WP, F3, F4),
+            s(Piece::WP, G2, G3 | G4),
+            s(Piece::WR, H1, G1),
+            s(Piece::WP, H2, H3 | H4),
+        ],
+
+        expected_attacks: vec![
+            s(Piece::WQ, B3, B7),
+            s(Piece::WN, D4, C6),
+            s(Piece::WP, D5, C6),
+        ],
+        expected_attacks_checks: vec![
+            s(Piece::WQ, B3, B7),
+            s(Piece::WN, D4, C6),
+            s(Piece::WP, D5, C6),
+        ],
     });
 }
