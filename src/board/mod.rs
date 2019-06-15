@@ -10,7 +10,6 @@ mod implementation;
 #[cfg(test)]
 mod testutils;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {
     discarded_rights: CastleZoneSet,

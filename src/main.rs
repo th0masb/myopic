@@ -50,8 +50,7 @@ fn main() {
     println!("{}", G1 > H1);
     let bitboard: BitBoard = vec!(A1, G5).into_iter().collect();
     println!("{}", bitboard);
-    println!("{}", Test::Y as usize)
-
+    println!("{}", Test::Y as usize);
 //    let squares = base.square::H1.search_one(dirs);
 //    println!("{:#?}", squares);
 //    println!("{}", base.square::H1);
