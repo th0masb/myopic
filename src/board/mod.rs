@@ -1,14 +1,17 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
+use crate::base::square::Square;
 use crate::pieces::Piece;
+
+#[cfg(test)]
+pub use self::implementation::testutils;
 
 mod implementation;
 #[cfg(test)]
-mod testutils;
+pub mod test_board;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {

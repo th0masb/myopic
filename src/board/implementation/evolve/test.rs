@@ -7,7 +7,7 @@ use crate::base::Side;
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::pieces::Piece;
-use crate::board::testutils::TestBoard;
+use crate::board::test_board::TestBoard;
 
 #[derive(Debug, Clone)]
 struct TestCase {

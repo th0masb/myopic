@@ -1,12 +1,12 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
-use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
+use crate::base::square::Square;
+use crate::board::Board;
 use crate::board::implementation::{
     castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker,
 };
-use crate::board::Board;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::ReversalData;
@@ -20,7 +20,7 @@ mod castletracker;
 mod hashcache;
 mod piecetracker;
 #[cfg(test)]
-mod testutils;
+pub mod testutils;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardImpl {

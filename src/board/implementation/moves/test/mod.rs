@@ -11,8 +11,8 @@ use crate::board::Board;
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::board::MoveComputeType;
-use crate::board::testutils::TestBoard;
 use crate::pieces::Piece;
+use crate::board::test_board::TestBoard;
 
 type MoveSet = BTreeSet<Move>;
 

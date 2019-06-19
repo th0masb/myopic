@@ -2,7 +2,7 @@ use crate::board::implementation::castletracker::CastleTracker;
 use crate::board::implementation::hashcache::HashCache;
 use crate::board::implementation::piecetracker::PieceTracker;
 use crate::board::implementation::BoardImpl;
-use crate::board::testutils::TestBoard;
+use crate::board::test_board::TestBoard;
 
 impl BoardImpl {
     pub fn from(test_board: TestBoard) -> BoardImpl {

@@ -1,12 +1,15 @@
 use std::cmp;
 
 use crate::base::bitboard::BitBoard;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
 use crate::board::Board;
 use crate::eval::values;
 use crate::pieces::Piece;
+
+#[cfg(test)]
+mod test;
 
 /// API function for determining whether an exchange is good on the given
 /// board. The board must have a piece at both the source and target square
@@ -20,6 +23,7 @@ pub fn exchange_value<B: Board>(board: &B, source: Square, target: Square) -> i3
         board,
         source,
         target,
+        value: values::midgame,
     }
     .exchange_value()
 }
@@ -29,6 +33,7 @@ struct See<'a, B: Board> {
     board: &'a B,
     source: Square,
     target: Square,
+    value: fn(Piece) -> i32,
 }
 
 impl<B: Board> See<'_, B> {
@@ -40,7 +45,7 @@ impl<B: Board> See<'_, B> {
 
         let mut d = 0;
         let mut gain: [i32; 32] = [0; 32];
-        gain[d] = values::midgame(first_victim);
+        gain[d] = (self.value)(first_victim);
         let mut attacker = first_attacker;
         let mut active = first_attacker.side();
         let mut src = self.source.lift();
@@ -48,7 +53,7 @@ impl<B: Board> See<'_, B> {
         loop {
             d += 1;
             active = active.reflect();
-            gain[d] = values::midgame(attacker) - gain[d - 1];
+            gain[d] = (self.value)(attacker) - gain[d - 1];
             if cmp::max(-gain[d - 1], gain[d]) < 0 {
                 break;
             }

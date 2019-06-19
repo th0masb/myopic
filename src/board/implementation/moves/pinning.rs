@@ -89,9 +89,9 @@ impl BoardImpl {
 mod test {
     use crate::base::bitboard::constants::*;
     use crate::base::castlezone::CastleZoneSet;
-    use crate::board::testutils::TestBoard;
 
     use super::*;
+    use crate::board::test_board::TestBoard;
 
     struct TestCase {
         input: TestBoard,
