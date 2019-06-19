@@ -7,7 +7,6 @@ use crate::base::Side;
 use crate::board::Board;
 use crate::eval::values;
 use crate::pieces::Piece;
-use std::cmp::max;
 
 #[cfg(test)]
 mod test;
@@ -57,9 +56,10 @@ impl<B: Board> See<'_, B> {
             d += 1;
             active = active.reflect();
             gain[d] = (self.value)(attacker) - gain[d - 1];
-            if cmp::max(-gain[d - 1], gain[d]) < 0 {
-                break;
-            }
+            // TODO Can add this optimization in if we only want to know is exchange is good
+            //if cmp::max(-gain[d - 1], gain[d]) < 0 {
+            //    break;
+            //}
             attadef ^= src;
             if !src.intersects(knights) {
                 let (new_attadef, new_xray) = self.update_xrays(attadef, xray);

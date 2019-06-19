@@ -1,11 +1,9 @@
 use crate::base::square::Square;
-use crate::base::Side;
 use crate::board::test_board::TestBoard;
 use crate::board::BoardImpl;
 use crate::eval::see::See;
 use crate::pieces::Piece;
 use crate::base::Reflectable;
-use crate::base::castlezone::CastleZoneSet;
 use crate::base::bitboard::constants::*;
 use crate::base::bitboard::BitBoard;
 
@@ -69,7 +67,7 @@ fn case_1() {
         ),
         expected: vec![
             (Square::C5, Square::D6, 0),
-            //(Square::D3, Square::D6, )
+            (Square::D3, Square::D6, -2)
         ],
 
     })
