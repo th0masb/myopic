@@ -18,6 +18,22 @@ pub struct TestBoard {
     pub hash_offset: usize,
 }
 
+impl TestBoard {
+    pub fn positions(whites: Vec<BitBoard>, blacks: Vec<BitBoard>) -> TestBoard {
+        TestBoard {
+            whites,
+            blacks,
+            castle_rights: CastleZoneSet::NONE,
+            white_status: None,
+            black_status: None,
+            active: Side::White,
+            clock: 5,
+            enpassant: None,
+            hash_offset: 20,
+        }
+    }
+}
+
 impl Reflectable for TestBoard {
     fn reflect(&self) -> Self {
         TestBoard {

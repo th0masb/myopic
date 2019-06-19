@@ -36,7 +36,10 @@ fn compute_cord_cache() -> Vec<BitBoard> {
     let mut dest: Vec<BitBoard> = Vec::with_capacity(2016);
     for i in 0..63 {
         for j in i + 1..64 {
-            dest.push(compute_cord_impl(Square::from_index(i), Square::from_index(j)));
+            dest.push(compute_cord_impl(
+                Square::from_index(i),
+                Square::from_index(j),
+            ));
         }
     }
     dest

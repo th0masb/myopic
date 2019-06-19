@@ -1,8 +1,8 @@
 use std::{fmt, ops};
 
 use crate::base::bitboard::BitBoard;
-use crate::base::Reflectable;
 use crate::base::square::Square;
+use crate::base::Reflectable;
 
 impl Reflectable for Square {
     fn reflect(&self) -> Self {

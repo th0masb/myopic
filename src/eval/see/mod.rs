@@ -7,6 +7,7 @@ use crate::base::Side;
 use crate::board::Board;
 use crate::eval::values;
 use crate::pieces::Piece;
+use std::cmp::max;
 
 #[cfg(test)]
 mod test;
@@ -14,16 +15,16 @@ mod test;
 /// API function for determining whether an exchange is good on the given
 /// board. The board must have a piece at both the source and target square
 /// otherwise this function will panic. The pieces must be on opposing
-/// sides and the return value is in relation to the side of the attacker,
-/// higher is good, better than 0 is a good exchange. If the pieces are on
-/// different sides the result is undefined.
+/// sides and the quality of the return value is in relation to the side of
+/// the attacker, higher magnitude is good, positive for white, negative for
+/// black. If the pieces are on different sides the result is undefined.
 ///
 pub fn exchange_value<B: Board>(board: &B, source: Square, target: Square) -> i32 {
     See {
         board,
         source,
         target,
-        value: values::midgame,
+        value: values::abs_midgame,
     }
     .exchange_value()
 }
@@ -42,10 +43,12 @@ impl<B: Board> See<'_, B> {
         let knights = self.locs(Piece::WN) | self.locs(Piece::BN);
         let first_attacker = board.piece_at(self.source).unwrap();
         let first_victim = board.piece_at(self.target).unwrap();
-
+//        assert_eq!(first_attacker, Piece::WP);
+//        assert_eq!(first_victim, Piece::BP);
         let mut d = 0;
         let mut gain: [i32; 32] = [0; 32];
         gain[d] = (self.value)(first_victim);
+
         let mut attacker = first_attacker;
         let mut active = first_attacker.side();
         let mut src = self.source.lift();
@@ -69,6 +72,11 @@ impl<B: Board> See<'_, B> {
             } else {
                 attacker = board.piece_at(src.first().unwrap()).unwrap();
             }
+        }
+        d -= 1;
+        while d > 0 {
+            gain[d - 1] = -cmp::max(-gain[d - 1], gain[d]);
+            d -= 1;
         }
         gain[0]
     }

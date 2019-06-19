@@ -3,8 +3,8 @@ use std::fmt;
 use itertools::Itertools;
 
 use crate::base::dir;
-use crate::base::square::Square::H1;
 use crate::base::square::Square;
+use crate::base::square::Square::H1;
 use crate::base::Reflectable;
 
 pub mod constants;

@@ -32,8 +32,8 @@ impl FromIterator<BitBoard> for BitBoard {
 #[cfg(test)]
 mod iter_test {
     use crate::base::bitboard::{loc, BitBoard};
-    use crate::base::square::Square::*;
     use crate::base::square::Square;
+    use crate::base::square::Square::*;
 
     fn new_set(a: Square, b: Square) -> BitBoard {
         BitBoard(loc(a) | loc(b))

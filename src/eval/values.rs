@@ -6,6 +6,10 @@ pub fn midgame(piece: Piece) -> i32 {
     parity(piece) * MIDGAME[piece as usize]
 }
 
+pub fn abs_midgame(piece: Piece) -> i32 {
+    MIDGAME[(piece as usize) & 6]
+}
+
 /// Retieve the endgame value of the given piece.
 pub fn endgame(piece: Piece) -> i32 {
     parity(piece) * ENDGAME[piece as usize]
