@@ -15,8 +15,9 @@ mod test;
 /// board. The board must have a piece at both the source and target square
 /// otherwise this function will panic. The pieces must be on opposing
 /// sides and the quality of the return value is in relation to the side of
-/// the attacker, higher magnitude is good, positive for white, negative for
-/// black. If the pieces are on different sides the result is undefined.
+/// the attacker, higher is good for the attacker. Positive means a good exchange,
+/// negative mean a bad one. If the pieces are on the same side the result is
+/// undefined.
 ///
 pub fn exchange_value<B: Board>(board: &B, source: Square, target: Square) -> i32 {
     See {

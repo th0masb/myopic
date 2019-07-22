@@ -69,6 +69,25 @@ fn case_1() {
             (Square::C5, Square::D6, 0),
             (Square::D3, Square::D6, -2)
         ],
+    })
+}
 
+#[test]
+fn case_2() {
+    execute_case(TestCase {
+        board: TestBoard::positions(
+            vec![ZERO, G7, E6, ZERO, C6, A8],
+            vec![B5 | F5, F4, ZERO, H6, E3, H1]
+        ),
+        expected: vec![
+            (Square::B5, Square::C6, 9),
+            (Square::C6, Square::B5, 1),
+            (Square::E3, Square::E6, -3),
+            (Square::F5, Square::E6, 3),
+            (Square::F4, Square::E6, 3),
+            (Square::H6, Square::E6, 1),
+            (Square::E6, Square::F5, 1),
+
+        ],
     })
 }
