@@ -6,28 +6,49 @@ use crate::pieces::Piece;
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the midgame.
 pub fn midgame(piece: Piece, location: Square) -> i32 {
-    let (table_index, parity) = compute_index_and_parity(piece, location);
-    parity * MIDGAME[(piece as usize) % 6][table_index]
+    if piece.is_pawn() {
+        let (table_index, parity) = compute_pawn_index_and_parity(piece, location);
+        parity * PAWN[table_index].0
+    } else {
+        let (table_index, parity) = compute_non_pawn_index_and_parity(piece, location);
+        parity * NON_PAWN_TABLES[((piece as usize) % 6) - 1][table_index].0
+    }
 }
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the endgame.
 pub fn endgame(piece: Piece, location: Square) -> i32 {
-    let (table_index, parity) = compute_index_and_parity(piece, location);
-    parity * ENDGAME[(piece as usize) % 6][table_index]
-}
-
-/// Computes the table index alongside the parity multiplier according to the
-/// piece side.
-fn compute_index_and_parity(piece: Piece, location: Square) -> (usize, i32) {
-    match piece.side() {
-        Side::White => (63 - (location as usize), 1),
-        Side::Black => (63 - (location.reflect() as usize), -1),
+    if piece.is_pawn() {
+        let (table_index, parity) = compute_pawn_index_and_parity(piece, location);
+        parity * PAWN[table_index].1
+    } else {
+        let (table_index, parity) = compute_non_pawn_index_and_parity(piece, location);
+        parity * NON_PAWN_TABLES[((piece as usize) % 6) - 1][table_index].1
     }
 }
 
+fn compute_pawn_index_and_parity(pawn: Piece, location: Square) -> (usize, i32) {
+    match pawn.side() {
+        Side::White => (location as usize, 1),
+        Side::Black => (location.reflect() as usize, -1),
+    }
+}
+
+fn compute_non_pawn_index_and_parity(piece: Piece, location: Square) -> (usize, i32) {
+    match piece.side() {
+        Side::White => (compute_table_index_non_pawn(location), 1),
+        Side::Black => (compute_table_index_non_pawn(location.reflect()), -1),
+    }
+}
+
+fn compute_table_index_non_pawn(location: Square) -> usize {
+    let file_index = location.file_index();
+    let column_index = if file_index < 4 {file_index} else {7 - file_index};
+    location.rank_index() * 4 + column_index
+}
+
 /// Tables lifted from stockfish here: https://github.com/official-stockfish/Stockfish/blob/master/src/psqt.cpp
-/// They are (mid, end) values for white side on files A-D
+/// They are (mid, end) values for white side on files H - E
  // Knight
 const KNIGHT: [(i32, i32); 32] =  [
     // Rank 1
@@ -89,16 +110,24 @@ const KING: [(i32, i32); 32] = [
     ( 64,  5), ( 87, 60), ( 49, 75), (  0, 75),
 ];
 
+const NON_PAWN_TABLES: [[(i32, i32); 32]; 5] = [
+    KNIGHT,
+    BISHOP,
+    ROOK,
+    QUEEN,
+    KING
+];
+
 const PAWN: [(i32, i32); 64] = [
-    // Pawn (asymmetric distribution) (note A file is on the left here
+    // Pawn (asymmetric distribution) (note H file is on the left here
     // Rank 1
     (  0,  0), (  0,  0), (  0,  0), (  0,  0), (  0,  0), (  0,  0), (  0,  0), (  0,  0),
-    (  3,-10), (  3, -6), ( 10, 10), ( 19,  0), ( 16, 14), ( 19,  7), (  7, -5), ( -5,-19),
-    ( -9,-10), (-15,-10), ( 11,-10), ( 15,  4), ( 32,  4), ( 22,  3), (  5, -6), (-22, -4),
-    ( -8,  6), (-23, -2), (  6, -8), ( 20, -4), ( 40,-13), ( 17,-12), (  4,-10), (-12, -9),
-    ( 13,  9), (  0,  4), (-13,  3), (  1,-12), ( 11,-12), ( -2, -6), (-13, 13), (  5,  8),
-    ( -5, 28), (-12, 20), ( -7, 21), ( 22, 28), ( -8, 30), ( -5,  7), (-15,  6), (-18, 13),
-    ( -7,  0), (  7,-11), ( -3, 12), (-13, 21), (  5, 25), (-16, 19), ( 10,  4), ( -8,  7),
+    ( -5,-19), (  7, -5), ( 19,  7), ( 16, 14), ( 19,  0), ( 10, 10), (  3, -6), (  3,-10),
+    (-22, -4), (  5, -6), ( 22,  3), ( 32,  4), ( 15,  4), ( 11,-10), (-15,-10), ( -9,-10),
+    (-12, -9), (  4,-10), ( 17,-12), ( 40,-13), ( 20, -4), (  6, -8), (-23, -2), ( -8,  6),
+    (  5,  8), (-13, 13), ( -2, -6), ( 11,-12), (  1,-12), (-13,  3), (  0,  4), ( 13,  9),
+    (-18, 13), (-15,  6), ( -5,  7), ( -8, 30), ( 22, 28), ( -7, 21), (-12, 20), ( -5, 28),
+    ( -8,  7), ( 10,  4), (-16, 19), (  5, 25), (-13, 21), ( -3, 12), (  7,-11), ( -7,  0),
     (  0,  0), (  0,  0), (  0,  0), (  0,  0), (  0,  0), (  0,  0), (  0,  0), (  0,  0),
 ];
 
@@ -120,134 +149,43 @@ mod test {
 
     #[test]
     fn test_midgame() {
-        assert_eq!(30, midgame(Piece::WP, C6));
-        assert_eq!(-30, midgame(Piece::BP, C3));
+        assert_eq!(-7, midgame(Piece::WP, C6));
+        assert_eq!(7, midgame(Piece::BP, C3));
 
-        assert_eq!(10, midgame(Piece::WN, D3));
-        assert_eq!(-10, midgame(Piece::BN, D6));
+        assert_eq!(19, midgame(Piece::WN, D3));
+        assert_eq!(-19, midgame(Piece::BN, D6));
 
-        assert_eq!(25, midgame(Piece::WB, D4));
-        assert_eq!(-25, midgame(Piece::BB, D5));
+        assert_eq!(26, midgame(Piece::WB, C4));
+        assert_eq!(-26, midgame(Piece::BB, C5));
 
-        assert_eq!(5, midgame(Piece::WR, D2));
-        assert_eq!(-5, midgame(Piece::BR, D7));
+        assert_eq!(-5, midgame(Piece::WR, F2));
+        assert_eq!(5, midgame(Piece::BR, F7));
 
-        assert_eq!(5, midgame(Piece::WQ, B3));
-        assert_eq!(-5, midgame(Piece::BQ, B6));
+        assert_eq!(6, midgame(Piece::WQ, B3));
+        assert_eq!(-6, midgame(Piece::BQ, B6));
 
-        assert_eq!(50, midgame(Piece::WK, B1));
-        assert_eq!(-50, midgame(Piece::BK, B8));
+        assert_eq!(325, midgame(Piece::WK, B1));
+        assert_eq!(-325, midgame(Piece::BK, B8));
     }
 
     #[test]
     fn test_endgame() {
-        assert_eq!(80, endgame(Piece::WP, C6));
-        assert_eq!(-80, endgame(Piece::BP, C3));
+        assert_eq!(21, endgame(Piece::WP, C6));
+        assert_eq!(-21, endgame(Piece::BP, C3));
 
-        assert_eq!(-40, endgame(Piece::WN, E1));
-        assert_eq!(40, endgame(Piece::BN, E8));
+        assert_eq!(-18, endgame(Piece::WN, E1));
+        assert_eq!(18, endgame(Piece::BN, E8));
 
-        assert_eq!(25, endgame(Piece::WB, D4));
-        assert_eq!(-25, endgame(Piece::BB, D5));
+        assert_eq!(16, endgame(Piece::WB, D4));
+        assert_eq!(-16, endgame(Piece::BB, D5));
 
-        assert_eq!(10, endgame(Piece::WR, D3));
-        assert_eq!(-10, endgame(Piece::BR, D6));
+        assert_eq!(-2, endgame(Piece::WR, D3));
+        assert_eq!(2, endgame(Piece::BR, D6));
 
-        assert_eq!(-30, endgame(Piece::WQ, A4));
-        assert_eq!(30, endgame(Piece::BQ, A5));
+        assert_eq!(-23, endgame(Piece::WQ, A4));
+        assert_eq!(23, endgame(Piece::BQ, A5));
 
-        assert_eq!(10, endgame(Piece::WK, D7));
-        assert_eq!(-10, endgame(Piece::BK, D2));
+        assert_eq!(141, endgame(Piece::WK, D7));
+        assert_eq!(-141, endgame(Piece::BK, D2));
     }
 }
-
-const MIDGAME: [[i32; 64]; 6] = [
-    PAWN_MIDGAME,
-    KNIGHT_MIDGAME,
-    BISHOP_MIDGAME,
-    ROOK_MIDGAME,
-    QUEEN_MIDGAME,
-    KING_MIDGAME,
-];
-
-const ENDGAME: [[i32; 64]; 6] = [
-    PAWN_ENDGAME,
-    KNIGHT_ENDGAME,
-    BISHOP_ENDGAME,
-    ROOK_ENDGAME,
-    QUEEN_ENDGAME,
-    KING_ENDGAME,
-];
-
-const PAWN_MIDGAME: [i32; 64] = [
-    0, 0, 0, 0, 0, 0, 0, 0, 60, 60, 60, 60, 60, 60, 60, 60, 5, 25, 30, 50, 50, 30, 25, 5, 5, 20,
-    30, 40, 40, 30, 20, 5, 5, -5, -5, 40, 40, -5, -5, 5, 10, -5, 0, -10, -10, 0, -5, 10, 0, 0, 0,
-    -20, -20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-];
-
-const PAWN_ENDGAME: [i32; 64] = [
-    0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100, 80, 80, 80, 80, 80, 80, 80, 80,
-    60, 60, 60, 60, 60, 60, 60, 60, 20, 20, 20, 20, 20, 20, 20, 20, -10, -10, -10, -10, -10, -10,
-    -10, -10, -50, -50, -50, -50, -50, -50, -50, -50, 0, 0, 0, 0, 0, 0, 0, 0,
-];
-
-const KNIGHT_MIDGAME: [i32; 64] = [
-    -40, -40, -40, -40, -40, -40, -40, -40, -40, 10, 15, 15, 15, 15, 10, -40, -40, 10, 25, 25, 25,
-    25, 10, -40, -40, 10, 35, 35, 35, 35, 10, -40, -40, 10, 20, 25, 25, 20, 10, -40, -40, 10, 10,
-    10, 10, 10, 10, -40, -40, -30, 0, 0, 0, 0, -30, -40, -40, -40, -40, -40, -40, -40, -40, -40,
-];
-
-const KNIGHT_ENDGAME: [i32; 64] = [
-    -40, -40, -40, -40, -40, -40, -40, -40, -40, 10, 15, 15, 15, 15, 10, -40, -40, 20, 35, 35, 35,
-    35, 20, -40, -40, 15, 25, 25, 25, 25, 15, -40, -40, 15, 20, 25, 25, 20, 15, -40, -40, 10, 10,
-    10, 10, 10, 10, -40, -40, -30, 0, 0, 0, 0, -30, -40, -40, -40, -40, -40, -40, -40, -40, -40,
-];
-
-const BISHOP_MIDGAME: [i32; 64] = [
-    -30, -20, -10, -10, -10, -10, -20, -30, -20, 10, 15, 15, 15, 15, 10, -20, -10, 15, 20, 25, 25,
-    20, 15, -10, -10, 15, 30, 35, 35, 30, 15, -10, -10, 15, 20, 25, 25, 20, 15, -10, -20, 10, 10,
-    10, 10, 10, 10, -20, -30, 10, 0, 0, 0, 0, 10, -30, -40, -40, -40, -40, -40, -40, -40, -40,
-];
-
-const BISHOP_ENDGAME: [i32; 64] = [
-    -30, -20, -10, -10, -10, -10, -20, -30, -20, 10, 15, 15, 15, 15, 10, -20, -10, 20, 35, 35, 35,
-    35, 20, -10, -10, 15, 20, 25, 25, 20, 15, -10, -10, 15, 20, 25, 25, 20, 15, -10, -20, 10, 10,
-    10, 10, 10, 10, -20, -30, 10, 0, 0, 0, 0, 10, -30, -40, -40, -40, -40, -40, -40, -40, -40,
-];
-
-const ROOK_MIDGAME: [i32; 64] = [
-    5, 7, 10, 10, 10, 10, 7, 5, 7, 15, 25, 30, 30, 25, 15, 7, -30, -30, -30, -30, -30, -30, -30,
-    -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30, -30,
-    -30, -30, -30, -30, -30, -30, -10, -10, 0, 5, 5, 0, -10, -10, 10, 10, 20, 30, 30, 20, 10, 10,
-];
-
-const ROOK_ENDGAME: [i32; 64] = [
-    5, 7, 10, 10, 10, 10, 7, 5, 25, 35, 40, 40, 40, 40, 35, 25, -5, 5, 20, 20, 20, 20, 5, -5, -5,
-    -5, 10, 25, 25, 10, -5, -5, -5, -5, 10, 25, 25, 10, -5, -5, -5, -5, 10, 10, 10, 10, -5, -5,
-    -10, -10, 0, 5, 5, 0, -10, -10, 5, 5, 10, 15, 15, 10, 5, 5,
-];
-
-const QUEEN_MIDGAME: [i32; 64] = [
-    5, 7, 10, 10, 10, 10, 7, 5, 7, 7, 10, 15, 15, 10, 7, 7, -10, 5, 20, 35, 35, 20, 5, -10, -10, 5,
-    20, 25, 25, 20, 5, -10, -30, 5, 20, 25, 25, 20, 5, -30, -30, 5, 25, 35, 35, 25, 5, -30, -10,
-    -10, 10, 10, 10, 10, -10, -10, -40, -40, -40, -5, -5, -40, -40, -40,
-];
-
-const QUEEN_ENDGAME: [i32; 64] = [
-    5, 7, 10, 10, 10, 10, 7, 5, 7, 20, 25, 35, 35, 25, 20, 7, -20, 10, 20, 35, 35, 20, 10, -20,
-    -30, 5, 20, 25, 25, 20, 5, -30, -30, 5, 20, 25, 25, 20, 5, -30, -30, 5, 10, 15, 15, 10, 5, -30,
-    -10, -10, 5, 10, 10, 5, -10, -10, -40, -40, -40, -5, -5, -40, -40, -40,
-];
-
-const KING_MIDGAME: [i32; 64] = [
-    -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40,
-    -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -40,
-    -40, -40, -40, -40, -40, -40, -40, -40, -40, -40, -35, -35, -35, -40, -40, -35, -35, -35, 10,
-    50, 30, -40, -40, 10, 50, 10,
-];
-
-const KING_ENDGAME: [i32; 64] = [
-    -40, -40, -40, -40, -40, -40, -40, -40, -20, 2, 5, 10, 10, 5, 2, -20, -20, 5, 10, 20, 20, 10,
-    5, -20, -20, 10, 20, 25, 25, 20, 10, -20, -20, 10, 20, 25, 25, 20, 10, -20, -20, 5, 10, 20, 20,
-    10, 5, -20, -40, 2, 5, 10, 10, 5, 2, -40, -10, 0, 0, -20, -20, 0, 0, -10,
-];

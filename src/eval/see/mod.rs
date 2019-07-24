@@ -43,8 +43,6 @@ impl<B: Board> See<'_, B> {
         let knights = self.locs(Piece::WN) | self.locs(Piece::BN);
         let first_attacker = board.piece_at(self.source).unwrap();
         let first_victim = board.piece_at(self.target).unwrap();
-//        assert_eq!(first_attacker, Piece::WP);
-//        assert_eq!(first_victim, Piece::BP);
         let mut d = 0;
         let mut gain: [i32; 32] = [0; 32];
         gain[d] = (self.value)(first_victim);
