@@ -41,7 +41,7 @@ pub enum MoveComputeType {
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
 /// properties.
-pub trait Board: Reflectable {
+pub trait Board {
     fn evolve(&mut self, action: &Move) -> ReversalData;
 
     fn devolve(&mut self, action: &Move, discards: ReversalData);
