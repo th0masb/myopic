@@ -17,6 +17,14 @@ impl fmt::Display for Square {
     }
 }
 
+impl ops::Shl<usize> for Square {
+    type Output = Square;
+
+    fn shl(self, rhs: usize) -> Self::Output {
+        unimplemented!()
+    }
+}
+
 impl ops::Not for Square {
     type Output = BitBoard;
 

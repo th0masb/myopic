@@ -35,20 +35,15 @@ pub struct SimpleEvalBoard<B: Board> {
 }
 impl<B: Board> SimpleEvalBoard<B> {
     fn remove(&mut self, piece: Piece, location: Square) {
-        self.mid_eval -= tables::midgame(piece, location);
-        self.mid_eval -= values::midgame(piece);
-        self.end_eval -= tables::endgame(piece, location);
-        self.end_eval -= values::endgame(piece);
+        self.mid_eval -= tables::midgame(piece, location) + values::midgame(piece);
+        self.end_eval -= tables::endgame(piece, location) + values::endgame(piece);
     }
 
     fn add(&mut self, piece: Piece, location: Square) {
-        self.mid_eval += tables::midgame(piece, location);
-        self.mid_eval += values::midgame(piece);
-        self.end_eval += tables::endgame(piece, location);
-        self.end_eval += values::endgame(piece);
+        self.mid_eval += tables::midgame(piece, location) + values::midgame(piece);
+        self.end_eval += tables::endgame(piece, location) + values::endgame(piece);
     }
 }
-
 
 impl<B: Board> Board for SimpleEvalBoard<B> {
     fn evolve(&mut self, action: &Move) -> ReversalData {
@@ -67,13 +62,24 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
             &Move::Enpassant(source) => {
                 let active_pawn = Piece::pawn(self.active());
                 let passive_pawn = active_pawn.reflect();
-                //self.rem
-                unimplemented!()
+                let enpassant = self.enpassant_square().unwrap();
+                let removal_square = match self.active() {
+                    Side::White => enpassant >> 8,
+                    Side::Black => enpassant << 8,
+                };
+                self.remove(active_pawn, source);
+                self.add(active_pawn, enpassant);
+                self.remove(passive_pawn, removal_square);
             },
             &Move::Castle(zone) => {
-                unimplemented!()
+                let (rook, r_src, r_target) = zone.rook_data();
+                let (king, k_src, k_target) = zone.king_data();
+                self.remove(rook, r_src);
+                self.add(rook, r_target);
+                self.remove(king, k_src);
+                self.add(king, k_target);
             }
-        }
+        };
         self.board.evolve(action)
     }
 
