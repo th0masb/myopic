@@ -21,7 +21,15 @@ impl ops::Shl<usize> for Square {
     type Output = Square;
 
     fn shl(self, rhs: usize) -> Self::Output {
-        unimplemented!()
+        Square::from_index(self as usize + rhs)
+    }
+}
+
+impl ops::Shr<usize> for Square {
+    type Output = Square;
+
+    fn shr(self, rhs: usize) -> Self::Output {
+        Square::from_index(self as usize - rhs)
     }
 }
 

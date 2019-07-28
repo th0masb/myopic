@@ -16,11 +16,11 @@ pub mod test_board;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {
-    discarded_rights: CastleZoneSet,
-    discarded_piece: Option<Piece>,
-    discarded_enpassant: Option<Square>,
-    discarded_hash: u64,
-    discarded_clock: usize,
+    pub discarded_rights: CastleZoneSet,
+    pub discarded_piece: Option<Piece>,
+    pub discarded_enpassant: Option<Square>,
+    pub discarded_hash: u64,
+    pub discarded_clock: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
