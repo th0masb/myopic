@@ -1,7 +1,6 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square::Square;
 use crate::pieces::Piece;
@@ -41,64 +40,67 @@ pub enum MoveComputeType {
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
 /// properties.
+///
 pub trait Board {
+    /// Evolves this board in place according to the given move reference.
+    /// The move must be one that is legal in this position otherwise the
+    /// results are undefined. The data which is lost during this evolution
+    /// is returned at the end of the procedure allowing for devolution to
+    /// take place.
+    ///
     fn evolve(&mut self, action: &Move) -> ReversalData;
 
+    /// Reverses the given move, i.e. it devolves the board. It can only be
+    /// called after the same move has been used to evolve the board. The
+    /// discarded information produced by the evolve call must be provided
+    /// here. If any of these conditions are not met the results of this
+    /// procedure are undefined.
+    ///
     fn devolve(&mut self, action: &Move, discards: ReversalData);
 
+    /// Compute a vector of all the legal moves in this position for the
+    /// given computation type. Note there is no particular ordering to the
+    /// move vector.
     fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move>;
 
+    /// Returns the Zobrist hash of this position.
     fn hash(&self) -> u64;
 
+    /// Return the active side in this position, i.e. the one whose turn it is.
     fn active(&self) -> Side;
 
+    /// Return the enpassant target square in this position.
     fn enpassant_square(&self) -> Option<Square>;
 
+    /// Return the castling status of the given side.
     fn castle_status(&self, side: Side) -> Option<CastleZone>;
 
+    /// Return the locations of the given piece.
     fn piece_locations(&self, piece: Piece) -> BitBoard;
 
+    /// Return the location of the king for the given side.
     fn king_location(&self, side: Side) -> Square;
 
+    /// Return the locations of all white and black pieces.
     fn whites_blacks(&self) -> (BitBoard, BitBoard);
 
+    /// Return the piece occupying the given location.
     fn piece_at(&self, location: Square) -> Option<Piece>;
 
+    /// Return the half move clock value at this position.
     fn half_move_clock(&self) -> usize;
 
+    /// Return the total number of half moves played to get to this position.
     fn game_counter(&self) -> usize;
 }
 
-impl Move {
-    pub fn standards(moving: Piece, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
-        targets
-            .into_iter()
-            .map(move |target| Move::Standard(moving, src, target))
+impl Board {
+    pub fn from_fen(fen: &'static str) -> BoardImpl {
+        unimplemented!()
     }
 
-    pub fn promotions(side: Side, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
-        targets.into_iter().flat_map(move |target| {
-            Move::promotion_targets(side)
-                .iter()
-                .map(move |&piece| Move::Promotion(src, target, piece))
-        })
-    }
-
-    fn promotion_targets<'a>(side: Side) -> &'a [Piece; 4] {
-        match side {
-            Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN],
-            Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN],
-        }
+    pub fn start() -> BoardImpl {
+        unimplemented!()
     }
 }
 
-impl Reflectable for Move {
-    fn reflect(&self) -> Self {
-        match self {
-            Move::Castle(zone) => Move::Castle(zone.reflect()),
-            Move::Enpassant(square) => Move::Enpassant(square.reflect()),
-            Move::Standard(p, s, t) => Move::Standard(p.reflect(), s.reflect(), t.reflect()),
-            Move::Promotion(s, t, p) => Move::Promotion(s.reflect(), t.reflect(), p.reflect()),
-        }
-    }
-}

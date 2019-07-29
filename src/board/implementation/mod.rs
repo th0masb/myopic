@@ -19,6 +19,7 @@ pub mod moves;
 mod castletracker;
 mod hashcache;
 mod piecetracker;
+
 #[cfg(test)]
 pub mod testutils;
 
@@ -108,5 +109,39 @@ impl BoardImpl {
             ^ hash::side_feature(self.active)
             ^ self.enpassant.map_or(0u64, |x| hash::enpassant_feature(x));
         self.hashes.push_head(next_hash)
+    }
+}
+
+impl Move {
+    pub fn standards(moving: Piece, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
+        targets
+            .into_iter()
+            .map(move |target| Move::Standard(moving, src, target))
+    }
+
+    pub fn promotions(side: Side, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
+        targets.into_iter().flat_map(move |target| {
+            Move::promotion_targets(side)
+                .iter()
+                .map(move |&piece| Move::Promotion(src, target, piece))
+        })
+    }
+
+    fn promotion_targets<'a>(side: Side) -> &'a [Piece; 4] {
+        match side {
+            Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN],
+            Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN],
+        }
+    }
+}
+
+impl Reflectable for Move {
+    fn reflect(&self) -> Self {
+        match self {
+            Move::Castle(zone) => Move::Castle(zone.reflect()),
+            Move::Enpassant(square) => Move::Enpassant(square.reflect()),
+            Move::Standard(p, s, t) => Move::Standard(p.reflect(), s.reflect(), t.reflect()),
+            Move::Promotion(s, t, p) => Move::Promotion(s.reflect(), t.reflect(), p.reflect()),
+        }
     }
 }
