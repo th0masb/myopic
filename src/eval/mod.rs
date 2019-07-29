@@ -180,7 +180,12 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
 
 impl<B: Board> EvalBoard for SimpleEvalBoard<B> {
     fn static_eval(&self) -> i32 {
-        let phase = (self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE;
-        unimplemented!()
+        let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
+        let (mid, end) = (self.mid_eval, self.end_eval);
+        let eval = ((mid * (256 - phase)) + end * phase) / 256;
+        match self.active() {
+            Side::White => eval,
+            Side::Black => -eval,
+        }
     }
 }
