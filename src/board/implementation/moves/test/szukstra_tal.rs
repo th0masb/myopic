@@ -315,7 +315,11 @@ fn white_move_eleven() {
             c(CastleZone::WQ.lift()),
             s(Piece::WR, A1, B1 | C1 | D1),
             s(Piece::WP, A2, A3 | A4),
-            s(Piece::WQ, B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5),
+            s(
+                Piece::WQ,
+                B3,
+                C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5,
+            ),
             s(Piece::WN, C3, B1 | D1 | D5 | A4 | B5 | E2),
             s(Piece::WK, E1, D1 | D2 | F2 | E2),
             s(Piece::WN, D4, C2 | B5 | E6 | F5 | E2 | C6),
@@ -377,15 +381,9 @@ fn black_move_eleven() {
             s(Piece::BP, H7, H6 | H5),
         ],
 
-        expected_attacks: vec![
-            s(Piece::BN, F6, D5),
-            s(Piece::BQ, D8, D5),
-        ],
+        expected_attacks: vec![s(Piece::BN, F6, D5), s(Piece::BQ, D8, D5)],
 
-        expected_attacks_checks: vec![
-            s(Piece::BN, F6, D5),
-            s(Piece::BQ, D8, D5),
-        ],
+        expected_attacks_checks: vec![s(Piece::BN, F6, D5), s(Piece::BQ, D8, D5)],
     });
 }
 

@@ -1,18 +1,18 @@
 use std::collections::btree_set::BTreeSet;
 
-use crate::base::bitboard::BitBoard;
 use crate::base::bitboard::constants::*;
+use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
-use crate::board::Board;
 use crate::board::implementation::BoardImpl;
+use crate::board::test_board::TestBoard;
+use crate::board::Board;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;
-use crate::board::test_board::TestBoard;
 
 type MoveSet = BTreeSet<Move>;
 
@@ -72,7 +72,10 @@ fn convert_case(case: TestCase) -> (BoardImpl, Vec<(MoveComputeType, MoveSet)>) 
     let expected = vec![
         (MoveComputeType::All, flatten(case.expected_all)),
         (MoveComputeType::Attacks, flatten(case.expected_attacks)),
-        (MoveComputeType::AttacksChecks, flatten(case.expected_attacks_checks)),
+        (
+            MoveComputeType::AttacksChecks,
+            flatten(case.expected_attacks_checks),
+        ),
     ];
     (board, expected)
 }
@@ -87,11 +90,13 @@ fn execute_test_impl(case: TestCase) {
     let (board, results) = convert_case(case);
     for (computation_type, expected_moves) in results.into_iter() {
         let actual_moves: MoveSet = board.compute_moves(computation_type).into_iter().collect();
-        assert_eq!(expected_moves.clone(),
-                   actual_moves.clone(),
-                   "Differences for {:?} are: {:?}",
-                   computation_type,
-                   compute_difference(expected_moves, actual_moves));
+        assert_eq!(
+            expected_moves.clone(),
+            actual_moves.clone(),
+            "Differences for {:?} are: {:?}",
+            computation_type,
+            compute_difference(expected_moves, actual_moves)
+        );
     }
 }
 

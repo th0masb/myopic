@@ -1,16 +1,17 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
-use crate::board::Board;
 use crate::board::implementation::{
     castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker,
 };
+use crate::board::Board;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::ReversalData;
 use crate::pieces::Piece;
+use regex::Regex;
 
 pub mod evolve;
 pub mod hash;
@@ -90,13 +91,50 @@ impl Board for BoardImpl {
     }
 }
 
-impl Reflectable for BoardImpl {
-    fn reflect(&self) -> Self {
-        unimplemented!()
-    }
+lazy_static! {
+    static ref NOT_WHITESPACE: Regex = Regex::new(r"[^ ]+").unwrap();
+    static ref RANK: Regex = Regex::new(r"[PpNnBbRrQqKk1-8]{1, 8}").unwrap();
+    static ref ACTIVE: Regex = Regex::new(r"[wb]").unwrap();
+    static ref RIGHTS: Regex = Regex::new(r"([KkQq]{1, 4})|[-]").unwrap();
+    static ref ENPASSANT: Regex = Regex::new(r"[a-h][36]").unwrap();
+    static ref COUNT: Regex = Regex::new(r"[0-9]+").unwrap();
+}
+
+
+fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
+    regex
+        .captures_iter(source)
+        .map(|cap| String::from(&cap[0]))
+        .collect()
+}
+
+fn fen_metadata<'a>() -> impl Iterator<Item = &'a Regex> {
+    let mut dest: Vec<&'a Regex> = Vec::new();
+    dest.push(&ACTIVE);
+    dest.push(&RIGHTS);
+    dest.push(&ENPASSANT);
+    dest.push(&COUNT);
+    dest.push(&COUNT);
+    dest.into_iter()
 }
 
 impl BoardImpl {
+    fn from_fen(fen_string: String) -> Result<BoardImpl, String> {
+        let initial_split = find_matches(&fen_string, &NOT_WHITESPACE);
+        if initial_split.len() != 6 {
+            Err(fen_string)
+        } else {
+            let ranks = find_matches(&initial_split[0], &RANK);
+            let meta_match = fen_metadata().zip(&initial_split[1..]).all(|(re, s)| re.is_match(s));
+            if ranks.len() != 8 || !meta_match {
+                Err(fen_string)
+            } else {
+                // We know all parts are valid here...
+                unimplemented!()
+            }
+        }
+    }
+
     fn switch_side(&mut self) {
         self.active = self.active.reflect();
     }
