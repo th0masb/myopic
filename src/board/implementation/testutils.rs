@@ -18,7 +18,7 @@ impl BoardImpl {
             test_board.white_status,
             test_board.black_status,
         );
-        let mut hashes = HashCache::new(0u64);
+        let mut hashes = HashCache::new(0u64, 0);
         for i in 0..test_board.hash_offset {
             hashes.push_head(i as u64);
         }

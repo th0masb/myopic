@@ -12,6 +12,10 @@ pub struct CastleTracker {
 }
 
 impl CastleTracker {
+    pub fn from_fen(fen_string: &String) -> CastleTracker {
+        unimplemented!()
+    }
+
     pub fn new(
         rights: CastleZoneSet,
         white_status: Option<CastleZone>,

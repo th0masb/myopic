@@ -20,6 +20,7 @@ pub mod moves;
 mod castletracker;
 mod hashcache;
 mod piecetracker;
+mod traitimpl;
 
 #[cfg(test)]
 pub mod testutils;
@@ -34,63 +35,6 @@ pub struct BoardImpl {
     clock: usize,
 }
 
-impl Board for BoardImpl {
-    fn evolve(&mut self, action: &Move) -> ReversalData {
-        self.evolve(action)
-    }
-
-    fn devolve(&mut self, action: &Move, discards: ReversalData) {
-        self.devolve(action, discards)
-    }
-
-    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
-        self.compute_moves_impl(computation_type)
-    }
-
-    fn hash(&self) -> u64 {
-        self.hashes.head()
-    }
-
-    fn active(&self) -> Side {
-        self.active
-    }
-
-    fn enpassant_square(&self) -> Option<Square> {
-        self.enpassant
-    }
-
-    fn castle_status(&self, side: Side) -> Option<CastleZone> {
-        self.castling.status(side)
-    }
-
-    fn piece_locations(&self, piece: Piece) -> BitBoard {
-        self.pieces.locations(piece)
-    }
-
-    fn king_location(&self, side: Side) -> Square {
-        self.pieces.king_location(side)
-    }
-
-    fn whites_blacks(&self) -> (BitBoard, BitBoard) {
-        (
-            self.pieces.side_locations(Side::White),
-            self.pieces.side_locations(Side::Black),
-        )
-    }
-
-    fn piece_at(&self, location: Square) -> Option<Piece> {
-        self.pieces.piece_at(location)
-    }
-
-    fn half_move_clock(&self) -> usize {
-        self.clock
-    }
-
-    fn game_counter(&self) -> usize {
-        self.hashes.pop_dist()
-    }
-}
-
 lazy_static! {
     static ref NOT_WHITESPACE: Regex = Regex::new(r"[^ ]+").unwrap();
     static ref RANK: Regex = Regex::new(r"[PpNnBbRrQqKk1-8]{1, 8}").unwrap();
@@ -99,7 +43,6 @@ lazy_static! {
     static ref ENPASSANT: Regex = Regex::new(r"[a-h][36]").unwrap();
     static ref COUNT: Regex = Regex::new(r"[0-9]+").unwrap();
 }
-
 
 fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
     regex
@@ -110,12 +53,22 @@ fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
 
 fn fen_metadata<'a>() -> impl Iterator<Item = &'a Regex> {
     let mut dest: Vec<&'a Regex> = Vec::new();
-    dest.push(&ACTIVE);
-    dest.push(&RIGHTS);
-    dest.push(&ENPASSANT);
-    dest.push(&COUNT);
-    dest.push(&COUNT);
+    dest.extend_from_slice(&[&ACTIVE, &RIGHTS, &ENPASSANT, &COUNT, &COUNT]);
     dest.into_iter()
+}
+
+fn side_from_fen(fen: &String) -> Side {
+    if fen.contains("w") {
+        Side::White
+    } else if fen.contains("b") {
+        Side::Black
+    } else {
+        panic!()
+    }
+}
+
+fn enpassant_from_fen(fen: &String) -> Option<Square> {
+    unimplemented!()
 }
 
 impl BoardImpl {
@@ -125,11 +78,19 @@ impl BoardImpl {
             Err(fen_string)
         } else {
             let ranks = find_matches(&initial_split[0], &RANK);
-            let meta_match = fen_metadata().zip(&initial_split[1..]).all(|(re, s)| re.is_match(s));
+            let meta_match = fen_metadata()
+                .zip(&initial_split[1..])
+                .all(|(re, s)| re.is_match(s));
             if ranks.len() != 8 || !meta_match {
                 Err(fen_string)
             } else {
                 // We know all parts are valid here...
+                let positions = PieceTracker::from_fen(ranks);
+                let active = side_from_fen(&initial_split[1]);
+                let castling = CastleTracker::from_fen(&initial_split[2]);
+                let enpassant = enpassant_from_fen(&initial_split[3]);
+                let half_clock = &initial_split[4].parse::<usize>();
+                let move_count = &initial_split[5].parse::<usize>();
                 unimplemented!()
             }
         }
@@ -140,14 +101,17 @@ impl BoardImpl {
     }
 
     /// Combines the various components of the hash together and pushes the
-    /// result onto the head of the cache, returning the overwritten value.
+    /// result onto the head of the cache.
     fn update_hash(&mut self) {
-        let next_hash = self.pieces.hash()
-            ^ self.castling.hash()
-            ^ hash::side_feature(self.active)
-            ^ self.enpassant.map_or(0u64, |x| hash::enpassant_feature(x));
-        self.hashes.push_head(next_hash)
+        self.hashes.push_head(hash(&self.pieces, &self.castling, self.active, self.enpassant))
     }
+}
+
+fn hash(pt: &PieceTracker, ct: &CastleTracker, active: Side, ep: Option<Square>) -> u64 {
+    pt.hash()
+        ^ ct.hash()
+        ^ hash::side_feature(active)
+        ^ ep.map_or(0u64, |x| hash::enpassant_feature(x))
 }
 
 impl Move {

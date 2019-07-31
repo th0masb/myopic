@@ -17,10 +17,17 @@ pub struct HashCache {
 }
 
 impl HashCache {
-    pub fn new(initial_hash: u64) -> HashCache {
-        let mut cache: Vec<_> = iter::repeat(0u64).take(CACHE_SIZE).collect();
-        cache[0] = initial_hash;
-        HashCache { pop_dist: 0, cache }
+    /// Create a new cache at a given point in the game with a supplied
+    /// position hash.
+    pub fn new(position_hash: u64, n_previous_positions: usize) -> HashCache {
+        let pop_dist = n_previous_positions;
+        let cache: Vec<_> = iter::repeat(0u64).take(CACHE_SIZE).collect();
+        let mut dest = HashCache { pop_dist: 0, cache };
+        for i in 0..pop_dist {
+            dest.push_head(i as u64);
+        }
+        dest.cache[pop_dist % CACHE_SIZE] = position_hash;
+        dest
     }
 
     fn head_index(&self) -> usize {
@@ -39,8 +46,8 @@ impl HashCache {
         self.cache[self.tail_index()]
     }
 
-    pub fn pop_dist(&self) -> usize {
-        self.pop_dist
+    pub fn position_count(&self) -> usize {
+        self.pop_dist + 1
     }
 
     pub fn push_head(&mut self, new_head: u64) {
@@ -85,7 +92,7 @@ mod test {
     use super::*;
 
     fn n_consecutive(n: usize) -> HashCache {
-        let mut cache = HashCache::new(0u64);
+        let mut cache = HashCache::new(0u64, 0);
         for n in 1..n {
             cache.push_head(n as u64);
         }

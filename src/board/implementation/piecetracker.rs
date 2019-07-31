@@ -11,6 +11,10 @@ pub struct PieceTracker {
 }
 
 impl PieceTracker {
+    pub fn from_fen(ranks: Vec<String>) -> PieceTracker {
+        unimplemented!()
+    }
+
     pub fn new(initial_boards: Vec<BitBoard>) -> PieceTracker {
         assert_eq!(12, initial_boards.len());
         let initial_hash = initial_boards

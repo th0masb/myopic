@@ -90,8 +90,8 @@ pub trait Board {
     /// Return the half move clock value at this position.
     fn half_move_clock(&self) -> usize;
 
-    /// Return the total number of half moves played to get to this position.
-    fn game_counter(&self) -> usize;
+    /// Return the total number of half moves played to reach this position.
+    fn half_move_count(&self) -> usize;
 }
 
 impl Board {

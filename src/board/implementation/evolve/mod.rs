@@ -22,10 +22,10 @@ impl BoardImpl {
     /// this same move is returned and the board is mutated to the next state.
     pub fn evolve(&mut self, action: &Move) -> RD {
         match action {
-            Standard(piece, source, target) => self.evolve_s(*piece, *source, *target),
-            Castle(zone) => self.evolve_c(*zone),
-            Enpassant(source) => self.evolve_e(*source),
-            Promotion(source, target, piece) => self.evolve_p(*source, *target, *piece),
+            &Standard(piece, source, target) => self.evolve_s(piece, source, target),
+            &Castle(zone) => self.evolve_c(zone),
+            &Enpassant(source) => self.evolve_e(source),
+            &Promotion(source, target, piece) => self.evolve_p(source, target, piece),
         }
     }
 
@@ -33,10 +33,10 @@ impl BoardImpl {
     /// required as an input here to recover the lost state exactly.
     pub fn devolve(&mut self, action: &Move, discards: RD) {
         match action {
-            Standard(piece, source, target) => self.devolve_s(*piece, *source, *target, discards),
-            Castle(zone) => self.devolve_c(*zone, discards),
-            Enpassant(source) => self.devolve_e(*source, discards),
-            Promotion(source, target, piece) => self.devolve_p(*source, *target, *piece, discards),
+            &Standard(piece, source, target) => self.devolve_s(piece, source, target, discards),
+            &Castle(zone) => self.devolve_c(zone, discards),
+            &Enpassant(source) => self.devolve_e(source, discards),
+            &Promotion(source, target, piece) => self.devolve_p(source, target, piece, discards),
         }
     }
 
@@ -51,23 +51,19 @@ impl BoardImpl {
             self.clock + 1
         };
         self.enpassant = BoardImpl::compute_enpassant(source, target, piece);
-        self.switch_side_and_update_hash();
+        self.switch_side_then_update_hash();
         rev_data
     }
 
-    fn switch_side_and_update_hash(&mut self) {
+    fn switch_side_then_update_hash(&mut self) {
         self.switch_side();
         self.update_hash();
     }
 
-    fn create_rev_data(
-        &self,
-        discarded_piece: Option<Piece>,
-        discarded_rights: CastleZoneSet,
-    ) -> RD {
+    fn create_rev_data(&self, piece: Option<Piece>, rights: CastleZoneSet) -> RD {
         ReversalData {
-            discarded_piece,
-            discarded_rights,
+            discarded_piece: piece,
+            discarded_rights: rights,
             discarded_enpassant: self.enpassant,
             discarded_hash: self.hashes.tail(),
             discarded_clock: self.clock,
@@ -90,7 +86,7 @@ impl BoardImpl {
         self.toggle_castle_pieces(zone);
         self.enpassant = None;
         self.clock += 1;
-        self.switch_side_and_update_hash();
+        self.switch_side_then_update_hash();
         rev_data
     }
 
@@ -114,7 +110,7 @@ impl BoardImpl {
         self.toggle_enpassant_pieces(source, self.enpassant.unwrap());
         self.enpassant = None;
         self.clock = 0;
-        self.switch_side_and_update_hash();
+        self.switch_side_then_update_hash();
         rev_data
     }
 
@@ -143,7 +139,7 @@ impl BoardImpl {
         self.pieces.toggle_piece(promotion_result, &[target]);
         self.enpassant = None;
         self.clock = 0;
-        self.switch_side_and_update_hash();
+        self.switch_side_then_update_hash();
         rev_data
     }
 
