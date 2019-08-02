@@ -10,6 +10,7 @@ extern crate regex;
 use crate::base::bitboard::BitBoard;
 use crate::base::dir;
 use crate::base::square::Square::*;
+use crate::base::square::Square;
 
 mod base;
 mod pieces;
@@ -33,8 +34,13 @@ fn main() {
     println!("{}", G1 > H1);
     let bitboard: BitBoard = vec!(A1, G5).into_iter().collect();
     println!("{}", bitboard);
-    println!("{}", Test::Y as usize);
-//    let squares = base.square::H1.search_one(dirs);
+    println!("{:?}", Square::E4);
+    let x = format!("{:?}", Square::E4);
+    println!("{}", x);
+
+    let string = String::from("hello");
+    println!("{}", string.contains("e"))
+//    let squares = base.square:;:H1.search_one(dirs);
 //    println!("{:#?}", squares);
 //    println!("{}", base.square::H1);
 

@@ -147,6 +147,10 @@ impl CastleZoneSet {
         (1usize << zone as usize) & self.data != 0
     }
 
+    pub fn intersects(self, other: CastleZoneSet) -> bool {
+        other.iter().any(|z| self.contains(z))
+    }
+
     pub fn iter(self) -> impl Iterator<Item = CastleZone> {
         CastleZone::iter().filter(move |&z| self.contains(z))
     }

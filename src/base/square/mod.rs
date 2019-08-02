@@ -85,6 +85,14 @@ impl Square {
         ALL[i]
     }
 
+    /// Performs linear search to find a square whose name matches
+    /// the given string (case-insensitive). Will panic if an invalid
+    /// string is passed.
+    pub fn from_string(square: &String) -> Square {
+        let upper = square.to_uppercase();
+        Square::iter().find(|sq| format!("{:?}", sq) == upper).unwrap()
+    }
+
     /// Return the index of the rank on which this square resides.
     pub const fn rank_index(self) -> usize {
         (self as usize) / 8

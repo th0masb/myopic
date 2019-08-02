@@ -51,24 +51,26 @@ fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
         .collect()
 }
 
-fn fen_metadata<'a>() -> impl Iterator<Item = &'a Regex> {
+fn fen_metadata_matchers<'a>() -> impl Iterator<Item = &'a Regex> {
     let mut dest: Vec<&'a Regex> = Vec::new();
     dest.extend_from_slice(&[&ACTIVE, &RIGHTS, &ENPASSANT, &COUNT, &COUNT]);
     dest.into_iter()
 }
 
 fn side_from_fen(fen: &String) -> Side {
-    if fen.contains("w") {
-        Side::White
-    } else if fen.contains("b") {
-        Side::Black
-    } else {
-        panic!()
+    match fen.to_lowercase().as_ref() {
+        "w" => Side::White,
+        "b" => Side::Black,
+        _ => panic!()
     }
 }
 
 fn enpassant_from_fen(fen: &String) -> Option<Square> {
-    unimplemented!()
+    if fen.contains("-") {
+        None
+    } else {
+        Some(Square::from_string(fen))
+    }
 }
 
 impl BoardImpl {
@@ -78,7 +80,7 @@ impl BoardImpl {
             Err(fen_string)
         } else {
             let ranks = find_matches(&initial_split[0], &RANK);
-            let meta_match = fen_metadata()
+            let meta_match = fen_metadata_matchers()
                 .zip(&initial_split[1..])
                 .all(|(re, s)| re.is_match(s));
             if ranks.len() != 8 || !meta_match {

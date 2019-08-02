@@ -7,13 +7,33 @@ use crate::board::implementation::hash;
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct CastleTracker {
     remaining_rights: CastleZoneSet,
+    // TODO Do we actually need to keep these fields?
     white_status: Option<CastleZone>,
     black_status: Option<CastleZone>,
 }
 
 impl CastleTracker {
     pub fn from_fen(fen_string: &String) -> CastleTracker {
-        unimplemented!()
+        let rights: CastleZoneSet = CastleZone::iter()
+            .zip(vec!["K", "Q", "k", "q"].into_iter())
+            .filter(|(_, pat)| fen_string.contains(pat))
+            .map(|(z, _)| z)
+            .collect();
+        let white_status = if rights.intersects(CastleZoneSet::WHITE) {
+            None
+        } else {
+            Some(CastleZone::WK)
+        };
+        let black_status = if rights.intersects(CastleZoneSet::BLACK) {
+            None
+        } else {
+            Some(CastleZone::BK)
+        };
+        CastleTracker {
+            remaining_rights: rights,
+            white_status,
+            black_status,
+        }
     }
 
     pub fn new(
