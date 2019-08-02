@@ -10,9 +10,40 @@ pub struct PieceTracker {
     hash: u64,
 }
 
+fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
+    let mut dest: Vec<Option<Piece>> = Vec::new();
+    for character in fen_rank.chars() {
+        if character.is_numeric() {
+            dest.extend(itertools::repeat_n(None, character as usize));
+        } else {
+            dest.extend(&[Some(match character {
+                'P' => Piece::WP,
+                'N' => Piece::WN,
+                'B' => Piece::WB,
+                'R' => Piece::WR,
+                'Q' => Piece::WQ,
+                'K' => Piece::WK,
+                'p' => Piece::BP,
+                'n' => Piece::BN,
+                'b' => Piece::BB,
+                'r' => Piece::BR,
+                'q' => Piece::BQ,
+                'k' => Piece::BK,
+                _ => panic!(),
+            })]);
+        }
+    }
+    dest
+}
+
 impl PieceTracker {
     pub fn from_fen(ranks: Vec<String>) -> PieceTracker {
-        unimplemented!()
+        let mut board = ranks
+            .into_iter()
+            .flat_map(|r| convert_rank(r).into_iter())
+            .collect::<Vec<_>>();
+        board.reverse();
+
     }
 
     pub fn new(initial_boards: Vec<BitBoard>) -> PieceTracker {
