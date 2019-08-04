@@ -12,8 +12,8 @@ const CACHE_SIZE: usize = 20;
 pub struct HashCache {
     /// Records how many pop operations required to return to initial state.
     pop_dist: usize,
-    /// Fixed size vector which maintains the hash values.
-    cache: Vec<u64>,
+    /// Fixed size array which maintains the hash values.
+    cache: [u64; CACHE_SIZE],
 }
 
 impl HashCache {
@@ -21,7 +21,7 @@ impl HashCache {
     /// position hash.
     pub fn new(position_hash: u64, n_previous_positions: usize) -> HashCache {
         let pop_dist = n_previous_positions;
-        let cache: Vec<_> = iter::repeat(0u64).take(CACHE_SIZE).collect();
+        let cache = [064; CACHE_SIZE];
         let mut dest = HashCache { pop_dist: 0, cache };
         for i in 0..pop_dist {
             dest.push_head(i as u64);
@@ -71,7 +71,7 @@ impl HashCache {
             cache.sort();
             let mut count = 1;
             let mut last = cache[0];
-            for hash in cache.into_iter().skip(1) {
+            for &hash in cache.into_iter().skip(1) {
                 if hash == last {
                     count += 1;
                     if count == 3 {
