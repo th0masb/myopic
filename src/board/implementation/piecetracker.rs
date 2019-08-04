@@ -23,7 +23,8 @@ fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
     let mut dest: Vec<Option<Piece>> = Vec::new();
     for character in fen_rank.chars() {
         if character.is_numeric() {
-            dest.extend(itertools::repeat_n(None, character as usize));
+            let space = character.to_string().parse::<usize>().unwrap();
+            dest.extend(itertools::repeat_n(None, space));
         } else {
             dest.extend(&[Some(match character {
                 'P' => Piece::WP,
@@ -52,6 +53,7 @@ impl PieceTracker {
             .into_iter()
             .flat_map(|r| convert_rank(r).into_iter())
             .collect::<Vec<_>>();
+        assert_eq!(64, board.len());
         board.reverse();
         let mut bitboards = [BitBoard::EMPTY; 12];
         for (i, x) in board.into_iter().enumerate() {

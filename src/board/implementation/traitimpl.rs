@@ -61,7 +61,7 @@ impl Board for BoardImpl {
         self.clock
     }
 
-    fn half_move_count(&self) -> usize {
-        self.hashes.position_count() - 1
+    fn history_count(&self) -> usize {
+        self.hashes.position_count()
     }
 }

@@ -15,7 +15,7 @@ pub struct TestBoard {
     pub active: Side,
     pub clock: usize,
     pub enpassant: Option<Square>,
-    pub hash_offset: usize,
+    pub history_count: usize,
 }
 
 impl TestBoard {
@@ -29,7 +29,7 @@ impl TestBoard {
             active: Side::White,
             clock: 5,
             enpassant: None,
-            hash_offset: 20,
+            history_count: 20,
         }
     }
 }
@@ -45,7 +45,7 @@ impl Reflectable for TestBoard {
             active: self.active.reflect(),
             clock: self.clock,
             enpassant: self.enpassant.reflect(),
-            hash_offset: self.hash_offset,
+            history_count: self.history_count,
         }
     }
 }

@@ -116,7 +116,7 @@ mod test {
                 white_status: None,
                 black_status: None,
                 clock: 10,
-                hash_offset: 10,
+                history_count: 10,
             },
 
             expected: PinnedSet {

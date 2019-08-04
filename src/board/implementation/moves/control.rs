@@ -75,7 +75,7 @@ mod test {
             enpassant: None,
             active: Side::White,
             clock: 20,
-            hash_offset: 20,
+            history_count: 20,
         }
     }
 

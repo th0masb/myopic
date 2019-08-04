@@ -54,7 +54,7 @@ fn test_white_kingside_castling() {
             active: Side::White,
             enpassant: None,
             clock: 20,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -66,7 +66,7 @@ fn test_white_kingside_castling() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -86,7 +86,7 @@ fn test_white_queenside_castling() {
             active: Side::White,
             enpassant: None,
             clock: 20,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -98,7 +98,7 @@ fn test_white_queenside_castling() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -118,7 +118,7 @@ fn test_black_kingside_castling() {
             active: Side::Black,
             enpassant: None,
             clock: 20,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -130,7 +130,7 @@ fn test_black_kingside_castling() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -150,7 +150,7 @@ fn test_black_queenside_castling() {
             active: Side::Black,
             enpassant: None,
             clock: 20,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -162,7 +162,7 @@ fn test_black_queenside_castling() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -181,7 +181,7 @@ fn test_white_rook_taking_black_rook_removing_kingside_rights() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -193,7 +193,7 @@ fn test_white_rook_taking_black_rook_removing_kingside_rights() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -212,7 +212,7 @@ fn test_black_rook_taking_white_rook_removing_kingside_rights() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -224,7 +224,7 @@ fn test_black_rook_taking_white_rook_removing_kingside_rights() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -243,7 +243,7 @@ fn test_white_rook_taking_black_rook_removing_queenside_rights() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -255,7 +255,7 @@ fn test_white_rook_taking_black_rook_removing_queenside_rights() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -274,7 +274,7 @@ fn test_black_rook_taking_white_rook_removing_queenside_rights() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -286,7 +286,7 @@ fn test_black_rook_taking_white_rook_removing_queenside_rights() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -305,7 +305,7 @@ fn test_white_king_moving_removes_castling_rights() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -317,7 +317,7 @@ fn test_white_king_moving_removes_castling_rights() {
             active: Side::Black,
             enpassant: None,
             clock: 22,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -336,7 +336,7 @@ fn test_black_king_moving_removes_castling_rights() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -348,7 +348,7 @@ fn test_black_king_moving_removes_castling_rights() {
             active: Side::White,
             enpassant: None,
             clock: 22,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -367,7 +367,7 @@ fn test_white_pawn_moves_forward_two() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -379,7 +379,7 @@ fn test_white_pawn_moves_forward_two() {
             active: Side::Black,
             enpassant: Some(Square::F3),
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -398,7 +398,7 @@ fn test_black_pawn_moves_forward_two() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -410,7 +410,7 @@ fn test_black_pawn_moves_forward_two() {
             active: Side::White,
             enpassant: Some(Square::F6),
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -429,7 +429,7 @@ fn test_white_pawn_moves_forward_one() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -441,7 +441,7 @@ fn test_white_pawn_moves_forward_one() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -460,7 +460,7 @@ fn test_black_pawn_moves_forward_one() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -472,7 +472,7 @@ fn test_black_pawn_moves_forward_one() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -492,7 +492,7 @@ fn test_white_knight_takes_black_knight() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -504,7 +504,7 @@ fn test_white_knight_takes_black_knight() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -523,7 +523,7 @@ fn test_black_knight_takes_white_knight() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -535,7 +535,7 @@ fn test_black_knight_takes_white_knight() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -554,7 +554,7 @@ fn test_white_bishop_takes_black_bishop() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -566,7 +566,7 @@ fn test_white_bishop_takes_black_bishop() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -585,7 +585,7 @@ fn test_black_bishop_takes_white_bishop() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -597,7 +597,7 @@ fn test_black_bishop_takes_white_bishop() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -616,7 +616,7 @@ fn test_white_pawn_takes_black_pawn() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -628,7 +628,7 @@ fn test_white_pawn_takes_black_pawn() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -647,7 +647,7 @@ fn test_black_pawn_takes_white_bishop() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -659,7 +659,7 @@ fn test_black_pawn_takes_white_bishop() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -679,7 +679,7 @@ fn test_white_queen_takes_black_queen() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -691,7 +691,7 @@ fn test_white_queen_takes_black_queen() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -710,7 +710,7 @@ fn test_black_queen_takes_white_queen() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -722,7 +722,7 @@ fn test_black_queen_takes_white_queen() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -741,7 +741,7 @@ fn test_white_king_takes_black_king() {
             active: Side::White,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -753,7 +753,7 @@ fn test_white_king_takes_black_king() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -772,7 +772,7 @@ fn test_black_king_takes_white_king() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -784,7 +784,7 @@ fn test_black_king_takes_white_king() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -803,7 +803,7 @@ fn test_white_enpassant() {
             active: Side::White,
             enpassant: Some(Square::E6),
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -815,7 +815,7 @@ fn test_white_enpassant() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -834,7 +834,7 @@ fn test_black_enpassant() {
             active: Side::Black,
             enpassant: Some(Square::D3),
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -846,7 +846,7 @@ fn test_black_enpassant() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -865,7 +865,7 @@ fn test_white_promotion() {
             active: Side::White,
             enpassant: Some(Square::D4),
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -877,7 +877,7 @@ fn test_white_promotion() {
             active: Side::Black,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }
@@ -896,7 +896,7 @@ fn test_black_promotion() {
             active: Side::Black,
             enpassant: None,
             clock: 21,
-            hash_offset: 11,
+            history_count: 11,
         },
 
         end: TestBoard {
@@ -908,7 +908,7 @@ fn test_black_promotion() {
             active: Side::White,
             enpassant: None,
             clock: 0,
-            hash_offset: 12,
+            history_count: 12,
         },
     })
 }

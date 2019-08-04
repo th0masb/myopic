@@ -91,16 +91,13 @@ pub trait Board {
     fn half_move_clock(&self) -> usize;
 
     /// Return the total number of half moves played to reach this position.
-    fn half_move_count(&self) -> usize;
+    fn history_count(&self) -> usize;
 }
 
-impl Board {
-    pub fn from_fen(fen: &'static str) -> BoardImpl {
-        unimplemented!()
-    }
-
-    pub fn start() -> BoardImpl {
-        unimplemented!()
-    }
+pub fn from_fen(fen: String) -> Result<BoardImpl, String> {
+    BoardImpl::from_fen(fen)
 }
 
+pub fn start() -> BoardImpl {
+    from_fen(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")).unwrap()
+}

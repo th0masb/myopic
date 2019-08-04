@@ -173,8 +173,8 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
         self.board.half_move_clock()
     }
 
-    fn half_move_count(&self) -> usize {
-        self.board.half_move_count()
+    fn history_count(&self) -> usize {
+        self.board.history_count()
     }
 }
 
