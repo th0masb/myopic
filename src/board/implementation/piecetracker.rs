@@ -6,8 +6,17 @@ use crate::pieces::Piece;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct PieceTracker {
-    boards: Vec<BitBoard>,
+    boards: [BitBoard; 12],
     hash: u64,
+}
+
+fn hash_boards(boards: &[BitBoard]) -> u64 {
+    assert_eq!(12, boards.len());
+    boards
+        .iter()
+        .zip(Piece::iter())
+        .flat_map(|(&b, p)| b.into_iter().map(move |sq| hash::piece_feature(p, sq)))
+        .fold(0u64, |a, b| a ^ b)
 }
 
 fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
@@ -38,24 +47,32 @@ fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
 
 impl PieceTracker {
     pub fn from_fen(ranks: Vec<String>) -> PieceTracker {
+        assert_eq!(8, ranks.len());
         let mut board = ranks
             .into_iter()
             .flat_map(|r| convert_rank(r).into_iter())
             .collect::<Vec<_>>();
         board.reverse();
-
+        let mut bitboards = [BitBoard::EMPTY; 12];
+        for (i, x) in board.into_iter().enumerate() {
+            match x {
+                Some(p) => bitboards[p as usize] |= Square::from_index(i),
+                _ => (),
+            }
+        }
+        PieceTracker {
+            boards: bitboards,
+            hash: hash_boards(&bitboards),
+        }
     }
 
-    pub fn new(initial_boards: Vec<BitBoard>) -> PieceTracker {
+    pub fn new(initial_boards: &[BitBoard]) -> PieceTracker {
         assert_eq!(12, initial_boards.len());
-        let initial_hash = initial_boards
-            .iter()
-            .zip(Piece::iter())
-            .flat_map(|(&b, p)| b.into_iter().map(move |sq| hash::piece_feature(p, sq)))
-            .fold(0u64, |a, b| a ^ b);
-
+        let initial_hash = hash_boards(initial_boards);
+        let mut dest: [BitBoard; 12] = [BitBoard::EMPTY; 12];
+        dest.copy_from_slice(initial_boards);
         PieceTracker {
-            boards: initial_boards,
+            boards: dest,
             hash: initial_hash,
         }
     }
@@ -155,7 +172,7 @@ mod test {
     }
 
     fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> PieceTracker {
-        let mut boards: Vec<_> = iter::repeat(BitBoard::EMPTY).take(12).collect();
+        let mut boards: [BitBoard; 12] = [BitBoard::EMPTY; 12];
         boards[Piece::WP as usize] = pawn_loc.map_or(BitBoard::EMPTY, |x| x.lift());
         boards[Piece::BN as usize] = knight_loc.map_or(BitBoard::EMPTY, |x| x.lift());
         let p_hash = pawn_loc.map_or(0u64, |x| hash::piece_feature(Piece::WP, x));

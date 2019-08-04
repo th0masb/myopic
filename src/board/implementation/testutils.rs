@@ -3,6 +3,7 @@ use crate::board::implementation::hashcache::HashCache;
 use crate::board::implementation::piecetracker::PieceTracker;
 use crate::board::implementation::BoardImpl;
 use crate::board::test_board::TestBoard;
+use crate::base::bitboard::BitBoard;
 
 impl BoardImpl {
     pub fn from(test_board: TestBoard) -> BoardImpl {
@@ -11,7 +12,7 @@ impl BoardImpl {
                 .iter()
                 .flat_map(|x| x.into_iter())
                 .map(|&x| x)
-                .collect(),
+                .collect::<Vec<BitBoard>>().as_slice(),
         );
         let castling = CastleTracker::new(
             test_board.castle_rights,
