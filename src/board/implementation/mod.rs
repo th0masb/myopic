@@ -194,4 +194,21 @@ mod fen_test {
         };
         test(board, String::from(fen));
     }
+
+    #[test]
+    fn case_2() {
+        let fen = "rnb2rk1/ppp2ppp/4pq2/8/2PP4/5N2/PP3PPP/R2QKB1R w KQ - 2 9";
+        let board = TestBoard {
+            whites: vec![A2 | B2 | C4 | D4 | F2 | G2 | H2, F3, F1, A1 | H1, D1, E1],
+            blacks: vec![A7 | B7 | C7 | E6 | F7 | G7 | H7, B8, C8, A8 | F8, F6, G8],
+            castle_rights: CastleZoneSet::WHITE,
+            white_status: None,
+            black_status: Some(CastleZone::BK),
+            clock: 2,
+            active: Side::White,
+            enpassant: None,
+            history_count: 16,
+        };
+        test(board, String::from(fen));
+    }
 }
