@@ -8,10 +8,11 @@ use crate::pieces::Piece;
 #[cfg(test)]
 pub use self::implementation::testutils;
 pub use self::implementation::BoardImpl;
+use crate::base::Reflectable;
 
 mod implementation;
 #[cfg(test)]
-pub mod test_board;
+mod test_board;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {
@@ -41,7 +42,7 @@ pub enum MoveComputeType {
 /// compute the set of legal moves and queried for a variety of
 /// properties.
 ///
-pub trait Board {
+pub trait Board: Clonet {
     /// Evolves this board in place according to the given move reference.
     /// The move must be one that is legal in this position otherwise the
     /// results are undefined. The data which is lost during this evolution
@@ -94,10 +95,10 @@ pub trait Board {
     fn history_count(&self) -> usize;
 }
 
-pub fn from_fen(fen: String) -> Result<BoardImpl, String> {
-    BoardImpl::from_fen(fen)
+pub fn from_fen(fen: &str) -> Result<BoardImpl, String> {
+    BoardImpl::from_fen(String::from(fen))
 }
 
 pub fn start() -> BoardImpl {
-    from_fen(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")).unwrap()
+    from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
 }

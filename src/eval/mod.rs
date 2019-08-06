@@ -26,6 +26,7 @@ pub trait EvalBoard: Board {
     fn static_eval(&self) -> i32;
 }
 
+#[derive(Clone, Eq, PartialEq)]
 pub struct SimpleEvalBoard<B: Board> {
     mid_eval: i32,
     end_eval: i32,
