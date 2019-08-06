@@ -15,7 +15,6 @@ use crate::base::square::Square;
 mod base;
 mod pieces;
 mod board;
-mod utils;
 mod eval;
 
 #[derive(Copy, Clone)]

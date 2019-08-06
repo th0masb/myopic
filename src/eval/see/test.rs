@@ -1,8 +1,6 @@
-use crate::base::bitboard::constants::*;
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Reflectable;
-use crate::board::BoardImpl;
 use crate::eval::see::See;
 use crate::pieces::Piece;
 use crate::board::Board;
@@ -20,22 +18,22 @@ struct TestCase<B: Board> {
     expected: Vec<(Square, Square, i32)>,
 }
 
-//impl<B: Board> Reflectable for TestCase<B> {
-//    fn reflect(&self) -> Self {
-//        let mut reflected_expected = Vec::new();
-//        for (src, targ, result) in self.expected.iter() {
-//            reflected_expected.push((src.reflect(), targ.reflect(), *result));
-//        }
-//        TestCase {
-//            board: self.board.reflect(),
-//            expected: reflected_expected,
-//        }
-//    }
-//}
+impl<B: Board> Reflectable for TestCase<B> {
+    fn reflect(&self) -> Self {
+        let mut reflected_expected = Vec::new();
+        for (src, targ, result) in self.expected.iter() {
+            reflected_expected.push((src.reflect(), targ.reflect(), *result));
+        }
+        TestCase {
+            board: self.board.reflect(),
+            expected: reflected_expected,
+        }
+    }
+}
 
 fn execute_case<B: Board>(test_case: TestCase<B>) {
     execute_case_impl(test_case.clone());
-    //execute_case_impl(test_case.reflect())
+    execute_case_impl(test_case.reflect())
 }
 
 fn execute_case_impl<B: Board>(test_case: TestCase<B>) {
@@ -71,10 +69,6 @@ fn case_1() {
 fn case_2() {
     execute_case(TestCase {
         board: board::from_fen("k7/6n1/2q1b2R/1P3P2/5N2/4Q3/8/K7 w KQkq - 10 30").unwrap(),
-//        board: TestBoard::positions(
-//            vec![ZERO, G7, E6, ZERO, C6, A8],
-//            vec![B5 | F5, F4, ZERO, H6, E3, H1],
-//        ),
         expected: vec![
             (Square::B5, Square::C6, 9),
             (Square::C6, Square::B5, 1),

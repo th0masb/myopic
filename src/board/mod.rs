@@ -42,7 +42,7 @@ pub enum MoveComputeType {
 /// compute the set of legal moves and queried for a variety of
 /// properties.
 ///
-pub trait Board: Clonet {
+pub trait Board: Clone + Reflectable {
     /// Evolves this board in place according to the given move reference.
     /// The move must be one that is legal in this position otherwise the
     /// results are undefined. The data which is lost during this evolution

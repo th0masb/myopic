@@ -1,17 +1,14 @@
 use regex::Regex;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::castlezone::CastleZone;
-use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
+use crate::base::square::Square;
+use crate::board::Board;
 use crate::board::implementation::{
     castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker,
 };
-use crate::board::Board;
 use crate::board::Move;
-use crate::board::MoveComputeType;
-use crate::board::ReversalData;
 use crate::pieces::Piece;
 
 mod evolve;
@@ -33,6 +30,25 @@ pub struct BoardImpl {
     active: Side,
     enpassant: Option<Square>,
     clock: usize,
+}
+
+impl Reflectable for BoardImpl {
+    fn reflect(&self) -> Self {
+        let pieces = self.pieces.reflect();
+        let castling = self.castling.reflect();
+        let active = self.active.reflect();
+        let enpassant = self.enpassant.reflect();
+        let history_count = self.history_count();
+        let hash = hash(&pieces, &castling, active, enpassant);
+        BoardImpl {
+            hashes: HashCache::new(hash, history_count),
+            clock: self.clock,
+            pieces,
+            castling,
+            active,
+            enpassant,
+        }
+    }
 }
 
 lazy_static! {
@@ -166,14 +182,13 @@ impl Reflectable for Move {
 
 #[cfg(test)]
 mod fen_test {
-    use super::testutils;
-    use crate::board::test_board::TestBoard;
-    use crate::board::BoardImpl;
     use crate::base::bitboard::constants::*;
-    use crate::base::castlezone::CastleZoneSet;
     use crate::base::castlezone::CastleZone;
+    use crate::base::castlezone::CastleZoneSet;
     use crate::base::Side;
     use crate::base::square::Square;
+    use crate::board::BoardImpl;
+    use crate::board::test_board::TestBoard;
 
     fn test(expected: TestBoard, fen_string: String) {
         assert_eq!(BoardImpl::from(expected), BoardImpl::from_fen(fen_string).unwrap())

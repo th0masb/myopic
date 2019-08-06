@@ -1,5 +1,3 @@
-use std::iter;
-
 const CACHE_SIZE: usize = 20;
 
 /// The hashcache is a circular fixed sized array which tracks a sequence

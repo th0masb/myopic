@@ -34,6 +34,12 @@ pub struct SimpleEvalBoard<B: Board> {
     board: B,
 }
 
+impl<B: Board> Reflectable for SimpleEvalBoard<B> {
+    fn reflect(&self) -> Self {
+        unimplemented!()
+    }
+}
+
 const PHASE_VALUES: [usize; 5] = [0, 1, 1, 2, 4];
 const TOTAL_PHASE: usize = 16 * PHASE_VALUES[0]
     + 4 * (PHASE_VALUES[1] + PHASE_VALUES[2] + PHASE_VALUES[3])

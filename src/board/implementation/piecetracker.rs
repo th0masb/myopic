@@ -3,11 +3,25 @@ use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::implementation::hash;
 use crate::pieces::Piece;
+use crate::base::Reflectable;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct PieceTracker {
     boards: [BitBoard; 12],
     hash: u64,
+}
+
+impl Reflectable for PieceTracker {
+    fn reflect(&self) -> Self {
+        let mut new_boards = [BitBoard::EMPTY; 12];
+        for i in 0..12 {
+            new_boards[i] = self.boards[(i + 6) % 12].reflect();
+        }
+        PieceTracker {
+            boards: new_boards,
+            hash: hash_boards(&new_boards),
+        }
+    }
 }
 
 fn hash_boards(boards: &[BitBoard]) -> u64 {
@@ -146,8 +160,6 @@ impl PieceTracker {
 
 #[cfg(test)]
 mod test {
-    use std::iter;
-
     use crate::base::square::Square::C3;
     use crate::base::square::Square::E4;
     use crate::base::square::Square::E5;

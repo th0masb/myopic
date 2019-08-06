@@ -3,6 +3,7 @@ use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::Side;
 use crate::board::implementation::hash;
+use crate::base::Reflectable;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct CastleTracker {
@@ -10,6 +11,16 @@ pub struct CastleTracker {
     // TODO Do we actually need to keep these fields?
     white_status: Option<CastleZone>,
     black_status: Option<CastleZone>,
+}
+
+impl Reflectable for CastleTracker {
+    fn reflect(&self) -> Self {
+        CastleTracker {
+            remaining_rights: self.remaining_rights.reflect(),
+            white_status: self.white_status.reflect(),
+            black_status: self.black_status.reflect(),
+        }
+    }
 }
 
 fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
