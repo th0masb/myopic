@@ -173,6 +173,7 @@ mod fen_test {
     use crate::base::castlezone::CastleZoneSet;
     use crate::base::castlezone::CastleZone;
     use crate::base::Side;
+    use crate::base::square::Square;
 
     fn test(expected: TestBoard, fen_string: String) {
         assert_eq!(BoardImpl::from(expected), BoardImpl::from_fen(fen_string).unwrap())
@@ -208,6 +209,40 @@ mod fen_test {
             active: Side::White,
             enpassant: None,
             history_count: 16,
+        };
+        test(board, String::from(fen));
+    }
+
+    #[test]
+    fn case_3() {
+        let fen = "r1bqkbnr/ppp1pppp/n7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3";
+        let board = TestBoard {
+            whites: vec![A2 | B2 | C2 | D2 | E5 | F2 | G2 | H2, B1 | G1, C1 | F1, A1 | H1, D1, E1],
+            blacks: vec![A7 | B7 | C7 | D5 | E7 | F7 | G7 | H7, A6 | G8, C8 | F8, A8 | H8, D8, E8],
+            castle_rights: CastleZoneSet::ALL,
+            white_status: None,
+            black_status: None,
+            clock: 0,
+            active: Side::White,
+            enpassant: Some(Square::D6),
+            history_count: 4,
+        };
+        test(board, String::from(fen));
+    }
+
+    #[test]
+    fn case_4() {
+        let fen = "r6k/p5pp/p1b2qnN/8/3Q4/2P1B3/PP4PP/R5K1 b - - 2 21";
+        let board = TestBoard {
+            whites: vec![A2 | B2 | C3 | G2 | H2, H6, E3, A1, D4, G1],
+            blacks: vec![A7 | A6 | G7 | H7, G6, C6, A8, F6, H8],
+            castle_rights: CastleZoneSet::NONE,
+            white_status: Some(CastleZone::WK),
+            black_status: Some(CastleZone::BK),
+            clock: 2,
+            active: Side::Black,
+            enpassant: None,
+            history_count: 41,
         };
         test(board, String::from(fen));
     }

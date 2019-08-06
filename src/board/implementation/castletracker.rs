@@ -12,6 +12,12 @@ pub struct CastleTracker {
     black_status: Option<CastleZone>,
 }
 
+fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
+    CastleZone::iter()
+        .filter(|x| move_components.intersects(x.source_squares()))
+        .collect()
+}
+
 impl CastleTracker {
     pub fn from_fen(fen_string: &String) -> CastleTracker {
         let rights: CastleZoneSet = CastleZone::iter()
@@ -48,12 +54,6 @@ impl CastleTracker {
         }
     }
 
-    fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
-        CastleZone::iter()
-            .filter(|x| move_components.intersects(x.source_squares()))
-            .collect()
-    }
-
     pub fn set_status(&mut self, side: Side, zone: CastleZone) -> CastleZoneSet {
         match side {
             Side::White => self.white_status = Some(zone),
@@ -76,7 +76,7 @@ impl CastleTracker {
     }
 
     pub fn remove_rights(&mut self, move_components: BitBoard) -> CastleZoneSet {
-        let to_remove = CastleTracker::compute_rights_removed(move_components);
+        let to_remove = compute_rights_removed(move_components);
         let removed = self.remaining_rights & to_remove;
         self.remaining_rights = self.remaining_rights - removed;
         removed
