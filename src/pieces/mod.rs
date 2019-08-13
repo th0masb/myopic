@@ -32,6 +32,16 @@ impl Piece {
         ALL.iter().cloned()
     }
 
+    /// Create an iterator traversing over all white pieces in order.
+    pub fn iter_w() -> impl Iterator<Item = Piece> {
+        WHITE.iter().cloned()
+    }
+
+    /// Create an iterator traversing over all black pieces in order.
+    pub fn iter_b() -> impl Iterator<Item = Piece> {
+        BLACK.iter().cloned()
+    }
+
     /// Returns the king which belongs to the given side.
     pub fn king(side: Side) -> Piece {
         match side {
