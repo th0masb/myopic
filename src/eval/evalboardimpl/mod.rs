@@ -18,7 +18,7 @@ mod test;
 pub struct SimpleEvalBoard<B: Board> {
     mid_eval: i32,
     end_eval: i32,
-    phase: usize,
+    phase: i32,
     board: B,
 }
 
@@ -33,39 +33,53 @@ impl<B: Board> Reflectable for SimpleEvalBoard<B> {
     }
 }
 
-const PHASE_VALUES: [usize; 5] = [0, 1, 1, 2, 4];
-const TOTAL_PHASE: usize = 16 * PHASE_VALUES[0]
+const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
+const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
     + 4 * (PHASE_VALUES[1] + PHASE_VALUES[2] + PHASE_VALUES[3])
     + 2 * PHASE_VALUES[4];
 
-fn compute_phase<B: Board>(board: &B) -> usize {
+fn compute_phase<B: Board>(board: &B) -> i32 {
     let pieces: Vec<_> = Piece::iter_w().take(5).chain(Piece::iter_b().take(5)).collect();
-    let phase_sub: usize = pieces.into_iter()
-        .map(|p| board.locs(p).size() * PHASE_VALUES[(p as usize) % 6]).sum();
+    let phase_sub: i32 = pieces.into_iter()
+        .map(|p| board.locs(p).size() as i32 * PHASE_VALUES[(p as usize) % 6]).sum();
     TOTAL_PHASE - phase_sub
 }
+
+fn compute_midgame<B: Board>(board: &B) -> i32 {
+    Piece::iter()
+        .flat_map(|p| board.locs(p).iter().map(move |loc| (p, loc)))
+        .map(|(p, loc)| tables::midgame(p, loc) + values::midgame(p))
+        .sum()
+}
+
+fn compute_endgame<B: Board>(board: &B) -> i32 {
+    Piece::iter()
+        .flat_map(|p| board.locs(p).iter().map(move |loc| (p, loc)))
+        .map(|(p, loc)| tables::endgame(p, loc) + values::endgame(p))
+        .sum()
+}
+
 
 impl<B: Board> SimpleEvalBoard<B> {
     fn new(board: B) -> SimpleEvalBoard<B> {
         SimpleEvalBoard {
-            mid_eval: tables::total_midgame(&board),
-            end_eval: tables::total_midgame(&board),
+            mid_eval: compute_midgame(&board),
+            end_eval: compute_endgame(&board),
             phase: compute_phase(&board),
             board
         }
     }
 
-
     fn remove(&mut self, piece: Piece, location: Square) {
         self.mid_eval -= tables::midgame(piece, location) + values::midgame(piece);
         self.end_eval -= tables::endgame(piece, location) + values::endgame(piece);
-        self.phase += PHASE_VALUES[piece as usize];
+        self.phase += PHASE_VALUES[(piece as usize) % 6];
     }
 
     fn add(&mut self, piece: Piece, location: Square) {
         self.mid_eval += tables::midgame(piece, location) + values::midgame(piece);
         self.end_eval += tables::endgame(piece, location) + values::endgame(piece);
-        self.phase -= PHASE_VALUES[piece as usize];
+        self.phase -= PHASE_VALUES[(piece as usize) % 6];
     }
 }
 
@@ -129,14 +143,14 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
             &Move::Enpassant(source) => {
                 let active_pawn = Piece::pawn(self.active());
                 let passive_pawn = active_pawn.reflect();
-                let enpassant = self.enpassant().unwrap();
+                let enpassant = discards.discarded_enpassant.unwrap();
                 let removal_square = match self.active() {
-                    Side::White => enpassant >> 8,
-                    Side::Black => enpassant << 8,
+                    Side::White => enpassant << 8,
+                    Side::Black => enpassant >> 8,
                 };
-                self.add(active_pawn, source);
-                self.remove(active_pawn, enpassant);
-                self.add(passive_pawn, removal_square);
+                self.remove(passive_pawn, enpassant);
+                self.add(passive_pawn, source);
+                self.add(active_pawn, removal_square);
             }
             &Move::Castle(zone) => {
                 let (rook, r_src, r_target) = zone.rook_data();
