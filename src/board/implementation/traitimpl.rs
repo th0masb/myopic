@@ -30,7 +30,7 @@ impl Board for BoardImpl {
         self.active
     }
 
-    fn enpassant_square(&self) -> Option<Square> {
+    fn enpassant(&self) -> Option<Square> {
         self.enpassant
     }
 
@@ -38,22 +38,22 @@ impl Board for BoardImpl {
         self.castling.status(side)
     }
 
-    fn piece_locations(&self, piece: Piece) -> BitBoard {
+    fn locs(&self, piece: Piece) -> BitBoard {
         self.pieces.locations(piece)
     }
 
-    fn king_location(&self, side: Side) -> Square {
+    fn king(&self, side: Side) -> Square {
         self.pieces.king_location(side)
     }
 
-    fn whites_blacks(&self) -> (BitBoard, BitBoard) {
+    fn sides(&self) -> (BitBoard, BitBoard) {
         (
             self.pieces.side_locations(Side::White),
             self.pieces.side_locations(Side::Black),
         )
     }
 
-    fn piece_at(&self, location: Square) -> Option<Piece> {
+    fn piece(&self, location: Square) -> Option<Piece> {
         self.pieces.piece_at(location)
     }
 

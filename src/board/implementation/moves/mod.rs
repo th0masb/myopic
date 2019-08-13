@@ -57,7 +57,7 @@ impl BoardImpl {
 
     fn compute_nbrqk_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(40);
-        let (whites, blacks) = self.whites_blacks();
+        let (whites, blacks) = self.sides();
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
         // Add standard moves for pieces which aren't pawns or king
         for piece in Piece::on_side(self.active).skip(1) {
@@ -72,7 +72,7 @@ impl BoardImpl {
     fn compute_pawn_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
         let mut dest: Vec<Move> = Vec::with_capacity(20);
         let (standard, enpassant, promotion) = self.separate_pawn_locs();
-        let (active_pawn, (whites, blacks)) = (Piece::pawn(self.active), self.whites_blacks());
+        let (active_pawn, (whites, blacks)) = (Piece::pawn(self.active), self.sides());
         let compute_moves = |loc: Square| active_pawn.moves(loc, whites, blacks);
 
         // Add moves for pawns which can only produce standard moves.
@@ -98,7 +98,7 @@ impl BoardImpl {
             enpassant_source::squares(self.active, sq)
         });
         let promotion_rank = self.active.pawn_last_rank();
-        let pawn_locs = self.piece_locations(Piece::pawn(self.active));
+        let pawn_locs = self.locs(Piece::pawn(self.active));
         (
             pawn_locs - enpassant_source - promotion_rank,
             pawn_locs & enpassant_source,
@@ -107,8 +107,8 @@ impl BoardImpl {
     }
 
     fn compute_king_attackers(&self) -> Vec<(Piece, Square)> {
-        let (whites, blacks) = self.whites_blacks();
-        let king_loc = self.pieces.king_location(self.active);
+        let (whites, blacks) = self.sides();
+        let king_loc = self.king(self.active);
         pnbrq(self.active.reflect())
             .iter()
             .flat_map(|&p| self.pieces.locations(p).into_iter().map(move |s| (p, s)))
@@ -117,8 +117,8 @@ impl BoardImpl {
     }
 
     fn compute_castle_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
-        let king_constraint = constraints.get(self.king_location(self.active));
-        let (whites, blacks) = self.whites_blacks();
+        let king_constraint = constraints.get(self.king(self.active));
+        let (whites, blacks) = self.sides();
         let p1 = |z: CastleZone| king_constraint.subsumes(z.uncontrolled_requirement());
         let p2 = |z: CastleZone| !(whites | blacks).intersects(z.unoccupied_requirement());
         self.castling

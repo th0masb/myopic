@@ -1,7 +1,24 @@
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
+use crate::board::Board;
 use crate::pieces::Piece;
+
+/// API method for computing the midgame evaluation of a board.
+pub fn total_midgame<B: Board>(board: &B) -> i32 {
+    Piece::iter()
+        .flat_map(|p| board.locs(p).iter().map(move |loc| (p, loc)))
+        .map(|(p, loc)| midgame(p, loc))
+        .sum()
+}
+
+/// API method for computing the endgame evaluation of a board.
+pub fn total_endgame<B: Board>(board: &B) -> i32 {
+    Piece::iter()
+        .flat_map(|p| board.locs(p).iter().map(move |loc| (p, loc)))
+        .map(|(p, loc)| endgame(p, loc))
+        .sum()
+}
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the midgame.
@@ -60,6 +77,7 @@ const KNIGHT: [(i32, i32); 32] = [
     (-96, -74),
     (-80, -46),
     (-79, -18),
+    // Rank 2
     (-79, -70),
     (-39, -56),
     (-24, -15),
@@ -247,6 +265,7 @@ const PAWN: [(i32, i32); 64] = [
     (0, 0),
     (0, 0),
     (0, 0),
+    // Rank 2
     (-5, -19),
     (7, -5),
     (19, 7),

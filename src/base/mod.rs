@@ -89,9 +89,9 @@ impl<T: Reflectable> Reflectable for Option<T> {
 }
 
 impl<T1, T2> Reflectable for (T1, T2)
-    where
-        T1: Reflectable,
-        T2: Reflectable,
+where
+    T1: Reflectable,
+    T2: Reflectable,
 {
     fn reflect(&self) -> Self {
         (self.0.reflect(), self.1.reflect())

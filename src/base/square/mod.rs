@@ -90,7 +90,9 @@ impl Square {
     /// string is passed.
     pub fn from_string(square: &String) -> Square {
         let upper = square.to_uppercase();
-        Square::iter().find(|sq| format!("{:?}", sq) == upper).unwrap()
+        Square::iter()
+            .find(|sq| format!("{:?}", sq) == upper)
+            .unwrap()
     }
 
     /// Return the index of the rank on which this square resides.

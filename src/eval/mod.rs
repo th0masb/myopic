@@ -36,7 +36,12 @@ pub struct SimpleEvalBoard<B: Board> {
 
 impl<B: Board> Reflectable for SimpleEvalBoard<B> {
     fn reflect(&self) -> Self {
-        unimplemented!()
+        SimpleEvalBoard {
+            mid_eval: -self.mid_eval,
+            end_eval: -self.end_eval,
+            phase: self.phase,
+            board: self.board.reflect(),
+        }
     }
 }
 
@@ -65,20 +70,20 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
             &Move::Standard(moving, src, target) => {
                 self.remove(moving, src);
                 self.add(moving, target);
-                self.piece_at(target)
+                self.piece(target)
                     .map(|taken| self.remove(taken, target));
             }
             &Move::Promotion(source, target, promoting) => {
                 let pawn = Piece::pawn(self.active());
                 self.remove(pawn, source);
                 self.add(promoting, target);
-                self.piece_at(target)
+                self.piece(target)
                     .map(|taken| self.remove(taken, target));
             }
             &Move::Enpassant(source) => {
                 let active_pawn = Piece::pawn(self.active());
                 let passive_pawn = active_pawn.reflect();
-                let enpassant = self.enpassant_square().unwrap();
+                let enpassant = self.enpassant().unwrap();
                 let removal_square = match self.active() {
                     Side::White => enpassant >> 8,
                     Side::Black => enpassant << 8,
@@ -119,7 +124,7 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
             &Move::Enpassant(source) => {
                 let active_pawn = Piece::pawn(self.active());
                 let passive_pawn = active_pawn.reflect();
-                let enpassant = self.enpassant_square().unwrap();
+                let enpassant = self.enpassant().unwrap();
                 let removal_square = match self.active() {
                     Side::White => enpassant >> 8,
                     Side::Black => enpassant << 8,
@@ -152,28 +157,28 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
         self.board.active()
     }
 
-    fn enpassant_square(&self) -> Option<Square> {
-        self.board.enpassant_square()
+    fn enpassant(&self) -> Option<Square> {
+        self.board.enpassant()
     }
 
     fn castle_status(&self, side: Side) -> Option<CastleZone> {
         self.board.castle_status(side)
     }
 
-    fn piece_locations(&self, piece: Piece) -> BitBoard {
-        self.board.piece_locations(piece)
+    fn locs(&self, piece: Piece) -> BitBoard {
+        self.board.locs(piece)
     }
 
-    fn king_location(&self, side: Side) -> Square {
-        self.board.king_location(side)
+    fn king(&self, side: Side) -> Square {
+        self.board.king(side)
     }
 
-    fn whites_blacks(&self) -> (BitBoard, BitBoard) {
-        self.board.whites_blacks()
+    fn sides(&self) -> (BitBoard, BitBoard) {
+        self.board.sides()
     }
 
-    fn piece_at(&self, location: Square) -> Option<Piece> {
-        self.board.piece_at(location)
+    fn piece(&self, location: Square) -> Option<Piece> {
+        self.board.piece(location)
     }
 
     fn half_move_clock(&self) -> usize {

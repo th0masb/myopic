@@ -55,7 +55,7 @@ impl BoardImpl {
         let passive_control = self.compute_control(self.active.reflect());
         let pinned = self.compute_pinned();
 
-        if passive_control.contains(self.king_location(self.active)) {
+        if passive_control.contains(self.king(self.active)) {
             self.in_check(passive_control, &pinned)
         } else {
             match computation_type {
@@ -69,7 +69,7 @@ impl BoardImpl {
     /// Assuming the king is not in check
     fn any(&self, passive_control: BitBoard, pinned: &PinnedSet) -> MoveConstraints {
         let mut constraints = MoveConstraints::all_universal();
-        constraints.set(self.king_location(self.active), !passive_control);
+        constraints.set(self.king(self.active), !passive_control);
         constraints.intersect_pins(pinned);
         constraints
     }
@@ -81,13 +81,13 @@ impl BoardImpl {
         pinned: &PinnedSet,
         checks: bool,
     ) -> MoveConstraints {
-        let (whites, blacks) = self.whites_blacks();
+        let (whites, blacks) = self.sides();
         let (active, passive) = (self.active, self.active.reflect());
         let mut constraints = MoveConstraints::all_universal();
         let passive_locs = self.pieces.side_locations(passive);
-        let passive_king_loc = self.king_location(passive);
+        let passive_king_loc = self.king(passive);
         // King constraint
-        constraints.set(self.king_location(active), passive_locs - passive_control);
+        constraints.set(self.king(active), passive_locs - passive_control);
         // Add pinned constraints
         constraints.intersect_pins(pinned);
         // Add attack constraints
@@ -100,7 +100,7 @@ impl BoardImpl {
                 BitBoard::EMPTY
             };
             let check_squares = piece.reflect().control(passive_king_loc, whites, blacks);
-            for loc in self.piece_locations(piece) {
+            for loc in self.locs(piece) {
                 if checks {
                     constraints.intersect(loc, passive_locs | check_squares | enpassant);
                 } else {
@@ -112,7 +112,7 @@ impl BoardImpl {
     }
 
     fn in_check(&self, passive_control: BitBoard, pinned: &PinnedSet) -> MoveConstraints {
-        let active_king_loc = self.pieces.king_location(self.active);
+        let active_king_loc = self.king(self.active);
         let attackers = self.compute_king_attackers();
         if attackers.len() == 1 {
             // If one attacker then all pieces can only move to block the attack

@@ -1,18 +1,16 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square::Square;
 use crate::pieces::Piece;
 
-#[cfg(test)]
-pub use self::implementation::testutils;
 pub use self::implementation::BoardImpl;
-use crate::base::Reflectable;
 
-mod implementation;
 #[cfg(test)]
 mod test_board;
+mod implementation;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReversalData {
@@ -71,22 +69,22 @@ pub trait Board: Clone + Reflectable {
     fn active(&self) -> Side;
 
     /// Return the enpassant target square in this position.
-    fn enpassant_square(&self) -> Option<Square>;
+    fn enpassant(&self) -> Option<Square>;
 
     /// Return the castling status of the given side.
     fn castle_status(&self, side: Side) -> Option<CastleZone>;
 
     /// Return the locations of the given piece.
-    fn piece_locations(&self, piece: Piece) -> BitBoard;
+    fn locs(&self, piece: Piece) -> BitBoard;
 
     /// Return the location of the king for the given side.
-    fn king_location(&self, side: Side) -> Square;
+    fn king(&self, side: Side) -> Square;
 
     /// Return the locations of all white and black pieces.
-    fn whites_blacks(&self) -> (BitBoard, BitBoard);
+    fn sides(&self) -> (BitBoard, BitBoard);
 
     /// Return the piece occupying the given location.
-    fn piece_at(&self, location: Square) -> Option<Piece>;
+    fn piece(&self, location: Square) -> Option<Piece>;
 
     /// Return the half move clock value at this position.
     fn half_move_clock(&self) -> usize;
