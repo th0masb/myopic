@@ -1,7 +1,7 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
-use crate::board::implementation::hash;
+use crate::board::implementation::utils::hash;
 use crate::pieces::Piece;
 use crate::base::Reflectable;
 

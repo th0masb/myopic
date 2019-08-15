@@ -5,13 +5,15 @@ use crate::base::Side;
 use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
 
-use super::{BLACK_SLIDERS, WHITE_SLIDERS};
+
+pub const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
+pub const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
 
 /// A pinned set consisted of the locations of all the pieces which are pinned
 /// alongside a vector containing the constraint area for each of these pinned
 /// pieces.
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub(in crate::board::implementation) struct PinnedSet {
+pub struct PinnedSet {
     pub pinned_locations: BitBoard,
     pub constraint_areas: Vec<(Square, BitBoard)>,
 }
@@ -52,7 +54,7 @@ impl BoardImpl {
     /// i.e have their movement areas constrained so that they do not move
     /// and leave the king in check.
     ///
-    pub(in crate::board::implementation) fn compute_pinned(&self) -> PinnedSet {
+    pub fn compute_pinned(&self) -> PinnedSet {
         let locs = |side: Side| self.pieces.side_locations(side);
         let (active, passive) = (locs(self.active), locs(self.active.reflect()));
         let king_loc = self.pieces.king_location(self.active);

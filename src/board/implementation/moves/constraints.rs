@@ -1,9 +1,9 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
 use crate::base::Reflectable;
-use crate::board::implementation::moves::pinning::PinnedSet;
-use crate::board::implementation::BoardImpl;
+use crate::base::square::Square;
 use crate::board::Board;
+use crate::board::implementation::BoardImpl;
+use crate::board::implementation::utils::pinning::PinnedSet;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;
 

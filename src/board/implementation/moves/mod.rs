@@ -1,11 +1,11 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
-use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::implementation::moves::constraints::MoveConstraints;
-use crate::board::implementation::BoardImpl;
+use crate::base::square::Square;
 use crate::board::Board;
+use crate::board::implementation::BoardImpl;
+use crate::board::implementation::moves::constraints::MoveConstraints;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;
@@ -14,12 +14,8 @@ use crate::pieces::Piece;
 mod test;
 
 mod constraints;
-mod control;
 mod enpassant_source;
-mod pinning;
 
-const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
-const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
 const FILES: [BitBoard; 8] = BitBoard::FILES;
 
 fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
