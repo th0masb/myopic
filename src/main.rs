@@ -16,6 +16,7 @@ mod base;
 mod pieces;
 mod board;
 mod eval;
+mod search;
 
 #[derive(Copy, Clone)]
 enum Test {
@@ -36,7 +37,6 @@ fn main() {
     println!("{:?}", Square::E4);
     let x = format!("{:?}", Square::E4);
     println!("{}", x);
-
     let string = String::from("hello");
     println!("{}", string.contains("e"))
 //    let squares = base.square:;:H1.search_one(dirs);

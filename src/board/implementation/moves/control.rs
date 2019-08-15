@@ -9,7 +9,7 @@ impl BoardImpl {
     /// passive king is treated as invisible so that if it is in check it cannot create
     /// it's own escape squares by blocking the control ray of an attacking slider.
     /// TODO Improve efficiency by treated all pawns as a block
-    pub(super) fn compute_control(&self, side: Side) -> BitBoard {
+    pub(in crate::board::implementation) fn compute_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
             Side::White => (

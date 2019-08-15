@@ -8,6 +8,7 @@ use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::ReversalData;
 use crate::pieces::Piece;
+use crate::board::Termination;
 
 impl Board for BoardImpl {
     fn evolve(&mut self, action: &Move) -> ReversalData {
@@ -20,6 +21,10 @@ impl Board for BoardImpl {
 
     fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
         self.compute_moves_impl(computation_type)
+    }
+
+    fn compute_termination_status(&self) -> Option<Termination> {
+        unimplemented!()
     }
 
     fn hash(&self) -> u64 {

@@ -10,6 +10,7 @@ use crate::board::ReversalData;
 use crate::eval::{tables, values};
 use crate::eval::EvalBoard;
 use crate::pieces::Piece;
+use crate::board::Termination;
 
 #[cfg(test)]
 mod test;
@@ -61,7 +62,7 @@ fn compute_endgame<B: Board>(board: &B) -> i32 {
 
 
 impl<B: Board> SimpleEvalBoard<B> {
-    fn new(board: B) -> SimpleEvalBoard<B> {
+    pub(super) fn new(board: B) -> SimpleEvalBoard<B> {
         SimpleEvalBoard {
             mid_eval: compute_midgame(&board),
             end_eval: compute_endgame(&board),
@@ -166,6 +167,10 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
 
     fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
         self.board.compute_moves(computation_type)
+    }
+
+    fn compute_termination_status(&self) -> Option<Termination> {
+        self.board.compute_termination_status()
     }
 
     fn hash(&self) -> u64 {

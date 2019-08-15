@@ -35,6 +35,11 @@ pub enum MoveComputeType {
     AttacksChecks
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub enum Termination {
+    Draw, Loss,
+}
+
 /// Trait representing a mutable state of play of a chess game
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
@@ -61,6 +66,14 @@ pub trait Board: Clone + Reflectable {
     /// given computation type. Note there is no particular ordering to the
     /// move vector.
     fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move>;
+
+    /// Compute the termination state of this node. If it is not terminal
+    /// nothing is returned, if it is then the manner of termination is
+    /// returned wrapped inside an Option. The termination can be only a
+    /// draw or a loss since a side only loses when it runs out of moves,
+    /// i.e. you don't play a winning move, you just fail to have a legal
+    /// move.
+    fn compute_termination_status(&self) -> Option<Termination>;
 
     /// Returns the Zobrist hash of this position.
     fn hash(&self) -> u64;
