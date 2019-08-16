@@ -2,7 +2,7 @@ use std::fmt;
 
 use itertools::Itertools;
 
-use crate::base::dir;
+use crate::base::direction;
 use crate::base::square::Square;
 use crate::base::square::Square::H1;
 use crate::base::Reflectable;
@@ -122,16 +122,16 @@ fn loc(sq: Square) -> u64 {
 }
 
 fn create_files() -> Vec<BitBoard> {
-    (H1.search(dir::W) | H1)
+    (H1.search(direction::W) | H1)
         .into_iter()
-        .map(|sq| sq.search(dir::N) | sq)
+        .map(|sq| sq.search(direction::N) | sq)
         .collect()
 }
 
 fn create_ranks() -> Vec<BitBoard> {
-    (H1.search(dir::N) | H1)
+    (H1.search(direction::N) | H1)
         .into_iter()
-        .map(|sq| sq.search(dir::W) | sq)
+        .map(|sq| sq.search(direction::W) | sq)
         .collect()
 }
 

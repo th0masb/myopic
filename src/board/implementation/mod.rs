@@ -6,7 +6,7 @@ use crate::base::Side;
 use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::implementation::{
-    castletracker::CastleTracker, history::History, piecetracker::PieceTracker,
+    castletracker::CastleTracker, history::History, positions::Positions,
 };
 use crate::board::Move;
 use crate::pieces::Piece;
@@ -20,7 +20,7 @@ mod evolve;
 mod moves;
 mod castletracker;
 mod history;
-mod piecetracker;
+mod positions;
 mod cache;
 #[cfg(test)]
 mod test;
@@ -28,7 +28,7 @@ mod test;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardImpl {
     history: History,
-    pieces: PieceTracker,
+    pieces: Positions,
     castling: CastleTracker,
     active: Side,
     enpassant: Option<Square>,
@@ -88,7 +88,7 @@ impl BoardImpl {
                 Err(fen_string)
             } else {
                 // We know all parts are valid here...
-                let pieces = PieceTracker::from_fen(ranks);
+                let pieces = Positions::from_fen(ranks);
                 let active = side_from_fen(&initial_split[1]);
                 let castling = CastleTracker::from_fen(&initial_split[2]);
                 let enpassant = enpassant_from_fen(&initial_split[3]);
@@ -125,7 +125,7 @@ impl BoardImpl {
     }
 }
 
-fn hash(pt: &PieceTracker, ct: &CastleTracker, active: Side, ep: Option<Square>) -> u64 {
+fn hash(pt: &Positions, ct: &CastleTracker, active: Side, ep: Option<Square>) -> u64 {
     pt.hash()
         ^ ct.hash()
         ^ crate::base::hash::side_feature(active)
@@ -285,7 +285,7 @@ impl Board for BoardImpl {
     }
 
     fn termination_status(&mut self) -> Option<Termination> {
-        unimplemented!()
+        self.termination_status_impl()
     }
 
     fn hash(&self) -> u64 {

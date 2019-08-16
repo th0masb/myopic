@@ -1,9 +1,9 @@
 use std::num::Wrapping;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::dir::{E, N, S, W};
-use crate::base::dir::{NE, NW, SE, SW};
-use crate::base::dir::Dir;
+use crate::base::direction::{E, N, S, W};
+use crate::base::direction::{NE, NW, SE, SW};
+use crate::base::direction::Dir;
 use crate::base::square::Square;
 
 pub mod bishops;

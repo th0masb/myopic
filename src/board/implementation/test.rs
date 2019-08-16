@@ -1,14 +1,14 @@
 use crate::base::bitboard::BitBoard;
 use crate::board::implementation::castletracker::CastleTracker;
 use crate::board::implementation::history::History;
-use crate::board::implementation::piecetracker::PieceTracker;
+use crate::board::implementation::positions::Positions;
 use crate::board::implementation::BoardImpl;
 use crate::board::test_board::TestBoard;
 use crate::board::implementation::cache::CalculationCache;
 
 impl BoardImpl {
     pub fn from(test_board: TestBoard) -> BoardImpl {
-        let pieces = PieceTracker::new(
+        let pieces = Positions::new(
             vec![test_board.whites, test_board.blacks]
                 .iter()
                 .flat_map(|x| x.into_iter())

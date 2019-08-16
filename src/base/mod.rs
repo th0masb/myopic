@@ -1,11 +1,11 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::dir::Dir;
-use crate::base::dir::N;
-use crate::base::dir::S;
+use crate::base::direction::Dir;
+use crate::base::direction::N;
+use crate::base::direction::S;
 
 pub mod bitboard;
 pub mod castlezone;
-pub mod dir;
+pub mod direction;
 pub mod square;
 pub mod hash;
 

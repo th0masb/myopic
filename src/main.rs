@@ -8,7 +8,7 @@ extern crate rand;
 extern crate regex;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::dir;
+use crate::base::direction;
 use crate::base::square::Square::*;
 use crate::base::square::Square;
 
@@ -24,7 +24,7 @@ enum Test {
 }
 
 fn main() {
-    let _dirs = vec!(&dir::N);
+    let _dirs = vec!(&direction::N);
     let board = D2 | H3;
     let board2 = A3 | G7;
     println!("{}", board | board2);

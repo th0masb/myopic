@@ -1,25 +1,29 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::Side;
 use crate::base::hash;
-use crate::pieces::Piece;
+use crate::base::square::Square;
 use crate::base::Reflectable;
+use crate::base::Side;
+use crate::pieces::Piece;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
-pub struct PieceTracker {
+pub struct Positions {
     boards: [BitBoard; 12],
     hash: u64,
+    whites: BitBoard,
+    blacks: BitBoard,
 }
 
-impl Reflectable for PieceTracker {
+impl Reflectable for Positions {
     fn reflect(&self) -> Self {
         let mut new_boards = [BitBoard::EMPTY; 12];
         for i in 0..12 {
             new_boards[i] = self.boards[(i + 6) % 12].reflect();
         }
-        PieceTracker {
+        Positions {
             boards: new_boards,
             hash: hash_boards(&new_boards),
+            whites: compute_whites(&new_boards),
+            blacks: compute_blacks(&new_boards),
         }
     }
 }
@@ -31,6 +35,14 @@ fn hash_boards(boards: &[BitBoard]) -> u64 {
         .zip(Piece::iter())
         .flat_map(|(&b, p)| b.into_iter().map(move |sq| hash::piece_feature(p, sq)))
         .fold(0u64, |a, b| a ^ b)
+}
+
+fn compute_whites(boards: &[BitBoard]) -> BitBoard {
+    boards.iter().take(6).fold(BitBoard::EMPTY, |a, &b| a | b)
+}
+
+fn compute_blacks(boards: &[BitBoard]) -> BitBoard {
+    boards.iter().skip(6).fold(BitBoard::EMPTY, |a, &b| a | b)
 }
 
 fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
@@ -60,8 +72,8 @@ fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
     dest
 }
 
-impl PieceTracker {
-    pub fn from_fen(ranks: Vec<String>) -> PieceTracker {
+impl Positions {
+    pub fn from_fen(ranks: Vec<String>) -> Positions {
         assert_eq!(8, ranks.len());
         let mut board = ranks
             .into_iter()
@@ -76,20 +88,24 @@ impl PieceTracker {
                 _ => (),
             }
         }
-        PieceTracker {
+        Positions {
             boards: bitboards,
             hash: hash_boards(&bitboards),
+            whites: compute_whites(&bitboards),
+            blacks: compute_blacks(&bitboards),
         }
     }
 
-    pub fn new(initial_boards: &[BitBoard]) -> PieceTracker {
+    pub fn new(initial_boards: &[BitBoard]) -> Positions {
         assert_eq!(12, initial_boards.len());
         let initial_hash = hash_boards(initial_boards);
         let mut dest: [BitBoard; 12] = [BitBoard::EMPTY; 12];
         dest.copy_from_slice(initial_boards);
-        PieceTracker {
+        Positions {
             boards: dest,
             hash: initial_hash,
+            whites: compute_whites(&dest),
+            blacks: compute_blacks(&dest),
         }
     }
 
@@ -108,17 +124,11 @@ impl PieceTracker {
     }
 
     pub fn whites(&self) -> BitBoard {
-        self.boards
-            .iter()
-            .take(6)
-            .fold(BitBoard::EMPTY, |a, &b| a | b)
+        self.whites
     }
 
     pub fn blacks(&self) -> BitBoard {
-        self.boards
-            .iter()
-            .skip(6)
-            .fold(BitBoard::EMPTY, |a, &b| a | b)
+        self.blacks
     }
 
     pub fn locs_impl(&self, piece: Piece) -> BitBoard {
@@ -140,6 +150,10 @@ impl PieceTracker {
                 erased_piece = Some(p);
                 self.boards[i] ^= square;
                 self.hash ^= hash::piece_feature(p, square);
+                match p.side() {
+                    Side::White => self.whites ^= square,
+                    Side::Black => self.blacks ^= square,
+                }
                 break;
             }
         }
@@ -147,9 +161,15 @@ impl PieceTracker {
     }
 
     pub fn toggle_piece(&mut self, piece: Piece, locations: &[Square]) {
+        let mut locationset = BitBoard::EMPTY;
         for &location in locations.iter() {
-            self.boards[piece as usize] ^= location;
+            locationset ^= location;
             self.hash ^= hash::piece_feature(piece, location);
+        }
+        self.boards[piece as usize] ^= locationset;
+        match piece.side() {
+            Side::White => self.whites ^= locationset,
+            Side::Black => self.blacks ^= locationset,
         }
     }
 
@@ -185,15 +205,17 @@ mod test {
         assert_eq!(init_tracker(Some(E4), Some(C3)), board);
     }
 
-    fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> PieceTracker {
+    fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> Positions {
         let mut boards: [BitBoard; 12] = [BitBoard::EMPTY; 12];
         boards[Piece::WP as usize] = pawn_loc.map_or(BitBoard::EMPTY, |x| x.lift());
         boards[Piece::BN as usize] = knight_loc.map_or(BitBoard::EMPTY, |x| x.lift());
         let p_hash = pawn_loc.map_or(0u64, |x| hash::piece_feature(Piece::WP, x));
         let n_hash = knight_loc.map_or(0u64, |x| hash::piece_feature(Piece::BN, x));
-        PieceTracker {
+        Positions {
             boards,
             hash: p_hash ^ n_hash,
+            whites: compute_whites(&boards),
+            blacks: compute_blacks(&boards),
         }
     }
 }

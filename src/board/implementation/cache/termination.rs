@@ -10,7 +10,18 @@ use crate::board::MoveComputeType;
 
 
 impl BoardImpl {
-    pub fn compute_termination(&mut self) -> Option<Termination> {
+    pub fn termination_status_impl(&mut self) -> Option<Termination> {
+        match &self.cache.termination_status {
+            Some(x) => *x,
+            None => {
+                let result = self.compute_termination();
+                self.cache.termination_status = Some(result);
+                result
+            }
+        }
+    }
+
+    fn compute_termination(&mut self) -> Option<Termination> {
         if self.half_move_clock() >= 50 || self.history.has_three_repetitions() {
             return Some(Termination::Draw);
         }

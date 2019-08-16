@@ -1,13 +1,13 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::dir::Dir;
-use crate::base::dir::E;
-use crate::base::dir::N;
-use crate::base::dir::NE;
-use crate::base::dir::NW;
-use crate::base::dir::S;
-use crate::base::dir::SE;
-use crate::base::dir::SW;
-use crate::base::dir::W;
+use crate::base::direction::Dir;
+use crate::base::direction::E;
+use crate::base::direction::N;
+use crate::base::direction::NE;
+use crate::base::direction::NW;
+use crate::base::direction::S;
+use crate::base::direction::SE;
+use crate::base::direction::SW;
+use crate::base::direction::W;
 use crate::base::square::Square;
 
 use std::cmp;

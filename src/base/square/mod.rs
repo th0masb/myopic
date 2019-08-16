@@ -1,7 +1,7 @@
 use itertools::iterate;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::dir::Dir;
+use crate::base::direction::Dir;
 
 mod traits;
 
@@ -235,7 +235,7 @@ const ALL: [Square; 64] = [
 
 #[cfg(test)]
 mod test {
-    use crate::base::dir::*;
+    use crate::base::direction::*;
 
     use super::Square;
     use super::Square::*;

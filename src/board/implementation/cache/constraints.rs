@@ -54,8 +54,7 @@ impl MoveConstraints {
 impl BoardImpl {
     pub fn constraints(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
         let passive_control = self.passive_control_impl();
-        let pinned = self.compute_pinned();
-
+        let pinned = self.pinned_set_impl();
         if passive_control.contains(self.king(self.active)) {
             self.in_check(passive_control, &pinned)
         } else {

@@ -12,7 +12,7 @@ use crate::pieces::Piece;
 #[cfg(test)]
 mod test;
 
-type RD = Discards;
+type D = Discards;
 
 /// Implementation of board evolution/devolution via some given Move
 /// instance which is assumed to be legal for this board.
@@ -20,7 +20,7 @@ impl BoardImpl {
     /// Public API for evolving a board. All that is required is a reference to
     /// a move which is assumed to be legal. The information required to reverse
     /// this same move is returned and the board is mutated to the next state.
-    pub fn evolve(&mut self, action: &Move) -> RD {
+    pub fn evolve(&mut self, action: &Move) -> D {
         match action {
             &Standard(piece, source, target) => self.evolve_s(piece, source, target),
             &Castle(zone) => self.evolve_c(zone),
@@ -31,7 +31,7 @@ impl BoardImpl {
 
     /// Public API for devolving a move, the information lost at evolve time is
     /// required as an input here to recover the lost state exactly.
-    pub fn devolve(&mut self, action: &Move, discards: RD) {
+    pub fn devolve(&mut self, action: &Move, discards: D) {
         match action {
             &Standard(piece, source, target) => self.devolve_s(piece, source, target, discards),
             &Castle(zone) => self.devolve_c(zone, discards),
@@ -40,7 +40,7 @@ impl BoardImpl {
         }
     }
 
-    fn evolve_s(&mut self, piece: Piece, source: Square, target: Square) -> RD {
+    fn evolve_s(&mut self, piece: Piece, source: Square, target: Square) -> D {
         let discarded_piece = self.pieces.erase_square(target);
         let discarded_rights = self.castling.remove_rights(source | target);
         let rev_data = self.create_rev_data(discarded_piece, discarded_rights);
@@ -51,16 +51,17 @@ impl BoardImpl {
             self.clock + 1
         };
         self.enpassant = BoardImpl::compute_enpassant(source, target, piece);
-        self.switch_side_then_update_hash();
+        self.switch_side_update_hash_clear_cache();
         rev_data
     }
 
-    fn switch_side_then_update_hash(&mut self) {
+    fn switch_side_update_hash_clear_cache(&mut self) {
         self.switch_side();
         self.update_hash();
+        self.clear_cache();
     }
 
-    fn create_rev_data(&self, piece: Option<Piece>, rights: CastleZoneSet) -> RD {
+    fn create_rev_data(&self, piece: Option<Piece>, rights: CastleZoneSet) -> D {
         Discards {
             piece: piece,
             rights: rights,
@@ -70,7 +71,7 @@ impl BoardImpl {
         }
     }
 
-    fn devolve_s(&mut self, piece: Piece, source: Square, target: Square, discards: RD) {
+    fn devolve_s(&mut self, piece: Piece, source: Square, target: Square, discards: D) {
         self.switch_side();
         self.pieces.toggle_piece(piece, &[target, source]);
         match discards.piece {
@@ -80,17 +81,17 @@ impl BoardImpl {
         self.replace_metadata(discards);
     }
 
-    fn evolve_c(&mut self, zone: CastleZone) -> RD {
+    fn evolve_c(&mut self, zone: CastleZone) -> D {
         let discarded_rights = self.castling.set_status(self.active, zone);
         let rev_data = self.create_rev_data(None, discarded_rights);
         self.toggle_castle_pieces(zone);
         self.enpassant = None;
         self.clock += 1;
-        self.switch_side_then_update_hash();
+        self.switch_side_update_hash_clear_cache();
         rev_data
     }
 
-    fn devolve_c(&mut self, zone: CastleZone, discards: RD) {
+    fn devolve_c(&mut self, zone: CastleZone, discards: D) {
         self.switch_side();
         self.toggle_castle_pieces(zone);
         self.castling.clear_status(self.active);
@@ -104,17 +105,17 @@ impl BoardImpl {
         self.pieces.toggle_piece(king, &[k_source, k_target]);
     }
 
-    fn evolve_e(&mut self, source: Square) -> RD {
+    fn evolve_e(&mut self, source: Square) -> D {
         let discarded_piece = Piece::pawn(self.active.reflect());
         let rev_data = self.create_rev_data(Some(discarded_piece), CastleZoneSet::NONE);
         self.toggle_enpassant_pieces(source, self.enpassant.unwrap());
         self.enpassant = None;
         self.clock = 0;
-        self.switch_side_then_update_hash();
+        self.switch_side_update_hash_clear_cache();
         rev_data
     }
 
-    fn devolve_e(&mut self, source: Square, discards: RD) {
+    fn devolve_e(&mut self, source: Square, discards: D) {
         self.switch_side();
         self.toggle_enpassant_pieces(source, discards.enpassant.unwrap());
         self.replace_metadata(discards);
@@ -131,7 +132,7 @@ impl BoardImpl {
         self.pieces.toggle_piece(passive_pawn, &[removal_square]);
     }
 
-    fn evolve_p(&mut self, source: Square, target: Square, promotion_result: Piece) -> RD {
+    fn evolve_p(&mut self, source: Square, target: Square, promotion_result: Piece) -> D {
         let discarded_piece = self.pieces.erase_square(target);
         let rev_data = self.create_rev_data(discarded_piece, CastleZoneSet::NONE);
         let moved_pawn = Piece::pawn(self.active);
@@ -139,11 +140,11 @@ impl BoardImpl {
         self.pieces.toggle_piece(promotion_result, &[target]);
         self.enpassant = None;
         self.clock = 0;
-        self.switch_side_then_update_hash();
+        self.switch_side_update_hash_clear_cache();
         rev_data
     }
 
-    fn devolve_p(&mut self, source: Square, target: Square, piece: Piece, discards: RD) {
+    fn devolve_p(&mut self, source: Square, target: Square, piece: Piece, discards: D) {
         self.switch_side();
         let moved_pawn = Piece::pawn(self.active);
         self.pieces.toggle_piece(moved_pawn, &[source]);
@@ -155,11 +156,12 @@ impl BoardImpl {
         self.replace_metadata(discards);
     }
 
-    fn replace_metadata(&mut self, discards: RD) {
+    fn replace_metadata(&mut self, discards: D) {
         self.castling.add_rights(discards.rights);
         self.history.pop_head(discards.hash);
         self.enpassant = discards.enpassant;
         self.clock = discards.half_move_clock;
+        self.clear_cache();
     }
 
     /// Determines the enpassant square for the next board state given a
