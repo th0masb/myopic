@@ -134,7 +134,7 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
                     .map(|taken| self.add(taken, target));
             }
             &Move::Promotion(source, target, promoting) => {
-                let pawn = Piece::pawn(self.active());
+                let pawn = Piece::pawn(self.active().reflect());
                 self.add(pawn, source);
                 self.remove(promoting, target);
                 discards
@@ -169,8 +169,8 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
         self.board.compute_moves(computation_type)
     }
 
-    fn compute_termination_status(&self) -> Option<Termination> {
-        self.board.compute_termination_status()
+    fn termination_status(&self) -> Option<Termination> {
+        self.board.termination_status()
     }
 
     fn hash(&self) -> u64 {
@@ -195,6 +195,10 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
 
     fn king(&self, side: Side) -> Square {
         self.board.king(side)
+    }
+
+    fn side(&self, side: Side) -> BitBoard {
+        self.board.side(side)
     }
 
     fn sides(&self) -> (BitBoard, BitBoard) {

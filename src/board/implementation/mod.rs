@@ -278,7 +278,7 @@ impl Board for BoardImpl {
         self.compute_moves_impl(computation_type)
     }
 
-    fn compute_termination_status(&self) -> Option<Termination> {
+    fn termination_status(&self) -> Option<Termination> {
         unimplemented!()
     }
 
@@ -304,6 +304,13 @@ impl Board for BoardImpl {
 
     fn king(&self, side: Side) -> Square {
         self.pieces.king_location(side)
+    }
+
+    fn side(&self, side: Side) -> BitBoard {
+        match side {
+            Side::White => self.pieces.whites(),
+            Side::Black => self.pieces.blacks(),
+        }
     }
 
     fn sides(&self) -> (BitBoard, BitBoard) {

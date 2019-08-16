@@ -6,6 +6,7 @@ use crate::board::implementation::BoardImpl;
 use crate::board::implementation::utils::pinning::PinnedSet;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;
+use crate::base::Side;
 
 pub struct MoveConstraints {
     data: [BitBoard; 64],
@@ -133,5 +134,30 @@ impl BoardImpl {
             constraint.set(active_king_loc, !passive_control);
             constraint
         }
+    }
+
+    fn compute_king_attackers(&self) -> Vec<(Piece, Square)> {
+        let (whites, blacks) = self.sides();
+        let king_loc = self.king(self.active);
+        pnbrq(self.active.reflect())
+            .iter()
+            .flat_map(|&p| self.pieces.locations(p).into_iter().map(move |s| (p, s)))
+            .filter(|(p, s)| p.control(*s, whites, blacks).contains(king_loc))
+            .collect()
+    }
+
+}
+
+fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
+    match side {
+        Side::White => &[Piece::WN, Piece::WB, Piece::WR, Piece::WQ],
+        Side::Black => &[Piece::BN, Piece::BB, Piece::BR, Piece::BQ],
+    }
+}
+
+fn pnbrq<'a>(side: Side) -> &'a [Piece; 5] {
+    match side {
+        Side::White => &[Piece::WP, Piece::WN, Piece::WB, Piece::WR, Piece::WQ],
+        Side::Black => &[Piece::BP, Piece::BN, Piece::BB, Piece::BR, Piece::BQ],
     }
 }

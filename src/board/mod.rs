@@ -73,7 +73,7 @@ pub trait Board: Clone + Reflectable {
     /// draw or a loss since a side only loses when it runs out of moves,
     /// i.e. you don't play a winning move, you just fail to have a legal
     /// move.
-    fn compute_termination_status(&self) -> Option<Termination>;
+    fn termination_status(&self) -> Option<Termination>;
 
     /// Returns the Zobrist hash of this position.
     fn hash(&self) -> u64;
@@ -92,6 +92,9 @@ pub trait Board: Clone + Reflectable {
 
     /// Return the location of the king for the given side.
     fn king(&self, side: Side) -> Square;
+
+    /// Return the locations of all pieces on the given side.
+    fn side(&self, side: Side) -> BitBoard;
 
     /// Return the locations of all white and black pieces.
     fn sides(&self) -> (BitBoard, BitBoard);

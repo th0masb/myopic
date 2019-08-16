@@ -6,6 +6,7 @@ use crate::base::Reflectable;
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::pieces::Piece;
+use crate::board::MoveComputeType;
 
 
 impl BoardImpl {
@@ -17,7 +18,7 @@ impl BoardImpl {
         let active_king = self.king(active);
         let passive_control = self.compute_control(passive);
         let (whites, blacks) = self.sides();
-        // If king can move somewhere then not terminal.
+        // If king can move somewhere which is usually the case then not terminal.
         let king_moves = Piece::king(active).moves(active_king, whites, blacks);
         if !(king_moves - passive_control).is_empty() {
             None
@@ -29,7 +30,9 @@ impl BoardImpl {
     }
 
     fn checked_termination(&self, passive_ctrl: BitBoard, king: Square) -> Option<Termination> {
+        let constraints = self.constraints(MoveComputeType::All);
         unimplemented!()
+
     }
 
     fn unchecked_termination(&self, passive_ctrl: BitBoard, king: Square) -> Option<Termination> {

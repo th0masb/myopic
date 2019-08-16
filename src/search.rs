@@ -4,7 +4,7 @@ use std::cmp;
 
 pub fn negamax<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: usize) -> i32 {
     // Termination state should be precomputed at move time? What if depth is zero and the state is terminal?
-    if depth == 0 || state.compute_termination_status().is_some() {
+    if depth == 0 || state.termination_status().is_some() {
         state.static_eval()
     } else {
         // Not quite right
