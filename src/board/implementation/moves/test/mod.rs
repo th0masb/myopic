@@ -87,7 +87,7 @@ fn execute_test(case: TestCase) {
 }
 
 fn execute_test_impl(case: TestCase) {
-    let (board, results) = convert_case(case);
+    let (mut board, results) = convert_case(case);
     for (computation_type, expected_moves) in results.into_iter() {
         let actual_moves: MoveSet = board.compute_moves(computation_type).into_iter().collect();
         assert_eq!(

@@ -165,11 +165,11 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
         self.board.devolve(action, discards)
     }
 
-    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
+    fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
         self.board.compute_moves(computation_type)
     }
 
-    fn termination_status(&self) -> Option<Termination> {
+    fn termination_status(&mut self) -> Option<Termination> {
         self.board.termination_status()
     }
 

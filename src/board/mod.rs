@@ -65,7 +65,7 @@ pub trait Board: Clone + Reflectable {
     /// Compute a vector of all the legal moves in this position for the
     /// given computation type. Note there is no particular ordering to the
     /// move vector.
-    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move>;
+    fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move>;
 
     /// Compute the termination state of this node. If it is not terminal
     /// nothing is returned, if it is then the manner of termination is
@@ -73,7 +73,13 @@ pub trait Board: Clone + Reflectable {
     /// draw or a loss since a side only loses when it runs out of moves,
     /// i.e. you don't play a winning move, you just fail to have a legal
     /// move.
-    fn termination_status(&self) -> Option<Termination>;
+    fn termination_status(&mut self) -> Option<Termination>;
+
+    /// Return the locations of all pieces on the given side.
+    fn side(&self, side: Side) -> BitBoard;
+
+    /// Return the locations of all white and black pieces.
+    fn sides(&self) -> (BitBoard, BitBoard);
 
     /// Returns the Zobrist hash of this position.
     fn hash(&self) -> u64;
@@ -92,12 +98,6 @@ pub trait Board: Clone + Reflectable {
 
     /// Return the location of the king for the given side.
     fn king(&self, side: Side) -> Square;
-
-    /// Return the locations of all pieces on the given side.
-    fn side(&self, side: Side) -> BitBoard;
-
-    /// Return the locations of all white and black pieces.
-    fn sides(&self) -> (BitBoard, BitBoard);
 
     /// Return the piece occupying the given location.
     fn piece(&self, location: Square) -> Option<Piece>;

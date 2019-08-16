@@ -3,13 +3,25 @@ use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
+use crate::base::Reflectable;
 
 impl BoardImpl {
+    pub fn passive_control_impl(&mut self) -> BitBoard {
+        match &self.cache.passive_control {
+            Some(x) => *x,
+            None => {
+                let result = self.compute_control(self.active.reflect());
+                self.cache.passive_control = Some(result);
+                result
+            }
+        }
+    }
+
     /// Computes the total area of control on the board for a given side. Note that the
     /// passive king is treated as invisible so that if it is in check it cannot create
     /// it's own escape squares by blocking the control ray of an attacking slider.
     /// TODO Improve efficiency by treated all pawns as a block
-    pub fn compute_control(&self, side: Side) -> BitBoard {
+    fn compute_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
             Side::White => (

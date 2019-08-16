@@ -10,13 +10,13 @@ use crate::board::MoveComputeType;
 
 
 impl BoardImpl {
-    pub fn compute_termination(&self) -> Option<Termination> {
+    pub fn compute_termination(&mut self) -> Option<Termination> {
         if self.half_move_clock() >= 50 || self.history.has_three_repetitions() {
             return Some(Termination::Draw);
         }
         let (active, passive) = (self.active, self.active.reflect());
         let active_king = self.king(active);
-        let passive_control = self.compute_control(passive);
+        let passive_control = self.passive_control_impl();
         let (whites, blacks) = self.sides();
         // If king can move somewhere which is usually the case then not terminal.
         let king_moves = Piece::king(active).moves(active_king, whites, blacks);
@@ -29,13 +29,13 @@ impl BoardImpl {
         }
     }
 
-    fn checked_termination(&self, passive_ctrl: BitBoard, king: Square) -> Option<Termination> {
+    fn checked_termination(&mut self, passive_ctrl: BitBoard, king: Square) -> Option<Termination> {
         let constraints = self.constraints(MoveComputeType::All);
         unimplemented!()
 
     }
 
-    fn unchecked_termination(&self, passive_ctrl: BitBoard, king: Square) -> Option<Termination> {
+    fn unchecked_termination(&mut self, passive_ctrl: BitBoard, king: Square) -> Option<Termination> {
         unimplemented!()
     }
 }

@@ -20,7 +20,7 @@ const FILES: [BitBoard; 8] = BitBoard::FILES;
 
 impl BoardImpl {
     pub(in crate::board::implementation) fn compute_moves_impl(
-        &self,
+        &mut self,
         computation_type: MoveComputeType,
     ) -> Vec<Move> {
         let constraints = self.constraints(computation_type);

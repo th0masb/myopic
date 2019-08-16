@@ -21,7 +21,7 @@ impl BoardImpl {
             test_board.white_status,
             test_board.black_status,
         );
-        let hash = super::super::hash(&pieces, &castling, test_board.active, test_board.enpassant);
+        let hash = super::hash(&pieces, &castling, test_board.active, test_board.enpassant);
         BoardImpl {
             history: History::new(hash, test_board.history_count),
             pieces,

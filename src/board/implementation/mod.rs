@@ -22,6 +22,8 @@ mod castletracker;
 mod history;
 mod piecetracker;
 mod cache;
+#[cfg(test)]
+mod test;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardImpl {
@@ -278,11 +280,11 @@ impl Board for BoardImpl {
         self.devolve(action, discards)
     }
 
-    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
+    fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
         self.compute_moves_impl(computation_type)
     }
 
-    fn termination_status(&self) -> Option<Termination> {
+    fn termination_status(&mut self) -> Option<Termination> {
         unimplemented!()
     }
 

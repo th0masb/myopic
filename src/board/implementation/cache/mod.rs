@@ -5,13 +5,10 @@ use crate::board::BoardImpl;
 use crate::pieces::Piece;
 use crate::base::Reflectable;
 
-pub(in crate::board::implementation) mod control;
-pub(in crate::board::implementation) mod pinning;
-pub(in crate::board::implementation) mod termination;
 pub(in crate::board::implementation) mod constraints;
-#[cfg(test)]
-pub(in crate::board::implementation) mod test;
-
+mod control;
+mod pinning;
+mod termination;
 
 #[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Hash)]
 pub struct CalculationCache {
@@ -74,17 +71,6 @@ impl BoardImpl {
                 let result = Piece::iter_b()
                     .fold(BitBoard::EMPTY, |a, p| a | self.pieces.locs_impl(p));
                 self.cache.blacks = Some(result);
-                result
-            }
-        }
-    }
-
-    pub fn passive_control_impl(&mut self) -> BitBoard {
-        match &self.cache.passive_control {
-            Some(x) => *x,
-            None => {
-                let result = self.compute_control(self.active.reflect());
-                self.cache.passive_control = Some(result);
                 result
             }
         }
