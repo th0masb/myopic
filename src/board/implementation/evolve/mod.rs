@@ -6,13 +6,13 @@ use crate::base::Side;
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::board::Move::*;
-use crate::board::ReversalData;
+use crate::board::Discards;
 use crate::pieces::Piece;
 
 #[cfg(test)]
 mod test;
 
-type RD = ReversalData;
+type RD = Discards;
 
 /// Implementation of board evolution/devolution via some given Move
 /// instance which is assumed to be legal for this board.
@@ -61,19 +61,19 @@ impl BoardImpl {
     }
 
     fn create_rev_data(&self, piece: Option<Piece>, rights: CastleZoneSet) -> RD {
-        ReversalData {
-            discarded_piece: piece,
-            discarded_rights: rights,
-            discarded_enpassant: self.enpassant,
-            discarded_hash: self.hashes.tail(),
-            discarded_clock: self.clock,
+        Discards {
+            piece: piece,
+            rights: rights,
+            enpassant: self.enpassant,
+            hash: self.history.tail(),
+            half_move_clock: self.clock,
         }
     }
 
     fn devolve_s(&mut self, piece: Piece, source: Square, target: Square, discards: RD) {
         self.switch_side();
         self.pieces.toggle_piece(piece, &[target, source]);
-        match discards.discarded_piece {
+        match discards.piece {
             Some(discarded) => self.pieces.toggle_piece(discarded, &[target]),
             _ => (),
         };
@@ -116,7 +116,7 @@ impl BoardImpl {
 
     fn devolve_e(&mut self, source: Square, discards: RD) {
         self.switch_side();
-        self.toggle_enpassant_pieces(source, discards.discarded_enpassant.unwrap());
+        self.toggle_enpassant_pieces(source, discards.enpassant.unwrap());
         self.replace_metadata(discards);
     }
 
@@ -148,7 +148,7 @@ impl BoardImpl {
         let moved_pawn = Piece::pawn(self.active);
         self.pieces.toggle_piece(moved_pawn, &[source]);
         self.pieces.toggle_piece(piece, &[target]);
-        match discards.discarded_piece {
+        match discards.piece {
             Some(p) => self.pieces.toggle_piece(p, &[target]),
             _ => (),
         };
@@ -156,10 +156,10 @@ impl BoardImpl {
     }
 
     fn replace_metadata(&mut self, discards: RD) {
-        self.castling.add_rights(discards.discarded_rights);
-        self.hashes.pop_head(discards.discarded_hash);
-        self.enpassant = discards.discarded_enpassant;
-        self.clock = discards.discarded_clock;
+        self.castling.add_rights(discards.rights);
+        self.history.pop_head(discards.hash);
+        self.enpassant = discards.enpassant;
+        self.clock = discards.half_move_clock;
     }
 
     /// Determines the enpassant square for the next board state given a

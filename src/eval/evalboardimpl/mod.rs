@@ -6,7 +6,7 @@ use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::Move;
 use crate::board::MoveComputeType;
-use crate::board::ReversalData;
+use crate::board::Discards;
 use crate::eval::{tables, values};
 use crate::eval::EvalBoard;
 use crate::pieces::Piece;
@@ -85,7 +85,7 @@ impl<B: Board> SimpleEvalBoard<B> {
 }
 
 impl<B: Board> Board for SimpleEvalBoard<B> {
-    fn evolve(&mut self, action: &Move) -> ReversalData {
+    fn evolve(&mut self, action: &Move) -> Discards {
         match action {
             &Move::Standard(moving, src, target) => {
                 self.remove(moving, src);
@@ -124,13 +124,13 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
         self.board.evolve(action)
     }
 
-    fn devolve(&mut self, action: &Move, discards: ReversalData) {
+    fn devolve(&mut self, action: &Move, discards: Discards) {
         match action {
             &Move::Standard(moving, src, target) => {
                 self.remove(moving, target);
                 self.add(moving, src);
                 discards
-                    .discarded_piece
+                    .piece
                     .map(|taken| self.add(taken, target));
             }
             &Move::Promotion(source, target, promoting) => {
@@ -138,13 +138,13 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
                 self.add(pawn, source);
                 self.remove(promoting, target);
                 discards
-                    .discarded_piece
+                    .piece
                     .map(|taken| self.add(taken, target));
             }
             &Move::Enpassant(source) => {
                 let active_pawn = Piece::pawn(self.active());
                 let passive_pawn = active_pawn.reflect();
-                let enpassant = discards.discarded_enpassant.unwrap();
+                let enpassant = discards.enpassant.unwrap();
                 let removal_square = match self.active() {
                     Side::White => enpassant << 8,
                     Side::Black => enpassant >> 8,

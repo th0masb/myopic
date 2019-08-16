@@ -13,12 +13,12 @@ mod test_board;
 mod implementation;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ReversalData {
-    pub discarded_rights: CastleZoneSet,
-    pub discarded_piece: Option<Piece>,
-    pub discarded_enpassant: Option<Square>,
-    pub discarded_hash: u64,
-    pub discarded_clock: usize,
+pub struct Discards {
+    pub rights: CastleZoneSet,
+    pub piece: Option<Piece>,
+    pub enpassant: Option<Square>,
+    pub hash: u64,
+    pub half_move_clock: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
@@ -52,7 +52,7 @@ pub trait Board: Clone + Reflectable {
     /// is returned at the end of the procedure allowing for devolution to
     /// take place.
     ///
-    fn evolve(&mut self, action: &Move) -> ReversalData;
+    fn evolve(&mut self, action: &Move) -> Discards;
 
     /// Reverses the given move, i.e. it devolves the board. It can only be
     /// called after the same move has been used to evolve the board. The
@@ -60,7 +60,7 @@ pub trait Board: Clone + Reflectable {
     /// here. If any of these conditions are not met the results of this
     /// procedure are undefined.
     ///
-    fn devolve(&mut self, action: &Move, discards: ReversalData);
+    fn devolve(&mut self, action: &Move, discards: Discards);
 
     /// Compute a vector of all the legal moves in this position for the
     /// given computation type. Note there is no particular ordering to the
@@ -107,6 +107,9 @@ pub trait Board: Clone + Reflectable {
 
     /// Return the total number of half moves played to reach this position.
     fn history_count(&self) -> usize;
+
+//    /// Return the set of squares the passive team is collectively controlling.
+//    fn passive_control(&self) -> BitBoard;
 }
 
 pub fn from_fen(fen: &str) -> Result<BoardImpl, String> {

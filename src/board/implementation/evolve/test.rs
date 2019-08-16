@@ -34,7 +34,7 @@ fn check_constrained_board_equality(left: BoardImpl, right: BoardImpl) {
     assert_eq!(left.active, right.active);
     assert_eq!(left.pieces, right.pieces);
     assert_eq!(left.castling, right.castling);
-    assert_eq!(left.hashes.head(), right.hashes.head());
+    assert_eq!(left.history.head(), right.history.head());
 }
 
 const EMPTY: BitBoard = BitBoard::EMPTY;

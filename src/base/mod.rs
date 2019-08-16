@@ -7,6 +7,7 @@ pub mod bitboard;
 pub mod castlezone;
 pub mod dir;
 pub mod square;
+pub mod hash;
 
 /// Represents the two different teams in a game of chess.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]

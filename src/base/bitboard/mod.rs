@@ -18,7 +18,7 @@ mod operators;
 /// example if we know a piece to reside on a particular square we can
 /// use a bitboard to to capture the available moves for that piece.
 ///
-#[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct BitBoard(pub u64);
 impl BitBoard {
     /// Check if this bitboard contains a particular square.

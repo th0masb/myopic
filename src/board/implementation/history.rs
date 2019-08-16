@@ -7,20 +7,20 @@ const CACHE_SIZE: usize = 20;
 /// for three repetitions of the same hash value which would imply a drawn
 ///  (by repetition) game.
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
-pub struct HashCache {
+pub struct History {
     /// Records how many pop operations required to return to initial state.
     pop_dist: usize,
     /// Fixed size array which maintains the hash values.
     cache: [u64; CACHE_SIZE],
 }
 
-impl HashCache {
+impl History {
     /// Create a new cache at a given point in the game with a supplied
     /// position hash.
-    pub fn new(position_hash: u64, n_previous_positions: usize) -> HashCache {
+    pub fn new(position_hash: u64, n_previous_positions: usize) -> History {
         let pop_dist = n_previous_positions;
         let cache = [064; CACHE_SIZE];
-        let mut dest = HashCache { pop_dist: 0, cache };
+        let mut dest = History { pop_dist: 0, cache };
         for i in 0..pop_dist {
             dest.push_head(i as u64);
         }
@@ -89,8 +89,8 @@ impl HashCache {
 mod test {
     use super::*;
 
-    fn n_consecutive(n: usize) -> HashCache {
-        let mut cache = HashCache::new(0u64, 0);
+    fn n_consecutive(n: usize) -> History {
+        let mut cache = History::new(0u64, 0);
         for n in 1..n {
             cache.push_head(n as u64);
         }

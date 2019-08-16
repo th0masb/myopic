@@ -6,30 +6,32 @@ use crate::base::Side;
 use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::implementation::{
-    castletracker::CastleTracker, hashcache::HashCache, piecetracker::PieceTracker,
+    castletracker::CastleTracker, history::History, piecetracker::PieceTracker,
 };
 use crate::board::Move;
 use crate::pieces::Piece;
-use crate::board::ReversalData;
+use crate::board::Discards;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
 use crate::base::castlezone::CastleZone;
+use crate::board::implementation::cache::CalculationCache;
 
 mod evolve;
 mod moves;
 mod castletracker;
-mod hashcache;
+mod history;
 mod piecetracker;
-mod utils;
+mod cache;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardImpl {
-    hashes: HashCache,
+    history: History,
     pieces: PieceTracker,
     castling: CastleTracker,
     active: Side,
     enpassant: Option<Square>,
     clock: usize,
+    cache: CalculationCache,
 }
 
 lazy_static! {
@@ -98,7 +100,8 @@ impl BoardImpl {
                     active,
                     enpassant,
                     clock,
-                    hashes: HashCache::new(hash, n_previous_pos),
+                    history: History::new(hash, n_previous_pos),
+                    cache: CalculationCache::empty(),
                 })
             }
         }
@@ -111,7 +114,7 @@ impl BoardImpl {
     /// Combines the various components of the hash together and pushes the
     /// result onto the head of the cache.
     fn update_hash(&mut self) {
-        self.hashes.push_head(hash(
+        self.history.push_head(hash(
             &self.pieces,
             &self.castling,
             self.active,
@@ -123,8 +126,8 @@ impl BoardImpl {
 fn hash(pt: &PieceTracker, ct: &CastleTracker, active: Side, ep: Option<Square>) -> u64 {
     pt.hash()
         ^ ct.hash()
-        ^ utils::hash::side_feature(active)
-        ^ ep.map_or(0u64, |x| utils::hash::enpassant_feature(x))
+        ^ crate::base::hash::side_feature(active)
+        ^ ep.map_or(0u64, |x| crate::base::hash::enpassant_feature(x))
 }
 
 impl Move {
@@ -244,12 +247,13 @@ impl Reflectable for BoardImpl {
         let history_count = self.history_count();
         let hash = hash(&pieces, &castling, active, enpassant);
         BoardImpl {
-            hashes: HashCache::new(hash, history_count),
+            history: History::new(hash, history_count),
             clock: self.clock,
             pieces,
             castling,
             active,
             enpassant,
+            cache: CalculationCache::empty(),
         }
     }
 }
@@ -266,11 +270,11 @@ impl Reflectable for Move {
 }
 
 impl Board for BoardImpl {
-    fn evolve(&mut self, action: &Move) -> ReversalData {
+    fn evolve(&mut self, action: &Move) -> Discards {
         self.evolve(action)
     }
 
-    fn devolve(&mut self, action: &Move, discards: ReversalData) {
+    fn devolve(&mut self, action: &Move, discards: Discards) {
         self.devolve(action, discards)
     }
 
@@ -283,7 +287,7 @@ impl Board for BoardImpl {
     }
 
     fn hash(&self) -> u64 {
-        self.hashes.head()
+        self.history.head()
     }
 
     fn active(&self) -> Side {
@@ -329,6 +333,6 @@ impl Board for BoardImpl {
     }
 
     fn history_count(&self) -> usize {
-        self.hashes.position_count()
+        self.history.position_count()
     }
 }

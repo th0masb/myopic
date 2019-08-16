@@ -1,9 +1,10 @@
 use crate::base::bitboard::BitBoard;
 use crate::board::implementation::castletracker::CastleTracker;
-use crate::board::implementation::hashcache::HashCache;
+use crate::board::implementation::history::History;
 use crate::board::implementation::piecetracker::PieceTracker;
 use crate::board::implementation::BoardImpl;
 use crate::board::test_board::TestBoard;
+use crate::board::implementation::cache::CalculationCache;
 
 impl BoardImpl {
     pub fn from(test_board: TestBoard) -> BoardImpl {
@@ -22,12 +23,13 @@ impl BoardImpl {
         );
         let hash = super::super::hash(&pieces, &castling, test_board.active, test_board.enpassant);
         BoardImpl {
-            hashes: HashCache::new(hash, test_board.history_count),
+            history: History::new(hash, test_board.history_count),
             pieces,
             castling,
             active: test_board.active,
             enpassant: test_board.enpassant,
             clock: test_board.clock,
+            cache: CalculationCache::empty(),
         }
     }
 }

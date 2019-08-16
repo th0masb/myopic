@@ -5,7 +5,7 @@ use crate::base::Side;
 use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::implementation::BoardImpl;
-use crate::board::implementation::utils::constraints::MoveConstraints;
+use crate::board::implementation::cache::constraints::MoveConstraints;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;

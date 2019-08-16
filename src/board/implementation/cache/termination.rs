@@ -1,7 +1,7 @@
 use crate::board::BoardImpl;
 use crate::board::Termination;
 use crate::board::Board;
-use crate::board::implementation::utils::control;
+use crate::board::implementation::cache::control;
 use crate::base::Reflectable;
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
@@ -11,7 +11,7 @@ use crate::board::MoveComputeType;
 
 impl BoardImpl {
     pub fn compute_termination(&self) -> Option<Termination> {
-        if self.half_move_clock() >= 50 || self.hashes.has_three_repetitions() {
+        if self.half_move_clock() >= 50 || self.history.has_three_repetitions() {
             return Some(Termination::Draw);
         }
         let (active, passive) = (self.active, self.active.reflect());

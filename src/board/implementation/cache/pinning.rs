@@ -12,7 +12,7 @@ pub const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
 /// A pinned set consisted of the locations of all the pieces which are pinned
 /// alongside a vector containing the constraint area for each of these pinned
 /// pieces.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct PinnedSet {
     pub pinned_locations: BitBoard,
     pub constraint_areas: Vec<(Square, BitBoard)>,
