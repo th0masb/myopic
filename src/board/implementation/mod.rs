@@ -303,7 +303,7 @@ impl Board for BoardImpl {
     }
 
     fn locs(&self, piece: Piece) -> BitBoard {
-        self.pieces.locations(piece)
+        self.pieces.locs_impl(piece)
     }
 
     fn king(&self, side: Side) -> Square {

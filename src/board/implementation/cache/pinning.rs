@@ -79,7 +79,7 @@ impl BoardImpl {
             Side::White => BLACK_SLIDERS,
             Side::Black => WHITE_SLIDERS,
         };
-        let locs = |p: Piece| self.pieces.locations(p);
+        let locs = |p: Piece| self.pieces.locs_impl(p);
         passive_sliders
             .iter()
             .flat_map(|&p| locs(p) & p.control(king_loc, BitBoard::EMPTY, BitBoard::EMPTY))

@@ -101,7 +101,7 @@ impl PieceTracker {
     }
 
     pub fn king_location(&self, side: Side) -> Square {
-        self.locations(Piece::king(side))
+        self.locs_impl(Piece::king(side))
             .into_iter()
             .next()
             .unwrap()
@@ -121,7 +121,7 @@ impl PieceTracker {
             .fold(BitBoard::EMPTY, |a, &b| a | b)
     }
 
-    pub fn locations(&self, piece: Piece) -> BitBoard {
+    pub fn locs_impl(&self, piece: Piece) -> BitBoard {
         self.boards[piece as usize]
     }
 

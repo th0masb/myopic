@@ -43,7 +43,7 @@ impl BoardImpl {
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
         // Add standard moves for pieces which aren't pawns or king
         for piece in Piece::on_side(self.active).skip(1) {
-            for location in self.pieces.locations(piece) {
+            for location in self.pieces.locs_impl(piece) {
                 let moves = unchecked_moves(piece, location) & constraints.get(location);
                 dest.extend(Move::standards(piece, location, moves));
             }

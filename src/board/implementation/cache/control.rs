@@ -21,7 +21,7 @@ impl BoardImpl {
                 pieces.blacks(),
             ),
         };
-        let locs = |piece: Piece| pieces.locations(piece);
+        let locs = |piece: Piece| pieces.locs_impl(piece);
         let control = |piece: Piece, square: Square| piece.control(square, whites, blacks);
         Piece::on_side(side)
             .flat_map(|p| locs(p).into_iter().map(move |sq| control(p, sq)))

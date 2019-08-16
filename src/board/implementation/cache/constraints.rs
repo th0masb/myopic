@@ -141,7 +141,7 @@ impl BoardImpl {
         let king_loc = self.king(self.active);
         pnbrq(self.active.reflect())
             .iter()
-            .flat_map(|&p| self.pieces.locations(p).into_iter().map(move |s| (p, s)))
+            .flat_map(|&p| self.pieces.locs_impl(p).into_iter().map(move |s| (p, s)))
             .filter(|(p, s)| p.control(*s, whites, blacks).contains(king_loc))
             .collect()
     }
