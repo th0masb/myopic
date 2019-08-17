@@ -337,4 +337,8 @@ impl Board for BoardImpl {
     fn history_count(&self) -> usize {
         self.history.position_count()
     }
+
+    fn in_check(&mut self) -> bool {
+        self.passive_control_impl().contains(self.king(self.active))
+    }
 }

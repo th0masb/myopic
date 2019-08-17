@@ -93,7 +93,7 @@ impl BoardImpl {
         let passive_control = self.passive_control_impl();
         let pinned = self.pinned_set_impl();
         if passive_control.contains(self.king(self.active)) {
-            self.in_check(passive_control, &pinned)
+            self.check(passive_control, &pinned)
         } else {
             match computation_type {
                 MoveComputeType::All => self.any(passive_control, &pinned),
@@ -148,7 +148,7 @@ impl BoardImpl {
         constraints
     }
 
-    fn in_check(&self, passive_control: BitBoard, pinned: &PinnedSet) -> MoveConstraints {
+    fn check(&self, passive_control: BitBoard, pinned: &PinnedSet) -> MoveConstraints {
         let active_king_loc = self.king(self.active);
         let attackers = self.compute_king_attackers();
         if attackers.len() == 1 {

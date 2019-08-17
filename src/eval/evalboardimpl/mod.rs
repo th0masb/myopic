@@ -216,6 +216,10 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
     fn history_count(&self) -> usize {
         self.board.history_count()
     }
+
+    fn in_check(&mut self) -> bool {
+        self.board.in_check()
+    }
 }
 
 impl<B: Board> EvalBoard for SimpleEvalBoard<B> {

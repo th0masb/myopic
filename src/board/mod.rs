@@ -75,6 +75,9 @@ pub trait Board: Clone + Reflectable {
     /// move.
     fn termination_status(&mut self) -> Option<Termination>;
 
+    /// Determines whether the active side is in a state of check.
+    fn in_check(&mut self) -> bool;
+
     /// Return the locations of all pieces on the given side.
     fn side(&self, side: Side) -> BitBoard;
 
