@@ -10,19 +10,24 @@ use crate::eval;
 use crate::eval::EvalBoard;
 use crate::itertools;
 
-const Q_DEPTH_CAP: i32 = -15;
-const Q_CHECK_CAP: i32 = -6;
+const Q_DEPTH_CAP: i32 = -6;
+const Q_CHECK_CAP: i32 = -3;
 
-pub fn compute_best_moves<B: EvalBoard>(state: &mut B, depth: usize) -> Vec<Move> {
+pub fn compute_best_moves<B: EvalBoard>(state: &mut B, depth: usize) -> Option<Move> {
     assert!(depth > 0);
-    let mut dest: Vec<(Move, i32)> = Vec::new();
+    let mut best_move = None;
+    let (mut alpha, beta) = (-eval::INFTY, eval::INFTY);
     for evolve in state.compute_moves(MoveComputeType::All) {
         let discards = state.evolve(&evolve);
-        dest.push((evolve.clone(), negamax(state, -eval::INFTY, eval::INFTY, depth - 1)));
+        let result = -negamax(state, -beta, -alpha, depth - 1);
         state.devolve(&evolve, discards);
+        if result > alpha {
+            alpha = result;
+            best_move = Some(evolve.clone());
+        }
+        println!("Evaluated {:?} at {:?}", evolve, result);
     }
-    dest.sort_by_key(|(_, score)| *score);
-    dest.into_iter().map(|(mv, _)| mv.clone()).collect()
+    best_move
 }
 
 fn negamax<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: usize) -> i32 {
@@ -30,7 +35,8 @@ fn negamax<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: usize)
         return match state.termination_status() {
             Some(Termination::Loss) => eval::LOSS_VALUE,
             Some(Termination::Draw) => eval::DRAW_VALUE,
-            None => -quiescent(state, -beta, -alpha, -1),
+            //None => state.static_eval(),
+            None => quiescent(state, -eval::INFTY, eval::INFTY, -1),
         };
     }
     let mut result = -eval::INFTY;
@@ -47,7 +53,7 @@ fn negamax<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: usize)
     return result;
 }
 
-fn quiescent<B: EvalBoard>(state: &mut B, mut alpha: i32, mut beta: i32, depth: i32) -> i32 {
+fn quiescent<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> i32 {
     if depth == Q_DEPTH_CAP || state.termination_status().is_some() {
         return match state.termination_status() {
             Some(Termination::Loss) => eval::LOSS_VALUE,
@@ -103,7 +109,7 @@ fn compute_quiescent_moves<B: Board>(state: &mut B, depth: i32) -> Vec<Move> {
         .map(|mv| (mv, score_attack(state, mv)))
         .filter(|(_, score)| *score > 0)
         .collect();
-    attacks.sort_by_key(|(_, score)| *score);
+    attacks.sort_by_key(|(_, score)| -*score);
 
     moves
         .iter()
@@ -124,8 +130,8 @@ fn score_attack<B: Board>(state: &mut B, attack: &Move) -> i32 {
 
 fn is_attack(query: &Move, enemies: BitBoard) -> bool {
     match query {
-        &Move::Enpassant(src) => true,
-        &Move::Castle(zone) => false,
+        &Move::Enpassant(_) => true,
+        &Move::Castle(_) => false,
         &Move::Promotion(_, target, _) => enemies.contains(target),
         &Move::Standard(_, _, target) => enemies.contains(target),
     }

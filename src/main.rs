@@ -24,26 +24,12 @@ enum Test {
 }
 
 fn main() {
-    let _dirs = vec!(&direction::N);
-    let board = D2 | H3;
-    let board2 = A3 | G7;
-    println!("{}", board | board2);
-    println!("{}", board | F3);
-    println!("{}", F3 | board);
-    println!("{}", G1 | A8);
-    println!("{}", G1 > H1);
-    let bitboard: BitBoard = vec!(A1, G5).into_iter().collect();
-    println!("{}", bitboard);
-    println!("{:?}", Square::E4);
-    let x = format!("{:?}", Square::E4);
-    println!("{}", x);
-    let string = String::from("hello");
-    println!("{}", string.contains("e"))
-//    let squares = base.square:;:H1.search_one(dirs);
-//    println!("{:#?}", squares);
-//    println!("{}", base.square::H1);
-
-//    let x = pieces::pawns::BLACK_CONTROL.clone().into_iter().map(|x| x.0).collect::<Vec<_>>();
-//    println!("{:?}", x);
+    //println!("{:?}", 1u64.trailing_zeros())
+    let fen = "r4rk1/5ppp/8/1Bn1p3/Q7/8/5PPP/1R3RK1 w KQkq - 5 24";
+    let mut board = eval::new_board(fen).unwrap();
+    let best_moves = search::compute_best_moves(&mut board, 3);
+    for mv in best_moves {
+        println!("{:?}", mv);
+    }
 }
 

@@ -64,8 +64,12 @@ impl BitBoard {
     /// Returns a bitboard with the least set bit of this bitboard
     /// or nothing if this bitboard is empty.
     pub fn least_set_bit(self) -> BitBoard {
-        let x = self.0 as i64;
-        BitBoard((x & -x) as u64)
+        let trailing = self.0.trailing_zeros();
+        if trailing == 64 {
+            BitBoard::EMPTY
+        } else {
+            BitBoard(1u64 << trailing)
+        }
     }
 
     /// Computes the 'cord' between two squares. Imagine a queen sat
@@ -172,5 +176,13 @@ mod test {
     #[test]
     fn test_create_ranks() {
         assert_eq!(A3 | B3 | C3 | D3 | E3 | F3 | G3 | H3, create_ranks()[2]);
+    }
+
+    #[test]
+    fn test_lsb() {
+        assert_eq!(BitBoard::EMPTY, BitBoard::EMPTY.least_set_bit());
+        assert_eq!(G1.lift(), (E4 | G1).least_set_bit());
+        assert_eq!(E3.lift(), (E3 | G5).least_set_bit());
+        assert_eq!(A8.lift(), A8.lift().least_set_bit());
     }
 }

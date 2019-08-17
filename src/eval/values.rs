@@ -8,7 +8,7 @@ pub fn midgame(piece: Piece) -> i32 {
 
 /// Retrieve the absolute value of the given piece in the midgame.
 pub fn abs_midgame(piece: Piece) -> i32 {
-    MIDGAME[(piece as usize) & 6]
+    MIDGAME[(piece as usize) % 6]
 }
 
 /// Retrieve the endgame value of the given piece.

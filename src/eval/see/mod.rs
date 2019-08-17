@@ -51,24 +51,29 @@ impl<B: Board> See<'_, B> {
         let mut active = first_attacker.side();
         let mut src = self.source.lift();
         let (mut attadef, mut xray) = self.pieces_involved();
+        assert!(attadef.intersects(src));
+        assert!(attadef.subsumes(src));
         loop {
             d += 1;
-            active = active.reflect();
             gain[d] = (self.value)(attacker) - gain[d - 1];
             // TODO Can add this optimization in if we only want to know is exchange is good
             //if cmp::max(-gain[d - 1], gain[d]) < 0 {
             //    break;
             //}
+            assert!(attadef.intersects(src), "{:?}, {:?}", attadef, src);
+            assert!(attadef.subsumes(src));
             attadef ^= src;
             if !src.intersects(knights) {
                 let (new_attadef, new_xray) = self.update_xrays(attadef, xray);
                 attadef = new_attadef;
                 xray = new_xray;
             }
+            active = active.reflect();
             src = self.least_valuable_piece(attadef, active);
             if src.is_empty() {
                 break;
             } else {
+                assert!(attadef.intersects(src), "{:?}, {:?}", attadef, src);
                 attacker = board.piece(src.first().unwrap()).unwrap();
             }
         }
@@ -125,7 +130,7 @@ impl<B: Board> See<'_, B> {
         Piece::on_side(side)
             .map(|p| self.locs(p))
             .find(|locs| locs.intersects(options))
-            .map_or(BitBoard::EMPTY, |locs| locs.least_set_bit())
+            .map_or(BitBoard::EMPTY, |locs| (locs & options).least_set_bit())
     }
 }
 
