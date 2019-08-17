@@ -1,5 +1,5 @@
 use crate::base::bitboard::BitBoard;
-use crate::board::implementation::castletracker::CastleTracker;
+use crate::board::implementation::castling::Castling;
 use crate::board::implementation::history::History;
 use crate::board::implementation::positions::Positions;
 use crate::board::implementation::BoardImpl;
@@ -16,7 +16,7 @@ impl BoardImpl {
                 .collect::<Vec<BitBoard>>()
                 .as_slice(),
         );
-        let castling = CastleTracker::new(
+        let castling = Castling::new(
             test_board.castle_rights,
             test_board.white_status,
             test_board.black_status,

@@ -30,7 +30,7 @@ impl CalculationCache {
 }
 
 impl BoardImpl {
-    pub fn clear(&mut self) {
+    pub fn clear_cache(&mut self) {
         self.cache.termination_status = None;
         self.cache.passive_control = None;
         self.cache.pinned_set = None;

@@ -7,10 +7,19 @@ use crate::board::implementation::cache::pinning::PinnedSet;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;
 use crate::base::Side;
+use std::fmt::Debug;
+use std::fmt::Formatter;
+use std::fmt::Error;
 
-//#[derive(Debug, Eq, PartialEq, Clone, Hash)]
+#[derive(Eq, PartialEq, Clone, Hash)]
 pub struct MoveConstraints {
     data: [BitBoard; 64],
+}
+
+impl Debug for MoveConstraints {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        self.data.to_vec().fmt(f)
+    }
 }
 
 impl MoveConstraints {

@@ -28,7 +28,9 @@ pub trait EvalBoard: Board {
     /// the rule that 'a higher score is best for the active side'. That
     /// is if it is white to move next then a high positive score indicates
     /// a favorable position for white and if it is black to move a high
-    /// positive score indicates a favorable position for black.
+    /// positive score indicates a favorable position for black. If the
+    /// state it terminal it must return the LOSS_VALUE or DRAW_VALUE
+    /// depending on the type of termination.
     fn static_eval(&mut self) -> i32;
 }
 

@@ -6,16 +6,16 @@ use crate::base::hash;
 use crate::base::Reflectable;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
-pub struct CastleTracker {
+pub struct Castling {
     remaining_rights: CastleZoneSet,
     // TODO Do we actually need to keep these fields?
     white_status: Option<CastleZone>,
     black_status: Option<CastleZone>,
 }
 
-impl Reflectable for CastleTracker {
+impl Reflectable for Castling {
     fn reflect(&self) -> Self {
-        CastleTracker {
+        Castling {
             remaining_rights: self.remaining_rights.reflect(),
             white_status: self.white_status.reflect(),
             black_status: self.black_status.reflect(),
@@ -29,8 +29,8 @@ fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
         .collect()
 }
 
-impl CastleTracker {
-    pub fn from_fen(fen_string: &String) -> CastleTracker {
+impl Castling {
+    pub fn from_fen(fen_string: &String) -> Castling {
         let rights: CastleZoneSet = CastleZone::iter()
             .zip(vec!["K", "Q", "k", "q"].into_iter())
             .filter(|(_, pat)| fen_string.contains(pat))
@@ -46,7 +46,7 @@ impl CastleTracker {
         } else {
             Some(CastleZone::BK)
         };
-        CastleTracker {
+        Castling {
             remaining_rights: rights,
             white_status,
             black_status,
@@ -57,8 +57,8 @@ impl CastleTracker {
         rights: CastleZoneSet,
         white_status: Option<CastleZone>,
         black_status: Option<CastleZone>,
-    ) -> CastleTracker {
-        CastleTracker {
+    ) -> Castling {
+        Castling {
             remaining_rights: rights,
             black_status,
             white_status,

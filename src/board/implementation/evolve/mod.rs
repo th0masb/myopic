@@ -58,7 +58,7 @@ impl BoardImpl {
     fn switch_side_update_hash_clear_cache(&mut self) {
         self.switch_side();
         self.update_hash();
-        self.clear();
+        self.clear_cache();
     }
 
     fn create_rev_data(&self, piece: Option<Piece>, rights: CastleZoneSet) -> D {
@@ -78,7 +78,7 @@ impl BoardImpl {
             Some(discarded) => self.pieces.toggle_piece(discarded, &[target]),
             _ => (),
         };
-        self.replace_metadata(discards);
+        self.replace_metadata_erase_cache(discards);
     }
 
     fn evolve_c(&mut self, zone: CastleZone) -> D {
@@ -95,7 +95,7 @@ impl BoardImpl {
         self.switch_side();
         self.toggle_castle_pieces(zone);
         self.castling.clear_status(self.active);
-        self.replace_metadata(discards);
+        self.replace_metadata_erase_cache(discards);
     }
 
     fn toggle_castle_pieces(&mut self, zone: CastleZone) {
@@ -118,7 +118,7 @@ impl BoardImpl {
     fn devolve_e(&mut self, source: Square, discards: D) {
         self.switch_side();
         self.toggle_enpassant_pieces(source, discards.enpassant.unwrap());
-        self.replace_metadata(discards);
+        self.replace_metadata_erase_cache(discards);
     }
 
     fn toggle_enpassant_pieces(&mut self, source: Square, enpassant: Square) {
@@ -153,15 +153,15 @@ impl BoardImpl {
             Some(p) => self.pieces.toggle_piece(p, &[target]),
             _ => (),
         };
-        self.replace_metadata(discards);
+        self.replace_metadata_erase_cache(discards);
     }
 
-    fn replace_metadata(&mut self, discards: D) {
+    fn replace_metadata_erase_cache(&mut self, discards: D) {
         self.castling.add_rights(discards.rights);
         self.history.pop_head(discards.hash);
         self.enpassant = discards.enpassant;
         self.clock = discards.half_move_clock;
-        self.clear();
+        self.clear_cache();
     }
 
     /// Determines the enpassant square for the next board state given a

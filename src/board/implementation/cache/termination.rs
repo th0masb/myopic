@@ -32,7 +32,7 @@ impl BoardImpl {
         let (whites, blacks) = self.sides();
         // If king can move somewhere which is usually the case then not terminal.
         let king_moves = Piece::king(active).moves(active_king, whites, blacks);
-        if !(king_moves - passive_control).is_empty() {
+        if (king_moves - passive_control).is_populated() {
             None
         } else if passive_control.contains(active_king) {
             self.checked_termination()
@@ -87,5 +87,37 @@ fn qrbnp<'a>(side: Side) -> &'a [Piece] {
     match side {
         Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN, Piece::WP],
         Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN, Piece::BP],
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[derive(Clone, Debug)]
+    struct TestCase {
+        board: BoardImpl,
+        expected: Option<Termination>,
+    }
+
+    fn test(expected: Option<Termination>, fen: &str) {
+        let mut board = crate::board::from_fen(fen).unwrap();
+        assert_eq!(expected, board.termination_status_impl());
+        assert_eq!(expected, board.reflect().termination_status_impl());
+    }
+
+    #[test]
+    fn checkmate() {
+        test(Some(Termination::Loss), "5R1k/pp2R2p/8/1b2r3/3p3q/8/PPB3P1/6K1 b - - 0 36")
+    }
+
+    #[test]
+    fn not_terminal() {
+        test(None, "r1b1qrk1/pp5p/1np2b2/3nNP2/3P2p1/1BN5/PP1BQ1P1/4RRK1 b - - 0 18");
+    }
+
+    #[test]
+    fn stalemate() {
+        test(Some(Termination::Draw), "6k1/6p1/7p/8/1p6/p1qp4/8/3K4 w - - 0 45");
     }
 }
