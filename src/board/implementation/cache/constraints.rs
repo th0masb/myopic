@@ -11,9 +11,18 @@ use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::fmt::Error;
 
-#[derive(Eq, PartialEq, Clone, Hash)]
+#[derive(Clone)]
 pub struct MoveConstraints {
     data: [BitBoard; 64],
+}
+
+impl PartialEq<MoveConstraints> for MoveConstraints {
+    fn eq(&self, other: &MoveConstraints) -> bool {
+        self.data.iter().zip(other.data.iter()).all(|(l, r)| *l == *r)
+    }
+}
+
+impl Eq for MoveConstraints {
 }
 
 impl Debug for MoveConstraints {
@@ -62,7 +71,25 @@ impl MoveConstraints {
 }
 
 impl BoardImpl {
-    pub fn constraints(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
+    pub fn constraints_impl(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
+        match computation_type {
+            MoveComputeType::Attacks => self.compute_constraints(computation_type),
+            MoveComputeType::AttacksChecks => self.compute_constraints(computation_type),
+            _ => {
+                match &self.cache.move_constraints {
+                    Some(x) => x.clone(),
+                    None => {
+                        let result = self.compute_constraints(computation_type);
+                        self.cache.move_constraints = Some(result.clone());
+                        result
+                    }
+                }
+
+            }
+        }
+    }
+
+    fn compute_constraints(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
         let passive_control = self.passive_control_impl();
         let pinned = self.pinned_set_impl();
         if passive_control.contains(self.king(self.active)) {

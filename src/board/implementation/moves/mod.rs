@@ -1,13 +1,13 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::Side;
+use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::implementation::BoardImpl;
-use crate::board::implementation::cache::constraints::MoveConstraints;
+use crate::board::implementation::cache::MoveConstraints;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;
-use crate::base::square::Square;
 
 #[cfg(test)]
 mod test;
@@ -22,7 +22,7 @@ impl BoardImpl {
         &mut self,
         computation_type: MoveComputeType,
     ) -> Vec<Move> {
-        let constraints = self.constraints(computation_type);
+        let constraints = self.constraints_impl(computation_type);
         let pawn_moves = self.compute_pawn_moves(&constraints);
         let nbrqk_moves = self.compute_nbrqk_moves(&constraints);
         let castle_moves = match computation_type {

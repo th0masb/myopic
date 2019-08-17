@@ -43,7 +43,7 @@ impl BoardImpl {
 
     /// Assumes king cannot move
     fn checked_termination(&mut self) -> Option<Termination> {
-        let constraints = self.constraints(MoveComputeType::All);
+        let constraints = self.constraints_impl(MoveComputeType::All);
         let (whites, blacks) = self.sides();
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
         for &piece in qrbnp(self.active) {
@@ -70,7 +70,7 @@ impl BoardImpl {
             }
         }
         // Compute constraints as a last resort
-        let constraints = self.constraints(MoveComputeType::All);
+        let constraints = self.constraints_impl(MoveComputeType::All);
         let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) - constraints.get(loc);
         for &piece in qrbnp(self.active) {
             let locations = self.locs(piece) & pin_rays;

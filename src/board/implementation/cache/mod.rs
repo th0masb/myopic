@@ -1,21 +1,22 @@
-use crate::board::Termination;
-use crate::base::bitboard::BitBoard;
-use crate::board::implementation::cache::pinning::PinnedSet;
-use crate::board::BoardImpl;
-use crate::base::Reflectable;
-use crate::board::implementation::cache::constraints::MoveConstraints;
+pub use constraints::MoveConstraints;
 
-pub(in crate::board::implementation) mod constraints;
+use crate::base::bitboard::BitBoard;
+use crate::base::Reflectable;
+use crate::board::BoardImpl;
+use crate::board::implementation::cache::pinning::PinnedSet;
+use crate::board::Termination;
+
+mod constraints;
 mod control;
 mod pinning;
 mod termination;
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct CalculationCache {
     termination_status: Option<Option<Termination>>,
     passive_control: Option<BitBoard>,
     pinned_set: Option<PinnedSet>,
-    //move_constraints: Option<MoveConstraints>,
+    move_constraints: Option<MoveConstraints>,
 }
 
 impl CalculationCache {
@@ -24,7 +25,7 @@ impl CalculationCache {
             termination_status: None,
             passive_control: None,
             pinned_set: None,
-            //move_constraints: None,
+            move_constraints: None,
         }
     }
 }
@@ -34,7 +35,7 @@ impl BoardImpl {
         self.cache.termination_status = None;
         self.cache.passive_control = None;
         self.cache.pinned_set = None;
-        //self.cache.move_constraints = None;
+        self.cache.move_constraints = None;
     }
 }
 
