@@ -1,8 +1,6 @@
 use crate::board::BoardImpl;
 use crate::board::Termination;
 use crate::board::Board;
-use crate::board::implementation::cache::control;
-use crate::base::Reflectable;
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::pieces::Piece;
@@ -26,7 +24,7 @@ impl BoardImpl {
         if self.half_move_clock() >= 50 || self.history.has_three_repetitions() {
             return Some(Termination::Draw);
         }
-        let (active, passive) = (self.active, self.active.reflect());
+        let active = self.active;
         let active_king = self.king(active);
         let passive_control = self.passive_control_impl();
         let (whites, blacks) = self.sides();
@@ -93,6 +91,7 @@ fn qrbnp<'a>(side: Side) -> &'a [Piece] {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::base::Reflectable;
 
     #[derive(Clone, Debug)]
     struct TestCase {

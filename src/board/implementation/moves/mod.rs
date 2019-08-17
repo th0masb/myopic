@@ -1,6 +1,5 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
-use crate::base::Side;
 use crate::base::square::Square;
 use crate::board::Board;
 use crate::board::implementation::BoardImpl;
@@ -18,7 +17,7 @@ const FILES: [BitBoard; 8] = BitBoard::FILES;
 
 
 impl BoardImpl {
-    pub(in crate::board::implementation) fn compute_moves_impl(
+    pub fn compute_moves_impl(
         &mut self,
         computation_type: MoveComputeType,
     ) -> Vec<Move> {

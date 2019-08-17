@@ -1,7 +1,6 @@
 pub use constraints::MoveConstraints;
 
 use crate::base::bitboard::BitBoard;
-use crate::base::Reflectable;
 use crate::board::BoardImpl;
 use crate::board::implementation::cache::pinning::PinnedSet;
 use crate::board::Termination;
