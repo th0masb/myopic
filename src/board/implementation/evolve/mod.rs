@@ -58,7 +58,7 @@ impl BoardImpl {
     fn switch_side_update_hash_clear_cache(&mut self) {
         self.switch_side();
         self.update_hash();
-        self.clear_cache();
+        self.clear();
     }
 
     fn create_rev_data(&self, piece: Option<Piece>, rights: CastleZoneSet) -> D {
@@ -161,7 +161,7 @@ impl BoardImpl {
         self.history.pop_head(discards.hash);
         self.enpassant = discards.enpassant;
         self.clock = discards.half_move_clock;
-        self.clear_cache();
+        self.clear();
     }
 
     /// Determines the enpassant square for the next board state given a

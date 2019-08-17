@@ -10,6 +10,15 @@ pub mod values;
 mod see;
 mod evalboardimpl;
 
+/// The evaluation upper/lower bound definition
+pub const INFTY: i32 = 500_000i32;
+
+/// The evaluation assigned to a lost position.
+pub const LOSS_VALUE: i32 = 1 - INFTY;
+
+/// The evaluation assigned to a drawn position.
+pub const DRAW_VALUE: i32 = 0;
+
 /// Extension of the Board trait which adds a static evaluation function.
 ///
 pub trait EvalBoard: Board {
@@ -20,7 +29,7 @@ pub trait EvalBoard: Board {
     /// is if it is white to move next then a high positive score indicates
     /// a favorable position for white and if it is black to move a high
     /// positive score indicates a favorable position for black.
-    fn static_eval(&self) -> i32;
+    fn static_eval(&mut self) -> i32;
 }
 
 /// Construct an instance of the default EvalBoard implementation using the

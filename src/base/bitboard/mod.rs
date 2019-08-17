@@ -36,6 +36,10 @@ impl BitBoard {
         self.0 == 0
     }
 
+    pub fn is_populated(self) -> bool {
+        self.0 != 0
+    }
+
     /// Check if the intersection of this bitboard and the other is
     /// non-empty.
     pub fn intersects(self, other: BitBoard) -> bool {
@@ -45,14 +49,7 @@ impl BitBoard {
     /// Computes the number of squares in this bitboard using the
     /// popcount algorithm.
     pub fn size(self) -> usize {
-        // Uses popcount algorithm.
-        let mut x = self.0;
-        let mut count = 0;
-        while x > 0 {
-            x &= x - 1;
-            count += 1;
-        }
-        count
+        self.0.count_ones() as usize
     }
 
     pub fn iter(self) -> impl Iterator<Item = Square> {

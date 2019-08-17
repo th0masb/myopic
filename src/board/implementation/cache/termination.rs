@@ -7,6 +7,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::pieces::Piece;
 use crate::board::MoveComputeType;
+use crate::base::Side;
 
 
 impl BoardImpl {
@@ -34,19 +35,57 @@ impl BoardImpl {
         if !(king_moves - passive_control).is_empty() {
             None
         } else if passive_control.contains(active_king) {
-            self.checked_termination(passive_control, active_king)
+            self.checked_termination()
         } else {
-            self.unchecked_termination(passive_control, active_king)
+            self.unchecked_termination()
         }
     }
 
-    fn checked_termination(&mut self, passive_ctrl: BitBoard, king: Square) -> Option<Termination> {
+    /// Assumes king cannot move
+    fn checked_termination(&mut self) -> Option<Termination> {
         let constraints = self.constraints(MoveComputeType::All);
-        unimplemented!()
-
+        let (whites, blacks) = self.sides();
+        let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
+        for &piece in qrbnp(self.active) {
+            let locations = self.locs(piece);
+            if locations.iter().any(|loc| moves(piece, loc).is_populated()) {
+                return None;
+            }
+        }
+        // Mated
+        return Some(Termination::Loss);
     }
 
-    fn unchecked_termination(&mut self, passive_ctrl: BitBoard, king: Square) -> Option<Termination> {
-        unimplemented!()
+    /// Assumes king cannot move
+    fn unchecked_termination(&mut self) -> Option<Termination> {
+        let king = self.king(self.active);
+        let pin_rays = Piece::WQ.control(king, BitBoard::EMPTY, BitBoard::EMPTY);
+        let (whites, blacks) = self.sides();
+        let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
+        // These pieces have no constraints since not in check and not on pin rays
+        for &piece in qrbnp(self.active) {
+            let locations = self.locs(piece) - pin_rays;
+            if locations.iter().any(|loc| moves(piece, loc).is_populated()) {
+                return None;
+            }
+        }
+        // Compute constraints as a last resort
+        let constraints = self.constraints(MoveComputeType::All);
+        let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) - constraints.get(loc);
+        for &piece in qrbnp(self.active) {
+            let locations = self.locs(piece) & pin_rays;
+            if locations.iter().any(|loc| moves2(piece, loc).is_populated()) {
+                return None;
+            }
+        }
+        // Stalemate
+        return Some(Termination::Draw);
+    }
+}
+
+fn qrbnp<'a>(side: Side) -> &'a [Piece] {
+    match side {
+        Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN, Piece::WP],
+        Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN, Piece::BP],
     }
 }

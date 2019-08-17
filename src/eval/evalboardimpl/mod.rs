@@ -219,13 +219,19 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
 }
 
 impl<B: Board> EvalBoard for SimpleEvalBoard<B> {
-    fn static_eval(&self) -> i32 {
-        let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
-        let (mid, end) = (self.mid_eval, self.end_eval);
-        let eval = ((mid * (256 - phase)) + end * phase) / 256;
-        match self.active() {
-            Side::White => eval,
-            Side::Black => -eval,
+    fn static_eval(&mut self) -> i32 {
+        match self.termination_status() {
+            Some(Termination::Draw) => super::DRAW_VALUE,
+            Some(Termination::Loss) => super::LOSS_VALUE,
+            None => {
+                let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
+                let (mid, end) = (self.mid_eval, self.end_eval);
+                let eval = ((mid * (256 - phase)) + end * phase) / 256;
+                match self.active() {
+                    Side::White => eval,
+                    Side::Black => -eval,
+                }
+            }
         }
     }
 }

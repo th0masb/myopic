@@ -8,6 +8,7 @@ use crate::board::MoveComputeType;
 use crate::pieces::Piece;
 use crate::base::Side;
 
+//#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub struct MoveConstraints {
     data: [BitBoard; 64],
 }
