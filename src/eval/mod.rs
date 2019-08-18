@@ -13,11 +13,15 @@ mod evalboardimpl;
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
 
+/// The evaluation assigned to a won position.
+pub const WIN_VALUE: i32 = INFTY - 1;
+
 /// The evaluation assigned to a lost position.
-pub const LOSS_VALUE: i32 = 1 - INFTY;
+pub const LOSS_VALUE: i32 = -WIN_VALUE;
 
 /// The evaluation assigned to a drawn position.
 pub const DRAW_VALUE: i32 = 0;
+
 
 /// Extension of the Board trait which adds a static evaluation function.
 ///

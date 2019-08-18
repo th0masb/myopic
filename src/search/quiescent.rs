@@ -1,12 +1,12 @@
-use crate::eval::EvalBoard;
-use crate::board::Termination;
-use crate::eval;
-use std::cmp;
+use crate::base::bitboard::BitBoard;
+use crate::base::Reflectable;
 use crate::board::Board;
 use crate::board::Move;
 use crate::board::MoveComputeType;
-use crate::base::Reflectable;
-use crate::base::bitboard::BitBoard;
+use crate::board::Termination;
+use crate::eval;
+use crate::eval::EvalBoard;
+use std::cmp;
 
 const Q_DEPTH_CAP: i32 = -8;
 const Q_CHECK_CAP: i32 = -3;
@@ -25,7 +25,8 @@ pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32
     // result under the sound assumption that there exists a move
     // (which might not be considered here) we can make in the position
     // which will improve our score. We cannot make this assumption if we
-    // are in check because we will consider all the moves.
+    // are in check because we will consider all the moves and so we
+    // assume lost until proven otherwise.
     let mut result = if state.in_check() {
         -eval::INFTY
     } else {
