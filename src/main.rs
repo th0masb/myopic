@@ -7,10 +7,6 @@ extern crate lazy_static;
 extern crate rand;
 extern crate regex;
 
-use crate::base::bitboard::BitBoard;
-use crate::base::direction;
-use crate::base::square::Square::*;
-use crate::base::square::Square;
 
 mod base;
 mod pieces;
@@ -27,7 +23,7 @@ fn main() {
     //println!("{:?}", 1u64.trailing_zeros())
     let fen = "r4rk1/5ppp/8/1Bn1p3/Q7/8/5PPP/1R3RK1 w KQkq - 5 24";
     let mut board = eval::new_board(fen).unwrap();
-    let best_moves = search::compute_best_moves(&mut board, 3);
+    let best_moves = search::best_move(&mut board, 2);
     for mv in best_moves {
         println!("{:?}", mv);
     }

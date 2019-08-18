@@ -1,59 +1,19 @@
+use crate::eval::EvalBoard;
+use crate::board::Termination;
+use crate::eval;
 use std::cmp;
-
-use crate::base::bitboard::BitBoard;
-use crate::base::Reflectable;
 use crate::board::Board;
 use crate::board::Move;
 use crate::board::MoveComputeType;
-use crate::board::Termination;
-use crate::eval;
-use crate::eval::EvalBoard;
-use crate::itertools;
+use crate::base::Reflectable;
+use crate::base::bitboard::BitBoard;
 
-const Q_DEPTH_CAP: i32 = -6;
+const Q_DEPTH_CAP: i32 = -8;
 const Q_CHECK_CAP: i32 = -3;
 
-pub fn compute_best_moves<B: EvalBoard>(state: &mut B, depth: usize) -> Option<Move> {
-    assert!(depth > 0);
-    let mut best_move = None;
-    let (mut alpha, beta) = (-eval::INFTY, eval::INFTY);
-    for evolve in state.compute_moves(MoveComputeType::All) {
-        let discards = state.evolve(&evolve);
-        let result = -negamax(state, -beta, -alpha, depth - 1);
-        state.devolve(&evolve, discards);
-        if result > alpha {
-            alpha = result;
-            best_move = Some(evolve.clone());
-        }
-        println!("Evaluated {:?} at {:?}", evolve, result);
-    }
-    best_move
-}
-
-fn negamax<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: usize) -> i32 {
-    if depth == 0 || state.termination_status().is_some() {
-        return match state.termination_status() {
-            Some(Termination::Loss) => eval::LOSS_VALUE,
-            Some(Termination::Draw) => eval::DRAW_VALUE,
-            //None => state.static_eval(),
-            None => quiescent(state, -eval::INFTY, eval::INFTY, -1),
-        };
-    }
-    let mut result = -eval::INFTY;
-    for evolve in state.compute_moves(MoveComputeType::All) {
-        let discards = state.evolve(&evolve);
-        let next_result = -negamax(state, -beta, -alpha, depth - 1);
-        state.devolve(&evolve, discards);
-        result = cmp::max(result, next_result);
-        alpha = cmp::max(alpha, result);
-        if alpha > beta {
-            return beta;
-        }
-    }
-    return result;
-}
-
-fn quiescent<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> i32 {
+/// Performs a depth limited search looking to evaluate only quiet positions,
+/// i.e. those with no attack moves.
+pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> i32 {
     if depth == Q_DEPTH_CAP || state.termination_status().is_some() {
         return match state.termination_status() {
             Some(Termination::Loss) => eval::LOSS_VALUE,
@@ -62,9 +22,10 @@ fn quiescent<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32)
         };
     }
     // If we aren't in check then we can use the static eval as the initial
-    // result under the sound assumption that there exists a move we can
-    // make in the position which will improve our score. We cannot make this
-    // assumption if we are in check because we will search all the moves.
+    // result under the sound assumption that there exists a move
+    // (which might not be considered here) we can make in the position
+    // which will improve our score. We cannot make this assumption if we
+    // are in check because we will consider all the moves.
     let mut result = if state.in_check() {
         -eval::INFTY
     } else {
@@ -81,7 +42,7 @@ fn quiescent<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32)
 
     for evolve in compute_quiescent_moves(state, depth) {
         let discards = state.evolve(&evolve);
-        let next_result = -quiescent(state, -beta, -alpha, depth - 1);
+        let next_result = -search(state, -beta, -alpha, depth - 1);
         state.devolve(&evolve, discards);
         result = cmp::max(result, next_result);
         alpha = cmp::max(alpha, result);
