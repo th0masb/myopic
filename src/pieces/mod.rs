@@ -11,20 +11,10 @@ mod sliding;
 /// Value type wrapping a single integer representing one of the 12
 /// different pieces in a game of chess.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[rustfmt::skip]
 pub enum Piece {
-    WP = 0,
-    WN = 1,
-    WB = 2,
-    WR = 3,
-    WQ = 4,
-    WK = 5,
-
-    BP = 6,
-    BN = 7,
-    BB = 8,
-    BR = 9,
-    BQ = 10,
-    BK = 11,
+    WP, WN, WB, WR, WQ, WK,
+    BP, BN, BB, BR, BQ, BK,
 }
 impl Piece {
     /// Create an iterator traversing over all pieces in order.
@@ -137,7 +127,6 @@ impl Reflectable for Piece {
         ALL[(*self as usize + 6) % 12]
     }
 }
-
 
 /// Constant piece groupings.
 const ALL: [Piece; 12] = [

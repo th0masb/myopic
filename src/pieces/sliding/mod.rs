@@ -1,9 +1,9 @@
 use std::num::Wrapping;
 
 use crate::base::bitboard::BitBoard;
+use crate::base::direction::Dir;
 use crate::base::direction::{E, N, S, W};
 use crate::base::direction::{NE, NW, SE, SW};
-use crate::base::direction::Dir;
 use crate::base::square::Square;
 
 pub mod bishops;
@@ -52,7 +52,7 @@ fn rook_dirs() -> Vec<Dir> {
 /// locations a piece could move to on an empty board excluding the last
 /// base.square in each of the direction 'rays'.
 fn compute_masks(dirs: &Vec<Dir>) -> Vec<u64> {
-        Square::iter()
+    Square::iter()
         .map(|sq| {
             dirs.iter()
                 .map(|&dir| search_remove_last(sq, dir))

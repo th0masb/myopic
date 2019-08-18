@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+//#![allow(dead_code)]
 
 #[macro_use]
 extern crate itertools;
@@ -23,7 +23,7 @@ fn main() {
     //println!("{:?}", 1u64.trailing_zeros())
     let fen = "r4rk1/5ppp/8/1Bn1p3/Q7/8/5PPP/1R3RK1 w KQkq - 5 24";
     let mut board = eval::new_board(fen).unwrap();
-    let best_moves = search::best_move(&mut board, 2);
+    let best_moves = search::best_move(&mut board, 4);
     for mv in best_moves {
         println!("{:?}", mv);
     }

@@ -58,18 +58,12 @@ mod test {
     fn test_case_one(moves: &Moves) {
         let (sq, occ) = (D3, E2 | B1 | F5 | H7 | D4);
         let expected = E2 | C2 | B1 | C4 | B5 | A6 | E4 | F5;
-        assert_eq!(
-            expected,
-            moves[sq as usize][compute_bishop_index(sq, occ)]
-        )
+        assert_eq!(expected, moves[sq as usize][compute_bishop_index(sq, occ)])
     }
 
     fn test_case_two(moves: &Moves) {
         let (sq, occ) = (H5, D1 | E2 | G6 | C5 | F6 | A1 | A4 | D2);
         let expected = G4 | F3 | E2 | G6;
-        assert_eq!(
-            expected,
-            moves[sq as usize][compute_bishop_index(sq, occ)]
-        )
+        assert_eq!(expected, moves[sq as usize][compute_bishop_index(sq, occ)])
     }
 }

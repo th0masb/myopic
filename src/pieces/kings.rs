@@ -111,10 +111,7 @@ mod white_test {
 
     #[test]
     fn test_moves() {
-        assert_eq!(
-            B2 | C2 | D2 | D1,
-            Piece::WK.moves(Square::C1, B1, C2)
-        );
+        assert_eq!(B2 | C2 | D2 | D1, Piece::WK.moves(Square::C1, B1, C2));
     }
 
     //    #[test]
@@ -143,10 +140,7 @@ mod black_test {
 
     #[test]
     fn test_moves() {
-        assert_eq!(
-            B2 | B1 | D2 | D1,
-            Piece::BK.moves(C1, B1.lift(), C2.lift())
-        );
+        assert_eq!(B2 | B1 | D2 | D1, Piece::BK.moves(C1, B1.lift(), C2.lift()));
     }
 
     //    #[test]

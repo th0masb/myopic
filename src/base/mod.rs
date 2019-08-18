@@ -3,9 +3,9 @@ use crate::base::direction::Dir;
 use crate::base::direction::N;
 use crate::base::direction::S;
 
+pub mod direction;
 pub mod bitboard;
 pub mod castlezone;
-pub mod direction;
 pub mod square;
 pub mod hash;
 
