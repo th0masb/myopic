@@ -99,15 +99,6 @@ mod test {
         )
     }
 
-    // Probably better as a benchmarking test
-    //    #[test]
-    //    fn complex_board_mate_in_two() {
-    //        test(
-    //            "2bqkbn1/2pppp2/np2N3/r3P1p1/p2N2B1/5Q2/PPPPKPP1/RNB2r2 w KQkq - 0 1",
-    //            vec![Standard(Piece::WQ, F3, F7)],
-    //        )
-    //    }
-
     #[test]
     fn mate_1() {
         test(
@@ -131,6 +122,16 @@ mod test {
         test(
             "3qr2k/1b1p2pp/7N/3Q2b1/4P3/8/5PP1/6K1 w - - 0 1",
             vec![Standard(Piece::WQ, D5, G8)],
+            true,
+        )
+    }
+
+    // Mate in 4 moves TODO probably better in benchmark.
+    #[test]
+    fn mate_4() {
+        test(
+            "r1k2b1r/pp4pp/2p1n3/3NQ1B1/6q1/8/PPP2P1P/2KR4 w - - 4 20",
+            vec![Standard(Piece::WQ, E5, C7)],
             true,
         )
     }

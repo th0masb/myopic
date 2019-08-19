@@ -1,20 +1,21 @@
 use regex::Regex;
 
 use crate::base::bitboard::BitBoard;
+use crate::base::castlezone::CastleZone;
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square::Square;
 use crate::board::Board;
-use crate::board::implementation::{
-    castling::Castling, history::History, positions::Positions,
-};
-use crate::board::Move;
-use crate::pieces::Piece;
 use crate::board::Discards;
+use crate::board::implementation::castling::Castling;
+use crate::board::implementation::history::History;
+use crate::board::implementation::positions::Positions;
+use crate::board::implementation::cache::CalculationCache;
+use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
-use crate::base::castlezone::CastleZone;
-use crate::board::implementation::cache::CalculationCache;
+use crate::pieces::Piece;
+use crate::pgn::find_matches;
 
 mod evolve;
 mod moves;
@@ -45,12 +46,6 @@ lazy_static! {
     static ref COUNT: Regex = Regex::new(r"[0-9]+").unwrap();
 }
 
-fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
-    regex
-        .captures_iter(source)
-        .map(|cap| String::from(&cap[0]))
-        .collect()
-}
 
 fn fen_metadata_matchers<'a>() -> impl Iterator<Item = &'a Regex> {
     let mut dest: Vec<&'a Regex> = Vec::new();
