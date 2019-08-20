@@ -1,9 +1,9 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::Side;
 use crate::base::hash;
 use crate::base::Reflectable;
+use crate::base::Side;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct Castling {
@@ -24,9 +24,7 @@ impl Reflectable for Castling {
 }
 
 fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
-    CastleZone::iter()
-        .filter(|x| move_components.intersects(x.source_squares()))
-        .collect()
+    CastleZone::iter().filter(|x| move_components.intersects(x.source_squares())).collect()
 }
 
 impl Castling {
@@ -36,21 +34,11 @@ impl Castling {
             .filter(|(_, pat)| fen_string.contains(pat))
             .map(|(z, _)| z)
             .collect();
-        let white_status = if rights.intersects(CastleZoneSet::WHITE) {
-            None
-        } else {
-            Some(CastleZone::WK)
-        };
-        let black_status = if rights.intersects(CastleZoneSet::BLACK) {
-            None
-        } else {
-            Some(CastleZone::BK)
-        };
-        Castling {
-            remaining_rights: rights,
-            white_status,
-            black_status,
-        }
+        let white_status =
+            if rights.intersects(CastleZoneSet::WHITE) { None } else { Some(CastleZone::WK) };
+        let black_status =
+            if rights.intersects(CastleZoneSet::BLACK) { None } else { Some(CastleZone::BK) };
+        Castling { remaining_rights: rights, white_status, black_status }
     }
 
     pub fn new(
@@ -58,11 +46,7 @@ impl Castling {
         white_status: Option<CastleZone>,
         black_status: Option<CastleZone>,
     ) -> Castling {
-        Castling {
-            remaining_rights: rights,
-            black_status,
-            white_status,
-        }
+        Castling { remaining_rights: rights, black_status, white_status }
     }
 
     pub fn set_status(&mut self, side: Side, zone: CastleZone) -> CastleZoneSet {

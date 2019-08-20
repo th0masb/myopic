@@ -1,15 +1,15 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::Reflectable;
 use crate::base::square::Square;
-use crate::board::Board;
-use crate::board::implementation::BoardImpl;
+use crate::base::Reflectable;
+use crate::base::Side;
 use crate::board::implementation::cache::pinning::PinnedSet;
+use crate::board::implementation::BoardImpl;
+use crate::board::Board;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;
-use crate::base::Side;
 use std::fmt::Debug;
-use std::fmt::Formatter;
 use std::fmt::Error;
+use std::fmt::Formatter;
 
 #[derive(Clone)]
 pub struct MoveConstraints {
@@ -22,8 +22,7 @@ impl PartialEq<MoveConstraints> for MoveConstraints {
     }
 }
 
-impl Eq for MoveConstraints {
-}
+impl Eq for MoveConstraints {}
 
 impl Debug for MoveConstraints {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
@@ -37,21 +36,15 @@ impl MoveConstraints {
     }
 
     pub fn all_universal() -> MoveConstraints {
-        MoveConstraints {
-            data: [BitBoard::ALL; 64],
-        }
+        MoveConstraints { data: [BitBoard::ALL; 64] }
     }
 
     pub fn all_empty() -> MoveConstraints {
-        MoveConstraints {
-            data: [BitBoard::EMPTY; 64],
-        }
+        MoveConstraints { data: [BitBoard::EMPTY; 64] }
     }
 
     pub fn all(bitboard: BitBoard) -> MoveConstraints {
-        MoveConstraints {
-            data: [bitboard; 64],
-        }
+        MoveConstraints { data: [bitboard; 64] }
     }
 
     fn intersect(&mut self, location: Square, constraint: BitBoard) {
@@ -75,17 +68,14 @@ impl BoardImpl {
         match computation_type {
             MoveComputeType::Attacks => self.compute_constraints(computation_type),
             MoveComputeType::AttacksChecks => self.compute_constraints(computation_type),
-            _ => {
-                match &self.cache.move_constraints {
-                    Some(x) => x.clone(),
-                    None => {
-                        let result = self.compute_constraints(computation_type);
-                        self.cache.move_constraints = Some(result.clone());
-                        result
-                    }
+            _ => match &self.cache.move_constraints {
+                Some(x) => x.clone(),
+                None => {
+                    let result = self.compute_constraints(computation_type);
+                    self.cache.move_constraints = Some(result.clone());
+                    result
                 }
-
-            }
+            },
         }
     }
 
@@ -131,11 +121,7 @@ impl BoardImpl {
         let enpassant_set = self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift());
         for piece in Piece::on_side(active) {
             // We reflect the piece here to correctly account for pawns.
-            let enpassant = if piece.is_pawn() {
-                enpassant_set
-            } else {
-                BitBoard::EMPTY
-            };
+            let enpassant = if piece.is_pawn() { enpassant_set } else { BitBoard::EMPTY };
             let check_squares = piece.reflect().control(passive_king_loc, whites, blacks);
             for loc in self.locs(piece) {
                 if checks {
@@ -181,7 +167,6 @@ impl BoardImpl {
             .filter(|(p, s)| p.control(*s, whites, blacks).contains(king_loc))
             .collect()
     }
-
 }
 
 fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {

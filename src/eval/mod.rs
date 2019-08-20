@@ -5,10 +5,10 @@ use crate::board::BoardImpl;
 pub use self::evalboardimpl::SimpleEvalBoard;
 pub use self::see::exchange_value;
 
+mod evalboardimpl;
+mod see;
 pub mod tables;
 pub mod values;
-mod see;
-mod evalboardimpl;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -22,9 +22,7 @@ pub const LOSS_VALUE: i32 = -WIN_VALUE;
 /// The evaluation assigned to a drawn position.
 pub const DRAW_VALUE: i32 = 0;
 
-
 /// Extension of the Board trait which adds a static evaluation function.
-///
 pub trait EvalBoard: Board {
     /// The static evaluation function assigns a score to this exact
     /// position at the point of time it is called. It does not take

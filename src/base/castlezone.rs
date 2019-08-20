@@ -17,7 +17,7 @@ use crate::base::square::Square::G1;
 use crate::base::square::Square::G8;
 use crate::base::square::Square::H1;
 use crate::base::square::Square::H8;
-use crate::base::Reflectable;
+use crate::base::{Reflectable, Side};
 use crate::pieces::Piece;
 
 /// Represents one of the four different areas on a chessboard where
@@ -31,6 +31,22 @@ pub enum CastleZone {
 }
 
 impl CastleZone {
+    /// Return the kingside zone for the given side.
+    pub fn kingside(side: Side) -> CastleZone {
+        match side {
+            Side::White => CastleZone::WK,
+            _ => CastleZone::BK,
+        }
+    }
+
+    /// Return the queenside zone for the given side.
+    pub fn queenside(side: Side) -> CastleZone {
+        match side {
+            Side::White => CastleZone::WQ,
+            _ => CastleZone::BQ,
+        }
+    }
+
     /// Create an iterator traversing all zones in order.
     pub fn iter() -> impl Iterator<Item = CastleZone> {
         CastleZone::ALL.iter().cloned()
@@ -52,11 +68,7 @@ impl CastleZone {
             CastleZone::WK | CastleZone::WQ => Piece::WR,
             CastleZone::BK | CastleZone::BQ => Piece::BR,
         };
-        (
-            rook,
-            CastleZone::ROOK_SOURCES[i],
-            CastleZone::ROOK_TARGETS[i],
-        )
+        (rook, CastleZone::ROOK_SOURCES[i], CastleZone::ROOK_TARGETS[i])
     }
 
     /// Returns a triple containing the king which moves in the corresponding
@@ -68,11 +80,7 @@ impl CastleZone {
             CastleZone::WK | CastleZone::WQ => Piece::WK,
             CastleZone::BK | CastleZone::BQ => Piece::BK,
         };
-        (
-            king,
-            CastleZone::KING_SOURCES[i],
-            CastleZone::KING_TARGETS[i],
-        )
+        (king, CastleZone::KING_SOURCES[i], CastleZone::KING_TARGETS[i])
     }
 
     /// Returns a set containing the squares which are required to be
@@ -91,18 +99,11 @@ impl CastleZone {
 
     /// Lifts this zone to a set of one element.
     pub fn lift(self) -> CastleZoneSet {
-        CastleZoneSet {
-            data: 1usize << self as usize,
-        }
+        CastleZoneSet { data: 1usize << self as usize }
     }
 
     /// All the four different castle zones ordered by their id.
-    const ALL: [CastleZone; 4] = [
-        CastleZone::WK,
-        CastleZone::WQ,
-        CastleZone::BK,
-        CastleZone::BQ,
-    ];
+    const ALL: [CastleZone; 4] = [CastleZone::WK, CastleZone::WQ, CastleZone::BK, CastleZone::BQ];
 
     const KING_SOURCES: [Square; 4] = [E1, E1, E8, E8];
     const KING_TARGETS: [Square; 4] = [G1, C1, G8, C8];
@@ -168,10 +169,7 @@ impl CastleZoneSet {
 impl FromIterator<CastleZone> for CastleZoneSet {
     fn from_iter<T: IntoIterator<Item = CastleZone>>(iter: T) -> Self {
         CastleZoneSet {
-            data: iter
-                .into_iter()
-                .map(|cz| 1usize << cz as usize)
-                .fold(0, |a, b| a | b),
+            data: iter.into_iter().map(|cz| 1usize << cz as usize).fold(0, |a, b| a | b),
         }
     }
 }
@@ -180,9 +178,7 @@ impl ops::Sub<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
 
     fn sub(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet {
-            data: self.data & !rhs.data,
-        }
+        CastleZoneSet { data: self.data & !rhs.data }
     }
 }
 
@@ -196,9 +192,7 @@ impl ops::BitOr<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
 
     fn bitor(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet {
-            data: self.data | rhs.data,
-        }
+        CastleZoneSet { data: self.data | rhs.data }
     }
 }
 
@@ -206,9 +200,7 @@ impl ops::BitAnd<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
 
     fn bitand(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet {
-            data: self.data & rhs.data,
-        }
+        CastleZoneSet { data: self.data & rhs.data }
     }
 }
 
@@ -240,12 +232,7 @@ mod set_test {
 
     #[test]
     fn test_collect() {
-        let source = vec![
-            CastleZone::BK,
-            CastleZone::WK,
-            CastleZone::WQ,
-            CastleZone::BQ,
-        ];
+        let source = vec![CastleZone::BK, CastleZone::WK, CastleZone::WQ, CastleZone::BQ];
         let collected: CastleZoneSet = source.into_iter().collect();
         assert_eq!(CastleZoneSet::ALL, collected);
     }

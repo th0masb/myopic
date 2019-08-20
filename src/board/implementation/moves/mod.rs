@@ -1,9 +1,9 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
-use crate::board::Board;
-use crate::board::implementation::BoardImpl;
 use crate::board::implementation::cache::MoveConstraints;
+use crate::board::implementation::BoardImpl;
+use crate::board::Board;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;
@@ -15,12 +15,8 @@ mod enpassant_source;
 
 const FILES: [BitBoard; 8] = BitBoard::FILES;
 
-
 impl BoardImpl {
-    pub fn compute_moves_impl(
-        &mut self,
-        computation_type: MoveComputeType,
-    ) -> Vec<Move> {
+    pub fn compute_moves_impl(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
         let constraints = self.constraints_impl(computation_type);
         let pawn_moves = self.compute_pawn_moves(&constraints);
         let nbrqk_moves = self.compute_nbrqk_moves(&constraints);
@@ -74,9 +70,8 @@ impl BoardImpl {
     }
 
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
-        let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
-            enpassant_source::squares(self.active, sq)
-        });
+        let enpassant_source =
+            self.enpassant.map_or(BitBoard::EMPTY, |sq| enpassant_source::squares(self.active, sq));
         let promotion_rank = self.active.pawn_last_rank();
         let pawn_locs = self.locs(Piece::pawn(self.active));
         (
@@ -91,11 +86,6 @@ impl BoardImpl {
         let (whites, blacks) = self.sides();
         let p1 = |z: CastleZone| king_constraint.subsumes(z.uncontrolled_requirement());
         let p2 = |z: CastleZone| !(whites | blacks).intersects(z.unoccupied_requirement());
-        self.castling
-            .rights()
-            .iter()
-            .filter(|&z| p1(z) && p2(z))
-            .map(Move::Castle)
-            .collect()
+        self.castling.rights().iter().filter(|&z| p1(z) && p2(z)).map(Move::Castle).collect()
     }
 }

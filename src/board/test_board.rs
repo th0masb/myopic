@@ -1,9 +1,9 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {
@@ -49,4 +49,3 @@ impl Reflectable for TestBoard {
         }
     }
 }
-

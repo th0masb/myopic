@@ -18,7 +18,6 @@ pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard 
 }
 
 /// Implementation and tests for the static magic move database.
-///
 type Moves = Vec<Vec<BitBoard>>;
 
 lazy_static! {

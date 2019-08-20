@@ -17,7 +17,6 @@ mod operators;
 /// square on the board, 0 -> H1, 1 -> G1,..., 8 -> H2,..., 63 -> A8. For
 /// example if we know a piece to reside on a particular square we can
 /// use a bitboard to to capture the available moves for that piece.
-///
 #[derive(Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct BitBoard(pub u64);
 impl BitBoard {
@@ -123,17 +122,11 @@ fn loc(sq: Square) -> u64 {
 }
 
 fn create_files() -> Vec<BitBoard> {
-    (H1.search(direction::W) | H1)
-        .into_iter()
-        .map(|sq| sq.search(direction::N) | sq)
-        .collect()
+    (H1.search(direction::W) | H1).into_iter().map(|sq| sq.search(direction::N) | sq).collect()
 }
 
 fn create_ranks() -> Vec<BitBoard> {
-    (H1.search(direction::N) | H1)
-        .into_iter()
-        .map(|sq| sq.search(direction::W) | sq)
-        .collect()
+    (H1.search(direction::N) | H1).into_iter().map(|sq| sq.search(direction::W) | sq).collect()
 }
 
 impl fmt::Debug for BitBoard {

@@ -1,10 +1,10 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Reflectable;
+use crate::board;
+use crate::board::Board;
 use crate::eval::see::See;
 use crate::pieces::Piece;
-use crate::board::Board;
-use crate::board;
 
 /// Dummy piece values
 fn value(piece: Piece) -> i32 {
@@ -24,10 +24,7 @@ impl<B: Board> Reflectable for TestCase<B> {
         for (src, targ, result) in self.expected.iter() {
             reflected_expected.push((src.reflect(), targ.reflect(), *result));
         }
-        TestCase {
-            board: self.board.reflect(),
-            expected: reflected_expected,
-        }
+        TestCase { board: self.board.reflect(), expected: reflected_expected }
     }
 }
 
@@ -39,12 +36,7 @@ fn execute_case<B: Board>(test_case: TestCase<B>) {
 fn execute_case_impl<B: Board>(test_case: TestCase<B>) {
     let board = test_case.board;
     for (source, target, expected_value) in test_case.expected.into_iter() {
-        let see = See {
-            board: &board,
-            source,
-            target,
-            value,
-        };
+        let see = See { board: &board, source, target, value };
         assert_eq!(
             expected_value,
             see.exchange_value(),

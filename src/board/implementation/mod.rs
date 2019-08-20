@@ -2,27 +2,27 @@ use regex::Regex;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
-use crate::board::Board;
-use crate::board::Discards;
+use crate::board::implementation::cache::CalculationCache;
 use crate::board::implementation::castling::Castling;
 use crate::board::implementation::history::History;
 use crate::board::implementation::positions::Positions;
-use crate::board::implementation::cache::CalculationCache;
+use crate::board::Board;
+use crate::board::Discards;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
-use crate::pieces::Piece;
 use crate::pgn::find_matches;
+use crate::pieces::Piece;
 
-mod evolve;
-mod moves;
-mod castling;
-mod history;
-mod positions;
 mod cache;
+mod castling;
+mod evolve;
+mod history;
+mod moves;
+mod positions;
 #[cfg(test)]
 mod test;
 
@@ -45,7 +45,6 @@ lazy_static! {
     static ref ENPASSANT: Regex = Regex::new(r"([a-h][36])|[-]").unwrap();
     static ref COUNT: Regex = Regex::new(r"[0-9]+").unwrap();
 }
-
 
 fn fen_metadata_matchers<'a>() -> impl Iterator<Item = &'a Regex> {
     let mut dest: Vec<&'a Regex> = Vec::new();
@@ -76,9 +75,8 @@ impl BoardImpl {
             Err(fen_string)
         } else {
             let ranks = find_matches(&initial_split[0], &RANK);
-            let meta_match = fen_metadata_matchers()
-                .zip(&initial_split[1..])
-                .all(|(re, s)| re.is_match(s));
+            let meta_match =
+                fen_metadata_matchers().zip(&initial_split[1..]).all(|(re, s)| re.is_match(s));
             if ranks.len() != 8 || !meta_match {
                 Err(fen_string)
             } else {
@@ -111,12 +109,7 @@ impl BoardImpl {
     /// Combines the various components of the hash together and pushes the
     /// result onto the head of the cache.
     fn update_hash(&mut self) {
-        self.history.push_head(hash(
-            &self.pieces,
-            &self.castling,
-            self.active,
-            self.enpassant,
-        ))
+        self.history.push_head(hash(&self.pieces, &self.castling, self.active, self.enpassant))
     }
 }
 
@@ -129,9 +122,7 @@ fn hash(pt: &Positions, ct: &Castling, active: Side, ep: Option<Square>) -> u64 
 
 impl Move {
     fn standards(moving: Piece, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
-        targets
-            .into_iter()
-            .map(move |target| Move::Standard(moving, src, target))
+        targets.into_iter().map(move |target| Move::Standard(moving, src, target))
     }
 
     fn promotions(side: Side, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
@@ -150,16 +141,15 @@ impl Move {
     }
 }
 
-
 #[cfg(test)]
 mod fen_test {
     use crate::base::bitboard::constants::*;
     use crate::base::castlezone::CastleZone;
     use crate::base::castlezone::CastleZoneSet;
-    use crate::base::Side;
     use crate::base::square::Square;
-    use crate::board::BoardImpl;
+    use crate::base::Side;
     use crate::board::test_board::TestBoard;
+    use crate::board::BoardImpl;
 
     fn test(expected: TestBoard, fen_string: String) {
         assert_eq!(BoardImpl::from(expected), BoardImpl::from_fen(fen_string).unwrap())
@@ -315,10 +305,7 @@ impl Board for BoardImpl {
     }
 
     fn sides(&self) -> (BitBoard, BitBoard) {
-        (
-            self.pieces.side_locations(Side::White),
-            self.pieces.side_locations(Side::Black),
-        )
+        (self.pieces.side_locations(Side::White), self.pieces.side_locations(Side::Black))
     }
 
     fn piece(&self, location: Square) -> Option<Piece> {

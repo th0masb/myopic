@@ -15,18 +15,11 @@ mod test;
 /// board. The board must have a piece at both the source and target square
 /// otherwise this function will panic. The pieces must be on opposing
 /// sides and the quality of the return value is in relation to the side of
-/// the attacker, higher is good for the attacker. Positive means a good exchange,
-/// negative mean a bad one. If the pieces are on the same side the result is
-/// undefined.
-///
+/// the attacker, higher is good for the attacker. Positive means a good
+/// exchange, negative mean a bad one. If the pieces are on the same side the
+/// result is undefined.
 pub fn exchange_value<B: Board>(board: &B, source: Square, target: Square) -> i32 {
-    See {
-        board,
-        source,
-        target,
-        value: values::abs_midgame,
-    }
-    .exchange_value()
+    See { board, source, target, value: values::abs_midgame }.exchange_value()
 }
 
 /// Static exchange evaluator
@@ -135,14 +128,7 @@ impl<B: Board> See<'_, B> {
 }
 
 fn sliders<'a>() -> &'a [Piece] {
-    &[
-        Piece::WB,
-        Piece::WR,
-        Piece::WQ,
-        Piece::BB,
-        Piece::BR,
-        Piece::BQ,
-    ]
+    &[Piece::WB, Piece::WR, Piece::WQ, Piece::BB, Piece::BR, Piece::BQ]
 }
 
 fn is_slider(piece: Piece) -> bool {

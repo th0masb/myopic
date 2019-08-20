@@ -3,7 +3,8 @@ use std::ops;
 use crate::base::bitboard::{loc, BitBoard};
 use crate::base::square::Square;
 
-/// Operator implementations for bitboards which all use the underlying u64 value.
+/// Operator implementations for bitboards which all use the underlying u64
+/// value.
 impl ops::Shr<u8> for BitBoard {
     type Output = Self;
 

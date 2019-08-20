@@ -7,10 +7,7 @@ pub struct Dir {
 }
 impl Reflectable for Dir {
     fn reflect(&self) -> Dir {
-        Dir {
-            dr: -self.dr,
-            df: -self.df,
-        }
+        Dir { dr: -self.dr, df: -self.df }
     }
 }
 

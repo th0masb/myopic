@@ -1,16 +1,16 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
 use crate::board::Board;
+use crate::board::Discards;
 use crate::board::Move;
 use crate::board::MoveComputeType;
-use crate::board::Discards;
-use crate::eval::{tables, values};
-use crate::eval::EvalBoard;
-use crate::pieces::Piece;
 use crate::board::Termination;
+use crate::eval::EvalBoard;
+use crate::eval::{tables, values};
+use crate::pieces::Piece;
 
 #[cfg(test)]
 mod test;
@@ -41,8 +41,10 @@ const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
 
 fn compute_phase<B: Board>(board: &B) -> i32 {
     let pieces: Vec<_> = Piece::iter_w().take(5).chain(Piece::iter_b().take(5)).collect();
-    let phase_sub: i32 = pieces.into_iter()
-        .map(|p| board.locs(p).size() as i32 * PHASE_VALUES[(p as usize) % 6]).sum();
+    let phase_sub: i32 = pieces
+        .into_iter()
+        .map(|p| board.locs(p).size() as i32 * PHASE_VALUES[(p as usize) % 6])
+        .sum();
     TOTAL_PHASE - phase_sub
 }
 
@@ -60,14 +62,13 @@ fn compute_endgame<B: Board>(board: &B) -> i32 {
         .sum()
 }
 
-
 impl<B: Board> SimpleEvalBoard<B> {
     pub(super) fn new(board: B) -> SimpleEvalBoard<B> {
         SimpleEvalBoard {
             mid_eval: compute_midgame(&board),
             end_eval: compute_endgame(&board),
             phase: compute_phase(&board),
-            board
+            board,
         }
     }
 
@@ -90,15 +91,13 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
             &Move::Standard(moving, src, target) => {
                 self.remove(moving, src);
                 self.add(moving, target);
-                self.piece(target)
-                    .map(|taken| self.remove(taken, target));
+                self.piece(target).map(|taken| self.remove(taken, target));
             }
             &Move::Promotion(source, target, promoting) => {
                 let pawn = Piece::pawn(self.active());
                 self.remove(pawn, source);
                 self.add(promoting, target);
-                self.piece(target)
-                    .map(|taken| self.remove(taken, target));
+                self.piece(target).map(|taken| self.remove(taken, target));
             }
             &Move::Enpassant(source) => {
                 let active_pawn = Piece::pawn(self.active());
@@ -129,17 +128,13 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
             &Move::Standard(moving, src, target) => {
                 self.remove(moving, target);
                 self.add(moving, src);
-                discards
-                    .piece
-                    .map(|taken| self.add(taken, target));
+                discards.piece.map(|taken| self.add(taken, target));
             }
             &Move::Promotion(source, target, promoting) => {
                 let pawn = Piece::pawn(self.active().reflect());
                 self.add(pawn, source);
                 self.remove(promoting, target);
-                discards
-                    .piece
-                    .map(|taken| self.add(taken, target));
+                discards.piece.map(|taken| self.add(taken, target));
             }
             &Move::Enpassant(source) => {
                 let active_pawn = Piece::pawn(self.active());

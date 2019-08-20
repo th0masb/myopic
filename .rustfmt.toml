@@ -1,0 +1,4 @@
+reorder_imports = true
+brace_style = "PreferSameLine"
+wrap_comments = true
+use_small_heuristics = "Max"

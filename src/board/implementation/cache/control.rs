@@ -1,9 +1,9 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
+use crate::base::Reflectable;
 use crate::base::Side;
 use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
-use crate::base::Reflectable;
 
 impl BoardImpl {
     pub fn passive_control_impl(&mut self) -> BitBoard {
@@ -17,21 +17,16 @@ impl BoardImpl {
         }
     }
 
-    /// Computes the total area of control on the board for a given side. Note that the
-    /// passive king is treated as invisible so that if it is in check it cannot create
-    /// it's own escape squares by blocking the control ray of an attacking slider.
-    /// TODO Improve efficiency by treated all pawns as a block
+    /// Computes the total area of control on the board for a given side. Note
+    /// that the passive king is treated as invisible so that if it is in
+    /// check it cannot create it's own escape squares by blocking the
+    /// control ray of an attacking slider. TODO Improve efficiency by
+    /// treated all pawns as a block
     fn compute_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
-            Side::White => (
-                pieces.whites(),
-                pieces.blacks() - pieces.king_location(Side::Black),
-            ),
-            Side::Black => (
-                pieces.whites() - pieces.king_location(Side::White),
-                pieces.blacks(),
-            ),
+            Side::White => (pieces.whites(), pieces.blacks() - pieces.king_location(Side::Black)),
+            Side::Black => (pieces.whites() - pieces.king_location(Side::White), pieces.blacks()),
         };
         let locs = |piece: Piece| pieces.locs_impl(piece);
         let control = |piece: Piece, square: Square| piece.control(square, whites, blacks);
@@ -57,30 +52,13 @@ mod test {
     }
 
     fn execute_test(case: TestCase) {
-        assert_eq!(
-            case.expected_control,
-            BoardImpl::from(case.board).compute_control(case.side)
-        );
+        assert_eq!(case.expected_control, BoardImpl::from(case.board).compute_control(case.side));
     }
 
     fn get_test_board() -> TestBoard {
         TestBoard {
-            whites: vec![
-                A2 | B3 | C2 | D2 | E4 | F2 | G2 | H2,
-                F3,
-                B2 | F1,
-                A1,
-                D1,
-                E1,
-            ],
-            blacks: vec![
-                A7 | B7 | C7 | D7 | E5 | F7 | G7 | H5,
-                C6 | G8,
-                C8,
-                A8 | H8,
-                F6,
-                E8,
-            ],
+            whites: vec![A2 | B3 | C2 | D2 | E4 | F2 | G2 | H2, F3, B2 | F1, A1, D1, E1],
+            blacks: vec![A7 | B7 | C7 | D7 | E5 | F7 | G7 | H5, C6 | G8, C8, A8 | H8, F6, E8],
             castle_rights: CastleZoneSet::ALL,
             white_status: None,
             black_status: None,
@@ -100,11 +78,7 @@ mod test {
         .into_iter()
         .collect();
 
-        execute_test(TestCase {
-            board: get_test_board(),
-            side: Side::White,
-            expected_control,
-        })
+        execute_test(TestCase { board: get_test_board(), side: Side::White, expected_control })
     }
 
     #[test]
@@ -116,10 +90,6 @@ mod test {
         .into_iter()
         .collect();
 
-        execute_test(TestCase {
-            board: get_test_board(),
-            side: Side::Black,
-            expected_control,
-        })
+        execute_test(TestCase { board: get_test_board(), side: Side::Black, expected_control })
     }
 }

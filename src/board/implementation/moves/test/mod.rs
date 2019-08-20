@@ -72,10 +72,7 @@ fn convert_case(case: TestCase) -> (BoardImpl, Vec<(MoveComputeType, MoveSet)>) 
     let expected = vec![
         (MoveComputeType::All, flatten(case.expected_all)),
         (MoveComputeType::Attacks, flatten(case.expected_attacks)),
-        (
-            MoveComputeType::AttacksChecks,
-            flatten(case.expected_attacks_checks),
-        ),
+        (MoveComputeType::AttacksChecks, flatten(case.expected_attacks_checks)),
     ];
     (board, expected)
 }

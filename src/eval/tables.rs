@@ -43,11 +43,7 @@ fn compute_non_pawn_index_and_parity(piece: Piece, location: Square) -> (usize, 
 
 fn compute_table_index_non_pawn(location: Square) -> usize {
     let file_index = location.file_index();
-    let column_index = if file_index < 4 {
-        file_index
-    } else {
-        7 - file_index
-    };
+    let column_index = if file_index < 4 { file_index } else { 7 - file_index };
     location.rank_index() * 4 + column_index
 }
 

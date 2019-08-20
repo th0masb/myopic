@@ -1,12 +1,11 @@
-use crate::board::BoardImpl;
-use crate::board::Termination;
-use crate::board::Board;
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
-use crate::pieces::Piece;
-use crate::board::MoveComputeType;
 use crate::base::Side;
-
+use crate::board::Board;
+use crate::board::BoardImpl;
+use crate::board::MoveComputeType;
+use crate::board::Termination;
+use crate::pieces::Piece;
 
 impl BoardImpl {
     pub fn termination_status_impl(&mut self) -> Option<Termination> {

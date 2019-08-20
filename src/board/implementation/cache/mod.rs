@@ -1,8 +1,8 @@
 pub use constraints::MoveConstraints;
 
 use crate::base::bitboard::BitBoard;
-use crate::board::BoardImpl;
 use crate::board::implementation::cache::pinning::PinnedSet;
+use crate::board::BoardImpl;
 use crate::board::Termination;
 
 mod constraints;
@@ -37,4 +37,3 @@ impl BoardImpl {
         self.cache.move_constraints = None;
     }
 }
-

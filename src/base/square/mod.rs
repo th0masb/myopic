@@ -35,9 +35,7 @@ impl Square {
     /// string is passed.
     pub fn from_string(square: &String) -> Square {
         let upper = square.to_uppercase();
-        Square::iter()
-            .find(|sq| format!("{:?}", sq) == upper)
-            .unwrap()
+        Square::iter().find(|sq| format!("{:?}", sq) == upper).unwrap()
     }
 
     /// Return the index of the rank on which this square resides.
@@ -105,9 +103,7 @@ impl Square {
     /// Find the squares adjacent to this square in all of the
     /// given directions and returns them as a set.
     pub fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
-        dirs.iter()
-            .flat_map(|&dir| self.next(dir).into_iter())
-            .collect()
+        dirs.iter().flat_map(|&dir| self.next(dir).into_iter()).collect()
     }
 }
 

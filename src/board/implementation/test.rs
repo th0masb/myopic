@@ -1,10 +1,10 @@
 use crate::base::bitboard::BitBoard;
+use crate::board::implementation::cache::CalculationCache;
 use crate::board::implementation::castling::Castling;
 use crate::board::implementation::history::History;
 use crate::board::implementation::positions::Positions;
 use crate::board::implementation::BoardImpl;
 use crate::board::test_board::TestBoard;
-use crate::board::implementation::cache::CalculationCache;
 
 impl BoardImpl {
     pub fn from(test_board: TestBoard) -> BoardImpl {

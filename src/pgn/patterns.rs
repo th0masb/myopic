@@ -33,10 +33,10 @@ pub(super) fn piece_regex() -> &'static Regex {
     &PIECE_RE
 }
 
-const FILE:   &'static str = r"([a-h])";
-const RANK:   &'static str = r"([1-8])";
+const FILE: &'static str = r"([a-h])";
+const RANK: &'static str = r"([1-8])";
 const SQUARE: &'static str = r"([a-h][1-8])";
-const PIECE:  &'static str = r"(N|B|R|Q|K)";
+const PIECE: &'static str = r"(N|B|R|Q|K)";
 
 lazy_static! {
     static ref FILE_RE: Regex = rgx(FILE.to_owned());
@@ -45,16 +45,10 @@ lazy_static! {
     static ref PIECE_RE: Regex = rgx(PIECE.to_owned());
     static ref CASTLE: Regex = rgx(r"(0-0(-0)?)".to_owned());
     static ref PROMOTION: Regex = rgx(format!("(({}x)?{}=[NBRQ])", FILE, SQUARE));
-    static ref STANDARD: Regex = rgx(format!(
-        "({}?({}|{}|{})?x?{}(?!=)))",
-        PIECE, RANK, FILE, SQUARE, SQUARE
-    ));
-    static ref MOVE: Regex = rgx(format!(
-        "({}|{}|{})",
-        CASTLE.as_str(),
-        PROMOTION.as_str(),
-        STANDARD.as_str()
-    ));
+    static ref STANDARD: Regex =
+        rgx(format!("({}?({}|{}|{})?x?{}(?!=)))", PIECE, RANK, FILE, SQUARE, SQUARE));
+    static ref MOVE: Regex =
+        rgx(format!("({}|{}|{})", CASTLE.as_str(), PROMOTION.as_str(), STANDARD.as_str()));
 }
 
 fn rgx(pattern: String) -> Regex {

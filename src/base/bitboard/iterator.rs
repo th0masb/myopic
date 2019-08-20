@@ -46,10 +46,7 @@ mod iter_test {
 
     #[test]
     fn test_into_iter() {
-        assert_eq!(
-            vec!(F1, G6),
-            new_set(F1, G6).into_iter().collect::<Vec<Square>>()
-        );
+        assert_eq!(vec!(F1, G6), new_set(F1, G6).into_iter().collect::<Vec<Square>>());
     }
 }
 

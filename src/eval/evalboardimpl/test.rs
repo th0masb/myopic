@@ -16,10 +16,7 @@ struct TestCase<B: Board> {
 
 impl<B: Board> Reflectable for TestCase<B> {
     fn reflect(&self) -> Self {
-        TestCase {
-            start_position: self.start_position.reflect(),
-            moves: self.moves.reflect(),
-        }
+        TestCase { start_position: self.start_position.reflect(), moves: self.moves.reflect() }
     }
 }
 
@@ -42,10 +39,7 @@ fn execute_test_impl<B: Board>(test_case: TestCase<B>) {
 }
 
 fn test(start_fen: &'static str, moves: Vec<Move>) {
-    execute_test(TestCase {
-        start_position: board::from_fen(start_fen).unwrap(),
-        moves,
-    })
+    execute_test(TestCase { start_position: board::from_fen(start_fen).unwrap(), moves })
 }
 
 #[test]

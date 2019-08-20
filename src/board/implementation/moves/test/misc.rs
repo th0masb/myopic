@@ -58,14 +58,7 @@ fn case_2() {
         board: TestBoard {
             active: Side::White,
             whites: vec![A7 | D4 | F2 | G2, C3, A4, B1 | H1, BitBoard::EMPTY, E1],
-            blacks: vec![
-                A2 | D5 | F7 | G7 | H7,
-                C6,
-                G6 | A5,
-                B8 | H8,
-                BitBoard::EMPTY,
-                C7,
-            ],
+            blacks: vec![A2 | D5 | F7 | G7 | H7, C6, G6 | A5, B8 | H8, BitBoard::EMPTY, C7],
             clock: 20,
             history_count: 20,
             castle_rights: CastleZoneSet::WK | CastleZoneSet::BK,
@@ -76,11 +69,7 @@ fn case_2() {
 
         expected_all: vec![
             s(Piece::WB, A4, B3 | C2 | D1 | B5 | C6),
-            s(
-                Piece::WR,
-                B1,
-                B2 | B3 | B4 | B5 | B6 | B7 | B8 | A1 | C1 | D1,
-            ),
+            s(Piece::WR, B1, B2 | B3 | B4 | B5 | B6 | B7 | B8 | A1 | C1 | D1),
             s(Piece::WK, E1, E2 | D1 | D2 | F1),
             s(Piece::WP, F2, F3 | F4),
             s(Piece::WP, G2, G3 | G4),

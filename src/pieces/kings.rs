@@ -103,10 +103,7 @@ mod white_test {
             D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3,
             Piece::WK.control(Square::E3, zero, zero)
         );
-        assert_eq!(
-            B1 | B2 | C2 | D2 | D1,
-            Piece::WK.control(Square::C1, zero, zero)
-        );
+        assert_eq!(B1 | B2 | C2 | D2 | D1, Piece::WK.control(Square::C1, zero, zero));
     }
 
     #[test]
@@ -131,10 +128,7 @@ mod black_test {
     #[test]
     fn test_control() {
         let zero = BitBoard::EMPTY;
-        assert_eq!(
-            D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3,
-            Piece::BK.control(E3, zero, zero)
-        );
+        assert_eq!(D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3, Piece::BK.control(E3, zero, zero));
         assert_eq!(B1 | B2 | C2 | D2 | D1, Piece::BK.control(C1, zero, zero));
     }
 

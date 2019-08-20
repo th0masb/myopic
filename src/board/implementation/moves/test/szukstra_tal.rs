@@ -5,22 +5,8 @@ fn black_move_eight() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::Black,
-            whites: vec![
-                A2 | B2 | C4 | D4 | E4 | F3 | G2 | H2,
-                C3 | E2,
-                E3 | F1,
-                A1 | H1,
-                B3,
-                E1,
-            ],
-            blacks: vec![
-                A7 | B7 | C6 | D6 | E5 | F7 | G6 | H7,
-                B8 | F6,
-                C8 | G7,
-                A8 | F8,
-                D8,
-                G8,
-            ],
+            whites: vec![A2 | B2 | C4 | D4 | E4 | F3 | G2 | H2, C3 | E2, E3 | F1, A1 | H1, B3, E1],
+            blacks: vec![A7 | B7 | C6 | D6 | E5 | F7 | G6 | H7, B8 | F6, C8 | G7, A8 | F8, D8, G8],
             clock: 1,
             history_count: 14,
             castle_rights: CastleZoneSet::WHITE,
@@ -56,22 +42,8 @@ fn white_move_nine() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::White,
-            whites: vec![
-                A2 | B2 | C4 | E4 | F3 | G2 | H2,
-                C3 | E2,
-                E3 | F1,
-                A1 | H1,
-                B3,
-                E1,
-            ],
-            blacks: vec![
-                A7 | B7 | C6 | D6 | D4 | F7 | G6 | H7,
-                B8 | F6,
-                C8 | G7,
-                A8 | F8,
-                D8,
-                G8,
-            ],
+            whites: vec![A2 | B2 | C4 | E4 | F3 | G2 | H2, C3 | E2, E3 | F1, A1 | H1, B3, E1],
+            blacks: vec![A7 | B7 | C6 | D6 | D4 | F7 | G6 | H7, B8 | F6, C8 | G7, A8 | F8, D8, G8],
             clock: 0,
             history_count: 15,
             castle_rights: CastleZoneSet::WHITE,
@@ -97,11 +69,7 @@ fn white_move_nine() {
             s(Piece::WP, H2, H3 | H4),
         ],
 
-        expected_attacks: vec![
-            s(Piece::WQ, B3, B7),
-            s(Piece::WB, E3, D4),
-            s(Piece::WN, E2, D4),
-        ],
+        expected_attacks: vec![s(Piece::WQ, B3, B7), s(Piece::WB, E3, D4), s(Piece::WN, E2, D4)],
         expected_attacks_checks: vec![
             s(Piece::WQ, B3, B7),
             s(Piece::WB, E3, D4),
@@ -115,22 +83,8 @@ fn black_move_nine() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::Black,
-            whites: vec![
-                A2 | B2 | C4 | E4 | F3 | G2 | H2,
-                C3 | D4,
-                E3 | F1,
-                A1 | H1,
-                B3,
-                E1,
-            ],
-            blacks: vec![
-                A7 | B7 | C6 | D6 | F7 | G6 | H7,
-                B8 | F6,
-                C8 | G7,
-                A8 | F8,
-                D8,
-                G8,
-            ],
+            whites: vec![A2 | B2 | C4 | E4 | F3 | G2 | H2, C3 | D4, E3 | F1, A1 | H1, B3, E1],
+            blacks: vec![A7 | B7 | C6 | D6 | F7 | G6 | H7, B8 | F6, C8 | G7, A8 | F8, D8, G8],
             clock: 0,
             history_count: 15,
             castle_rights: CastleZoneSet::WHITE,
@@ -165,22 +119,8 @@ fn white_move_ten() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::White,
-            whites: vec![
-                A2 | B2 | C4 | E4 | F3 | G2 | H2,
-                C3 | D4,
-                E3 | F1,
-                A1 | H1,
-                B3,
-                E1,
-            ],
-            blacks: vec![
-                A7 | B7 | C6 | D5 | F7 | G6 | H7,
-                B8 | F6,
-                C8 | G7,
-                A8 | F8,
-                D8,
-                G8,
-            ],
+            whites: vec![A2 | B2 | C4 | E4 | F3 | G2 | H2, C3 | D4, E3 | F1, A1 | H1, B3, E1],
+            blacks: vec![A7 | B7 | C6 | D5 | F7 | G6 | H7, B8 | F6, C8 | G7, A8 | F8, D8, G8],
             clock: 0,
             history_count: 15,
             castle_rights: CastleZoneSet::WHITE,
@@ -229,22 +169,8 @@ fn black_move_ten() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::Black,
-            whites: vec![
-                A2 | B2 | D5 | E4 | F3 | G2 | H2,
-                C3 | D4,
-                E3 | F1,
-                A1 | H1,
-                B3,
-                E1,
-            ],
-            blacks: vec![
-                A7 | B7 | C6 | F7 | G6 | H7,
-                B8 | F6,
-                C8 | G7,
-                A8 | F8,
-                D8,
-                G8,
-            ],
+            whites: vec![A2 | B2 | D5 | E4 | F3 | G2 | H2, C3 | D4, E3 | F1, A1 | H1, B3, E1],
+            blacks: vec![A7 | B7 | C6 | F7 | G6 | H7, B8 | F6, C8 | G7, A8 | F8, D8, G8],
             clock: 0,
             history_count: 15,
             castle_rights: CastleZoneSet::WHITE,
@@ -287,22 +213,8 @@ fn white_move_eleven() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::White,
-            whites: vec![
-                A2 | B2 | E4 | F3 | G2 | H2,
-                C3 | D4,
-                E3 | F1,
-                A1 | H1,
-                B3,
-                E1,
-            ],
-            blacks: vec![
-                A7 | B7 | D5 | F7 | G6 | H7,
-                B8 | F6,
-                C8 | G7,
-                A8 | F8,
-                D8,
-                G8,
-            ],
+            whites: vec![A2 | B2 | E4 | F3 | G2 | H2, C3 | D4, E3 | F1, A1 | H1, B3, E1],
+            blacks: vec![A7 | B7 | D5 | F7 | G6 | H7, B8 | F6, C8 | G7, A8 | F8, D8, G8],
             clock: 0,
             history_count: 15,
             castle_rights: CastleZoneSet::WHITE,
@@ -315,11 +227,7 @@ fn white_move_eleven() {
             c(CastleZone::WQ.lift()),
             s(Piece::WR, A1, B1 | C1 | D1),
             s(Piece::WP, A2, A3 | A4),
-            s(
-                Piece::WQ,
-                B3,
-                C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5,
-            ),
+            s(Piece::WQ, B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5),
             s(Piece::WN, C3, B1 | D1 | D5 | A4 | B5 | E2),
             s(Piece::WK, E1, D1 | D2 | F2 | E2),
             s(Piece::WN, D4, C2 | B5 | E6 | F5 | E2 | C6),
@@ -350,14 +258,7 @@ fn black_move_eleven() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::Black,
-            whites: vec![
-                A2 | B2 | D5 | F3 | G2 | H2,
-                C3 | D4,
-                E3 | F1,
-                A1 | H1,
-                B3,
-                E1,
-            ],
+            whites: vec![A2 | B2 | D5 | F3 | G2 | H2, C3 | D4, E3 | F1, A1 | H1, B3, E1],
             blacks: vec![A7 | B7 | F7 | G6 | H7, B8 | F6, C8 | G7, A8 | F8, D8, G8],
             clock: 0,
             history_count: 15,
@@ -392,14 +293,7 @@ fn white_move_twelve() {
     execute_test(TestCase {
         board: TestBoard {
             active: Side::White,
-            whites: vec![
-                A2 | B2 | D5 | F3 | G2 | H2,
-                C3 | D4,
-                E3 | F1,
-                A1 | H1,
-                B3,
-                E1,
-            ],
+            whites: vec![A2 | B2 | D5 | F3 | G2 | H2, C3 | D4, E3 | F1, A1 | H1, B3, E1],
             blacks: vec![A7 | B7 | F7 | G6 | H7, C6 | F6, C8 | G7, A8 | F8, D8, G8],
             clock: 0,
             history_count: 15,
@@ -426,11 +320,7 @@ fn white_move_twelve() {
             s(Piece::WP, H2, H3 | H4),
         ],
 
-        expected_attacks: vec![
-            s(Piece::WQ, B3, B7),
-            s(Piece::WN, D4, C6),
-            s(Piece::WP, D5, C6),
-        ],
+        expected_attacks: vec![s(Piece::WQ, B3, B7), s(Piece::WN, D4, C6), s(Piece::WP, D5, C6)],
         expected_attacks_checks: vec![
             s(Piece::WQ, B3, B7),
             s(Piece::WN, D4, C6),

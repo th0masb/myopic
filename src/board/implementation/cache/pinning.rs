@@ -5,7 +5,6 @@ use crate::base::Side;
 use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
 
-
 pub const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
 pub const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
 
@@ -22,16 +21,13 @@ pub struct PinnedSet {
 impl PinnedSet {
     /// Computes the constraint area for a piece at the given square taking into
     /// account some existing constraint set. If the piece is pinned we perform
-    /// a linear search to find the constraint area before returning the intersection
-    /// of the two constraints. Otherwise we just return the existing constraint.
+    /// a linear search to find the constraint area before returning the
+    /// intersection of the two constraints. Otherwise we just return the
+    /// existing constraint.
     fn compute_constraint_area(&self, loc: Square, existing: BitBoard) -> BitBoard {
         existing
             & if self.pinned_locations.contains(loc) {
-                (&self.constraint_areas)
-                    .into_iter()
-                    .find(|(sq, _)| *sq == loc)
-                    .unwrap()
-                    .1
+                (&self.constraint_areas).into_iter().find(|(sq, _)| *sq == loc).unwrap().1
             } else {
                 BitBoard::ALL
             }
@@ -39,11 +35,7 @@ impl PinnedSet {
 
     pub fn constraint(&self, loc: Square) -> BitBoard {
         if self.pinned_locations.contains(loc) {
-            self.constraint_areas
-                .iter()
-                .find(|(sq, _)| *sq == loc)
-                .map(|(_, c)| *c)
-                .unwrap()
+            self.constraint_areas.iter().find(|(sq, _)| *sq == loc).map(|(_, c)| *c).unwrap()
         } else {
             BitBoard::ALL
         }
@@ -65,7 +57,6 @@ impl BoardImpl {
     /// Computes the set of all active pieces which are pinned to the king,
     /// i.e have their movement areas constrained so that they do not move
     /// and leave the king in check.
-    ///
     fn compute_pinned(&self) -> PinnedSet {
         let locs = |side: Side| self.pieces.side_locations(side);
         let (active, passive) = (locs(self.active), locs(self.active.reflect()));
@@ -80,10 +71,7 @@ impl BoardImpl {
                 pinned_locations |= pinned_loc;
             }
         }
-        PinnedSet {
-            pinned_locations,
-            constraint_areas,
-        }
+        PinnedSet { pinned_locations, constraint_areas }
     }
 
     fn compute_potential_pinners(&self, king_loc: Square) -> BitBoard {

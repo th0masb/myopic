@@ -75,10 +75,8 @@ fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
 impl Positions {
     pub fn from_fen(ranks: Vec<String>) -> Positions {
         assert_eq!(8, ranks.len());
-        let mut board = ranks
-            .into_iter()
-            .flat_map(|r| convert_rank(r).into_iter())
-            .collect::<Vec<_>>();
+        let mut board =
+            ranks.into_iter().flat_map(|r| convert_rank(r).into_iter()).collect::<Vec<_>>();
         assert_eq!(64, board.len());
         board.reverse();
         let mut bitboards = [BitBoard::EMPTY; 12];
@@ -117,10 +115,7 @@ impl Positions {
     }
 
     pub fn king_location(&self, side: Side) -> Square {
-        self.locs_impl(Piece::king(side))
-            .into_iter()
-            .next()
-            .unwrap()
+        self.locs_impl(Piece::king(side)).into_iter().next().unwrap()
     }
 
     pub fn whites(&self) -> BitBoard {
@@ -136,11 +131,7 @@ impl Positions {
     }
 
     pub fn piece_at(&self, square: Square) -> Option<Piece> {
-        self.boards
-            .iter()
-            .zip(Piece::iter())
-            .find(|(&b, _)| b.contains(square))
-            .map(|(_, p)| p)
+        self.boards.iter().zip(Piece::iter()).find(|(&b, _)| b.contains(square)).map(|(_, p)| p)
     }
 
     pub fn erase_square(&mut self, square: Square) -> Option<Piece> {

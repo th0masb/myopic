@@ -1,16 +1,16 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
 use crate::pieces::Piece;
 
 pub use self::implementation::BoardImpl;
 
+mod implementation;
 #[cfg(test)]
 mod test_board;
-mod implementation;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Discards {
@@ -31,27 +31,27 @@ pub enum Move {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum MoveComputeType {
-    All, Attacks,
-    AttacksChecks
+    All,
+    Attacks,
+    AttacksChecks,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum Termination {
-    Draw, Loss,
+    Draw,
+    Loss,
 }
 
 /// Trait representing a mutable state of play of a chess game
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
 /// properties.
-///
 pub trait Board: Clone + Reflectable {
     /// Evolves this board in place according to the given move reference.
     /// The move must be one that is legal in this position otherwise the
     /// results are undefined. The data which is lost during this evolution
     /// is returned at the end of the procedure allowing for devolution to
     /// take place.
-    ///
     fn evolve(&mut self, action: &Move) -> Discards;
 
     /// Reverses the given move, i.e. it devolves the board. It can only be
@@ -59,7 +59,6 @@ pub trait Board: Clone + Reflectable {
     /// discarded information produced by the evolve call must be provided
     /// here. If any of these conditions are not met the results of this
     /// procedure are undefined.
-    ///
     fn devolve(&mut self, action: &Move, discards: Discards);
 
     /// Compute a vector of all the legal moves in this position for the
@@ -111,8 +110,8 @@ pub trait Board: Clone + Reflectable {
     /// Return the total number of half moves played to reach this position.
     fn history_count(&self) -> usize;
 
-//    /// Return the set of squares the passive team is collectively controlling.
-//    fn passive_control(&self) -> BitBoard;
+    //    /// Return the set of squares the passive team is collectively
+    // controlling.    fn passive_control(&self) -> BitBoard;
 }
 
 pub fn from_fen(fen: &str) -> Result<BoardImpl, String> {

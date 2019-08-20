@@ -101,11 +101,7 @@ mod test {
 
     #[test]
     fn mate_1() {
-        test(
-            "8/8/8/4Q3/8/6R1/2n1pkBK/8 w - - 0 1",
-            vec![Standard(Piece::WR, G3, D3)],
-            true,
-        )
+        test("8/8/8/4Q3/8/6R1/2n1pkBK/8 w - - 0 1", vec![Standard(Piece::WR, G3, D3)], true)
     }
 
     #[test]
