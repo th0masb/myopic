@@ -123,6 +123,7 @@ mod test {
     }
 
     // Mate in 4 moves TODO probably better in benchmark.
+    #[ignore]
     #[test]
     fn mate_4() {
         test(
