@@ -3,10 +3,10 @@ use crate::base::square::Square;
 use crate::base::Side;
 use crate::board::Move::Castle;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
+use crate::pieces::Piece;
 use crate::regex::Regex;
 use patterns::*;
 use std::str::FromStr;
-use crate::pieces::Piece;
 
 mod patterns;
 
@@ -19,44 +19,63 @@ pub fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
 }
 
 fn parse_single_move<B: Board>(start: &mut B, pgn_move: String) -> Result<Move, String> {
-    let trimmed = pgn_move.trim().to_owned();
-    if castle_regex().is_match(trimmed.as_str()) {
-        parse_castle(start, trimmed)
-    } else if promotion_regex().is_match(trimmed.as_str()) {
-        parse_promotion(start, trimmed)
-    } else if standard_regex().is_match(trimmed.as_str()) {
-        parse_standard(start, trimmed)
-    } else {
-        Err(trimmed)
+    // If a castle move we can retrieve straight away
+    if pgn_move.as_str() == "0-0" {
+        return Ok(Castle(CastleZone::kingside(start.active())));
+    } else if pgn_move.as_str() == "0-0-0" {
+        return Ok(Castle(CastleZone::queenside(start.active())));
+    }
+
+    // Otherwise we need to get more involved and look through the legal moves.
+    let legal = start.compute_moves(MoveComputeType::All);
+    // The target square of the move.
+    let target = find_matches(&pgn_move, square_regex())
+        .into_iter()
+        .map(|s| Square::from_string(&s))
+        .collect::<Vec<_>>()
+        .last()
+        .map(|mv| mv.clone());
+
+    // Functionality for checking if a piece type matches the pgn move.
+    let piece_ordinal = piece_ordinal(&pgn_move);
+    let piece_matches = |p: Piece| piece_ordinal == (p as usize % 6);
+    let matches_pawn = piece_matches(Piece::WP);
+
+    // Functionality for differentiating ambiguous moves.
+    let file = find_differentiating_rank_or_file(&pgn_move, file_regex());
+    let rank = find_differentiating_rank_or_file(&pgn_move, rank_regex());
+    let matches_start = |sq: Square| matches_square(file, rank, sq);
+
+    // Retrieve the unique move which matches target square, piece type and
+    // any differentiating information.
+    legal
+        .into_iter()
+        .filter(|mv| match mv {
+            &Move::Standard(p, s, e) => piece_matches(p) && target == Some(e) && matches_start(s),
+            &Move::Enpassant(s) => matches_pawn && target == start.enpassant() && matches_start(s),
+            &Move::Promotion(s, e, p) => matches_pawn && target == Some(e) && matches_start(s),
+            _ => panic!(),
+        })
+        .map(|mv| mv.clone())
+        .next()
+        .ok_or(pgn_move)
+}
+
+fn matches_square(file: Option<char>, rank: Option<char>, sq: Square) -> bool {
+    match (file, rank) {
+        (Some(f), Some(r)) => matches_file(f, sq) && matches_rank(r, sq),
+        (None, Some(r)) => matches_rank(r, sq),
+        (Some(f), None) => matches_file(f, sq),
+        _ => true,
     }
 }
 
-fn parse_standard<B: Board>(start: &mut B, pgn_move: String) -> Result<Move, String> {
-    let legal = start.compute_moves(MoveComputeType::All);
-    let square_matches: Vec<_> = find_matches(&pgn_move, square_regex())
-        .into_iter()
-        .map(|s| Square::from_string(&s))
-        .collect();
-    if square_matches.len() == 0 {
-        Err(pgn_move)
-    } else if square_matches.len() == 2 {
-        // Rare case of two squares specified we can search straight away.
-        let (start, end) = (square_matches[0], square_matches[1]);
-        let matched_move = legal.iter().find(|&mv| match mv {
-            &Move::Standard(_, s, e) => s == start && e == end,
-            _ => false,
-        });
-        matched_move.map(|mv| mv.clone()).ok_or(pgn_move)
-    } else {
-        let end = square_matches[0];
-        let file = find_differentiating_rank_or_file(&pgn_move, file_regex());
-        let ranks = find_differentiating_rank_or_file(&pgn_move, rank_regex());
-        let piece_ordinal = piece_ordinal(&pgn_move);
-        let piece_matches = |p: Piece| piece_ordinal == (p as usize % 6);
+fn matches_file(file: char, sq: Square) -> bool {
+    char_at(&format!("{:?}", sq), 0) == file
+}
 
-
-        unimplemented!()
-    }
+fn matches_rank(rank: char, sq: Square) -> bool {
+    char_at(&format!("{:?}", sq), 1) == rank
 }
 
 fn char_at(string: &String, index: usize) -> char {
@@ -72,11 +91,8 @@ fn find_differentiating_rank_or_file(pgn_move: &String, re: &Regex) -> Option<ch
     }
 }
 
-
 fn piece_ordinal(pgn_move: &String) -> usize {
-    let piece = find_matches(&pgn_move, piece_regex())
-        .first()
-        .and_then(|s| s.chars().nth(0));
+    let piece = find_matches(&pgn_move, piece_regex()).first().and_then(|s| s.chars().nth(0));
     match piece {
         None => 0,
         Some('N') => 1,
@@ -84,18 +100,6 @@ fn piece_ordinal(pgn_move: &String) -> usize {
         Some('R') => 3,
         Some('Q') => 4,
         Some('K') => 5,
-        _ => panic!()
-    }
-}
-
-fn parse_promotion<B: Board>(start: &mut B, pgn_move: String) -> Result<Move, String> {
-    unimplemented!()
-}
-
-fn parse_castle<B: Board>(start: &mut B, pgn_move: String) -> Result<Move, String> {
-    if pgn_move.as_str() == "0-0" {
-        Ok(Castle(CastleZone::kingside(start.active())))
-    } else {
-        Ok(Castle(CastleZone::queenside(start.active())))
+        _ => panic!(),
     }
 }

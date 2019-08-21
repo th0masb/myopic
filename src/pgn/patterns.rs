@@ -5,17 +5,6 @@ pub(super) fn move_regex() -> &'static Regex {
     &MOVE
 }
 
-pub(super) fn castle_regex() -> &'static Regex {
-    &CASTLE
-}
-
-pub(super) fn promotion_regex() -> &'static Regex {
-    &PROMOTION
-}
-
-pub(super) fn standard_regex() -> &'static Regex {
-    &STANDARD
-}
 
 pub(super) fn file_regex() -> &'static Regex {
     &FILE_RE
@@ -44,11 +33,9 @@ lazy_static! {
     static ref SQUARE_RE: Regex = rgx(SQUARE.to_owned());
     static ref PIECE_RE: Regex = rgx(PIECE.to_owned());
     static ref CASTLE: Regex = rgx(r"(0-0(-0)?)".to_owned());
-    static ref PROMOTION: Regex = rgx(format!("(({}x)?{}=[NBRQ])", FILE, SQUARE));
-    static ref STANDARD: Regex =
-        rgx(format!("({}?({}|{}|{})?x?{}(?!=)))", PIECE, RANK, FILE, SQUARE, SQUARE));
+    static ref NOT_CASTLE: Regex = rgx(format!(r"({}?({}|{}|{})?x?{}(=[NBRQ])?[+#]?)", PIECE, RANK, FILE, SQUARE, SQUARE).to_owned());
     static ref MOVE: Regex =
-        rgx(format!("({}|{}|{})", CASTLE.as_str(), PROMOTION.as_str(), STANDARD.as_str()));
+        rgx(format!("({}|{})", CASTLE.as_str(), NOT_CASTLE.as_str()));
 }
 
 fn rgx(pattern: String) -> Regex {
