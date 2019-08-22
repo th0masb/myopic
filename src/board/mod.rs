@@ -109,9 +109,6 @@ pub trait Board: Clone + Reflectable {
 
     /// Return the total number of half moves played to reach this position.
     fn history_count(&self) -> usize;
-
-    //    /// Return the set of squares the passive team is collectively
-    // controlling.    fn passive_control(&self) -> BitBoard;
 }
 
 pub fn from_fen(fen: &str) -> Result<BoardImpl, String> {

@@ -26,7 +26,7 @@ mod positions;
 #[cfg(test)]
 mod test;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct BoardImpl {
     history: History,
     pieces: Positions,
@@ -253,6 +253,16 @@ impl Reflectable for Move {
             Move::Standard(p, s, t) => Move::Standard(p.reflect(), s.reflect(), t.reflect()),
             Move::Promotion(s, t, p) => Move::Promotion(s.reflect(), t.reflect(), p.reflect()),
         }
+    }
+}
+
+impl PartialEq<BoardImpl> for BoardImpl {
+    fn eq(&self, other: &BoardImpl) -> bool {
+        self.pieces == other.pieces
+            && self.castling.rights() == other.castling.rights()
+            && self.enpassant == other.enpassant
+            && self.active == other.active
+            && self.half_move_clock() == other.half_move_clock()
     }
 }
 

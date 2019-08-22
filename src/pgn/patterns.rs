@@ -31,7 +31,7 @@ lazy_static! {
     static ref RANK_RE: Regex = rgx(RANK.to_owned());
     static ref SQUARE_RE: Regex = rgx(SQUARE.to_owned());
     static ref PIECE_RE: Regex = rgx(PIECE.to_owned());
-    static ref CASTLE: Regex = rgx(r"(0-0(-0)?)".to_owned());
+    static ref CASTLE: Regex = rgx(r"(O-O(-O)?)".to_owned());
     static ref NOT_CASTLE: Regex =
         rgx(format!(r"({}?({}|{}|{})?x?{}(=[NBRQ])?[+#]?)", PIECE, RANK, FILE, SQUARE, SQUARE)
             .to_owned());
