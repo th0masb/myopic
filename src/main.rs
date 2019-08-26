@@ -14,6 +14,9 @@ mod pgn;
 mod pieces;
 mod search;
 
+use std::fs;
+use std::path::Path;
+
 #[derive(Copy, Clone)]
 enum Test {
     X,
@@ -29,6 +32,8 @@ fn main() {
     //    for mv in best_moves {
     //        println!("{:?}", mv);
     //    }
-    let re = regex::Regex::new(r"[abc]{2}");
-    println!("{}", re.unwrap().as_str());
+    let path = Path::new("/home/t/git/myopic/data/formatted-three-puzzles");
+    println!("{:?}", path.is_file());
+    //let re = regex::Regex::new(r"[abc]{2}");
+    //println!("{}", re.unwrap().as_str());
 }

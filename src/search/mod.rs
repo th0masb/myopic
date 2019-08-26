@@ -7,6 +7,8 @@ use crate::eval;
 use crate::eval::EvalBoard;
 
 mod quiescent;
+#[cfg(test)]
+mod mate_benchmark;
 
 pub fn best_move<B: EvalBoard>(state: &mut B, depth: usize) -> Option<(Move, i32)> {
     assert!(depth > 0);
