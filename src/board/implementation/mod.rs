@@ -16,6 +16,7 @@ use crate::board::MoveComputeType;
 use crate::board::Termination;
 use crate::pgn::find_matches;
 use crate::pieces::Piece;
+use std::cmp::max;
 
 mod cache;
 mod castling;
@@ -88,7 +89,7 @@ impl BoardImpl {
                 let clock = *(&initial_split[4].parse::<usize>().unwrap());
                 let move_count = *(&initial_split[5].parse::<usize>().unwrap());
                 let hash = hash(&pieces, &castling, active, enpassant);
-                let n_previous_pos = 2 * (move_count - 1) + (active as usize);
+                let n_previous_pos = 2 * (max(move_count, 1) - 1) + (active as usize);
                 Ok(BoardImpl {
                     pieces,
                     castling,

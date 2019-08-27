@@ -10,7 +10,7 @@ use std::str::FromStr;
 
 mod patterns;
 
-pub fn parse_pgn<B: Board>(start: &B, pgn_moves: String) -> Result<Vec<Move>, String> {
+pub fn parse_pgn<B: Board>(start: &B, pgn_moves: &String) -> Result<Vec<Move>, String> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in find_matches(&pgn_moves, move_regex()) {
@@ -20,7 +20,11 @@ pub fn parse_pgn<B: Board>(start: &B, pgn_moves: String) -> Result<Vec<Move>, St
         };
         mutator_board.evolve(dest.last().unwrap());
     }
-    return Ok(dest);
+    if dest.len() > 0 {
+        Ok(dest)
+    } else {
+        Err(pgn_moves.clone())
+    }
 }
 
 pub fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
@@ -138,7 +142,7 @@ mod test {
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
         let finish = crate::board::from_fen(expected_finish).unwrap();
         let mut board = crate::board::start();
-        for evolve in parse_pgn(&board, String::from(pgn)).unwrap() {
+        for evolve in parse_pgn(&board, &String::from(pgn)).unwrap() {
             board.evolve(&evolve);
         }
         assert_eq!(finish, board);
