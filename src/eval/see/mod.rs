@@ -22,6 +22,8 @@ pub fn exchange_value<B: Board>(board: &B, source: Square, target: Square) -> i3
     See { board, source, target, value: values::abs_midgame }.exchange_value()
 }
 
+type BitBoardPair = (BitBoard, BitBoard);
+
 /// Static exchange evaluator
 struct See<'a, B: Board> {
     board: &'a B,
@@ -33,7 +35,6 @@ struct See<'a, B: Board> {
 impl<B: Board> See<'_, B> {
     fn exchange_value(&self) -> i32 {
         let board = self.board;
-        let knights = self.locs(Piece::WN) | self.locs(Piece::BN);
         let first_attacker = board.piece(self.source).unwrap();
         let first_victim = board.piece(self.target).unwrap();
         let mut d = 0;
@@ -43,9 +44,8 @@ impl<B: Board> See<'_, B> {
         let mut attacker = first_attacker;
         let mut active = first_attacker.side();
         let mut src = self.source.lift();
+        let mut removed = BitBoard::EMPTY;
         let (mut attadef, mut xray) = self.pieces_involved();
-        assert!(attadef.intersects(src));
-        assert!(attadef.subsumes(src));
         loop {
             d += 1;
             gain[d] = (self.value)(attacker) - gain[d - 1];
@@ -53,20 +53,16 @@ impl<B: Board> See<'_, B> {
             //if cmp::max(-gain[d - 1], gain[d]) < 0 {
             //    break;
             //}
-            assert!(attadef.intersects(src), "{:?}, {:?}", attadef, src);
-            assert!(attadef.subsumes(src));
             attadef ^= src;
-            if !src.intersects(knights) {
-                let (new_attadef, new_xray) = self.update_xrays(attadef, xray);
-                attadef = new_attadef;
-                xray = new_xray;
-            }
+            removed ^= src;
+            let (new_attadef, new_xray) = self.update_xray(removed, attadef, xray);
+            attadef = new_attadef;
+            xray = new_xray;
             active = active.reflect();
             src = self.least_valuable_piece(attadef, active);
             if src.is_empty() {
                 break;
             } else {
-                assert!(attadef.intersects(src), "{:?}, {:?}", attadef, src);
                 attacker = board.piece(src.first().unwrap()).unwrap();
             }
         }
@@ -83,7 +79,7 @@ impl<B: Board> See<'_, B> {
     }
 
     /// Get (direct attadef, xray attadef) involved.
-    fn pieces_involved(&self) -> (BitBoard, BitBoard) {
+    fn pieces_involved(&self) -> BitBoardPair {
         let (board, target) = (self.board, self.target);
         let (whites, blacks) = board.sides();
         let zero = BitBoard::EMPTY;
@@ -100,11 +96,13 @@ impl<B: Board> See<'_, B> {
         (attadef, xray)
     }
 
-    fn update_xrays(&self, attadef: BitBoard, xray: BitBoard) -> (BitBoard, BitBoard) {
-        if xray.is_empty() {
+    fn update_xray(&self, removed: BitBoard, attadef: BitBoard, xray: BitBoard) -> BitBoardPair {
+        if xray.is_empty() || self.is_knight_position(removed) {
             (attadef, xray)
         } else {
-            let (whites, blacks) = self.board.sides();
+            let (mut whites, mut blacks) = self.board.sides();
+            whites = whites - removed;
+            blacks = blacks - removed;
             let (mut new_attadef, mut new_xray) = (attadef, xray);
             sliders()
                 .iter()
@@ -117,6 +115,10 @@ impl<B: Board> See<'_, B> {
                 });
             (new_attadef, new_xray)
         }
+    }
+
+    fn is_knight_position(&self, square: BitBoard) -> bool {
+        (self.board.locs(Piece::WN) | self.board.locs(Piece::BN)).intersects(square)
     }
 
     fn least_valuable_piece(&self, options: BitBoard, side: Side) -> BitBoard {

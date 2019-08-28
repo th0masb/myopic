@@ -8,7 +8,7 @@ use crate::pieces::Piece;
 
 /// Dummy piece values
 fn value(piece: Piece) -> i32 {
-    let values = [1, 3, 3, 5, 9, 100];
+    let values = [1, 3, 3, 5, 9, 1000];
     values[(piece as usize) % 6]
 }
 
@@ -50,7 +50,7 @@ fn execute_case_impl<B: Board>(test_case: TestCase<B>) {
 const ZERO: BitBoard = BitBoard(0);
 
 #[test]
-fn case_1() {
+fn see_case_1() {
     execute_case(TestCase {
         board: board::from_fen("1b5k/5n2/3p2q1/2P5/8/3R4/1K1Q4/8 w KQkq - 5 20").unwrap(),
         expected: vec![(Square::C5, Square::D6, 0), (Square::D3, Square::D6, -2)],
@@ -58,7 +58,7 @@ fn case_1() {
 }
 
 #[test]
-fn case_2() {
+fn see_case_2() {
     execute_case(TestCase {
         board: board::from_fen("k7/6n1/2q1b2R/1P3P2/5N2/4Q3/8/K7 w KQkq - 10 30").unwrap(),
         expected: vec![
@@ -69,6 +69,16 @@ fn case_2() {
             (Square::F4, Square::E6, 3),
             (Square::H6, Square::E6, 1),
             (Square::E6, Square::F5, 1),
+        ],
+    })
+}
+
+#[test]
+fn see_case_3() {
+    execute_case(TestCase {
+        board: board::from_fen("r1n2qk1/pp5p/2ppr1pQ/4p3/8/2N4R/PPP3PP/6K1 w - - 0 3").unwrap(),
+        expected: vec![
+            (Square::H6, Square::H7, 1)
         ],
     })
 }
