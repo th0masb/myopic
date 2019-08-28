@@ -40,7 +40,8 @@ fn mate_benchmark() {
             println!("Error at index {}", i);
         }
     }
-    println!("Depth: {}, Cases: {}, Errors: {}, Time: {}", timer.elapsed().as_millis());
+    let time = timer.elapsed().as_millis();
+    println!("Depth: {}, Cases: {}, Errors: {}, Time: {}", DEPTH, N_CASES, err_count, time);
 }
 
 fn load_cases() -> Vec<TestCase> {
