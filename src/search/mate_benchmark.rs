@@ -2,16 +2,41 @@ use crate::board::{BoardImpl, Move};
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
+use std::time::Instant;
+use crate::eval::SimpleEvalBoard;
 
 const DATA_PATH: &'static str = r"/home/t/git/myopic/data/formatted-three-puzzles";
-const N_CASES: usize = 459;
+const N_CASES: usize = 100;
 const DEPTH: usize = 4;
 
+///
+/// cargo test --release mate_benchmark -- --ignored --nocapture
+///
+/// RESULTS:
+/// ------------------------------------------------------------
+/// Depth          | Number of cases     | Time (ms)
+/// ------------------------------------------------------------
+/// 4              | 3                   | 24,537
+///                |                     |
+///                |                     |
+///                |                     |
+///                |                     |
+///                |                     |
+///                |                     |
+///                |                     |
+/// ------------------------------------------------------------
 #[test]
 #[ignore]
 fn mate_benchmark() {
     let cases = load_cases();
-    assert_eq!(cases.len(), N_CASES)
+    let timer = Instant::now();
+    for (i, mut test_case) in cases.into_iter().enumerate() {
+        let actual_move = crate::search::best_move(&mut test_case.board, DEPTH).unwrap().0;
+        if test_case.expected_move != actual_move {
+            println!("Error at index {}", i);
+        }
+    }
+    println!("Completed in {}ms", timer.elapsed().as_millis());
 }
 
 fn load_cases() -> Vec<TestCase> {
@@ -41,7 +66,7 @@ fn load_cases() -> Vec<TestCase> {
             continue;
         }
         let expected_move = moves_res.unwrap().first().unwrap().to_owned();
-        dest.push(TestCase{board, expected_move});
+        dest.push(TestCase{ board: SimpleEvalBoard::new(board), expected_move});
         if dest.len() == N_CASES {
             break;
         }
@@ -50,6 +75,6 @@ fn load_cases() -> Vec<TestCase> {
 }
 
 struct TestCase {
-    board: BoardImpl,
+    board: SimpleEvalBoard<BoardImpl>,
     expected_move: Move,
 }

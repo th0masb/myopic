@@ -63,7 +63,7 @@ fn compute_endgame<B: Board>(board: &B) -> i32 {
 }
 
 impl<B: Board> SimpleEvalBoard<B> {
-    pub(super) fn new(board: B) -> SimpleEvalBoard<B> {
+    pub fn new(board: B) -> SimpleEvalBoard<B> {
         SimpleEvalBoard {
             mid_eval: compute_midgame(&board),
             end_eval: compute_endgame(&board),
