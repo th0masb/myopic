@@ -24,5 +24,5 @@ fn parity(piece: Piece) -> i32 {
 }
 
 /// Values copied from Stockfish: https://github.com/official-stockfish/Stockfish/blob/master/src/types.h
-const MIDGAME: [i32; 6] = [128, 782, 830, 1289, 2529, 0];
-const ENDGAME: [i32; 6] = [213, 865, 918, 1378, 2687, 0];
+const MIDGAME: [i32; 6] = [128, 782, 830, 1289, 2529, 100000];
+const ENDGAME: [i32; 6] = [213, 865, 918, 1378, 2687, 100000];

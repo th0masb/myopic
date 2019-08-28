@@ -17,6 +17,7 @@ pub fn best_move<B: EvalBoard>(state: &mut B, depth: usize) -> Option<(Move, i32
     for evolve in state.compute_moves(MoveComputeType::All) {
         let discards = state.evolve(&evolve);
         let result = -negamax(state, -beta, -alpha, depth - 1);
+        //println!("{:?}, {}", evolve, result);
         state.devolve(&evolve, discards);
         if result > alpha {
             alpha = result;
@@ -133,6 +134,16 @@ mod test {
             vec![Standard(Piece::WQ, E5, C7)],
             true,
         )
+    }
+
+    #[test]
+    fn mate_5() {
+        test(
+            "r1b1k1nr/p2p1ppp/n2B4/1p1NPN1P/6P1/3P1Q2/P1P1K3/q5b1 w - - 0 30",
+            vec![Standard(Piece::WN, F5, G7)],
+            true,
+        )
+
     }
 
     #[test]

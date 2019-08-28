@@ -13,30 +13,34 @@ const DEPTH: usize = 4;
 /// cargo test --release mate_benchmark -- --ignored --nocapture
 ///
 /// RESULTS:
-/// ------------------------------------------------------------
-/// Depth          | Number of cases     | Time (ms)
-/// ------------------------------------------------------------
-/// 4              | 3                   | 24,537
-///                |                     |
-///                |                     |
-///                |                     |
-///                |                     |
-///                |                     |
-///                |                     |
-///                |                     |
+/// ------------------------------------------------------------------------------------------------
+/// Date     | Depth | Cases | Errors | Time (ms)          | Notes
+/// ------------------------------------------------------------------------------------------------
+/// 28/08/19 | 4     | 3     |        | 24,537             |
+/// ------------------------------------------------------------------------------------------------
+/// 28/08/19 | 4     | 100   | 10     | 1,282,849          |
+/// ------------------------------------------------------------------------------------------------
+///          |       |       |        |
+///          |       |       |        |
+///          |       |       |        |
+///          |       |       |        |
+///          |       |       |        |
+///          |       |       |        |
 /// ------------------------------------------------------------
 #[test]
 #[ignore]
 fn mate_benchmark() {
     let cases = load_cases();
     let timer = Instant::now();
+    let mut err_count = 0;
     for (i, mut test_case) in cases.into_iter().enumerate() {
         let actual_move = crate::search::best_move(&mut test_case.board, DEPTH).unwrap().0;
         if test_case.expected_move != actual_move {
+            err_count += 1;
             println!("Error at index {}", i);
         }
     }
-    println!("Completed in {}ms", timer.elapsed().as_millis());
+    println!("Depth: {}, Cases: {}, Errors: {}, Time: {}", timer.elapsed().as_millis());
 }
 
 fn load_cases() -> Vec<TestCase> {
