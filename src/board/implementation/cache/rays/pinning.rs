@@ -1,10 +1,10 @@
 use crate::base::bitboard::BitBoard;
+use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::base::square::Square;
-use crate::board::Board;
-use crate::board::implementation::BoardImpl;
 use crate::board::implementation::cache::rays::RaySet;
+use crate::board::implementation::BoardImpl;
+use crate::board::Board;
 use crate::pieces::Piece;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};

@@ -9,8 +9,8 @@ use std::collections::BTreeSet;
 pub const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
 pub const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
 
-pub mod pinning;
 pub mod discovery;
+pub mod pinning;
 
 /// A pinned set consisted of the locations of all the pieces which are pinned
 /// alongside a vector containing the constraint area for each of these pinned
@@ -44,9 +44,6 @@ impl RaySet {
 
 impl Reflectable for RaySet {
     fn reflect(&self) -> Self {
-        RaySet {
-            ray_points: self.ray_points.reflect(),
-            rays: self.rays.reflect(),
-        }
+        RaySet { ray_points: self.ray_points.reflect(), rays: self.rays.reflect() }
     }
 }

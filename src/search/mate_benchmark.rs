@@ -1,9 +1,9 @@
 use crate::board::{BoardImpl, Move};
+use crate::eval::SimpleEvalBoard;
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
-use crate::eval::SimpleEvalBoard;
 
 const DATA_PATH: &'static str = r"/home/t/git/myopic/data/formatted-three-puzzles";
 const N_CASES: usize = 100;
@@ -22,10 +22,11 @@ const DEPTH: usize = 4;
 /// ------------------------------------------------------------------------------------------------
 /// 28/08/19 | 4(8)(3) | 100   | 10     | 1,282,849          |
 /// ------------------------------------------------------------------------------------------------
-/// 28/08/19 | 4(8)(3) | 100   | 5      | 1,272,875          | Fixed bug with static exchange eval
+/// 28/08/19 | 4(8)(3) | 100   | 5      | 1,272,875          | Fixed bug with
+/// static exchange eval
 /// ------------------------------------------------------------------------------------------------
-/// 28/08/19 | 4(8)(3) | 100   | 4      | 1,375,979          | Another bug with see
-///          |         |       |        |
+/// 28/08/19 | 4(8)(3) | 100   | 4      | 1,375,979          | Another bug with
+/// see          |         |       |        |
 ///          |         |       |        |
 ///          |         |       |        |
 ///          |         |       |        |
@@ -74,7 +75,7 @@ fn load_cases() -> Vec<TestCase> {
             continue;
         }
         let expected_move = moves_res.unwrap().first().unwrap().to_owned();
-        dest.push(TestCase{ board: SimpleEvalBoard::new(board), expected_move});
+        dest.push(TestCase { board: SimpleEvalBoard::new(board), expected_move });
         if dest.len() == N_CASES {
             break;
         }

@@ -10,6 +10,7 @@ mod control;
 mod rays;
 mod termination;
 
+// TODO Can we switch to returning references from the cache?
 #[derive(Debug, Clone)]
 pub struct CalculationCache {
     termination_status: Option<Option<Termination>>,

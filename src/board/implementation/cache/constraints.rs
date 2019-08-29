@@ -100,12 +100,7 @@ impl BoardImpl {
     }
 
     /// Assuming the king is not in check
-    fn attacks(
-        &self,
-        passive_control: BitBoard,
-        pinned: &RaySet,
-        checks: bool,
-    ) -> MoveConstraints {
+    fn attacks(&self, passive_control: BitBoard, pinned: &RaySet, checks: bool) -> MoveConstraints {
         let (whites, blacks) = self.sides();
         let (active, passive) = (self.active, self.active.reflect());
         let mut constraints = MoveConstraints::all_universal();

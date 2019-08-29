@@ -77,8 +77,6 @@ fn see_case_2() {
 fn see_case_3() {
     execute_case(TestCase {
         board: board::from_fen("r1n2qk1/pp5p/2ppr1pQ/4p3/8/2N4R/PPP3PP/6K1 w - - 0 3").unwrap(),
-        expected: vec![
-            (Square::H6, Square::H7, 1)
-        ],
+        expected: vec![(Square::H6, Square::H7, 1)],
     })
 }

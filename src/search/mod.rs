@@ -6,9 +6,9 @@ use crate::board::Termination;
 use crate::eval;
 use crate::eval::EvalBoard;
 
-mod quiescent;
 #[cfg(test)]
 mod mate_benchmark;
+mod quiescent;
 
 pub fn best_move<B: EvalBoard>(state: &mut B, depth: usize) -> Option<(Move, i32)> {
     assert!(depth > 0);
@@ -143,7 +143,6 @@ mod test {
             vec![Standard(Piece::WN, F5, G7)],
             true,
         )
-
     }
 
     #[test]
