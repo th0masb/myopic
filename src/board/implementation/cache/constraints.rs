@@ -2,7 +2,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::implementation::cache::pinning::PinnedSet;
+use crate::board::implementation::cache::rays::RaySet;
 use crate::board::implementation::BoardImpl;
 use crate::board::Board;
 use crate::board::MoveComputeType;
@@ -21,8 +21,6 @@ impl PartialEq<MoveConstraints> for MoveConstraints {
         self.data.iter().zip(other.data.iter()).all(|(l, r)| *l == *r)
     }
 }
-
-impl Eq for MoveConstraints {}
 
 impl Debug for MoveConstraints {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
@@ -52,9 +50,9 @@ impl MoveConstraints {
         self.data[location as usize] = curr & constraint;
     }
 
-    fn intersect_pins(&mut self, pinned: &PinnedSet) {
-        for loc in pinned.pinned_locations {
-            self.intersect(loc, pinned.constraint(loc))
+    fn intersect_pins(&mut self, pinned: &RaySet) {
+        for loc in pinned.ray_points {
+            self.intersect(loc, pinned.ray(loc).unwrap_or(BitBoard::ALL))
         }
     }
 
@@ -94,7 +92,7 @@ impl BoardImpl {
     }
 
     /// Assuming the king is not in check
-    fn any(&self, passive_control: BitBoard, pinned: &PinnedSet) -> MoveConstraints {
+    fn any(&self, passive_control: BitBoard, pinned: &RaySet) -> MoveConstraints {
         let mut constraints = MoveConstraints::all_universal();
         constraints.set(self.king(self.active), !passive_control);
         constraints.intersect_pins(pinned);
@@ -105,7 +103,7 @@ impl BoardImpl {
     fn attacks(
         &self,
         passive_control: BitBoard,
-        pinned: &PinnedSet,
+        pinned: &RaySet,
         checks: bool,
     ) -> MoveConstraints {
         let (whites, blacks) = self.sides();
@@ -134,7 +132,7 @@ impl BoardImpl {
         constraints
     }
 
-    fn check(&self, passive_control: BitBoard, pinned: &PinnedSet) -> MoveConstraints {
+    fn check(&self, passive_control: BitBoard, pinned: &RaySet) -> MoveConstraints {
         let active_king_loc = self.king(self.active);
         let attackers = self.compute_king_attackers();
         if attackers.len() == 1 {

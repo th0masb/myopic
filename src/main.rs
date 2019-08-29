@@ -26,12 +26,10 @@ enum Test {
 
 fn main() {
         //println!("{:?}", 1u64.trailing_zeros())
-    //let fen = "r1n5/pp2q1kp/2ppr1p1/4p1Q1/8/2N4R/PPP3PP/5RK1 w - - 1 0";
-    //let fen = "r1n5/pp2q1kp/2ppr1pQ/4p3/8/2N4R/PPP3PP/5RK1 b - - 2 1";
-    //let fen = "r1n3k1/pp2q2p/2ppr1pQ/4p3/8/2N4R/PPP3PP/5RK1 w - - 3 2";
-    //let fen = "r1n2Rk1/pp2q2p/2ppr1pQ/4p3/8/2N4R/PPP3PP/6K1 b - - 4 2";
-    let fen = "r1n2qk1/pp5p/2ppr1pQ/4p3/8/2N4R/PPP3PP/6K1 w - - 0 3";
+    let fen = "2b3rk/1q3p1p/p1p1pPpQ/4N3/2pP4/2P1p1P1/1P4PK/5R2 w - - 1 0";
+    let fen = "2b3rk/1q3p1p/p1p1pPpQ/4N3/2pP4/2P3P1/1P2p1PK/7R w - - 0 2";
+    let fen = "2b3rk/1q3p1Q/p1p1pPp1/4N3/2pP4/2P3P1/1P2p1PK/7R b - - 0 2";
     let mut board = eval::new_board(fen).unwrap();
-        let neg = search::negamax(&mut board, -eval::INFTY, eval::INFTY, 0);
-        println!("{:?}", neg);
+    let neg = search::best_move(&mut board, 1);
+    println!("{:?}", neg);
 }
