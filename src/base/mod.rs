@@ -2,6 +2,8 @@ use crate::base::bitboard::BitBoard;
 use crate::base::direction::Dir;
 use crate::base::direction::N;
 use crate::base::direction::S;
+use std::collections::BTreeSet;
+use std::cell::Ref;
 
 pub mod bitboard;
 pub mod castlezone;
@@ -107,5 +109,11 @@ where
 {
     fn reflect(&self) -> Self {
         (self.0.reflect(), self.1.reflect(), self.2.reflect())
+    }
+}
+
+impl<T: Reflectable + Ord> Reflectable for BTreeSet<T> {
+    fn reflect(&self) -> Self {
+        self.iter().map(|x| x.reflect()).collect()
     }
 }

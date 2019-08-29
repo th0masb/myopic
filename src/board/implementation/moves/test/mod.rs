@@ -21,26 +21,16 @@ mod misc;
 #[cfg(test)]
 mod szukstra_tal;
 
+type ExpectedMoves = Vec<(MoveComputeType, MoveSet)>;
+
 #[derive(Debug, Clone)]
 struct TestCase {
-    board: TestBoard,
-
+    board: &'static str,
     // We use stacked vectors so we can more easily
     // write collections of moves shorthand.
     expected_all: Vec<Vec<Move>>,
     expected_attacks_checks: Vec<Vec<Move>>,
     expected_attacks: Vec<Vec<Move>>,
-}
-
-impl Reflectable for TestCase {
-    fn reflect(&self) -> Self {
-        TestCase {
-            board: self.board.reflect(),
-            expected_all: self.expected_all.reflect(),
-            expected_attacks_checks: self.expected_attacks_checks.reflect(),
-            expected_attacks: self.expected_attacks.reflect(),
-        }
-    }
 }
 
 fn s(piece: Piece, src: BitBoard, targets: BitBoard) -> Vec<Move> {
@@ -59,33 +49,33 @@ fn c(zones: CastleZoneSet) -> Vec<Move> {
     zones.iter().map(Move::Castle).collect()
 }
 
-fn flatten(moves: Vec<Vec<Move>>) -> MoveSet {
-    moves.into_iter().flat_map(|xs| xs.into_iter()).collect()
+fn flatten(moves: &Vec<Vec<Move>>) -> MoveSet {
+    moves.iter().flat_map(|xs| xs.iter().map(|mv| mv.clone())).collect()
 }
 
 fn sq(set: BitBoard) -> Square {
     set.into_iter().next().unwrap()
 }
 
-fn convert_case(case: TestCase) -> (BoardImpl, Vec<(MoveComputeType, MoveSet)>) {
-    let board = BoardImpl::from(case.board);
-    let expected = vec![
-        (MoveComputeType::All, flatten(case.expected_all)),
-        (MoveComputeType::Attacks, flatten(case.expected_attacks)),
-        (MoveComputeType::AttacksChecks, flatten(case.expected_attacks_checks)),
-    ];
-    (board, expected)
+fn convert_moves(case: &TestCase) -> ExpectedMoves {
+    vec![
+        (MoveComputeType::All, flatten(&case.expected_all)),
+        (MoveComputeType::Attacks, flatten(&case.expected_attacks)),
+        (MoveComputeType::AttacksChecks, flatten(&case.expected_attacks_checks)),
+    ]
 }
 
 fn execute_test(case: TestCase) {
-    let reflected_case = case.reflect();
-    execute_test_impl(case);
-    execute_test_impl(reflected_case);
+    let mut board = crate::board::from_fen(case.board).unwrap();
+    let moves = convert_moves(&case);
+    let mut ref_board = board.reflect();
+    let ref_moves: Vec<_> = moves.iter().map(|(t, mvs)| (*t, mvs.reflect())).collect();
+    execute_test_impl(board, moves);
+    //execute_test_impl(ref_board, ref_moves);
 }
 
-fn execute_test_impl(case: TestCase) {
-    let (mut board, results) = convert_case(case);
-    for (computation_type, expected_moves) in results.into_iter() {
+fn execute_test_impl(mut board: BoardImpl, moves: ExpectedMoves) {
+    for (computation_type, expected_moves) in moves.into_iter() {
         let actual_moves: MoveSet = board.compute_moves(computation_type).into_iter().collect();
         assert_eq!(
             expected_moves.clone(),
