@@ -10,7 +10,7 @@ mod control;
 mod rays;
 mod termination;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct CalculationCache {
     termination_status: Option<Option<Termination>>,
     passive_control: Option<BitBoard>,

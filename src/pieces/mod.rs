@@ -81,6 +81,12 @@ impl Piece {
         Piece::CONTROL_FN[self as usize](loc, whites, blacks)
     }
 
+    /// Computes the control set for this piece given it's location on an
+    /// empty board.
+    pub fn empty_control(self, loc: Square) -> BitBoard {
+        self.control(loc, BitBoard::EMPTY, BitBoard::EMPTY)
+    }
+
     /// Computes the set of legal moves for this piece given it's location
     /// and the locations of all the white and black pieces on the board.
     /// Note that this method does not take into account special restrictions

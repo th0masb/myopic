@@ -1,12 +1,12 @@
+use super::{BLACK_SLIDERS, WHITE_SLIDERS};
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::implementation::BoardImpl;
-use crate::pieces::Piece;
-use super::{WHITE_SLIDERS, BLACK_SLIDERS};
 use crate::board::implementation::cache::rays::RaySet;
-
+use crate::board::implementation::BoardImpl;
+use crate::board::Board;
+use crate::pieces::Piece;
 
 impl BoardImpl {
     pub fn pinned_set_impl(&mut self) -> RaySet {
@@ -24,7 +24,7 @@ impl BoardImpl {
     /// i.e have their movement areas constrained so that they do not move
     /// and leave the king in check.
     fn compute_pinned(&self) -> RaySet {
-        let locs = |side: Side| self.pieces.side_locations(side);
+        let locs = |side: Side| self.side(side);
         let (active, passive) = (locs(self.active), locs(self.active.reflect()));
         let king_loc = self.pieces.king_location(self.active);
         let mut constraint_areas: Vec<(Square, BitBoard)> = Vec::with_capacity(2);
@@ -46,10 +46,7 @@ impl BoardImpl {
             Side::Black => WHITE_SLIDERS,
         };
         let locs = |p: Piece| self.pieces.locs_impl(p);
-        passive_sliders
-            .iter()
-            .flat_map(|&p| locs(p) & p.control(king_loc, BitBoard::EMPTY, BitBoard::EMPTY))
-            .collect()
+        passive_sliders.iter().flat_map(|&p| locs(p) & p.empty_control(king_loc)).collect()
     }
 }
 
