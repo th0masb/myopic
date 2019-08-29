@@ -17,13 +17,6 @@ mod search;
 use std::fs;
 use std::path::Path;
 
-#[derive(Copy, Clone)]
-enum Test {
-    X,
-    Y,
-    Z,
-}
-
 fn main() {
     //println!("{:?}", 1u64.trailing_zeros())
     let fen = "2b3rk/1q3p1p/p1p1pPpQ/4N3/2pP4/2P1p1P1/1P4PK/5R2 w - - 1 0";
