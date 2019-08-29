@@ -1,12 +1,13 @@
-use super::{BLACK_SLIDERS, WHITE_SLIDERS};
 use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::implementation::cache::rays::RaySet;
-use crate::board::implementation::BoardImpl;
+use crate::base::square::Square;
 use crate::board::Board;
+use crate::board::implementation::BoardImpl;
+use crate::board::implementation::cache::rays::RaySet;
 use crate::pieces::Piece;
+
+use super::{BLACK_SLIDERS, WHITE_SLIDERS};
 
 impl BoardImpl {
     pub fn pinned_set_impl(&mut self) -> RaySet {
@@ -54,44 +55,27 @@ impl BoardImpl {
 mod test {
     use crate::base::bitboard::constants::*;
     use crate::base::castlezone::CastleZoneSet;
-
-    use super::*;
     use crate::board::test_board::TestBoard;
 
-    struct TestCase {
-        input: TestBoard,
-        expected: RaySet,
-    }
+    use super::*;
 
-    fn execute_test(case: TestCase) {
-        assert_eq!(case.expected, BoardImpl::from(case.input).compute_pinned());
+    fn execute_test(fen: &'static str, expected_pinned: RaySet) {
+        let board = crate::board::from_fen(fen).unwrap();
+        assert_eq!(expected_pinned.reflect(), board.reflect().compute_pinned());
+        assert_eq!(expected_pinned, board.compute_pinned());
     }
-
-    const EMPTY: BitBoard = BitBoard::EMPTY;
 
     #[test]
     fn case_one() {
-        execute_test(TestCase {
-            input: TestBoard {
-                active: Side::Black,
-                whites: vec![EMPTY, EMPTY, G1 | B6, G4, D8, EMPTY],
-                blacks: vec![E3 | E4 | H8, G6, C5 | F2, C4 | G2, D5, D4],
-                castle_rights: CastleZoneSet::ALL,
-                enpassant: None,
-                white_status: None,
-                black_status: None,
-                clock: 10,
-                history_count: 10,
-            },
-
-            expected: RaySet {
-                ray_points: C5 | D5 | E4,
-                rays: vec![
-                    (Square::E4, D4 | E4 | F4 | G4),
-                    (Square::C5, B6 | C5 | D4),
-                    (Square::D5, D4 | D5 | D6 | D7 | D8),
-                ],
-            },
-        })
+        let fen = "K2Q4/7p/1B4n1/2bq4/2rkp1R1/4p3/5br1/6B1 b KQkq - 5 10";
+        let expected_pinned = RaySet {
+            ray_points: C5 | D5 | E4,
+            rays: vec![
+                (Square::E4, D4 | E4 | F4 | G4),
+                (Square::C5, B6 | C5 | D4),
+                (Square::D5, D4 | D5 | D6 | D7 | D8),
+            ],
+        };
+        execute_test(fen, expected_pinned);
     }
 }

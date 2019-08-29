@@ -16,8 +16,8 @@ impl BoardImpl {
             let cord = BitBoard::cord(king_loc, xrayer);
             if (cord & active).size() == 2 && (cord & passive).size() == 1 {
                 let discov_loc = ((cord & active) - xrayer).first().unwrap();
-                discovery_rays.push((discover_loc, cord));
-                discovers |= discover_loc;
+                discovery_rays.push((discov_loc, cord));
+                discovers |= discov_loc;
             }
         }
         RaySet {ray_points: discovers, rays: discovery_rays}
