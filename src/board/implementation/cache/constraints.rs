@@ -104,26 +104,32 @@ impl BoardImpl {
         let (whites, blacks) = self.sides();
         let (active, passive) = (self.active, self.active.reflect());
         let mut constraints = MoveConstraints::all_universal();
-        let passive_locs = self.pieces.side_locations(passive);
-        let passive_king_loc = self.king(passive);
-        // King constraint
-        constraints.set(self.king(active), passive_locs - passive_control);
         // Add pinned constraints
         constraints.intersect_pins(pinned);
-        // Add attack constraints
         let enpassant_set = self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift());
-        for piece in Piece::on_side(active) {
-            // We reflect the piece here to correctly account for pawns.
-            let enpassant = if piece.is_pawn() { enpassant_set } else { BitBoard::EMPTY };
-            let check_squares = piece.reflect().control(passive_king_loc, whites, blacks);
-            for loc in self.locs(piece) {
-                if checks {
-                    constraints.intersect(loc, passive_locs | check_squares | enpassant);
-                } else {
+        let passive_locs = self.side(passive);
+        if !checks {
+            for piece in Piece::on_side(active) {
+                let enpassant = if piece.is_pawn() { enpassant_set } else { BitBoard::EMPTY };
+                for loc in self.locs(piece) {
                     constraints.intersect(loc, passive_locs | enpassant);
                 }
             }
+        } else {
+            let discoveries = self.compute_discoveries();
+            let passive_king_loc = self.king(passive);
+            for piece in Piece::on_side(active) {
+                let enpassant = if piece.is_pawn() { enpassant_set } else { BitBoard::EMPTY };
+                for loc in self.locs(piece) {
+                    let check_squares = piece.reflect().control(passive_king_loc, whites, blacks);
+                    let discov = discoveries.ray(loc).map(|r| !r).unwrap_or(BitBoard::EMPTY);
+                    //println!("{:?}  {:?}  {:?}  {:?}", piece, loc, constraints.get(loc),discov);
+                    constraints.intersect(loc, passive_locs | check_squares | enpassant | discov);
+                }
+            }
         }
+        // King can't move into check
+        constraints.intersect(self.king(active), !passive_control);
         constraints
     }
 

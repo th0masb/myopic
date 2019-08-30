@@ -8,11 +8,11 @@ extern crate rand;
 extern crate regex;
 
 mod base;
-mod board;
 mod eval;
 mod pgn;
 mod pieces;
 mod search;
+mod board;
 
 use std::fs;
 use std::path::Path;
