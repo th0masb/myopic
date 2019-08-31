@@ -9,7 +9,7 @@ use crate::eval::EvalBoard;
 use std::cmp;
 
 const Q_DEPTH_CAP: i32 = -8;
-const Q_CHECK_CAP: i32 = -2;
+const Q_CHECK_CAP: i32 = -3;
 
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.

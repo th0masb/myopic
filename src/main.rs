@@ -19,10 +19,8 @@ use std::path::Path;
 
 fn main() {
     //println!("{:?}", 1u64.trailing_zeros())
-    let fen = "2b3rk/1q3p1p/p1p1pPpQ/4N3/2pP4/2P1p1P1/1P4PK/5R2 w - - 1 0";
-    let fen = "2b3rk/1q3p1p/p1p1pPpQ/4N3/2pP4/2P3P1/1P2p1PK/7R w - - 0 2";
-    let fen = "2b3rk/1q3p1Q/p1p1pPp1/4N3/2pP4/2P3P1/1P2p1PK/7R b - - 0 2";
+    let fen = "rn4nr/pppq2bk/7p/5b1P/4NBQ1/3B4/PPP3P1/R3K2R w - - 1 0";
     let mut board = eval::new_board(fen).unwrap();
-    let neg = search::best_move(&mut board, 1);
+    let neg = search::best_move(&mut board, 4);
     println!("{:?}", neg);
 }
