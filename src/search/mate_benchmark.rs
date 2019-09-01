@@ -6,13 +6,13 @@ use std::io::{BufRead, BufReader};
 use std::time::Instant;
 
 const DATA_PATH: &'static str = r"/home/t/git/myopic/data/formatted-three-puzzles";
-const N_CASES: usize = 100;
+const MAX_CASES: usize = 500;
 const DEPTH: usize = 4;
 
 ///
 /// cargo test --release mate_benchmark -- --ignored --nocapture
 ///
-/// Errors at case 35, 62
+/// Errors at case 35
 ///
 ///  - error at 35 should be fixed by iterative deepening
 ///
@@ -31,22 +31,27 @@ const DEPTH: usize = 4;
 /// 30/08/19 | 4(8)(3) | 100   | 3      | 1,455,897          | Fixed issue with check by discovery
 /// ------------------------------------------------------------------------------------------------
 /// 30/08/19 | 4(8)(2) | 100   | 3      | 1,315,718
-/// ------------------------------------------------------------
+/// ------------------------------------------------------------------------------------------------
+/// 01/09/19 | 4(8)(3) | 100   | 1      | 1,521,827          | Fixed bug with termination status
+///          |         |       |        |                    | computation, unsure why performance -
+/// ------------------------------------------------------------------------------------------------
 #[test]
 #[ignore]
 fn mate_benchmark() {
-    let cases = load_cases();
+    let cases = load_cases().into_iter().skip(100).enumerate();
     let timer = Instant::now();
-    let mut err_count = 0;
-    for (i, mut test_case) in cases.into_iter().enumerate() {
+    let (mut err_count, mut case_count) = (0, 0);
+    for (i, mut test_case) in cases {//cases.into_iter().enumerate() {
+        println!("{}", i);
         let actual_move = crate::search::best_move(&mut test_case.board, DEPTH).unwrap().0;
         if test_case.expected_move != actual_move {
             err_count += 1;
             println!("Error at index {}", i);
         }
+        case_count += 1;
     }
     let time = timer.elapsed().as_millis();
-    println!("Depth: {}, Cases: {}, Errors: {}, Time: {}", DEPTH, N_CASES, err_count, time);
+    println!("Depth: {}, Cases: {}, Errors: {}, Time: {}", DEPTH, case_count, err_count, time);
 }
 
 fn load_cases() -> Vec<TestCase> {
@@ -77,7 +82,7 @@ fn load_cases() -> Vec<TestCase> {
         }
         let expected_move = moves_res.unwrap().first().unwrap().to_owned();
         dest.push(TestCase { board: SimpleEvalBoard::new(board), expected_move });
-        if dest.len() == N_CASES {
+        if dest.len() == MAX_CASES {
             break;
         }
     }

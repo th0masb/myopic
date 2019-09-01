@@ -284,6 +284,21 @@ impl Board for BoardImpl {
         self.termination_status_impl()
     }
 
+    fn in_check(&mut self) -> bool {
+        self.passive_control_impl().contains(self.king(self.active))
+    }
+
+    fn side(&self, side: Side) -> BitBoard {
+        match side {
+            Side::White => self.pieces.whites(),
+            Side::Black => self.pieces.blacks(),
+        }
+    }
+
+    fn sides(&self) -> (BitBoard, BitBoard) {
+        (self.pieces.side_locations(Side::White), self.pieces.side_locations(Side::Black))
+    }
+
     fn hash(&self) -> u64 {
         self.history.head()
     }
@@ -308,17 +323,6 @@ impl Board for BoardImpl {
         self.pieces.king_location(side)
     }
 
-    fn side(&self, side: Side) -> BitBoard {
-        match side {
-            Side::White => self.pieces.whites(),
-            Side::Black => self.pieces.blacks(),
-        }
-    }
-
-    fn sides(&self) -> (BitBoard, BitBoard) {
-        (self.pieces.side_locations(Side::White), self.pieces.side_locations(Side::Black))
-    }
-
     fn piece(&self, location: Square) -> Option<Piece> {
         self.pieces.piece_at(location)
     }
@@ -329,9 +333,5 @@ impl Board for BoardImpl {
 
     fn history_count(&self) -> usize {
         self.history.position_count()
-    }
-
-    fn in_check(&mut self) -> bool {
-        self.passive_control_impl().contains(self.king(self.active))
     }
 }
