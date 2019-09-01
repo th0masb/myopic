@@ -193,3 +193,13 @@ fn case_12() {
         expected_attacks_checks: vec![s(Piece::WK, H2, G1)],
     })
 }
+
+#[test]
+fn case_13() {
+    execute_test(TestCase {
+        board: "4R3/1p1Q2rk/6p1/2p1BpP1/p1P1pP2/P7/1P6/K2q4 w - - 2 2",
+        expected_all: vec![s(Piece::WQ, D7, D1), s(Piece::WK, A1, A2)],
+        expected_attacks: vec![s(Piece::WQ, D7, D1), s(Piece::WK, A1, A2)],
+        expected_attacks_checks: vec![s(Piece::WQ, D7, D1), s(Piece::WK, A1, A2)],
+    })
+}

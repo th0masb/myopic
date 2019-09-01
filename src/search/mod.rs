@@ -29,6 +29,9 @@ pub fn best_move<B: EvalBoard>(state: &mut B, depth: usize) -> Option<(Move, i32
 
 pub fn negamax<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: usize) -> i32 {
     if depth == 0 || state.termination_status().is_some() {
+//        if depth == 1{
+//            println!("{:?}", state.termination_status());
+//        }
         return match state.termination_status() {
             Some(Termination::Loss) => eval::LOSS_VALUE,
             Some(Termination::Draw) => eval::DRAW_VALUE,

@@ -38,7 +38,7 @@ impl BoardImpl {
         }
     }
 
-    /// Assumes king cannot move
+    /// Assumes king is in check and cannot move out of it
     fn checked_termination(&mut self) -> Option<Termination> {
         let constraints = self.constraints_impl(MoveComputeType::All);
         let (whites, blacks) = self.sides();
@@ -53,7 +53,7 @@ impl BoardImpl {
         return Some(Termination::Loss);
     }
 
-    /// Assumes king cannot move
+    /// Assumes king cannot move but not in check
     fn unchecked_termination(&mut self) -> Option<Termination> {
         let king = self.king(self.active);
         let pin_rays = Piece::WQ.control(king, BitBoard::EMPTY, BitBoard::EMPTY);
@@ -68,7 +68,7 @@ impl BoardImpl {
         }
         // Compute constraints as a last resort
         let constraints = self.constraints_impl(MoveComputeType::All);
-        let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) - constraints.get(loc);
+        let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
         for &piece in qrbnp(self.active) {
             let locations = self.locs(piece) & pin_rays;
             if locations.iter().any(|loc| moves2(piece, loc).is_populated()) {
@@ -112,6 +112,11 @@ mod test {
     #[test]
     fn not_terminal() {
         test(None, "r1b1qrk1/pp5p/1np2b2/3nNP2/3P2p1/1BN5/PP1BQ1P1/4RRK1 b - - 0 18");
+    }
+
+    #[test]
+    fn not_terminal2() {
+        test(None, "4R3/1p4rk/6p1/2p1BpP1/p1P1pP2/P7/1P6/K2Q4 b - - 0 2");
     }
 
     #[test]
