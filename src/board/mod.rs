@@ -109,6 +109,17 @@ pub trait Board: Clone + Reflectable {
 
     /// Return the total number of half moves played to reach this position.
     fn history_count(&self) -> usize;
+
+    /// Returns the locations of a set of pieces as a single bitboard.
+    fn locs_n(&self, pieces: &[Piece]) -> BitBoard {
+        pieces.into_iter().map(|&p| self.locs(p)).collect()
+    }
+
+    /// Returns the locations of all pieces on the board.
+    fn all_pieces(&self) -> BitBoard {
+        let (w, b) = self.sides();
+        w | b
+    }
 }
 
 pub fn from_fen(fen: &str) -> Result<BoardImpl, String> {

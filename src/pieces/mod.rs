@@ -40,6 +40,22 @@ impl Piece {
         }
     }
 
+    /// Returns the queen which belongs to the given side.
+    pub fn queen(side: Side) -> Piece {
+        match side {
+            Side::White => Piece::WQ,
+            Side::Black => Piece::BQ,
+        }
+    }
+
+    /// Returns the rook belonging to the given side.
+    pub fn rook(side: Side) -> Piece {
+        match side {
+            Side::White => Piece::WR,
+            Side::Black => Piece::BR,
+        }
+    }
+
     /// Returns the pawn which belongs to the given side.
     pub fn pawn(side: Side) -> Piece {
         match side {

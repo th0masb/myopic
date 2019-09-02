@@ -1,6 +1,7 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
+use crate::base::Reflectable;
 use crate::board::implementation::cache::MoveConstraints;
 use crate::board::implementation::BoardImpl;
 use crate::board::Board;
@@ -56,9 +57,10 @@ impl BoardImpl {
             let targets = compute_moves(location) & constraints.get(location);
             dest.extend(Move::standards(active_pawn, location, targets));
         }
-        for location in enpassant {
-            if constraints.get(location).contains(self.enpassant.unwrap()) {
-                dest.push(Move::Enpassant(location));
+        let ep = self.enpassant.unwrap();
+        for loc in enpassant {
+            if constraints.get(loc).contains(ep) && self.enpassant_doesnt_discover_attack(loc) {
+                dest.push(Move::Enpassant(loc));
             }
         }
         for location in promotion {
@@ -67,6 +69,28 @@ impl BoardImpl {
         }
 
         dest
+    }
+
+    fn enpassant_doesnt_discover_attack(&self, enpassant_source: Square) -> bool {
+        let (active, passive) = (self.active, self.active.reflect());
+        let active_king = self.king(active);
+        let third_rank = passive.pawn_third_rank();
+        if !third_rank.contains(active_king) {
+            return true;
+        }
+        let (r, q) = (Piece::rook(passive), Piece::queen(passive));
+        let potential_attackers = self.locs_n(&[r, q]) & third_rank;
+        let all_pieces = self.all_pieces();
+        for loc in potential_attackers {
+            let cord = BitBoard::cord(loc, active_king) & all_pieces;
+            if cord.size() == 4
+                && cord.contains(enpassant_source)
+                && cord.intersects(self.locs(Piece::pawn(passive)))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
