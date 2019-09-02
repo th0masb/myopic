@@ -39,10 +39,13 @@ const DEPTH: usize = 4;
 #[ignore]
 fn mate_benchmark() {
     let cases = load_cases().into_iter().skip(100).enumerate();
+    println!("hi");
     let timer = Instant::now();
     let (mut err_count, mut case_count) = (0, 0);
     for (i, mut test_case) in cases {//cases.into_iter().enumerate() {
-        println!("{}", i);
+        if i % 25 == 0 {
+            println!("{}", i);
+        }
         let actual_move = crate::search::best_move(&mut test_case.board, DEPTH).unwrap().0;
         if test_case.expected_move != actual_move {
             err_count += 1;

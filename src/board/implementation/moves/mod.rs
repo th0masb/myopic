@@ -57,8 +57,8 @@ impl BoardImpl {
             let targets = compute_moves(location) & constraints.get(location);
             dest.extend(Move::standards(active_pawn, location, targets));
         }
-        let ep = self.enpassant.unwrap();
         for loc in enpassant {
+            let ep = self.enpassant.unwrap();
             if constraints.get(loc).contains(ep) && self.enpassant_doesnt_discover_attack(loc) {
                 dest.push(Move::Enpassant(loc));
             }
