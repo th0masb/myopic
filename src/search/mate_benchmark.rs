@@ -12,7 +12,7 @@ const DEPTH: usize = 4;
 ///
 /// cargo test --release mate_benchmark -- --ignored --nocapture
 ///
-/// Errors at case 35, 268, 350, 399
+/// Errors at case 35, 268, 350
 ///
 ///  - error at 35, 268, 350 should be fixed by iterative deepening
 ///
@@ -35,16 +35,16 @@ const DEPTH: usize = 4;
 /// 01/09/19 | 4(8)(2) | 100   | 1      | 1,521,827          | Fixed bug with termination status
 ///          |         |       |        |                    | computation, unsure why performance -
 /// ------------------------------------------------------------------------------------------------
-/// 02/09/19 | 4(8)(3) | 458   | 6      | 5,642,934          | First full run
+/// 02/09/19 | 4(8)(2) | 458   | 6      | 5,642,934          | First full run
 /// ------------------------------------------------------------------------------------------------
 #[test]
 #[ignore]
 fn mate_benchmark() {
-    let cases = load_cases().into_iter().skip(100).enumerate();
+    let cases = load_cases();
     let timer = Instant::now();
     let (mut err_count, mut case_count) = (0, 0);
-    for (i, mut test_case) in cases {//cases.into_iter().enumerate() {
-        if i % 25 == 0 {
+    for (i, mut test_case) in cases.into_iter().enumerate() {
+        if i % 50 == 0 {
             println!("{}", i);
         }
         let actual_move = crate::search::best_move(&mut test_case.board, DEPTH).unwrap().0;
