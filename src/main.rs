@@ -19,15 +19,13 @@ use std::path::Path;
 
 fn main() {
     //println!("{:?}", 1u64.trailing_zeros())
-    let fen = "5r2/pp2R3/1q1p3Q/2pP1b2/2Pkrp2/3B4/PPK2PP1/R7 w - - 1 0";
-    let fen = "5r2/pp2R3/1q1p4/2pP1b2/2Pkrp1Q/3B4/PPK2PP1/R7 b - - 2 1";
-    let fen = "5r2/pp2R3/1q1p4/2pP1b2/2Pk1p1Q/3B4/PPK2PP1/R3r3 w - - 3 2";
-    // Performing enpassant opens discovered attack on queen!! Probably easiest to just make the
-    // switch to a psuedo legal move computation mode in the search...
-    // TODO encapsulate this bug into a test...
-
-    //let fen = "5r2/pp2R3/1q1p4/2pP1b2/2Pk1pPQ/3B4/PPK2P2/R3r3 b - - 0 2";
+    let fen = "1r2r2k/5p1p/ppbp1P1B/5PR1/2P3Rp/3n4/PP1N3P/6K1 w - - 1 0";
+    let fen = "1r2r2k/5p1p/ppbp1P1B/5PR1/2P3Rp/3n4/PP5P/5NK1 b - - 2 1";
+    let fen = "1r2r2k/5p1p/ppbp1P1B/5PR1/2P3R1/3n3p/PP5P/5NK1 w - - 0 2";
+    let fen = "1r2r1Rk/5p1p/ppbp1P1B/5P2/2P3R1/3n3p/PP5P/5NK1 b - - 1 2";
+    let fen = "1r4rk/5p1p/ppbp1P1B/5P2/2P3R1/3n3p/PP5P/5NK1 w - - 0 3";
+    // No moves computed here!!
     let mut board = eval::new_board(fen).unwrap();
-    let neg = search::best_move(&mut board, 2);
+    let neg = search::negamax(&mut board, -eval::INFTY, eval::INFTY, 0);
     println!("{:?}", neg);
 }

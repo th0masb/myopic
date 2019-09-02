@@ -213,3 +213,23 @@ fn case_14() {
         expected_attacks_checks: vec![],
     })
 }
+
+#[test]
+fn case_15() {
+    execute_test(TestCase {
+        board: "1k6/b2P1r2/p5p1/4qp1p/7P/7K/8/8 w - - 0 1",
+        expected_all: vec![p(Side::White, D7, D8), s(Piece::WK, H3, G2)],
+        expected_attacks: vec![],
+        expected_attacks_checks: vec![p(Side::White, D7, D8)],
+    })
+}
+
+#[test]
+fn case_16() {
+    execute_test(TestCase {
+        board: "8/bk1P1r2/p5p1/4qp1p/7P/7K/8/8 w - - 0 1",
+        expected_all: vec![p(Side::White, D7, D8), s(Piece::WK, H3, G2)],
+        expected_attacks: vec![],
+        expected_attacks_checks: vec![p(Side::White, D7, D8)],
+    })
+}

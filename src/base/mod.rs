@@ -47,10 +47,19 @@ impl Side {
 
     /// Get the rank a pawn on this side must be on for it to be able
     /// to promote on it's next move.
-    pub fn pawn_last_rank(self) -> BitBoard {
+    pub fn pawn_promoting_rank(self) -> BitBoard {
         match self {
             Side::White => BitBoard::RANKS[6],
             Side::Black => BitBoard::RANKS[1],
+        }
+    }
+
+
+    /// The rank a pawn on this
+    pub fn pawn_last_rank(self) -> BitBoard {
+        match self {
+            Side::White => BitBoard::RANKS[7],
+            Side::Black => BitBoard::RANKS[0],
         }
     }
 }

@@ -96,7 +96,7 @@ impl BoardImpl {
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
         let enpassant_source =
             self.enpassant.map_or(BitBoard::EMPTY, |sq| enpassant_source::squares(self.active, sq));
-        let promotion_rank = self.active.pawn_last_rank();
+        let promotion_rank = self.active.pawn_promoting_rank();
         let pawn_locs = self.locs(Piece::pawn(self.active));
         (
             pawn_locs - enpassant_source - promotion_rank,

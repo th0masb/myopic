@@ -9,7 +9,7 @@ use crate::eval::EvalBoard;
 use std::cmp;
 
 const Q_DEPTH_CAP: i32 = -8;
-const Q_CHECK_CAP: i32 = -3;
+const Q_CHECK_CAP: i32 = -2;
 
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
@@ -51,7 +51,7 @@ pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32
 }
 
 fn compute_quiescent_moves<B: Board>(state: &mut B, depth: i32) -> Vec<Move> {
-    let mut moves = if depth > Q_CHECK_CAP {
+    let mut moves = if depth >= Q_CHECK_CAP {
         state.compute_moves(MoveComputeType::AttacksChecks)
     } else {
         state.compute_moves(MoveComputeType::Attacks)

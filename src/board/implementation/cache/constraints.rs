@@ -117,14 +117,21 @@ impl BoardImpl {
             }
         } else {
             let discoveries = self.compute_discoveries();
-            let passive_king_loc = self.king(passive);
+            let passive_king = self.king(passive);
+            let promotion_rays = Piece::WQ.control(passive_king, whites, blacks);
+            let promotion_jumps = Piece::WN.empty_control(passive_king);
+            let promotion_checks = (promotion_rays | promotion_jumps) & active.pawn_last_rank();
             for piece in Piece::on_side(active) {
-                let enpassant = if piece.is_pawn() { enpassant_set } else { BitBoard::EMPTY };
+                let is_pawn = piece.is_pawn();
+                let enpassant = if is_pawn { enpassant_set } else { BitBoard::EMPTY };
+                let check_squares = piece.reflect().control(passive_king, whites, blacks);
+                let promotion = if is_pawn { promotion_checks } else { BitBoard::EMPTY };
                 for loc in self.locs(piece) {
-                    let check_squares = piece.reflect().control(passive_king_loc, whites, blacks);
                     let discov = discoveries.ray(loc).map(|r| !r).unwrap_or(BitBoard::EMPTY);
-                    //println!("{:?}  {:?}  {:?}  {:?}", piece, loc, constraints.get(loc),discov);
-                    constraints.intersect(loc, passive_locs | check_squares | enpassant | discov);
+                    constraints.intersect(
+                        loc,
+                        passive_locs | check_squares | enpassant | discov | promotion,
+                    );
                 }
             }
         }

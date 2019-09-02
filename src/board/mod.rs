@@ -33,6 +33,8 @@ pub enum Move {
 pub enum MoveComputeType {
     All,
     Attacks,
+    /// If a promoting move causes check then all promoting moves for
+    /// the four different target pieces will be included for that pawn.
     AttacksChecks,
 }
 
