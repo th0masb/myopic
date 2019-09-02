@@ -12,7 +12,7 @@ const DEPTH: usize = 4;
 ///
 /// cargo test --release mate_benchmark -- --ignored --nocapture
 ///
-/// Errors at case 35, 268, 350, 379, 399
+/// Errors at case 35, 268, 350, 399
 ///
 ///  - error at 35, 268, 350 should be fixed by iterative deepening
 ///

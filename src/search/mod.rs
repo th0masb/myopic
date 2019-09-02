@@ -17,7 +17,7 @@ pub fn best_move<B: EvalBoard>(state: &mut B, depth: usize) -> Option<(Move, i32
     for evolve in state.compute_moves(MoveComputeType::All) {
         let discards = state.evolve(&evolve);
         let result = -negamax(state, -beta, -alpha, depth - 1);
-        println!("Move {:?}  result {}", evolve, result);
+        //println!("Move {:?}  result {}", evolve, result);
         state.devolve(&evolve, discards);
         if result > alpha {
             alpha = result;

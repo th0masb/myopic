@@ -51,21 +51,23 @@ pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32
 }
 
 fn compute_quiescent_moves<B: Board>(state: &mut B, depth: i32) -> Vec<Move> {
-    let mut moves = if depth >= Q_CHECK_CAP {
-        state.compute_moves(MoveComputeType::AttacksChecks)
-    } else {
+    let just_attacks = depth < Q_CHECK_CAP;
+    let mut moves = if just_attacks {
         state.compute_moves(MoveComputeType::Attacks)
+    } else {
+        state.compute_moves(MoveComputeType::AttacksChecks)
     };
     let enemies = state.side(state.active().reflect());
-    let attack_filter = |mv: &Move| is_attack(mv, enemies);
-    let split_index = itertools::partition(&mut moves, attack_filter);
+    let is_attack_filter = |mv: &Move| is_attack(mv, enemies);
+    let good_attack_threshold = if just_attacks {0} else {-eval::INFTY};
+    let split_index = itertools::partition(&mut moves, is_attack_filter);
     // Score attacks using see and filter bad exchanges before sorting and
     // recombining.
     let mut attacks: Vec<_> = moves
         .iter()
         .take(split_index)
         .map(|mv| (mv, score_attack(state, mv)))
-        .filter(|(_, score)| *score > 0)
+        .filter(|(_, score)| *score > good_attack_threshold)
         .collect();
     attacks.sort_by_key(|(_, score)| -*score);
 
