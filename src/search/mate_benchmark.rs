@@ -1,5 +1,5 @@
 use crate::board::{BoardImpl, Move};
-use crate::eval::SimpleEvalBoard;
+use crate::eval::{SimpleEvalBoard, WIN_VALUE};
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -47,8 +47,8 @@ fn mate_benchmark() {
         if i % 50 == 0 {
             println!("{}", i);
         }
-        let actual_move = crate::search::best_move(&mut test_case.board, DEPTH).unwrap().0;
-        if test_case.expected_move != actual_move {
+        let actual_move = crate::search::best_move(&mut test_case.board, DEPTH).unwrap();
+        if test_case.expected_move != actual_move.0 || WIN_VALUE != actual_move.1 {
             err_count += 1;
             println!("Error at index {}", i);
         }
