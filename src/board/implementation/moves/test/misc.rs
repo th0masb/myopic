@@ -63,7 +63,7 @@ fn case_2() {
             s(Piece::WB, A4, C6),
             s(Piece::WR, B1, B7 | B8),
             s(Piece::WR, H1, H7),
-            p(Side::White, A7, B8),
+            p(Side::White, A7, A8 | B8),
         ],
     });
 }
@@ -156,7 +156,7 @@ fn case_8() {
             s(Piece::WK, B7, B8 | A8 | A7 | A6 | B6 | C6 | C8),
         ],
         expected_attacks: vec![p(Side::White, G7, H8)],
-        expected_attacks_checks: vec![p(Side::White, G7, H8)],
+        expected_attacks_checks: vec![p(Side::White, G7, H8 | G8)],
     });
 }
 
