@@ -1,5 +1,4 @@
 //#![allow(dead_code)]
-#![feature(type_alias_enum_variants)]
 
 #[macro_use]
 extern crate itertools;
