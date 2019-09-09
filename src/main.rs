@@ -35,7 +35,7 @@ enum EngineState {
 }
 
 #[derive(Debug)]
-enum EngineCmd {
+enum EngineCommand {
     Uci,
     IsReady,
     UciNewGame,
@@ -62,7 +62,7 @@ enum GoCommand {
 
 fn main() {
     // Engine input command channel
-    let (cmd_input_tx, cmd_input_rx) = mpsc::channel::<EngineCmd>();
+    let (cmd_input_tx, cmd_input_rx) = mpsc::channel::<EngineCommand>();
     // Spawn the user input thread, it simply listens for
     // standard input, parses the string to an engine command
     // and transmits the result (if valid) to the main
@@ -87,22 +87,22 @@ fn main() {
         match cmd_input_rx.try_recv() {
             Err(_) => thread::sleep(Duration::from_millis(10)),
             Ok(input) => match input {
-                EngineCmd::Quit => break,
+                EngineCommand::Quit => break,
                 x => println!("{:?}", x),
             }
         }
     }
 }
 
-fn parse_engine_command(content: String) -> Option<EngineCmd> {
+fn parse_engine_command(content: String) -> Option<EngineCommand> {
     let content_ref = content.as_str();
     match content_ref {
-        "uci" => Some(EngineCmd::Uci),
-        "isready" => Some(EngineCmd::IsReady),
-        "ucinewgame" => Some(EngineCmd::UciNewGame),
-        "stop" => Some(EngineCmd::Stop),
-        "ponderhit" => Some(EngineCmd::PonderHit),
-        "quit" => Some(EngineCmd::Quit),
+        "uci" => Some(EngineCommand::Uci),
+        "isready" => Some(EngineCommand::IsReady),
+        "ucinewgame" => Some(EngineCommand::UciNewGame),
+        "stop" => Some(EngineCommand::Stop),
+        "ponderhit" => Some(EngineCommand::PonderHit),
+        "quit" => Some(EngineCommand::Quit),
         x => {
             if x.starts_with("position") {
                 parse_position_command(content)
@@ -115,32 +115,56 @@ fn parse_engine_command(content: String) -> Option<EngineCmd> {
     }
 }
 
-fn parse_go_command(content: String) -> Option<EngineCmd> {
+fn parse_go_command(content: String) -> Option<EngineCommand> {
+    lazy_static! {
+        static ref INFINITE: Regex = re("infinite".to_owned());
+        static ref PONDER: Regex = re("ponder".to_owned());
+        static ref DEPTH: Regex = re(format!("depth {}", int_re().as_str()));
+        static ref MOVETIME: Regex = re(format!("movetime {}", int_re().as_str()));
+        static ref WHITETIME: Regex = re(format!("wtime {}", int_re().as_str()));
+        static ref BLACKTIME: Regex = re(format!("btime {}", int_re().as_str()));
+        static ref WHITEINC: Regex = re(format!("winc {}", int_re().as_str()));
+        static ref BLACKINC: Regex = re(format!("binc {}", int_re().as_str()));
+    }
     unimplemented!()
 }
 
-fn parse_position_command(content: String) -> Option<EngineCmd> {
+fn re(pattern: String) -> Regex {
+    Regex::new(pattern.as_str()).unwrap()
+}
+
+fn parse_position_command(content: String) -> Option<EngineCommand> {
     let split: Vec<String> = space_re()
         .split(content.as_str()).map(|x| x.to_owned()).collect();
     if split.len() > 0 {
         let first = split.first().unwrap().to_owned();
         let rest = split.into_iter().skip(1).collect();
-        Some(EngineCmd::Position(first, rest))
+        Some(EngineCommand::Position(first, rest))
     } else {
         None
     }
 }
 
+fn extract_int(source: &String) -> usize {
+    int_re().find(source).unwrap().as_str().parse::<usize>().unwrap()
+}
+
+fn int_re() -> &'static Regex {
+    lazy_static! {
+        static ref INT_RE: Regex = re(r"[0-9]+".to_owned());
+    }
+    &INT_RE
+}
 fn space_re() -> &'static Regex {
     lazy_static! {
-        static ref WHITESPACE: Regex = Regex::new(r"\s+").unwrap();
+        static ref WHITESPACE: Regex = re(r"\s+".to_owned());
     }
     &WHITESPACE
 }
 
 fn move_re() -> &'static Regex {
     lazy_static! {
-        static ref MOVE: Regex = Regex::new(r"([a-h][1-8]){2}[qrnb]?").unwrap();
+        static ref MOVE: Regex = re(r"([a-h][1-8]){2}[qrnb]?".to_owned());
     }
     &MOVE
 }
