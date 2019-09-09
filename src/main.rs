@@ -1,4 +1,5 @@
 //#![allow(dead_code)]
+#![feature(type_alias_enum_variants)]
 
 #[macro_use]
 extern crate itertools;
@@ -11,12 +12,14 @@ use std::fs;
 use std::io::{self, Read};
 use std::path::Path;
 use std::sync::mpsc;
+use std::sync::mpsc::{Sender, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use crate::board::{BoardImpl, Move};
 use regex::{Match, Regex};
-use std::sync::mpsc::Sender;
+
+use crate::board::{BoardImpl, Move};
+use crate::board::Move::Standard;
 
 mod base;
 mod board;
@@ -25,18 +28,18 @@ mod pgn;
 mod pieces;
 mod search;
 
-#[derive(Debug, Eq, PartialEq)]
-enum EngineState {
-    WaitingForGui,
-    Initializing,
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+enum State {
+    Uninitialized,
+    Configuring,
     WaitingForPosition,
     WaitingForGo,
     Searching,
     Pondering,
 }
 
-#[derive(Debug, Eq, PartialEq)]
-enum EngineCommand {
+#[derive(Debug, Eq, PartialEq, Clone)]
+enum Input {
     Uci,
     IsReady,
     UciNewGame,
@@ -47,7 +50,7 @@ enum EngineCommand {
     Go(Vec<GoCommand>),
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 enum GoCommand {
     SearchMoves(Vec<String>),
     Depth(usize),
@@ -60,28 +63,83 @@ enum GoCommand {
     Infinite,
 }
 
-fn main() {
+const ENGINE_NAME: &'static str = "Myopic";
+const ENGINE_AUTHOR: &'static str = "Thomas Ball";
+
+fn main() -> () {
     // Engine input command channel
-    let (cmd_input_tx, cmd_input_rx) = mpsc::channel::<EngineCommand>();
-    // Spawn the thread responsible for registering user input.
-    spawn_input_thread(cmd_input_tx);
+    let cmd_input_rx = initialize_input_thread();
     // Begin the main control loop
+    let (mut engine_state, mut searcher) = (State::Uninitialized, Searcher::new());
     loop {
-        match cmd_input_rx.recv() {
-            Err(_) => break,
-            Ok(input) => match input {
-                EngineCommand::Quit => break,
-                x => println!("{:?}", x),
-            },
+        // If currently in a search state then check if a best move has been computed,
+        // if it has then output the result and update the engine state.
+
+        // Check for a new input and process the command if it is present.
+        match cmd_input_rx.try_recv() {
+            Err(_) => continue,
+            Ok(cmd) => match (engine_state, cmd) {
+                // In any state if we get a quit command then break.
+                (_, Input::Quit) => break,
+                // Procedure from an uninitialized state
+                (State::Uninitialized, Input::Uci) => {
+                    engine_state = State::Configuring;
+                    initialize();
+                }
+
+                // Procedure from the config state, not complete yet
+                // since we don't actually support any config.
+                (State::Configuring, Input::IsReady) => {
+                    engine_state = State::WaitingForPosition;
+                    println!("readyok")
+                }
+
+                // Procedure from the positional setup state.
+                (State::WaitingForPosition, Input::UciNewGame) => searcher.reset(),
+                (State::WaitingForPosition, Input::Position(fen, moves)) => {
+                    if searcher.setup_position(fen, moves) {
+                        engine_state = State::WaitingForGo;
+                    }
+                }
+
+                (_, Input::IsReady) => println!("readyok"),
+
+                _ => (),
+            }
         }
     }
+}
+
+struct Searcher {
+    board: BoardImpl,
+}
+
+impl Searcher {
+    pub fn new() -> Searcher {
+        Searcher { board: crate::board::start() }
+    }
+
+    pub fn setup_position(&mut self, fen: String, moves: Vec<String>) -> bool {
+        unimplemented!()
+    }
+
+    pub fn reset(&mut self) -> () {
+        self.board = crate::board::start();
+    }
+}
+
+fn initialize() {
+    println!("id name {}", ENGINE_NAME);
+    println!("id author {}", ENGINE_AUTHOR);
+    println!("uciok");
 }
 
 /// Spawn a user input thread, it simply listens for
 /// standard input, parses the string to an engine command
 /// and transmits the result (if valid) along the given
 /// sender instance.
-fn spawn_input_thread(input_tx: Sender<EngineCommand>) {
+fn initialize_input_thread() -> Receiver<Input> {
+    let (cmd_input_tx, cmd_input_rx) = mpsc::channel::<Input>();
     thread::spawn(move || loop {
         let mut dest = String::new();
         match io::stdin().read_line(&mut dest) {
@@ -90,26 +148,27 @@ fn spawn_input_thread(input_tx: Sender<EngineCommand>) {
         }
         let cmd = parse_engine_command(dest.trim().to_lowercase().to_owned());
         if cmd.is_some() {
-            match input_tx.send(cmd.unwrap()) {
+            match cmd_input_tx.send(cmd.unwrap()) {
                 _ => (),
             }
         }
     });
+    cmd_input_rx
 }
 
-fn parse_engine_command(content: String) -> Option<EngineCommand> {
+fn parse_engine_command(content: String) -> Option<Input> {
     match content.as_str() {
-        "uci" => Some(EngineCommand::Uci),
-        "isready" => Some(EngineCommand::IsReady),
-        "ucinewgame" => Some(EngineCommand::UciNewGame),
-        "stop" => Some(EngineCommand::Stop),
-        "ponderhit" => Some(EngineCommand::PonderHit),
-        "quit" => Some(EngineCommand::Quit),
+        "uci" => Some(Input::Uci),
+        "isready" => Some(Input::IsReady),
+        "ucinewgame" => Some(Input::UciNewGame),
+        "stop" => Some(Input::Stop),
+        "ponderhit" => Some(Input::PonderHit),
+        "quit" => Some(Input::Quit),
         x => {
             if x.starts_with("position") {
                 parse_position_command(content)
             } else if x.starts_with("go") {
-                Some(EngineCommand::Go(parse_go_command(content)))
+                Some(Input::Go(parse_go_command(content)))
             } else {
                 None
             }
@@ -148,12 +207,12 @@ fn parse_go_command(content: String) -> Vec<GoCommand> {
     dest
 }
 
-fn parse_position_command(content: String) -> Option<EngineCommand> {
+fn parse_position_command(content: String) -> Option<Input> {
     let split: Vec<String> = space_re().split(content.as_str()).map(|x| x.to_owned()).collect();
     if split.len() > 0 {
         let first = split.first().unwrap().to_owned();
         let rest = split.into_iter().skip(1).collect();
-        Some(EngineCommand::Position(first, rest))
+        Some(Input::Position(first, rest))
     } else {
         None
     }
