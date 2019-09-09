@@ -5,10 +5,30 @@ use crate::board::MoveComputeType;
 use crate::board::Termination;
 use crate::eval;
 use crate::eval::EvalBoard;
+use std::sync::mpsc::Receiver;
+use std::time::{Instant, Duration};
 
 #[cfg(test)]
 mod mate_benchmark;
 mod quiescent;
+
+struct SearchInitializer {
+    max_depth: usize,
+    max_time: Duration,
+    stop_signal: Receiver<bool>,
+}
+
+struct SearchTerminationTracker {
+    search_start: Instant,
+    max_time: Duration,
+    stop_signal: Receiver<bool>,
+}
+
+impl SearchTerminationTracker {
+    pub fn should_stop_search(&self) -> bool {
+        self.search_start.elapsed() > self.max_time || self.stop_signal.try_recv().is_ok()
+    }
+}
 
 pub fn best_move<B: EvalBoard>(state: &mut B, depth: usize) -> Option<(Move, i32)> {
     assert!(depth > 0);

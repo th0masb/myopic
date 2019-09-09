@@ -111,12 +111,12 @@ fn main() -> () {
 }
 
 struct Searcher {
-    board: BoardImpl,
+    root: BoardImpl,
 }
 
 impl Searcher {
     pub fn new() -> Searcher {
-        Searcher { board: crate::board::start() }
+        Searcher { root: crate::board::start() }
     }
 
     pub fn setup_position(&mut self, fen: String, moves: Vec<String>) -> bool {
@@ -124,7 +124,7 @@ impl Searcher {
     }
 
     pub fn reset(&mut self) -> () {
-        self.board = crate::board::start();
+        self.root = crate::board::start();
     }
 }
 
