@@ -11,6 +11,8 @@ use std::cmp;
 const Q_DEPTH_CAP: i32 = -8;
 const Q_CHECK_CAP: i32 = -2;
 
+// TODO Do we want the quiescent search to have interruption finishing checks too?
+
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
 pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> i32 {
@@ -58,7 +60,7 @@ fn compute_quiescent_moves<B: Board>(state: &mut B, depth: i32) -> Vec<Move> {
     };
     let enemies = state.side(state.active().reflect());
     let is_attack_filter = |mv: &Move| is_attack(mv, enemies);
-    // If in check don't filter out any attacks.
+    // If in check don't filter out any attacks, we must check all available moves.
     let good_attack_threshold = if state.in_check() {-eval::INFTY} else {0};
     let split_index = itertools::partition(&mut moves, is_attack_filter);
     // Score attacks using see and filter bad exchanges before sorting and

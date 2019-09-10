@@ -1,16 +1,16 @@
 use std::cmp;
+use std::sync::mpsc::Receiver;
+use std::time::{Duration, Instant};
 
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
 use crate::eval;
 use crate::eval::EvalBoard;
-use std::sync::mpsc::Receiver;
-use std::time::{Duration, Instant};
 
 #[cfg(test)]
 mod mate_benchmark;
-mod quiescent;
+pub mod quiescent;
 
 pub struct SearchTermination {
     max_depth: usize,
@@ -24,14 +24,13 @@ pub struct Search<B: EvalBoard> {
 }
 
 impl<B: EvalBoard> Search<B> {
+    pub fn new(root: B, termination: SearchTermination) -> Search<B> {
+        Search { root, termination }
+    }
     pub fn time_capped(root: B, max_time: Duration) -> Search<B> {
         Search {
             root,
-            termination: SearchTermination {
-                max_time,
-                max_depth: 1000,
-                stop_signal: None,
-            }
+            termination: SearchTermination { max_time, max_depth: 1000, stop_signal: None },
         }
     }
     pub fn depth_capped(root: B, max_depth: usize) -> Search<B> {
@@ -41,7 +40,7 @@ impl<B: EvalBoard> Search<B> {
                 max_depth,
                 max_time: Duration::from_secs(100_000_000_000),
                 stop_signal: None,
-            }
+            },
         }
     }
 

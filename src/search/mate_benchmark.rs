@@ -1,19 +1,22 @@
 use crate::board::{BoardImpl, Move};
 use crate::eval::{SimpleEvalBoard, WIN_VALUE};
+use crate::search::{Search, SearchTermination};
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
-use std::time::Instant;
-use crate::search::Search;
+use std::time::{Duration, Instant};
 
 const DATA_PATH: &'static str = r"/home/t/git/myopic/data/formatted-three-puzzles";
 const MAX_CASES: usize = 500;
 const DEPTH: usize = 4;
 
+#[rustfmt::skip]
 ///
 /// cargo test --release mate_benchmark -- --ignored --nocapture
 ///
-/// Errors at case 350
+/// Errors at case 330:
+/// -- quiescent search on "8/7k/1p6/5p1p/PP2bb2/6QP/6PK/5q2 b - - 0 3" doesn't recognize the mate
+///    because see thinks it's a bad exchange. I think I can live with it for now.
 ///
 /// RESULTS:
 /// ------------------------------------------------------------------------------------------------
@@ -29,7 +32,7 @@ const DEPTH: usize = 4;
 /// ------------------------------------------------------------------------------------------------
 /// 30/08/19 | 4(8)(2) | 100   | 3      | 1,455,897          | Fixed issue with check by discovery
 /// ------------------------------------------------------------------------------------------------
-/// 30/08/19 | 4(8)(1) | 100   | 3      | 1,315,718
+/// 30/08/19 | 4(8)(1) | 100   | 3      | 1,315,718          |
 /// ------------------------------------------------------------------------------------------------
 /// 01/09/19 | 4(8)(2) | 100   | 1      | 1,521,827          | Fixed bug with termination status
 ///          |         |       |        |                    | computation, unsure why performance -
@@ -38,25 +41,44 @@ const DEPTH: usize = 4;
 /// ------------------------------------------------------------------------------------------------
 /// 03/09/19 | 4(8)(2) | 458   | 1      | 5,891,925          | Second full run, fixed bugs
 /// ------------------------------------------------------------------------------------------------
+/// 10/09/19 | 4(8)(2) | 457   | 1      | 6,155,301          | Tested new interruptable search,
+///          |         |       |        |                    | pleasingly fast considering it uses
+///          |         |       |        |                    | naive iterative deepening. Adjusted
+///          |         |       |        |                    | the timing to be more precise though
+///          |         |       |        |                    | So I think that played a part.
+/// ------------------------------------------------------------------------------------------------
+///          |         |       |        |                    |
+///
+///
 #[test]
 #[ignore]
 fn mate_benchmark() {
     let cases = load_cases();
-    let timer = Instant::now();
+    let mut search_duration = Duration::from_secs(0);
     let (mut err_count, mut case_count) = (0, 0);
     for (i, mut test_case) in cases.into_iter().enumerate() {
         if i % 50 == 0 {
             println!("{}", i);
         }
-        let actual_move = Search::depth_capped(test_case.board, DEPTH).execute().unwrap();
+        let (_, rx) = std::sync::mpsc::channel::<bool>();
+        let termination = SearchTermination {
+            max_depth: DEPTH,
+            max_time: Duration::from_secs(100000000),
+            stop_signal: Some(rx),
+        };
+        let timer = Instant::now();
+        let actual_move = Search::new(test_case.board, termination).execute().unwrap();
+        search_duration += timer.elapsed();
         if test_case.expected_move != actual_move.0 || WIN_VALUE != actual_move.1 {
             err_count += 1;
             println!("Error at index {}", i);
         }
         case_count += 1;
     }
-    let time = timer.elapsed().as_millis();
-    println!("Depth: {}, Cases: {}, Errors: {}, Time: {}", DEPTH, case_count, err_count, time);
+    println!(
+        "Depth: {}, Cases: {}, Errors: {}, Time: {}",
+        DEPTH, case_count, err_count, search_duration.as_millis()
+    );
 }
 
 fn load_cases() -> Vec<TestCase> {
