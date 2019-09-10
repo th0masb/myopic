@@ -6,71 +6,137 @@ use crate::board::Termination;
 use crate::eval;
 use crate::eval::EvalBoard;
 use std::sync::mpsc::Receiver;
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
 #[cfg(test)]
 mod mate_benchmark;
 mod quiescent;
 
-struct SearchInitializer {
+pub struct SearchTermination {
     max_depth: usize,
     max_time: Duration,
-    stop_signal: Receiver<bool>,
+    stop_signal: Option<Receiver<bool>>,
 }
 
-struct SearchTerminationTracker {
+pub struct Search<B: EvalBoard> {
+    root: B,
+    termination: SearchTermination,
+}
+
+impl<B: EvalBoard> Search<B> {
+    pub fn time_capped(root: B, max_time: Duration) -> Search<B> {
+        Search {
+            root,
+            termination: SearchTermination {
+                max_time,
+                max_depth: 1000,
+                stop_signal: None,
+            }
+        }
+    }
+    pub fn depth_capped(root: B, max_depth: usize) -> Search<B> {
+        Search {
+            root,
+            termination: SearchTermination {
+                max_depth,
+                max_time: Duration::from_secs(100_000_000_000),
+                stop_signal: None,
+            }
+        }
+    }
+
+    pub fn execute(&self) -> Result<(Move, i32), ()> {
+        let tracker = SearchTerminationImpl {
+            search_start: Instant::now(),
+            max_time: self.termination.max_time,
+            stop_signal: self.termination.stop_signal.as_ref(),
+        };
+        let searcher = TerminatingSearchImpl {
+            root: self.root.clone(),
+            termination_tracker: tracker,
+            max_depth: self.termination.max_depth,
+        };
+        searcher.search()
+    }
+}
+
+struct SearchTerminationImpl<'a> {
     search_start: Instant,
     max_time: Duration,
-    stop_signal: Receiver<bool>,
+    stop_signal: Option<&'a Receiver<bool>>,
 }
 
-impl SearchTerminationTracker {
+struct TerminatingSearchImpl<'a, B: EvalBoard> {
+    root: B,
+    termination_tracker: SearchTerminationImpl<'a>,
+    max_depth: usize,
+}
+
+impl SearchTerminationImpl<'_> {
     pub fn should_stop_search(&self) -> bool {
-        self.search_start.elapsed() > self.max_time || self.stop_signal.try_recv().is_ok()
+        self.search_start.elapsed() > self.max_time
+            || self.stop_signal.map_or(false, |rec| rec.try_recv().is_ok())
     }
 }
 
-pub fn best_move<B: EvalBoard>(state: &mut B, depth: usize) -> Option<(Move, i32)> {
-    assert!(depth > 0);
-    let mut best_move = None;
-    let (mut alpha, beta) = (-eval::INFTY, eval::INFTY);
-    for evolve in state.compute_moves(MoveComputeType::All) {
-        let discards = state.evolve(&evolve);
-        let result = -negamax(state, -beta, -alpha, depth - 1);
-        //println!("Move {:?}  result {}", evolve, result);
-        state.devolve(&evolve, discards);
-        if result > alpha {
-            alpha = result;
-            best_move = Some((evolve.clone(), result));
+impl<B: EvalBoard> TerminatingSearchImpl<'_, B> {
+    pub fn search(&self) -> Result<(Move, i32), ()> {
+        let mut best_move = Err(());
+        for i in 1..self.max_depth + 1 {
+            match self.best_move(i) {
+                Err(_) => break,
+                Ok(next_depth) => best_move = Ok(next_depth),
+            }
         }
+        best_move
     }
-    best_move
-}
 
-pub fn negamax<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: usize) -> i32 {
-    if depth == 0 || state.termination_status().is_some() {
-//        if depth == 1{
-//            println!("{:?}", state.termination_status());
-//        }
-        return match state.termination_status() {
-            Some(Termination::Loss) => eval::LOSS_VALUE,
-            Some(Termination::Draw) => eval::DRAW_VALUE,
-            None => quiescent::search(state, -eval::INFTY, eval::INFTY, -1),
-        };
-    }
-    let mut result = -eval::INFTY;
-    for evolve in state.compute_moves(MoveComputeType::All) {
-        //println!("Second {:?}", evolve);
-        let discards = state.evolve(&evolve);
-        let next_result = -negamax(state, -beta, -alpha, depth - 1);
-        state.devolve(&evolve, discards);
-        result = cmp::max(result, next_result);
-        alpha = cmp::max(alpha, result);
-        if alpha > beta {
-            return beta;
+    pub fn best_move(&self, depth: usize) -> Result<(Move, i32), ()> {
+        assert!(depth > 0);
+        let mut state = self.root.clone();
+        let mut best_move = None;
+        let (mut alpha, beta) = (-eval::INFTY, eval::INFTY);
+        for evolve in state.compute_moves(MoveComputeType::All) {
+            let discards = state.evolve(&evolve);
+            match self.negamax(&mut state, -beta, -alpha, depth - 1) {
+                Err(_) => return Err(()),
+                Ok(result) => {
+                    let negated_result = -result;
+                    state.devolve(&evolve, discards);
+                    if negated_result > alpha {
+                        alpha = negated_result;
+                        best_move = Some((evolve.clone(), negated_result));
+                    }
+                }
+            }
         }
+        best_move.ok_or(())
     }
-    return result;
+
+    pub fn negamax(&self, root: &mut B, mut a: i32, b: i32, depth: usize) -> Result<i32, ()> {
+        if self.termination_tracker.should_stop_search() {
+            return Err(());
+        } else if depth == 0 || root.termination_status().is_some() {
+            return Ok(match root.termination_status() {
+                Some(Termination::Loss) => eval::LOSS_VALUE,
+                Some(Termination::Draw) => eval::DRAW_VALUE,
+                None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
+            });
+        }
+        let mut result = -eval::INFTY;
+        for evolve in root.compute_moves(MoveComputeType::All) {
+            //println!("Second {:?}", evolve);
+            let discards = root.evolve(&evolve);
+            let next_result = -self.negamax(root, -b, -a, depth - 1)?;
+            root.devolve(&evolve, discards);
+            result = cmp::max(result, next_result);
+            a = cmp::max(a, result);
+            if a > b {
+                return Ok(b);
+            }
+        }
+        return Ok(result);
+    }
 }
 
 /// Tests for 'obvious' positions like taking a hanging piece,
@@ -84,6 +150,7 @@ mod test {
     use crate::board::Move::*;
     use crate::eval::EvalBoard;
     use crate::pieces::Piece;
+    use crate::search::Search;
 
     const DEPTH: usize = 3;
 
@@ -94,10 +161,10 @@ mod test {
         test_impl(ref_board, ref_move_pool, is_won);
     }
 
-    fn test_impl<B: EvalBoard>(mut board: B, expected_move_pool: Vec<Move>, is_won: bool) {
-        let search_result = super::best_move(&mut board, DEPTH);
+    fn test_impl<B: EvalBoard>(board: B, expected_move_pool: Vec<Move>, is_won: bool) {
+        let search_result = Search::depth_capped(board, DEPTH).execute();
         if expected_move_pool.is_empty() {
-            assert_eq!(None, search_result);
+            assert_eq!(Err(()), search_result);
         } else {
             let (best_move, evaluation) = search_result.unwrap().clone();
             if is_won {

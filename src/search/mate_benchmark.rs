@@ -4,6 +4,7 @@ use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
+use crate::search::Search;
 
 const DATA_PATH: &'static str = r"/home/t/git/myopic/data/formatted-three-puzzles";
 const MAX_CASES: usize = 500;
@@ -47,7 +48,7 @@ fn mate_benchmark() {
         if i % 50 == 0 {
             println!("{}", i);
         }
-        let actual_move = crate::search::best_move(&mut test_case.board, DEPTH).unwrap();
+        let actual_move = Search::depth_capped(test_case.board, DEPTH).execute().unwrap();
         if test_case.expected_move != actual_move.0 || WIN_VALUE != actual_move.1 {
             err_count += 1;
             println!("Error at index {}", i);
