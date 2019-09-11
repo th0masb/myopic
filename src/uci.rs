@@ -52,8 +52,9 @@ const ENGINE_AUTHOR: &'static str = "Thomas Ball";
 pub fn uci_main() -> () {
     // Engine input command channel
     let cmd_input_rx = initialize_input_thread();
+    //let (search_input_rx, search_output_tx) = crate::search::i
     // Begin the main control loop
-    let (mut engine_state, mut searcher) = (State::Uninitialized, Searcher::new());
+    let mut engine_state = State::Uninitialized;
     loop {
         // If currently in a search state then check if a best move has been computed,
         // if it has then output the result and update the engine state.
@@ -78,11 +79,12 @@ pub fn uci_main() -> () {
                 }
 
                 // Procedure from the positional setup state.
-                (State::WaitingForPosition, Input::UciNewGame) => searcher.reset(),
+                (State::WaitingForPosition, Input::UciNewGame) => (),
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
-                    if searcher.setup_position(fen, moves) {
-                        engine_state = State::WaitingForGo;
-                    }
+                    unimplemented!()
+//                    if searcher.setup_position(fen, moves) {
+//                        engine_state = State::WaitingForGo;
+//                    }
                 }
 
                 (_, Input::IsReady) => println!("readyok"),
@@ -90,24 +92,6 @@ pub fn uci_main() -> () {
                 _ => (),
             },
         }
-    }
-}
-
-struct Searcher {
-    root: BoardImpl,
-}
-
-impl Searcher {
-    pub fn new() -> Searcher {
-        Searcher { root: crate::board::start() }
-    }
-
-    pub fn setup_position(&mut self, fen: String, moves: Vec<String>) -> bool {
-        unimplemented!()
-    }
-
-    pub fn reset(&mut self) -> () {
-        self.root = crate::board::start();
     }
 }
 

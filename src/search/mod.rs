@@ -24,29 +24,28 @@ pub enum SearchCommand<B: EvalBoard> {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SearchDetails {
-    best_move: Move,
-    eval: i32,
-    depth: usize,
-    time: Duration,
-    ponder: Option<Move>,
+    pub best_move: Move,
+    pub eval: i32,
+    pub depth: usize,
+    pub time: Duration,
+    pub ponder: Option<Move>,
 }
-
 
 pub type SearchResult = Result<SearchDetails, ()>;
 
 ///
-pub fn init<B: EvalBoard + 'static>(root: B) -> (Sender<SearchCommand<B>>, Receiver<SearchResult>) {
+pub fn init<B: EvalBoard + 'static>() -> (Sender<SearchCommand<B>>, Receiver<SearchResult>) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<SearchResult>();
     std::thread::spawn(move || {
-        let mut searcher = Search::new(root, input_rx, output_tx);
+        let mut searcher = Search::new(input_rx, output_tx);
         loop {
             match &searcher.input_rx.recv() {
                 Err(_) => continue,
                 Ok(input) => match input.to_owned() {
                     SearchCommand::Close => break,
                     SearchCommand::Stop => (),
-                    SearchCommand::Root(root) => searcher.root = root,
+                    SearchCommand::Root(root) => searcher.root = Some(root),
                     SearchCommand::Go => searcher.search_send(),
                     SearchCommand::GoOnce => {
                         searcher.search_send();
@@ -69,19 +68,30 @@ type OutChannel = Sender<SearchResult>;
 struct Search<B: EvalBoard> {
     input_rx: InChannel<B>,
     output_tx: OutChannel,
-    root: B,
+    root: Option<B>,
     max_depth: usize,
     max_time: Duration,
 }
 
+const DEFAULT_SEARCH_DURATION: Duration = Duration::from_secs(1_000_000);
+const DEFAULT_SEARCH_DEPTH: usize = 100;
+
 impl<B: EvalBoard> Search<B> {
-    pub fn new(root: B, input_rx: InChannel<B>, output_tx: OutChannel) -> Search<B> {
-        Search { input_rx, output_tx, root, max_depth: 10, max_time: Duration::from_secs(10000) }
+    pub fn new(input_rx: InChannel<B>, output_tx: OutChannel) -> Search<B> {
+        Search {
+            input_rx,
+            output_tx,
+            root: None,
+            max_depth: DEFAULT_SEARCH_DEPTH,
+            max_time: DEFAULT_SEARCH_DURATION,
+        }
     }
 
     pub fn search_send(&self) -> () {
-        match self.output_tx.send(self.execute()) {
-            _ => (),
+        if self.root.is_some() {
+            match self.output_tx.send(self.execute()) {
+                _ => (),
+            }
         }
     }
 
@@ -93,7 +103,7 @@ impl<B: EvalBoard> Search<B> {
             stop_signal: &self.input_rx,
         };
         let searcher = SearchImpl {
-            root: self.root.clone(),
+            root: self.root.clone().unwrap(),
             termination_tracker: tracker,
             max_depth: self.max_depth,
         };
@@ -213,7 +223,8 @@ mod test {
     }
 
     fn test_impl<B: EvalBoard + 'static>(board: B, expected_move_pool: Vec<Move>, is_won: bool) {
-        let (input, output) = super::init(board);
+        let (input, output) = super::init();
+        input.send(SearchCommand::Root(board));
         input.send(SearchCommand::Time { max_depth: DEPTH, max_time: Duration::from_secs(120) });
         input.send(SearchCommand::GoOnce);
         match output.recv() {
@@ -226,7 +237,7 @@ mod test {
                         assert_eq!(crate::eval::WIN_VALUE, details.eval);
                     }
                 }
-            }
+            },
         }
     }
 

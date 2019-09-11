@@ -15,7 +15,7 @@ const Q_CHECK_CAP: i32 = -2;
 
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
-pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> i32 {
+pub(super) fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> i32 {
     if depth == Q_DEPTH_CAP || state.termination_status().is_some() {
         return match state.termination_status() {
             Some(Termination::Loss) => eval::LOSS_VALUE,
