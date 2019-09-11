@@ -48,7 +48,7 @@ pub enum Termination {
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
 /// properties.
-pub trait Board: Clone + Reflectable {
+pub trait Board: Clone + Send + Reflectable {
     /// Evolves this board in place according to the given move reference.
     /// The move must be one that is legal in this position otherwise the
     /// results are undefined. The data which is lost during this evolution

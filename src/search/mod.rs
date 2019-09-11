@@ -2,9 +2,9 @@ use std::cmp;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::time::{Duration, Instant};
 
-use crate::board::{Move, BoardImpl, Board};
 use crate::board::MoveComputeType;
 use crate::board::Termination;
+use crate::board::{Board, BoardImpl, Move};
 use crate::eval;
 use crate::eval::{EvalBoard, SimpleEvalBoard};
 
@@ -12,50 +12,14 @@ use crate::eval::{EvalBoard, SimpleEvalBoard};
 mod mate_benchmark;
 pub mod quiescent;
 
-// TODO need to restructure this, there should be a search thread with
-// a state and receivers for setup/stopping and a sender for the best
-// move computation.
-type SearchResult = Result<SearchDetails, ()>;
-type DefaultBoard = SimpleEvalBoard<BoardImpl>;
-
-pub fn init<B: EvalBoard>(root: B) -> (Sender<SearchInput<B>>, Receiver<SearchResult>) {
-    let (input_tx, input_rx) = mpsc::channel::<SearchInput<B>>();
-    let (output_tx, output_rx) = mpsc::channel::<SearchResult>();
-    std::thread::spawn(move || {
-        let mut searcher = Search2::new(root, input_rx, output_tx);
-        loop {
-            match &searcher.input_rx.recv() {
-                Err(_) => continue,
-                Ok(input) => match input.to_owned() {
-                    SearchInput::Close => break,
-                    SearchInput::Stop => (),
-                    SearchInput::Go => {
-                        match &searcher.output_tx.send(searcher.execute()) {
-                            _ => (),
-                        }
-                    },
-                    SearchInput::Setup {root, max_depth, max_time} => {
-                        searcher.root = root;
-                        searcher.max_depth = max_depth;
-                        searcher.max_time = max_time;
-                    },
-                }
-            }
-        }
-    });
-    (input_tx, output_rx)
-}
-
 #[derive(Debug, Clone, PartialEq)]
-pub enum SearchInput<B: EvalBoard> {
+pub enum SearchCommand<B: EvalBoard> {
     Go,
+    GoOnce,
     Stop,
     Close,
-    Setup {
-        root: B,
-        max_depth: usize,
-        max_time: Duration,
-    },
+    Root(B),
+    Time { max_depth: usize, max_time: Duration },
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -67,10 +31,42 @@ pub struct SearchDetails {
     ponder: Option<Move>,
 }
 
-type InChannel<B: EvalBoard> = Receiver<SearchInput<B>>;
+
+pub type SearchResult = Result<SearchDetails, ()>;
+
+///
+pub fn init<B: EvalBoard + 'static>(root: B) -> (Sender<SearchCommand<B>>, Receiver<SearchResult>) {
+    let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
+    let (output_tx, output_rx) = mpsc::channel::<SearchResult>();
+    std::thread::spawn(move || {
+        let mut searcher = Search::new(root, input_rx, output_tx);
+        loop {
+            match &searcher.input_rx.recv() {
+                Err(_) => continue,
+                Ok(input) => match input.to_owned() {
+                    SearchCommand::Close => break,
+                    SearchCommand::Stop => (),
+                    SearchCommand::Root(root) => searcher.root = root,
+                    SearchCommand::Go => searcher.search_send(),
+                    SearchCommand::GoOnce => {
+                        searcher.search_send();
+                        break;
+                    }
+                    SearchCommand::Time { max_depth, max_time } => {
+                        searcher.max_depth = max_depth;
+                        searcher.max_time = max_time;
+                    }
+                },
+            }
+        }
+    });
+    (input_tx, output_rx)
+}
+
+type InChannel<B: EvalBoard> = Receiver<SearchCommand<B>>;
 type OutChannel = Sender<SearchResult>;
 
-pub struct Search2<B: EvalBoard> {
+struct Search<B: EvalBoard> {
     input_rx: InChannel<B>,
     output_tx: OutChannel,
     root: B,
@@ -78,14 +74,14 @@ pub struct Search2<B: EvalBoard> {
     max_time: Duration,
 }
 
-impl<B: EvalBoard> Search2<B> {
-    pub fn new(root: B, input_rx: InChannel<B>, output_tx: OutChannel) -> Search2<B> {
-        Search2 {
-            input_rx,
-            output_tx,
-            root,
-            max_depth: 10,
-            max_time: Duration::from_secs(10000),
+impl<B: EvalBoard> Search<B> {
+    pub fn new(root: B, input_rx: InChannel<B>, output_tx: OutChannel) -> Search<B> {
+        Search { input_rx, output_tx, root, max_depth: 10, max_time: Duration::from_secs(10000) }
+    }
+
+    pub fn search_send(&self) -> () {
+        match self.output_tx.send(self.execute()) {
+            _ => (),
         }
     }
 
@@ -101,14 +97,12 @@ impl<B: EvalBoard> Search2<B> {
             termination_tracker: tracker,
             max_depth: self.max_depth,
         };
-        searcher.search().map(|(best_move, eval, depth)| {
-            SearchDetails {
-                best_move,
-                eval,
-                depth,
-                ponder: None,
-                time: search_start.elapsed(),
-            }
+        searcher.search().map(|(best_move, eval, depth)| SearchDetails {
+            best_move,
+            eval,
+            depth,
+            ponder: None,
+            time: search_start.elapsed(),
         })
     }
 }
@@ -129,14 +123,14 @@ impl<B: EvalBoard> SearchTerminationImpl<'_, B> {
     pub fn should_stop_search(&self) -> bool {
         self.search_start.elapsed() > self.max_time
             || match self.stop_signal.try_recv() {
-            Ok(SearchInput::Stop) => true,
-            _ => false,
-        }
+                Ok(SearchCommand::Stop) => true,
+                _ => false,
+            }
     }
 }
 
 impl<B: EvalBoard> SearchImpl<'_, B> {
-    pub fn search(&self) -> Result<(Move, i32, usize), ()> {
+    fn search(&self) -> Result<(Move, i32, usize), ()> {
         let mut best_move = Err(());
         for i in 1..self.max_depth + 1 {
             match self.best_move(i) {
@@ -147,7 +141,7 @@ impl<B: EvalBoard> SearchImpl<'_, B> {
         best_move
     }
 
-    pub fn best_move(&self, depth: usize) -> Result<(Move, i32), ()> {
+    fn best_move(&self, depth: usize) -> Result<(Move, i32), ()> {
         assert!(depth > 0);
         let mut state = self.root.clone();
         let mut best_move = None;
@@ -169,7 +163,7 @@ impl<B: EvalBoard> SearchImpl<'_, B> {
         best_move.ok_or(())
     }
 
-    pub fn negamax(&self, root: &mut B, mut a: i32, b: i32, depth: usize) -> Result<i32, ()> {
+    fn negamax(&self, root: &mut B, mut a: i32, b: i32, depth: usize) -> Result<i32, ()> {
         if self.termination_tracker.should_stop_search() {
             return Err(());
         } else if depth == 0 || root.termination_status().is_some() {
@@ -206,7 +200,7 @@ mod test {
     use crate::board::Move::*;
     use crate::eval::EvalBoard;
     use crate::pieces::Piece;
-    use crate::search::SearchInput;
+    use crate::search::SearchCommand;
     use std::time::Duration;
 
     const DEPTH: usize = 3;
@@ -218,24 +212,22 @@ mod test {
         test_impl(ref_board, ref_move_pool, is_won);
     }
 
-    fn test_impl<B: EvalBoard>(board: B, expected_move_pool: Vec<Move>, is_won: bool) {
-        let (input, output) = super::init();
-        input.send(SearchInput::Setup {
-            root: board,
-            max_depth: DEPTH,
-            max_time: Duration::from_secs(120),
-        });
-        unimplemented!()
-//        let search_result = Search::depth_capped(board, DEPTH).execute();
-//        if expected_move_pool.is_empty() {
-//            assert_eq!(Err(()), search_result);
-//        } else {
-//            let (best_move, evaluation) = search_result.unwrap().clone();
-//            if is_won {
-//                assert_eq!(crate::eval::WIN_VALUE, evaluation);
-//            }
-//            assert!(expected_move_pool.contains(&best_move), "{:?}", best_move);
-//        }
+    fn test_impl<B: EvalBoard + 'static>(board: B, expected_move_pool: Vec<Move>, is_won: bool) {
+        let (input, output) = super::init(board);
+        input.send(SearchCommand::Time { max_depth: DEPTH, max_time: Duration::from_secs(120) });
+        input.send(SearchCommand::GoOnce);
+        match output.recv() {
+            Err(_) => panic!(),
+            Ok(result) => match result {
+                Err(_) => assert!(expected_move_pool.is_empty()),
+                Ok(details) => {
+                    assert!(expected_move_pool.contains(&details.best_move));
+                    if is_won {
+                        assert_eq!(crate::eval::WIN_VALUE, details.eval);
+                    }
+                }
+            }
+        }
     }
 
     #[test]
