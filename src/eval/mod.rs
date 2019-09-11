@@ -41,3 +41,7 @@ pub trait EvalBoard: Board {
 pub fn new_board(fen_string: &'static str) -> Result<SimpleEvalBoard<BoardImpl>, String> {
     board::from_fen(fen_string).map(SimpleEvalBoard::new)
 }
+
+pub fn start() -> SimpleEvalBoard<BoardImpl> {
+    SimpleEvalBoard::new(board::start())
+}

@@ -71,7 +71,7 @@ fn execute_test(case: TestCase) {
     let mut ref_board = board.reflect();
     let ref_moves: Vec<_> = moves.iter().map(|(t, mvs)| (*t, mvs.reflect())).collect();
     execute_test_impl(board, moves);
-    //execute_test_impl(ref_board, ref_moves);
+    execute_test_impl(ref_board, ref_moves);
 }
 
 fn execute_test_impl(mut board: BoardImpl, moves: ExpectedMoves) {
