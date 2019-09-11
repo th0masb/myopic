@@ -47,7 +47,11 @@ const DEPTH: usize = 4;
 ///          |         |       |        |                    | the timing to be more precise though
 ///          |         |       |        |                    | So I think that played a part.
 /// ------------------------------------------------------------------------------------------------
-///          |         |       |        |                    |
+/// 11/09/19 | 4(8)(2) | 457   | 1      | 6,066,524          | Refactored the search again, runs on
+///          |         |       |        |                    | separate thread. Further tightened
+///          |         |       |        |                    | the timing which will explain the
+///          |         |       |        |                    | performance increase.
+/// ------------------------------------------------------------------------------------------------
 ///
 ///
 #[test]
@@ -101,21 +105,24 @@ fn load_cases() -> Vec<TestCase> {
             continue;
         }
         let (fen, pgn) = (split.first().unwrap(), split.last().unwrap());
-        let board_res = crate::board::from_fen(fen);
-        if board_res.is_err() {
-            println!("Error with position parsing: {}", line_clone);
-            continue;
-        }
-        let board = board_res.unwrap();
-        let moves_res = crate::pgn::parse_pgn(&board, pgn);
-        if moves_res.is_err() {
-            println!("Error with move parsing: {}", line_clone);
-            continue;
-        }
-        let expected_move = moves_res.unwrap().first().unwrap().to_owned();
-        dest.push(TestCase { board: SimpleEvalBoard::new(board), expected_move });
-        if dest.len() == MAX_CASES {
-            break;
+        match crate::board::from_fen(fen) {
+            Err(_) => {
+                println!("Error with position parsing: {}", line_clone);
+                continue;
+            },
+            Ok(board) => match crate::pgn::parse_pgn(&board, pgn) {
+                Err(_) => {
+                    println!("Error with move parsing: {}", line_clone);
+                    continue;
+                },
+                Ok(moves) => {
+                    let expected_move = moves.first().unwrap().to_owned();
+                    dest.push(TestCase { board: SimpleEvalBoard::new(board), expected_move });
+                    if dest.len() == MAX_CASES {
+                        break;
+                    }
+                }
+            }
         }
     }
     dest

@@ -10,6 +10,7 @@ use regex::{Match, Regex};
 
 use crate::board::{BoardImpl, Move};
 use crate::board::Move::Standard;
+use crate::eval::SimpleEvalBoard;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 enum State {
@@ -52,7 +53,7 @@ const ENGINE_AUTHOR: &'static str = "Thomas Ball";
 pub fn uci_main() -> () {
     // Engine input command channel
     let cmd_input_rx = initialize_input_thread();
-    //let (search_input_rx, search_output_tx) = crate::search::i
+    let (search_input_rx, search_output_tx) = crate::search::init::<SimpleEvalBoard<BoardImpl>>();
     // Begin the main control loop
     let mut engine_state = State::Uninitialized;
     loop {
