@@ -1,9 +1,10 @@
+use std::{fmt, ops};
+
 use itertools::iterate;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::direction::Dir;
-
-mod traits;
+use crate::base::Reflectable;
 
 /// Type representing a square on a chessboard.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -62,7 +63,7 @@ impl Square {
 
     /// 'Lifts' this square to a singleton set of squares.
     pub const fn lift(self) -> BitBoard {
-        BitBoard(1u64 << (self as usize))
+        BitBoard(1u64 << (self as u64))
     }
 
     /// Finds the next square on a chessboard from this square in a
@@ -104,6 +105,68 @@ impl Square {
     /// given directions and returns them as a set.
     pub fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
         dirs.iter().flat_map(|&dir| self.next(dir).into_iter()).collect()
+    }
+}
+
+impl Reflectable for Square {
+    fn reflect(&self) -> Self {
+        let (fi, ri) = (self.file_index(), self.rank_index());
+        Square::from_index((8 * (7 - ri) + fi) as usize)
+    }
+}
+
+impl fmt::Display for Square {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(&self, f)
+    }
+}
+
+impl ops::Shl<usize> for Square {
+    type Output = Square;
+    fn shl(self, rhs: usize) -> Self::Output {
+        Square::from_index(self as usize + rhs)
+    }
+}
+
+impl ops::Shr<usize> for Square {
+    type Output = Square;
+    fn shr(self, rhs: usize) -> Self::Output {
+        Square::from_index(self as usize - rhs)
+    }
+}
+
+impl ops::Not for Square {
+    type Output = BitBoard;
+    fn not(self) -> Self::Output {
+        !self.lift()
+    }
+}
+
+impl ops::BitOr<Square> for Square {
+    type Output = BitBoard;
+    fn bitor(self, other: Square) -> Self::Output {
+        self.lift() | other.lift()
+    }
+}
+
+impl ops::BitOr<BitBoard> for Square {
+    type Output = BitBoard;
+    fn bitor(self, other: BitBoard) -> Self::Output {
+        self.lift() | other
+    }
+}
+
+impl ops::BitAnd<BitBoard> for Square {
+    type Output = BitBoard;
+    fn bitand(self, other: BitBoard) -> Self::Output {
+        self.lift() & other
+    }
+}
+
+impl ops::Sub<BitBoard> for Square {
+    type Output = BitBoard;
+    fn sub(self, other: BitBoard) -> Self::Output {
+        self.lift() - other
     }
 }
 

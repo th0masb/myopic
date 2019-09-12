@@ -1,3 +1,5 @@
+use std::cmp;
+
 use crate::base::bitboard::BitBoard;
 use crate::base::direction::Dir;
 use crate::base::direction::E;
@@ -9,8 +11,6 @@ use crate::base::direction::SE;
 use crate::base::direction::SW;
 use crate::base::direction::W;
 use crate::base::square::Square;
-
-use std::cmp;
 
 pub fn get_cord(source: Square, target: Square) -> BitBoard {
     let (min, max) = (cmp::min(source, target), cmp::max(source, target));
@@ -54,8 +54,9 @@ fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use crate::base::square::Square::*;
+
+    use super::*;
 
     #[test]
     fn test_compute_cord() {
