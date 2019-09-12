@@ -1,6 +1,7 @@
 use std::iter::FromIterator;
 use std::ops;
 
+use crate::base::{Reflectable, Side};
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::square::Square::A1;
@@ -17,7 +18,6 @@ use crate::base::square::Square::G1;
 use crate::base::square::Square::G8;
 use crate::base::square::Square::H1;
 use crate::base::square::Square::H8;
-use crate::base::{Reflectable, Side};
 use crate::pieces::Piece;
 
 /// Represents one of the four different areas on a chessboard where
@@ -176,7 +176,6 @@ impl FromIterator<CastleZone> for CastleZoneSet {
 
 impl ops::Sub<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
-
     fn sub(self, rhs: CastleZoneSet) -> Self::Output {
         CastleZoneSet { data: self.data & !rhs.data }
     }
@@ -190,7 +189,6 @@ impl ops::SubAssign<CastleZoneSet> for CastleZoneSet {
 
 impl ops::BitOr<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
-
     fn bitor(self, rhs: CastleZoneSet) -> Self::Output {
         CastleZoneSet { data: self.data | rhs.data }
     }
@@ -198,7 +196,6 @@ impl ops::BitOr<CastleZoneSet> for CastleZoneSet {
 
 impl ops::BitAnd<CastleZoneSet> for CastleZoneSet {
     type Output = CastleZoneSet;
-
     fn bitand(self, rhs: CastleZoneSet) -> Self::Output {
         CastleZoneSet { data: self.data & rhs.data }
     }

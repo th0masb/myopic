@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 const CACHE_SIZE: usize = 20;
 
 /// The hashcache is a circular fixed sized array which tracks a sequence
@@ -12,6 +14,8 @@ pub struct History {
     pop_dist: usize,
     /// Fixed size array which maintains the hash values.
     cache: [u64; CACHE_SIZE],
+    /// Tree map also storing the hash values to allow for rapid repetition check.
+    cache_map: BTreeMap<u64, usize>,
 }
 
 impl History {
@@ -19,12 +23,16 @@ impl History {
     /// position hash.
     pub fn new(position_hash: u64, n_previous_positions: usize) -> History {
         let pop_dist = n_previous_positions;
-        let cache = [064; CACHE_SIZE];
-        let mut dest = History { pop_dist: 0, cache };
+        let cache = [0u64; CACHE_SIZE];
+        let mut cache_map = BTreeMap::new();
+        cache_map.insert(0u64, CACHE_SIZE);
+        let mut dest = History { pop_dist: 0, cache, cache_map };
         for i in 0..pop_dist {
             dest.push_head(i as u64);
         }
+        dest.decrement_count(dest.cache[pop_dist % CACHE_SIZE]);
         dest.cache[pop_dist % CACHE_SIZE] = position_hash;
+        dest.increment_count(position_hash);
         dest
     }
 
@@ -49,39 +57,61 @@ impl History {
     }
 
     pub fn push_head(&mut self, new_head: u64) {
+        self.increment_count(new_head);
+        self.decrement_count(self.tail());
         self.pop_dist += 1;
-        let index = self.head_index();
-        self.cache[index] = new_head;
+        self.cache[self.head_index()] = new_head;
     }
 
     pub fn pop_head(&mut self, new_tail: u64) {
         debug_assert!(self.pop_dist > 0);
-        let index = self.head_index();
-        self.cache[index] = new_tail;
+        self.increment_count(new_tail);
+        self.decrement_count(self.head());
+        self.cache[self.head_index()] = new_tail;
         self.pop_dist -= 1;
+    }
+
+    fn increment_count(&mut self, hash: u64) {
+        match self.cache_map.get(&hash).cloned() {
+            None => self.cache_map.insert(hash, 1),
+            Some(n) => self.cache_map.insert(hash, n + 1),
+        };
+    }
+
+    fn decrement_count(&mut self, hash: u64) {
+        match self.cache_map.get(&hash).cloned() {
+            None => panic!(),
+            Some(1) => self.cache_map.remove(&hash),
+            Some(n) => self.cache_map.insert(hash, n - 1),
+        };
     }
 
     pub fn has_three_repetitions(&self) -> bool {
         if self.pop_dist < CACHE_SIZE {
             false
         } else {
-            let mut cache = self.cache.clone();
-            cache.sort();
-            let mut count = 1;
-            let mut last = cache[0];
-            for &hash in cache.into_iter().skip(1) {
-                if hash == last {
-                    count += 1;
-                    if count == 3 {
-                        break;
-                    }
-                } else {
-                    count = 1;
-                    last = hash;
-                }
-            }
-            count == 3
+            self.cache_map.values().any(|count| *count > 2)
         }
+//        if self.pop_dist < CACHE_SIZE {
+//            false
+//        } else {
+//            let mut cache = self.cache.clone();
+//            cache.sort();
+//            let mut count = 1;
+//            let mut last = cache[0];
+//            for &hash in cache.into_iter().skip(1) {
+//                if hash == last {
+//                    count += 1;
+//                    if count == 3 {
+//                        break;
+//                    }
+//                } else {
+//                    count = 1;
+//                    last = hash;
+//                }
+//            }
+//            count == 3
+//        }
     }
 }
 

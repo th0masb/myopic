@@ -43,7 +43,7 @@ mod test {
     use crate::base::castlezone::CastleZoneSet;
     use crate::base::Side;
     use crate::board::implementation::BoardImpl;
-    use crate::board::test_board::TestBoard;
+    use crate::board::implementation::test::TestBoard;
 
     struct TestCase {
         board: TestBoard,

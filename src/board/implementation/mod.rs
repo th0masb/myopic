@@ -149,8 +149,8 @@ mod fen_test {
     use crate::base::castlezone::CastleZoneSet;
     use crate::base::square::Square;
     use crate::base::Side;
-    use crate::board::test_board::TestBoard;
     use crate::board::BoardImpl;
+    use crate::board::implementation::test::TestBoard;
 
     fn test(expected: TestBoard, fen_string: String) {
         assert_eq!(BoardImpl::from(expected), BoardImpl::from_fen(fen_string).unwrap())
