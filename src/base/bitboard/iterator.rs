@@ -4,70 +4,21 @@ use std::num::Wrapping;
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 
-/// A bitboard is a set of squares and is therefore iterable.
-impl IntoIterator for BitBoard {
-    type Item = Square;
-    type IntoIter = BitBoardIterator;
-
-    fn into_iter(self) -> Self::IntoIter {
-        BitBoardIterator { src: self.0 }
-    }
-}
-
-/// A set of squares can be built from an iterator traversing squares.
-impl FromIterator<Square> for BitBoard {
-    fn from_iter<I: IntoIterator<Item = Square>>(iter: I) -> Self {
-        iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
-    }
-}
-
-/// We can collect an iterator of bitboards into a single bitboard under
-/// the logical OR binary operator on sets.
-impl FromIterator<BitBoard> for BitBoard {
-    fn from_iter<I: IntoIterator<Item = BitBoard>>(iter: I) -> Self {
-        iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
-    }
-}
-
-#[cfg(test)]
-mod iter_test {
-    use crate::base::bitboard::{loc, BitBoard};
-    use crate::base::square::Square;
-    use crate::base::square::Square::*;
-
-    fn new_set(a: Square, b: Square) -> BitBoard {
-        BitBoard(loc(a) | loc(b))
-    }
-
-    #[test]
-    fn test_from_square_iter() {
-        assert_eq!(new_set(F1, G6), vec!(F1, G6).into_iter().collect());
-    }
-
-    #[test]
-    fn test_into_iter() {
-        assert_eq!(vec!(F1, G6), new_set(F1, G6).into_iter().collect::<Vec<Square>>());
-    }
-}
-
 /// The iterator implementation struct produced by a bitboard. It simply
 /// wraps a long value used to track the remaining set bits.
-pub struct BitBoardIterator {
-    src: u64,
-}
+pub struct BitBoardIterator(pub u64);
 
 /// The implementation uses the 'de bruijn' forward bitscan method for
 /// determining the LSB of the encapsulated u64 value. The LSB represents
 /// the next square to be returned.
 impl Iterator for BitBoardIterator {
     type Item = Square;
-
     fn next(&mut self) -> Option<Square> {
-        if self.src == 0 {
+        if self.0 == 0 {
             None
         } else {
-            let lsb = bitscan(self.src);
-            self.src ^= 1u64 << lsb;
+            let lsb = bitscan(self.0);
+            self.0 ^= 1u64 << lsb as u64;
             Some(Square::from_index(lsb))
         }
     }

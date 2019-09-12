@@ -13,7 +13,6 @@ use crate::base::square::Square;
 use std::cmp;
 
 pub fn get_cord(source: Square, target: Square) -> BitBoard {
-    debug_assert!(source != target);
     let (min, max) = (cmp::min(source, target), cmp::max(source, target));
     CACHE[OFFSETS[min as usize] + (max as usize) - (min as usize) - 1]
 }

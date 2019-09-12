@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, ops};
 
 use itertools::Itertools;
 
@@ -6,11 +6,12 @@ use crate::base::direction;
 use crate::base::square::Square;
 use crate::base::square::Square::H1;
 use crate::base::Reflectable;
+use std::iter::FromIterator;
+use crate::base::bitboard::iterator::BitBoardIterator;
 
 pub mod constants;
 mod cords;
 mod iterator;
-mod operators;
 
 /// A bitboard is a value type wrapping a 64 bit integer which represents
 /// a set of squares on a chess board. Each bit is mapped to a particular
@@ -22,7 +23,7 @@ pub struct BitBoard(pub u64);
 impl BitBoard {
     /// Check if this bitboard contains a particular square.
     pub fn contains(self, square: Square) -> bool {
-        self.0 & (1u64 << (square as usize)) != 0
+        self.0 & (1u64 << (square as u64)) != 0
     }
 
     /// Check if this set is a superset of the other.
@@ -35,6 +36,7 @@ impl BitBoard {
         self.0 == 0
     }
 
+    /// Check if this bitboard contains at least one square.
     pub fn is_populated(self) -> bool {
         self.0 != 0
     }
@@ -117,16 +119,132 @@ impl Reflectable for BitBoard {
     }
 }
 
-fn loc(sq: Square) -> u64 {
-    1u64 << (sq as usize)
+/// A bitboard is a set of squares and is therefore iterable.
+impl IntoIterator for BitBoard {
+    type Item = Square;
+    type IntoIter = BitBoardIterator;
+    fn into_iter(self) -> Self::IntoIter {
+        BitBoardIterator(self.0)
+    }
 }
 
-fn create_files() -> Vec<BitBoard> {
-    (H1.search(direction::W) | H1).into_iter().map(|sq| sq.search(direction::N) | sq).collect()
+/// A set of squares can be built from an iterator traversing squares.
+impl FromIterator<Square> for BitBoard {
+    fn from_iter<I: IntoIterator<Item = Square>>(iter: I) -> Self {
+        iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
+    }
 }
 
-fn create_ranks() -> Vec<BitBoard> {
-    (H1.search(direction::N) | H1).into_iter().map(|sq| sq.search(direction::W) | sq).collect()
+/// We can collect an iterator of bitboards into a single bitboard under
+/// the logical OR binary operator on sets.
+impl FromIterator<BitBoard> for BitBoard {
+    fn from_iter<I: IntoIterator<Item = BitBoard>>(iter: I) -> Self {
+        iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
+    }
+}
+
+
+/// Operator implementations for bitboards which all use the underlying u64
+/// value.
+impl ops::Shr<u8> for BitBoard {
+    type Output = Self;
+    fn shr(self, shift: u8) -> Self {
+        BitBoard(self.0 >> shift as u64)
+    }
+}
+
+impl ops::Shl<u8> for BitBoard {
+    type Output = Self;
+    fn shl(self, shift: u8) -> Self {
+        BitBoard(self.0 << shift as u64)
+    }
+}
+
+impl ops::Not for BitBoard {
+    type Output = Self;
+    fn not(self) -> Self {
+        BitBoard(!self.0)
+    }
+}
+
+impl ops::Sub<BitBoard> for BitBoard {
+    type Output = Self;
+    fn sub(self, other: BitBoard) -> Self {
+        BitBoard(self.0 & !other.0)
+    }
+}
+
+impl ops::Sub<Square> for BitBoard {
+    type Output = Self;
+    fn sub(self, other: Square) -> Self {
+        BitBoard(self.0 & !loc(other))
+    }
+}
+
+impl ops::BitXor<BitBoard> for BitBoard {
+    type Output = Self;
+    fn bitxor(self, other: BitBoard) -> Self {
+        BitBoard(self.0 ^ other.0)
+    }
+}
+
+impl ops::BitXor<Square> for BitBoard {
+    type Output = Self;
+    fn bitxor(self, rhs: Square) -> Self {
+        BitBoard(self.0 ^ loc(rhs))
+    }
+}
+
+impl ops::BitOr<BitBoard> for BitBoard {
+    type Output = Self;
+    fn bitor(self, other: BitBoard) -> Self {
+        BitBoard(self.0 | other.0)
+    }
+}
+
+impl ops::BitOr<Square> for BitBoard {
+    type Output = Self;
+    fn bitor(self, other: Square) -> Self {
+        BitBoard(self.0 | loc(other))
+    }
+}
+
+impl ops::BitAnd<BitBoard> for BitBoard {
+    type Output = Self;
+    fn bitand(self, other: BitBoard) -> Self {
+        BitBoard(self.0 & other.0)
+    }
+}
+
+impl ops::BitAnd<Square> for BitBoard {
+    type Output = Self;
+    fn bitand(self, other: Square) -> Self {
+        BitBoard(self.0 & loc(other))
+    }
+}
+
+impl ops::BitXorAssign<BitBoard> for BitBoard {
+    fn bitxor_assign(&mut self, rhs: BitBoard) {
+        self.0 = self.0 ^ rhs.0;
+    }
+}
+
+impl ops::BitXorAssign<Square> for BitBoard {
+    fn bitxor_assign(&mut self, rhs: Square) {
+        self.0 = self.0 ^ (1u64 << (rhs as u64));
+    }
+}
+
+impl ops::BitOrAssign<BitBoard> for BitBoard {
+    fn bitor_assign(&mut self, rhs: BitBoard) {
+        self.0 = self.0 | rhs.0;
+    }
+}
+
+impl ops::BitOrAssign<Square> for BitBoard {
+    fn bitor_assign(&mut self, rhs: Square) {
+        self.0 = self.0 | (1u64 << (rhs as u64));
+    }
 }
 
 impl fmt::Debug for BitBoard {
@@ -141,12 +259,34 @@ impl fmt::Display for BitBoard {
     }
 }
 
+fn loc(sq: Square) -> u64 {
+    1u64 << (sq as u64)
+}
+
+fn create_files() -> Vec<BitBoard> {
+    (H1.search(direction::W) | H1).into_iter().map(|sq| sq.search(direction::N) | sq).collect()
+}
+
+fn create_ranks() -> Vec<BitBoard> {
+    (H1.search(direction::N) | H1).into_iter().map(|sq| sq.search(direction::W) | sq).collect()
+}
+
 #[cfg(test)]
 mod test {
     use crate::base::bitboard::BitBoard;
     use crate::base::square::Square::*;
 
     use super::*;
+
+    #[test]
+    fn test_from_square_iter() {
+        assert_eq!(F1 | G6, vec!(F1, G6).into_iter().collect());
+    }
+
+    #[test]
+    fn test_into_iter() {
+        assert_eq!(vec![F1, G6], (F1 | G6).into_iter().collect::<Vec<Square>>());
+    }
 
     #[test]
     fn test_display() {
