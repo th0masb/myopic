@@ -29,7 +29,7 @@ enum Input {
     IsReady,
     UciNewGame,
     Stop,
-    PonderHit,
+    //PonderHit,
     Quit,
     Position(String, Vec<String>),
     Go(Vec<GoCommand>),
@@ -44,7 +44,7 @@ enum GoCommand {
     BlackTime(usize),
     WhiteInc(usize),
     BlackInc(usize),
-    Ponder,
+    //Ponder,
     Infinite,
 }
 
@@ -66,7 +66,8 @@ pub fn uci_main() -> () {
                 Ok(result) => match result {
                     Err(_) => engine_state = State::WaitingForPosition,
                     Ok(details) => {
-                        unimplemented!()
+                        engine_state = State::WaitingForPosition;
+                        println!("bestmove {}", format_move(details.best_move))
                     }
                 }
             }
@@ -94,10 +95,12 @@ pub fn uci_main() -> () {
                 // Procedure from the positional setup state.
                 (State::WaitingForPosition, Input::UciNewGame) => (),
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
-                    unimplemented!()
-//                    if searcher.setup_position(fen, moves) {
-//                        engine_state = State::WaitingForGo;
-//                    }
+                    match crate::eval::new_board(&fen) {
+                        Err(_) => continue,
+                        Ok(board) => {
+                            unimplemented!()
+                        }
+                    }
                 }
 
                 (_, Input::IsReady) => println!("readyok"),
@@ -113,7 +116,11 @@ fn format_move(input: Move) -> String {
     let (source, target, promotion) = match input {
         Move::Standard(p, s, t) => (s, t, None),
         Move::Promotion(s, t, p) => (s, t, Some(p)),
-        _ => unimplemented!()
+        Move::Enpassant(s, t) => (s, t, None),
+        Move::Castle(zone) => {
+            let (_, s, t) = zone.king_data();
+            (s, t, None)
+        }
     };
     dest.push_str(format!("{}", source).as_str());
     dest.push_str(format!("{}", target).as_str());
@@ -165,7 +172,7 @@ fn parse_engine_command(content: String) -> Option<Input> {
         "isready" => Some(Input::IsReady),
         "ucinewgame" => Some(Input::UciNewGame),
         "stop" => Some(Input::Stop),
-        "ponderhit" => Some(Input::PonderHit),
+        //"ponderhit" => Some(Input::PonderHit),
         "quit" => Some(Input::Quit),
         x => {
             if x.starts_with("position") {
@@ -196,7 +203,7 @@ fn parse_go_command(content: String) -> Vec<GoCommand> {
     let extract = |m: Match| int_re().find(m.as_str()).unwrap().as_str().parse::<usize>().unwrap();
     let mut dest = Vec::new();
     &INFINITE.find(content_ref).map(|_| dest.push(GoCommand::Infinite));
-    &PONDER.find(content_ref).map(|_| dest.push(GoCommand::Ponder));
+    //&PONDER.find(content_ref).map(|_| dest.push(GoCommand::Ponder));
     &DEPTH.find(content_ref).map(|m| dest.push(GoCommand::Depth(extract(m))));
     &MOVETIME.find(content_ref).map(|m| dest.push(GoCommand::MoveTime(extract(m))));
     &WHITETIME.find(content_ref).map(|m| dest.push(GoCommand::WhiteTime(extract(m))));

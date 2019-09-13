@@ -38,7 +38,7 @@ pub trait EvalBoard: Board {
 
 /// Construct an instance of the default EvalBoard implementation using the
 /// default Board implementation from a fen string.
-pub fn new_board(fen_string: &'static str) -> Result<SimpleEvalBoard<BoardImpl>, String> {
+pub fn new_board(fen_string: &str) -> Result<SimpleEvalBoard<BoardImpl>, String> {
     board::from_fen(fen_string).map(SimpleEvalBoard::new)
 }
 
