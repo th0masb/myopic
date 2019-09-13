@@ -24,7 +24,7 @@ impl BoardImpl {
         match action {
             &Standard(piece, source, target) => self.evolve_s(piece, source, target),
             &Castle(zone) => self.evolve_c(zone),
-            &Enpassant(source) => self.evolve_e(source),
+            &Enpassant(source, _) => self.evolve_e(source),
             &Promotion(source, target, piece) => self.evolve_p(source, target, piece),
         }
     }
@@ -35,7 +35,7 @@ impl BoardImpl {
         match action {
             &Standard(piece, source, target) => self.devolve_s(piece, source, target, discards),
             &Castle(zone) => self.devolve_c(zone, discards),
-            &Enpassant(source) => self.devolve_e(source, discards),
+            &Enpassant(source, _) => self.devolve_e(source, discards),
             &Promotion(source, target, piece) => self.devolve_p(source, target, piece, discards),
         }
     }

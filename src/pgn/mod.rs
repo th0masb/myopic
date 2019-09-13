@@ -67,7 +67,7 @@ fn parse_single_move<B: Board>(start: &mut B, pgn_move: &String) -> Result<Move,
             &Move::Standard(p, s, e) => {
                 move_piece_matches(p) && target == Some(e) && matches_start(s)
             }
-            &Move::Enpassant(s) => {
+            &Move::Enpassant(s, _) => {
                 move_matches_pawn && target == start.enpassant() && matches_start(s)
             }
             &Move::Promotion(s, e, p) => {
@@ -201,7 +201,7 @@ mod test_single_move {
     #[test]
     fn case_two() {
         execute_success_test(
-            Move::Enpassant(E5),
+            Move::Enpassant(E5, Square::F6),
             "r2qkbnr/pp1np1pp/2p5/3pPp2/8/2N2Q1P/PPPP1PP1/R1B1KB1R w KQkq f6 0 7",
             "exf6",
         )

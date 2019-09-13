@@ -60,7 +60,7 @@ impl BoardImpl {
         for loc in enpassant {
             let ep = self.enpassant.unwrap();
             if constraints.get(loc).contains(ep) && self.enpassant_doesnt_discover_attack(loc) {
-                dest.push(Move::Enpassant(loc));
+                dest.push(Move::Enpassant(loc, ep));
             }
         }
         for location in promotion {

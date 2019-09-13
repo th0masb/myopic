@@ -83,7 +83,7 @@ fn compute_quiescent_moves<B: Board>(state: &mut B, depth: i32) -> Vec<Move> {
 
 fn score_attack<B: Board>(state: &mut B, attack: &Move) -> i32 {
     match attack {
-        &Move::Enpassant(_) => 10000,
+        &Move::Enpassant(_, _) => 10000,
         &Move::Promotion(_, _, _) => 20000,
         &Move::Standard(_, source, target) => eval::exchange_value(state, source, target),
         _ => panic!(),
@@ -92,7 +92,7 @@ fn score_attack<B: Board>(state: &mut B, attack: &Move) -> i32 {
 
 fn is_attack(query: &Move, enemies: BitBoard) -> bool {
     match query {
-        &Move::Enpassant(_) => true,
+        &Move::Enpassant(_, _) => true,
         &Move::Castle(_) => false,
         &Move::Promotion(_, target, _) => enemies.contains(target),
         &Move::Standard(_, _, target) => enemies.contains(target),

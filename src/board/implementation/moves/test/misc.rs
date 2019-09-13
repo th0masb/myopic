@@ -16,7 +16,7 @@ fn case_1() {
             s(Piece::WP, F5, F6 | G6),
             s(Piece::WP, G2, G3 | G4),
             s(Piece::WR, H1, G1 | F1 | H2 | H3 | H4 | H5 | H6 | H7),
-            e(F5),
+            e(F5, Square::E6),
             c(CastleZone::WQ.lift()),
         ],
         expected_attacks: vec![
@@ -24,7 +24,7 @@ fn case_1() {
             s(Piece::WB, F3, C6),
             s(Piece::WP, F5, G6),
             s(Piece::WR, H1, H7),
-            e(F5),
+            e(F5, Square::E6),
         ],
         expected_attacks_checks: vec![
             s(Piece::WR, A1, D1),
@@ -34,7 +34,7 @@ fn case_1() {
             s(Piece::WQ, C2, D1 | D2 | D3),
             s(Piece::WP, F5, G6),
             s(Piece::WR, H1, H7),
-            e(F5),
+            e(F5, Square::E6),
         ],
     });
 }
@@ -135,14 +135,14 @@ fn case_7() {
     execute_test(TestCase {
         board: "7k/8/8/3PpP2/8/8/8/7K w - e6 3 10",
         expected_all: vec![
-            e(D5),
-            e(F5),
+            e(D5, Square::E6),
+            e(F5, Square::E6),
             s(Piece::WP, D5, D6),
             s(Piece::WP, F5, F6),
             s(Piece::WK, H1, G1 | G2 | H2),
         ],
-        expected_attacks: vec![e(D5), e(F5)],
-        expected_attacks_checks: vec![e(D5), e(F5)],
+        expected_attacks: vec![e(D5, Square::E6), e(F5, Square::E6)],
+        expected_attacks_checks: vec![e(D5, Square::E6), e(F5, Square::E6)],
     });
 }
 

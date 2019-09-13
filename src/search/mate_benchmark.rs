@@ -63,7 +63,7 @@ fn mate_benchmark() {
     let (search_input_tx, search_output_rx) = crate::search::init();
     search_input_tx.send(SearchCommand::Time {max_depth: DEPTH, max_time: Duration::from_secs(10000)});
     for (i, mut test_case) in cases.into_iter().enumerate() {
-        if i % 50 == 0 {
+        if i % 5 == 0 {
             println!("{}", i);
         }
         search_input_tx.send(SearchCommand::Root(test_case.board));

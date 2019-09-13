@@ -99,7 +99,7 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
                 self.add(promoting, target);
                 self.piece(target).map(|taken| self.remove(taken, target));
             }
-            &Move::Enpassant(source) => {
+            &Move::Enpassant(source, _) => {
                 let active_pawn = Piece::pawn(self.active());
                 let passive_pawn = active_pawn.reflect();
                 let enpassant = self.enpassant().unwrap();
@@ -136,7 +136,7 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
                 self.remove(promoting, target);
                 discards.piece.map(|taken| self.add(taken, target));
             }
-            &Move::Enpassant(source) => {
+            &Move::Enpassant(source, _) => {
                 let active_pawn = Piece::pawn(self.active());
                 let passive_pawn = active_pawn.reflect();
                 let enpassant = discards.enpassant.unwrap();

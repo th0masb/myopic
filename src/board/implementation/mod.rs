@@ -250,7 +250,7 @@ impl Reflectable for Move {
     fn reflect(&self) -> Self {
         match self {
             Move::Castle(zone) => Move::Castle(zone.reflect()),
-            Move::Enpassant(square) => Move::Enpassant(square.reflect()),
+            Move::Enpassant(s, t) => Move::Enpassant(s.reflect(), t.reflect()),
             Move::Standard(p, s, t) => Move::Standard(p.reflect(), s.reflect(), t.reflect()),
             Move::Promotion(s, t, p) => Move::Promotion(s.reflect(), t.reflect(), p.reflect()),
         }

@@ -793,7 +793,7 @@ fn test_black_king_takes_white_king() {
 #[test]
 fn test_white_enpassant() {
     check_case(TestCase {
-        action: Move::Enpassant(Square::D5),
+        action: Move::Enpassant(Square::D5, Square::E6),
 
         start: TestBoard {
             whites: vec![D5 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
@@ -824,7 +824,7 @@ fn test_white_enpassant() {
 #[test]
 fn test_black_enpassant() {
     check_case(TestCase {
-        action: Move::Enpassant(Square::E4),
+        action: Move::Enpassant(Square::E4, Square::D3),
 
         start: TestBoard {
             whites: vec![D4 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],

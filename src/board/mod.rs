@@ -22,7 +22,7 @@ pub struct Discards {
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum Move {
     Standard(Piece, Square, Square),
-    Enpassant(Square),
+    Enpassant(Square, Square),
     Promotion(Square, Square, Piece),
     Castle(CastleZone),
 }

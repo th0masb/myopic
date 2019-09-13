@@ -40,8 +40,8 @@ fn p(side: Side, src: BitBoard, targets: BitBoard) -> Vec<Move> {
     Move::promotions(side, src.first().unwrap(), targets).collect()
 }
 
-fn e(src: BitBoard) -> Vec<Move> {
-    src.iter().map(Move::Enpassant).collect()
+fn e(src: BitBoard, enpassant_target: Square) -> Vec<Move> {
+    src.iter().map(|s| Move::Enpassant(s, enpassant_target)).collect()
 }
 
 fn c(zones: CastleZoneSet) -> Vec<Move> {

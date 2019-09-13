@@ -7,6 +7,7 @@ use crate::board::Move;
 use crate::board::Move::*;
 use crate::eval::evalboardimpl::SimpleEvalBoard;
 use crate::pieces::Piece::*;
+use crate::base::square::Square;
 
 #[derive(Clone, Eq, PartialEq)]
 struct TestCase<B: Board> {
@@ -61,7 +62,7 @@ fn case_1() {
             Castle(CastleZone::BQ),
             Standard(WP, E4, E5),
             Standard(BP, D7, D5),
-            Enpassant(E5),
+            Enpassant(E5, Square::D6),
             Standard(BK, C8, B8),
             Standard(WP, D6, E7),
             Standard(BR, H8, H7),
