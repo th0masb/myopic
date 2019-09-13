@@ -11,6 +11,7 @@ use regex::{Match, Regex};
 use crate::board::{BoardImpl, Move};
 use crate::board::Move::Standard;
 use crate::eval::SimpleEvalBoard;
+use crate::pieces::Piece;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 enum State {
@@ -59,6 +60,17 @@ pub fn uci_main() -> () {
     loop {
         // If currently in a search state then check if a best move has been computed,
         // if it has then output the result and update the engine state.
+        if engine_state == State::Searching {
+            match search_output_tx.try_recv() {
+                Err(_) => (),
+                Ok(result) => match result {
+                    Err(_) => engine_state = State::WaitingForPosition,
+                    Ok(details) => {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
 
         // Check for a new input and process the command if it is present.
         match cmd_input_rx.try_recv() {
@@ -93,6 +105,29 @@ pub fn uci_main() -> () {
                 _ => (),
             },
         }
+    }
+}
+
+fn format_move(input: Move) -> String {
+    let mut dest = String::new();
+    let (source, target, promotion) = match input {
+        Move::Standard(p, s, t) => (s, t, None),
+        Move::Promotion(s, t, p) => (s, t, Some(p)),
+        _ => unimplemented!()
+    };
+    dest.push_str(format!("{}", source).as_str());
+    dest.push_str(format!("{}", target).as_str());
+    promotion.map(|piece: Piece| dest.push_str(format_piece(piece)));
+    dest
+}
+
+fn format_piece(piece: Piece) -> &'static str {
+    match piece {
+        Piece::WQ | Piece::BQ => "q",
+        Piece::WR | Piece::BR => "r",
+        Piece::WB | Piece::BB => "b",
+        Piece::WN | Piece::BN => "n",
+        _ => panic!()
     }
 }
 
