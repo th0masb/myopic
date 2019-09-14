@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 
 use regex::{Match, Regex};
 
-use crate::board::{BoardImpl, Move};
+use crate::board::{BoardImpl, Move, Board};
 use crate::board::Move::Standard;
 use crate::eval::SimpleEvalBoard;
 use crate::pieces::Piece;
@@ -97,7 +97,7 @@ pub fn uci_main() -> () {
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
                     match crate::eval::new_board(&fen) {
                         Err(_) => continue,
-                        Ok(board) => {
+                        Ok(mut board) => {
                             unimplemented!()
                         }
                     }
@@ -109,6 +109,10 @@ pub fn uci_main() -> () {
             },
         }
     }
+}
+
+fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) {
+    unimplemented!()
 }
 
 fn format_move(input: Move) -> String {
