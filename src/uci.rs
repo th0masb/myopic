@@ -8,8 +8,9 @@ use std::time::{Duration, Instant};
 
 use regex::{Match, Regex};
 
-use crate::board::{BoardImpl, Move, Board};
+use crate::base::square::Square;
 use crate::board::Move::Standard;
+use crate::board::{Board, BoardImpl, Move, MoveComputeType};
 use crate::eval::SimpleEvalBoard;
 use crate::pieces::Piece;
 
@@ -69,7 +70,7 @@ pub fn uci_main() -> () {
                         engine_state = State::WaitingForPosition;
                         println!("bestmove {}", format_move(details.best_move))
                     }
-                }
+                },
             }
         }
 
@@ -97,9 +98,7 @@ pub fn uci_main() -> () {
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
                     match crate::eval::new_board(&fen) {
                         Err(_) => continue,
-                        Ok(mut board) => {
-                            unimplemented!()
-                        }
+                        Ok(mut board) => unimplemented!(),
                     }
                 }
 
@@ -111,8 +110,28 @@ pub fn uci_main() -> () {
     }
 }
 
-fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) {
-    unimplemented!()
+fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) -> Result<Move, ()> {
+    if mv.len() < 4 || mv.len() > 5 {
+        return Err(());
+    }
+    let source = Square::from_string(&mv.chars().take(2).collect::<String>());
+    let target = Square::from_string(&mv.chars().skip(2).take(2).collect::<String>());
+    let promote = mv.chars().nth(5).map(|c| c.to_string());
+    board
+        .compute_moves(MoveComputeType::All)
+        .into_iter()
+        .find(|mv| match mv {
+            &Move::Standard(_, s, t) => source == s && target == t,
+            &Move::Enpassant(s, t) => source == s && target == t,
+            &Move::Promotion(s, t, p) => {
+                source == s && target == t && Some(format_piece(p).to_string()) == promote
+            }
+            &Move::Castle(zone) => {
+                let (_, ks, kt) = zone.king_data();
+                source == ks && target == kt
+            }
+        })
+        .ok_or(())
 }
 
 fn format_move(input: Move) -> String {
@@ -138,7 +157,7 @@ fn format_piece(piece: Piece) -> &'static str {
         Piece::WR | Piece::BR => "r",
         Piece::WB | Piece::BB => "b",
         Piece::WN | Piece::BN => "n",
-        _ => panic!()
+        _ => panic!(),
     }
 }
 
