@@ -62,9 +62,15 @@ fn mate_benchmark() {
     let (mut err_count, mut case_count) = (0, 0);
     let (search_input_tx, search_output_rx) = crate::search::init();
     search_input_tx.send(SearchCommand::Time {max_depth: DEPTH, max_time: Duration::from_secs(10000)});
+    let print_progress = |cases: usize, errs: usize, d: Duration| {
+        println!(
+            "Depth: {}, Cases: {}, Errors: {}, Time: {}ms",
+            DEPTH, cases, errs, d.as_millis()
+        );
+    };
     for (i, mut test_case) in cases.into_iter().enumerate() {
         if i % 5 == 0 {
-            println!("{}", i);
+            print_progress(case_count, err_count, search_duration.clone());
         }
         search_input_tx.send(SearchCommand::Root(test_case.board));
         search_input_tx.send(SearchCommand::Go);
@@ -84,10 +90,7 @@ fn mate_benchmark() {
         case_count += 1;
     }
     search_input_tx.send(SearchCommand::Close);
-    println!(
-        "Depth: {}, Cases: {}, Errors: {}, Time: {}",
-        DEPTH, case_count, err_count, search_duration.as_millis()
-    );
+    print_progress(case_count, err_count, search_duration);
 }
 
 fn load_cases() -> Vec<TestCase> {
