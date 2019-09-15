@@ -13,6 +13,7 @@ use crate::board::Move::Standard;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
 use crate::eval::SimpleEvalBoard;
 use crate::pieces::Piece;
+use crate::base::StrResult;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 enum State {
@@ -110,12 +111,12 @@ pub fn uci_main() -> () {
     }
 }
 
-fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) -> Result<Move, ()> {
+fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) -> StrResult<Move> {
     if mv.len() < 4 || mv.len() > 5 {
-        return Err(());
+        return Err(format!("Illegal length: {}", mv.len()));
     }
-    let source = Square::from_string(&mv.chars().take(2).collect::<String>());
-    let target = Square::from_string(&mv.chars().skip(2).take(2).collect::<String>());
+    let source = Square::from_string(&mv.chars().take(2).collect::<String>())?;
+    let target = Square::from_string(&mv.chars().skip(2).take(2).collect::<String>())?;
     let promote = mv.chars().nth(5).map(|c| c.to_string());
     board
         .compute_moves(MoveComputeType::All)
@@ -131,7 +132,7 @@ fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) -> Result<Mov
                 source == ks && target == kt
             }
         })
-        .ok_or(())
+        .ok_or(format!("No moves matching {}", mv.clone()))
 }
 
 fn format_move(input: Move) -> String {

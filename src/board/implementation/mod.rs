@@ -65,7 +65,7 @@ fn enpassant_from_fen(fen: &String) -> Option<Square> {
     if fen.contains("-") {
         None
     } else {
-        Some(Square::from_string(fen))
+        Square::from_string(fen).ok()
     }
 }
 

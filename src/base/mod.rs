@@ -64,6 +64,8 @@ impl Side {
     }
 }
 
+pub type StrResult<T> = Result<T, String>;
+
 /// Chess is a symmetric game and this trait represents a component of
 /// the game which can be reflected to it's symmetric opposite component.
 pub trait Reflectable {

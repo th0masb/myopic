@@ -4,7 +4,7 @@ use itertools::iterate;
 
 use crate::base::bitboard::BitBoard;
 use crate::base::direction::Dir;
-use crate::base::Reflectable;
+use crate::base::{Reflectable, StrResult};
 
 /// Type representing a square on a chessboard.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -32,11 +32,10 @@ impl Square {
     }
 
     /// Performs linear search to find a square whose name matches
-    /// the given string (case-insensitive). Will panic if an invalid
-    /// string is passed.
-    pub fn from_string(square: &String) -> Square {
+    /// the given string (case-insensitive).
+    pub fn from_string(square: &String) -> StrResult<Square> {
         let upper = square.to_uppercase();
-        Square::iter().find(|sq| format!("{:?}", sq) == upper).unwrap()
+        Square::iter().find(|sq| format!("{:?}", sq) == upper).ok_or(square.clone())
     }
 
     /// Return the index of the rank on which this square resides.

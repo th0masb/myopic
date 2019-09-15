@@ -1,6 +1,6 @@
 use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
-use crate::base::Side;
+use crate::base::{Side, StrResult};
 use crate::board::Move::Castle;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
 use crate::pieces::Piece;
@@ -31,7 +31,7 @@ pub fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
     regex.captures_iter(source).map(|cap| String::from(&cap[0])).collect()
 }
 
-fn parse_single_move<B: Board>(start: &mut B, pgn_move: &String) -> Result<Move, String> {
+fn parse_single_move<B: Board>(start: &mut B, pgn_move: &String) -> StrResult<Move> {
     // If a castle move we can retrieve straight away
     if pgn_move.as_str() == "O-O" {
         return Ok(Castle(CastleZone::kingside(start.active())));
@@ -44,7 +44,7 @@ fn parse_single_move<B: Board>(start: &mut B, pgn_move: &String) -> Result<Move,
     // The target square of the move.
     let target = find_matches(&pgn_move, square_regex())
         .into_iter()
-        .map(|s| Square::from_string(&s))
+        .map(|s| Square::from_string(&s).ok().unwrap())
         .last()
         .map(|mv| mv.clone());
 
