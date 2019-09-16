@@ -4,7 +4,7 @@ use crate::search::SearchCommand;
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
-use std::time::{Duration, Instant};
+use std::time::{Duration};
 
 const DATA_PATH: &'static str = r"/home/t/git/myopic/data/formatted-three-puzzles";
 const MAX_CASES: usize = 500;
@@ -52,6 +52,13 @@ const DEPTH: usize = 4;
 ///          |         |       |        |                    | the timing which will explain the
 ///          |         |       |        |                    | performance increase.
 /// ------------------------------------------------------------------------------------------------
+/// 16/09/19 | 4(8)(2) | 457   | 1      | 5,857,774          | Ran outside ide which probably explains
+///          |         |       |        |                    | speed difference.
+/// ------------------------------------------------------------------------------------------------
+/// 16/09/19 | 4(8)(2) | 200   | 0      | 3,632,758          | Adding a BTreeMap didn't seem to
+///          |         |       |        |                    | speed anything up, 500,000ms slower
+///          |         |       |        |                    | by the 200 case.
+/// ------------------------------------------------------------------------------------------------
 ///
 ///
 #[test]
@@ -61,19 +68,19 @@ fn mate_benchmark() {
     let mut search_duration = Duration::from_secs(0);
     let (mut err_count, mut case_count) = (0, 0);
     let (search_input_tx, search_output_rx) = crate::search::init();
-    search_input_tx.send(SearchCommand::Time {max_depth: DEPTH, max_time: Duration::from_secs(10000)});
+    search_input_tx.send(SearchCommand::Time {max_depth: DEPTH, max_time: Duration::from_secs(10000)}).unwrap();
     let print_progress = |cases: usize, errs: usize, d: Duration| {
         println!(
             "Depth: {}, Cases: {}, Errors: {}, Time: {}ms",
             DEPTH, cases, errs, d.as_millis()
         );
     };
-    for (i, mut test_case) in cases.into_iter().enumerate() {
+    for (i, test_case) in cases.into_iter().enumerate() {
         if i % 5 == 0 {
             print_progress(case_count, err_count, search_duration.clone());
         }
-        search_input_tx.send(SearchCommand::Root(test_case.board));
-        search_input_tx.send(SearchCommand::Go);
+        search_input_tx.send(SearchCommand::Root(test_case.board)).unwrap();
+        search_input_tx.send(SearchCommand::Go).unwrap();
         match search_output_rx.recv() {
             Err(_) => panic!(),
             Ok(result) => match result {
@@ -89,7 +96,7 @@ fn mate_benchmark() {
         }
         case_count += 1;
     }
-    search_input_tx.send(SearchCommand::Close);
+    search_input_tx.send(SearchCommand::Close).unwrap();
     print_progress(case_count, err_count, search_duration);
 }
 
@@ -112,12 +119,12 @@ fn load_cases() -> Vec<TestCase> {
             Err(_) => {
                 println!("Error with position parsing: {}", line_clone);
                 continue;
-            },
+            }
             Ok(board) => match crate::pgn::parse_pgn(&board, pgn) {
                 Err(_) => {
                     println!("Error with move parsing: {}", line_clone);
                     continue;
-                },
+                }
                 Ok(moves) => {
                     let expected_move = moves.first().unwrap().to_owned();
                     dest.push(TestCase { board: SimpleEvalBoard::new(board), expected_move });
@@ -125,7 +132,7 @@ fn load_cases() -> Vec<TestCase> {
                         break;
                     }
                 }
-            }
+            },
         }
     }
     dest

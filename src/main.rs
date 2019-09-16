@@ -35,10 +35,10 @@ fn main() -> () {
     let fen = "rnb1k1nr/p2p1ppp/5q2/1pb2N1P/4PBP1/2NP1Q2/PPP5/R4KR1 w kq - 3 17";
     let board = eval::new_board(fen).unwrap();
     let (input_tx, output_rx) = search::init::<SimpleEvalBoard<BoardImpl>>();
-    input_tx.send(SearchCommand::Root(board));
-    input_tx.send(SearchCommand::GoOnce);
+    input_tx.send(SearchCommand::Root(board)).unwrap();
+    input_tx.send(SearchCommand::GoOnce).unwrap();
     thread::sleep(Duration::from_secs(10));
-    input_tx.send(SearchCommand::Stop);
+    input_tx.send(SearchCommand::Stop).unwrap();
     match output_rx.recv() {
         Err(_) => panic!(),
         Ok(result) => match result {

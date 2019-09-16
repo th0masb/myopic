@@ -1,19 +1,16 @@
-use std::fs;
-use std::io::{self, Read};
-use std::path::Path;
+use std::io;
 use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::{Receiver};
 use std::thread;
-use std::time::{Duration, Instant};
 
 use regex::{Match, Regex};
 
 use crate::base::square::Square;
-use crate::board::Move::Standard;
+use crate::base::StrResult;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
 use crate::eval::SimpleEvalBoard;
 use crate::pieces::Piece;
-use crate::base::StrResult;
+use crate::search::SearchCommand;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 enum State {
@@ -22,7 +19,7 @@ enum State {
     WaitingForPosition,
     WaitingForGo,
     Searching,
-    Pondering,
+    //Pondering,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -39,7 +36,7 @@ enum Input {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 enum GoCommand {
-    SearchMoves(Vec<String>),
+    //SearchMoves(Vec<String>),
     Depth(usize),
     MoveTime(usize),
     WhiteTime(usize),
@@ -99,7 +96,22 @@ pub fn uci_main() -> () {
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
                     match crate::eval::new_board(&fen) {
                         Err(_) => continue,
-                        Ok(mut board) => unimplemented!(),
+                        Ok(mut board) => {
+                            let mut parsed_correctly = true;
+                            for mv in moves {
+                                match parse_long_algebraic_move(&mut board, &mv) {
+                                    Err(_) => parsed_correctly = false,
+                                    Ok(parsed_move) => {
+                                        board.evolve(&parsed_move);
+                                        ()
+                                    }
+                                }
+                            }
+                            if parsed_correctly {
+                                engine_state = State::WaitingForGo;
+                                search_input_rx.send(SearchCommand::Root(board)).unwrap();
+                            }
+                        }
                     }
                 }
 
@@ -138,7 +150,7 @@ fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) -> StrResult<
 fn format_move(input: Move) -> String {
     let mut dest = String::new();
     let (source, target, promotion) = match input {
-        Move::Standard(p, s, t) => (s, t, None),
+        Move::Standard(_, s, t) => (s, t, None),
         Move::Promotion(s, t, p) => (s, t, Some(p)),
         Move::Enpassant(s, t) => (s, t, None),
         Move::Castle(zone) => {
@@ -212,17 +224,17 @@ fn parse_engine_command(content: String) -> Option<Input> {
 
 fn parse_go_command(content: String) -> Vec<GoCommand> {
     lazy_static! {
-        static ref INFINITE: Regex = re("infinite".to_owned());
-        static ref PONDER: Regex = re("ponder".to_owned());
-        static ref DEPTH: Regex = re(format!("depth {}", int_re().as_str()));
-        static ref MOVETIME: Regex = re(format!("movetime {}", int_re().as_str()));
-        static ref WHITETIME: Regex = re(format!("wtime {}", int_re().as_str()));
-        static ref BLACKTIME: Regex = re(format!("btime {}", int_re().as_str()));
-        static ref WHITEINC: Regex = re(format!("winc {}", int_re().as_str()));
-        static ref BLACKINC: Regex = re(format!("binc {}", int_re().as_str()));
-        static ref SEARCHMOVES: Regex =
-            re(format!("searchmoves({}{})+", space_re().as_str(), move_re().as_str()));
-    }
+            static ref INFINITE: Regex = re("infinite".to_owned());
+            static ref PONDER: Regex = re("ponder".to_owned());
+            static ref DEPTH: Regex = re(format!("depth {}", int_re().as_str()));
+            static ref MOVETIME: Regex = re(format!("movetime {}", int_re().as_str()));
+            static ref WHITETIME: Regex = re(format!("wtime {}", int_re().as_str()));
+            static ref BLACKTIME: Regex = re(format!("btime {}", int_re().as_str()));
+            static ref WHITEINC: Regex = re(format!("winc {}", int_re().as_str()));
+            static ref BLACKINC: Regex = re(format!("binc {}", int_re().as_str()));
+    //        static ref SEARCHMOVES: Regex =
+    //            re(format!("searchmoves({}{})+", space_re().as_str(), move_re().as_str()));
+        }
     let content_ref = content.as_str();
     let extract = |m: Match| int_re().find(m.as_str()).unwrap().as_str().parse::<usize>().unwrap();
     let mut dest = Vec::new();
@@ -234,10 +246,10 @@ fn parse_go_command(content: String) -> Vec<GoCommand> {
     &BLACKTIME.find(content_ref).map(|m| dest.push(GoCommand::BlackTime(extract(m))));
     &WHITEINC.find(content_ref).map(|m| dest.push(GoCommand::WhiteInc(extract(m))));
     &BLACKINC.find(content_ref).map(|m| dest.push(GoCommand::BlackInc(extract(m))));
-    &SEARCHMOVES.find(content_ref).map(|m| {
-        let moves = move_re().find_iter(m.as_str()).map(|n| n.as_str().to_owned()).collect();
-        dest.push(GoCommand::SearchMoves(moves));
-    });
+    //    &SEARCHMOVES.find(content_ref).map(|m| {
+    //        let moves = move_re().find_iter(m.as_str()).map(|n|
+    // n.as_str().to_owned()).collect();        dest.push(GoCommand::
+    // SearchMoves(moves));    });
     dest
 }
 

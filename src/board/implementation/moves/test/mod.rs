@@ -65,9 +65,9 @@ fn convert_moves(case: &TestCase) -> ExpectedMoves {
 }
 
 fn execute_test(case: TestCase) {
-    let mut board = crate::board::from_fen(case.board).unwrap();
+    let board = crate::board::from_fen(case.board).unwrap();
     let moves = convert_moves(&case);
-    let mut ref_board = board.reflect();
+    let ref_board = board.reflect();
     let ref_moves: Vec<_> = moves.iter().map(|(t, mvs)| (*t, mvs.reflect())).collect();
     execute_test_impl(board, moves);
     execute_test_impl(ref_board, ref_moves);

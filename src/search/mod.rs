@@ -4,9 +4,9 @@ use std::time::{Duration, Instant};
 
 use crate::board::MoveComputeType;
 use crate::board::Termination;
-use crate::board::{Board, BoardImpl, Move};
+use crate::board::Move;
 use crate::eval;
-use crate::eval::{EvalBoard, SimpleEvalBoard};
+use crate::eval::EvalBoard;
 
 #[cfg(test)]
 mod mate_benchmark;
@@ -62,7 +62,7 @@ pub fn init<B: EvalBoard + 'static>() -> (Sender<SearchCommand<B>>, Receiver<Sea
     (input_tx, output_rx)
 }
 
-type InChannel<B: EvalBoard> = Receiver<SearchCommand<B>>;
+type InChannel<B> = Receiver<SearchCommand<B>>;
 type OutChannel = Sender<SearchResult>;
 
 struct Search<B: EvalBoard> {
@@ -224,9 +224,11 @@ mod test {
 
     fn test_impl<B: EvalBoard + 'static>(board: B, expected_move_pool: Vec<Move>, is_won: bool) {
         let (input, output) = super::init();
-        input.send(SearchCommand::Root(board));
-        input.send(SearchCommand::Time { max_depth: DEPTH, max_time: Duration::from_secs(120) });
-        input.send(SearchCommand::GoOnce);
+        input.send(SearchCommand::Root(board)).unwrap();
+        input
+            .send(SearchCommand::Time { max_depth: DEPTH, max_time: Duration::from_secs(120) })
+            .unwrap();
+        input.send(SearchCommand::GoOnce).unwrap();
         match output.recv() {
             Err(_) => panic!(),
             Ok(result) => match result {
