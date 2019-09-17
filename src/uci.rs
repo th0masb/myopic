@@ -1,19 +1,17 @@
 use std::io;
 use std::sync::mpsc;
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Receiver};
 use std::thread;
 
 use regex::{Match, Regex};
 
 use crate::base::square::Square;
 use crate::base::StrResult;
-use crate::board::Move::Standard;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
-use crate::eval::SimpleEvalBoard;
+use crate::eval::{SimpleEvalBoard, EvalBoard};
 use crate::pieces::Piece;
 use crate::search;
-use crate::search::SearchCommand;
-use std::time::Duration;
+use crate::search::{SearchCommand, SearchResult,  SearchCmdTx};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 enum State {
@@ -52,6 +50,32 @@ enum GoCommand {
 
 const ENGINE_NAME: &'static str = "Myopic";
 const ENGINE_AUTHOR: &'static str = "Thomas Ball";
+const READYOK: &'static str = "readyok";
+const BESTMOVE: &'static str = "bestmove";
+const ISREADY: &'static str = "isready";
+const QUIT: &'static str = "quit";
+const STOP: &'static str = "stop";
+const UCI: &'static str = "uci";
+const UCIOK: &'static str = "uciok";
+const UCINEWGAME: &'static str = "ucinewgame";
+const POSITION: &'static str = "position";
+const GO: &'static str = "go";
+
+
+fn complete_search<E, B: EvalBoard>(r: Result<SearchResult, E>, tx: &SearchCmdTx<B>) -> State {
+    match r {
+        Err(_) => State::Searching,
+        Ok(result) => match result {
+            Err(_) => State::Searching,
+            Ok(details) => {
+                // Reset the search timing
+                tx.send(SearchCommand::Infinite).unwrap();
+                println!("{} {}", BESTMOVE, format_move(details.best_move));
+                State::WaitingForPosition
+            }
+        }
+    }
+}
 
 pub fn uci_main() -> () {
     // Engine input command channel
@@ -60,20 +84,12 @@ pub fn uci_main() -> () {
     // Begin the main control loop
     let mut engine_state = State::Uninitialized;
     loop {
+        // TODO Should the thread sleep for a short period?
         // If currently in a search state then check if a best move has been computed,
         // if it has then output the result and update the engine state.
         if engine_state == State::Searching {
-            match search_output_rx.try_recv() {
-                Err(_) => (),
-                Ok(result) => {
-                    engine_state = State::WaitingForPosition;
-                    search_input_tx.send(SearchCommand::Infinite);
-                    match result {
-                        Err(_) => (),
-                        Ok(details) => println!("bestmove {}", format_move(details.best_move)),
-                    }
-                }
-            }
+            // Don't block for the result here
+             engine_state = complete_search(search_output_rx.try_recv(), &search_input_tx);
         }
 
         // Check for a new input and process the command if it is present.
@@ -85,6 +101,7 @@ pub fn uci_main() -> () {
                 // Procedure from an uninitialized state
                 (State::Uninitialized, Input::Uci) => {
                     engine_state = State::Configuring;
+                    //println!("{:?}", engine_state);
                     initialize();
                 }
 
@@ -92,7 +109,8 @@ pub fn uci_main() -> () {
                 // since we don't actually support any config.
                 (State::Configuring, Input::IsReady) => {
                     engine_state = State::WaitingForPosition;
-                    println!("readyok")
+                    //println!("{:?}", engine_state);
+                    println!("{}", READYOK)
                 }
 
                 // Procedure from the positional setup state.
@@ -114,6 +132,7 @@ pub fn uci_main() -> () {
                             if parsed_correctly {
                                 engine_state = State::WaitingForGo;
                                 search_input_tx.send(SearchCommand::Root(board)).unwrap();
+                                //println!("{:?}", engine_state);
                             }
                         }
                     }
@@ -137,7 +156,7 @@ pub fn uci_main() -> () {
                                 sent = true;
                             }
                             GoCommand::MoveTime(time) => {
-                                search_input_tx.send(SearchCommand::Time(time));
+                                search_input_tx.send(SearchCommand::Time(time)).unwrap();
                                 sent = true;
                             }
                         }
@@ -150,9 +169,19 @@ pub fn uci_main() -> () {
                             b_inc,
                         }).unwrap()
                     }
+                    engine_state = State::Searching;
+                    //println!("{:?}", engine_state);
+                    search_input_tx.send(SearchCommand::Go).unwrap();
                 }
 
-                (_, Input::IsReady) => println!("readyok"),
+                (State::Searching, Input::Stop) => {
+                    // block for the result
+                    search_input_tx.send(SearchCommand::Stop).unwrap();
+                    engine_state = complete_search(search_output_rx.recv(), &search_input_tx);
+                    //println!("{:?}", engine_state);
+                }
+
+                (_, Input::IsReady) => println!("{}", READYOK),
                 // Otherwise do nothing
                 _ => (),
             },
@@ -195,8 +224,8 @@ fn format_move(input: Move) -> String {
             (s, t, None)
         }
     };
-    dest.push_str(format!("{}", source).as_str());
-    dest.push_str(format!("{}", target).as_str());
+    dest.push_str(format!("{}", source).to_lowercase().as_str());
+    dest.push_str(format!("{}", target).to_lowercase().as_str());
     promotion.map(|piece: Piece| dest.push_str(format_piece(piece)));
     dest
 }
@@ -214,7 +243,7 @@ fn format_piece(piece: Piece) -> &'static str {
 fn initialize() {
     println!("id name {}", ENGINE_NAME);
     println!("id author {}", ENGINE_AUTHOR);
-    println!("uciok");
+    println!("{}", UCIOK);
 }
 
 /// Spawn a user input thread, it simply listens for
@@ -241,16 +270,16 @@ fn initialize_input_thread() -> Receiver<Input> {
 
 fn parse_engine_command(content: String) -> Option<Input> {
     match content.as_str() {
-        "uci" => Some(Input::Uci),
-        "isready" => Some(Input::IsReady),
-        "ucinewgame" => Some(Input::UciNewGame),
-        "stop" => Some(Input::Stop),
+        UCI => Some(Input::Uci),
+        ISREADY => Some(Input::IsReady),
+        UCINEWGAME => Some(Input::UciNewGame),
+        STOP => Some(Input::Stop),
         //"ponderhit" => Some(Input::PonderHit),
-        "quit" => Some(Input::Quit),
+        QUIT => Some(Input::Quit),
         x => {
-            if x.starts_with("position") {
+            if x.starts_with(POSITION) {
                 parse_position_command(content)
-            } else if x.starts_with("go") {
+            } else if x.starts_with(GO) {
                 Some(Input::Go(parse_go_command(content)))
             } else {
                 None
@@ -292,12 +321,25 @@ fn parse_go_command(content: String) -> Vec<GoCommand> {
 
 fn parse_position_command(content: String) -> Option<Input> {
     let split: Vec<String> = space_re().split(content.as_str()).map(|x| x.to_owned()).collect();
-    if split.len() > 0 {
-        let first = split.first().unwrap().to_owned();
-        let rest = split.into_iter().skip(1).collect();
-        Some(Input::Position(first, rest))
-    } else {
-        None
+    let switch_start = |content: String| match content.as_str() {
+        "startpos" => crate::board::START_FEN.to_owned(),
+        _ => content
+    };
+    match split.len() {
+        0 | 1 => None,
+        _ => {
+            let first = split.get(1).unwrap().to_owned();
+            let rest = split.into_iter().skip(2).collect();
+            Some(Input::Position(switch_start(first), rest))
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_parse_position() {
+
     }
 }
 

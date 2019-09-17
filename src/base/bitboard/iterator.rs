@@ -1,7 +1,5 @@
-use std::iter::{FromIterator, IntoIterator};
 use std::num::Wrapping;
 
-use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 
 /// The iterator implementation struct produced by a bitboard. It simply

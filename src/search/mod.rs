@@ -7,6 +7,8 @@ use crate::board::MoveComputeType;
 use crate::board::Termination;
 use crate::eval;
 use crate::eval::EvalBoard;
+use std::cmp::max;
+use crate::base::Side;
 
 #[cfg(test)]
 mod mate_benchmark;
@@ -35,11 +37,14 @@ pub struct SearchDetails {
 }
 
 pub type SearchResult = Result<SearchDetails, ()>;
+pub type SearchCmdTx<B> = Sender<SearchCommand<B>>;
+pub type SearchResultRx = Receiver<SearchResult>;
+
 const INFINITE_DURATION: Duration = Duration::from_secs(1_000_000);
 const MAX_DEPTH: usize = 1_000;
 
 ///
-pub fn init<B: EvalBoard + 'static>() -> (Sender<SearchCommand<B>>, Receiver<SearchResult>) {
+pub fn init<B: EvalBoard + 'static>() -> (SearchCmdTx<B>, SearchResultRx) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<SearchResult>();
     std::thread::spawn(move || {
@@ -72,12 +77,12 @@ pub fn init<B: EvalBoard + 'static>() -> (Sender<SearchCommand<B>>, Receiver<Sea
     (input_tx, output_rx)
 }
 
-type InChannel<B> = Receiver<SearchCommand<B>>;
-type OutChannel = Sender<SearchResult>;
+type CmdRx<B> = Receiver<SearchCommand<B>>;
+type ResultTx = Sender<SearchResult>;
 
 struct Search<B: EvalBoard> {
-    input_rx: InChannel<B>,
-    output_tx: OutChannel,
+    input_rx: CmdRx<B>,
+    output_tx: ResultTx,
     root: Option<B>,
     max_depth: usize,
     max_time: Duration,
@@ -87,7 +92,8 @@ const DEFAULT_SEARCH_DURATION: Duration = Duration::from_secs(1_000_000);
 const DEFAULT_SEARCH_DEPTH: usize = 100;
 
 impl<B: EvalBoard> Search<B> {
-    pub fn new(input_rx: InChannel<B>, output_tx: OutChannel) -> Search<B> {
+    pub fn new(input_rx: CmdRx<B>, output_tx: ResultTx) -> Search<B> {
+
         Search {
             input_rx,
             output_tx,
@@ -102,7 +108,15 @@ impl<B: EvalBoard> Search<B> {
     }
 
     pub fn set_game_time(&mut self, w_base: usize, w_inc: usize, b_base: usize, b_inc: usize) {
-        unimplemented!()
+        if self.root.is_some() {
+            let active = self.root.as_ref().unwrap().active();
+            let mut time = max(500, match active {Side::White => w_inc, _ => b_inc});
+            time += match active {
+                Side::White => w_base / 10,
+                Side::Black => b_base / 10,
+            };
+            self.set_max_time(time);
+        }
     }
 
     pub fn execute_then_send(&self) -> () {
@@ -138,7 +152,7 @@ impl<B: EvalBoard> Search<B> {
 struct SearchTerminationImpl<'a, B: EvalBoard> {
     search_start: Instant,
     max_time: Duration,
-    stop_signal: &'a InChannel<B>,
+    stop_signal: &'a CmdRx<B>,
 }
 
 struct SearchImpl<'a, B: EvalBoard> {
@@ -229,7 +243,6 @@ mod test {
     use crate::eval::EvalBoard;
     use crate::pieces::Piece;
     use crate::search::SearchCommand;
-    use std::time::Duration;
 
     const DEPTH: usize = 3;
 

@@ -1,8 +1,6 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Reflectable;
-use crate::base::Side;
-use crate::board::implementation::BoardImpl;
 use crate::pieces::Piece;
 use std::collections::BTreeSet;
 

@@ -122,10 +122,12 @@ pub trait Board: Clone + Send + Reflectable {
     }
 }
 
+pub const START_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 pub fn from_fen(fen: &str) -> Result<BoardImpl, String> {
     BoardImpl::from_fen(String::from(fen))
 }
 
 pub fn start() -> BoardImpl {
-    from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
+    from_fen(START_FEN).unwrap()
 }

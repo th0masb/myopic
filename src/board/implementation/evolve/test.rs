@@ -3,7 +3,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
 use crate::base::square::Square;
-use crate::base::{Side, Reflectable};
+use crate::base::Side;
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
 use crate::pieces::Piece;

@@ -1,12 +1,11 @@
 use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
-use crate::base::{Side, StrResult};
+use crate::base::StrResult;
 use crate::board::Move::Castle;
-use crate::board::{Board, BoardImpl, Move, MoveComputeType};
+use crate::board::{Board, Move, MoveComputeType};
 use crate::pieces::Piece;
 use crate::regex::Regex;
 use patterns::*;
-use std::str::FromStr;
 
 mod patterns;
 

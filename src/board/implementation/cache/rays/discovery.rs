@@ -36,7 +36,6 @@ impl BoardImpl {
 #[cfg(test)]
 mod test {
     use crate::base::bitboard::constants::*;
-    use crate::base::castlezone::CastleZoneSet;
 
     use super::*;
 

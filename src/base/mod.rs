@@ -3,7 +3,6 @@ use crate::base::direction::Dir;
 use crate::base::direction::N;
 use crate::base::direction::S;
 use std::collections::BTreeSet;
-use std::cell::Ref;
 
 pub mod bitboard;
 pub mod castlezone;
