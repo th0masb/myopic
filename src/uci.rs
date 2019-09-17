@@ -1,17 +1,18 @@
 use std::io;
 use std::sync::mpsc;
-use std::sync::mpsc::{Receiver};
+use std::sync::mpsc::Receiver;
 use std::thread;
+use std::time::Duration;
 
 use regex::{Match, Regex};
 
 use crate::base::square::Square;
 use crate::base::StrResult;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
-use crate::eval::{SimpleEvalBoard, EvalBoard};
+use crate::eval::{EvalBoard, SimpleEvalBoard};
 use crate::pieces::Piece;
 use crate::search;
-use crate::search::{SearchCommand, SearchResult,  SearchCmdTx};
+use crate::search::{SearchCmdTx, SearchCommand, SearchResult};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 enum State {
@@ -62,20 +63,21 @@ const POSITION: &'static str = "position";
 const GO: &'static str = "go";
 
 
-fn complete_search<E, B: EvalBoard>(r: Result<SearchResult, E>, tx: &SearchCmdTx<B>) -> State {
-    match r {
+fn complete_search<B: EvalBoard>(result: SearchResult, tx: &SearchCmdTx<B>) -> State {
+    match result {
         Err(_) => State::Searching,
-        Ok(result) => match result {
-            Err(_) => State::Searching,
-            Ok(details) => {
-                // Reset the search timing
-                tx.send(SearchCommand::Infinite).unwrap();
-                println!("{} {}", BESTMOVE, format_move(details.best_move));
-                State::WaitingForPosition
-            }
+        Ok(details) => {
+            // Print best move if there is one.
+            println!("{} {}", BESTMOVE, format_move(details.best_move));
+            // Reset the search timing
+            tx.send(SearchCommand::Infinite).unwrap();
+            // Return
+            State::WaitingForPosition
         }
     }
 }
+
+const SLEEP_TIME: Duration = Duration::from_millis(500);
 
 pub fn uci_main() -> () {
     // Engine input command channel
@@ -84,12 +86,15 @@ pub fn uci_main() -> () {
     // Begin the main control loop
     let mut engine_state = State::Uninitialized;
     loop {
-        // TODO Should the thread sleep for a short period?
+        thread::sleep(SLEEP_TIME);
         // If currently in a search state then check if a best move has been computed,
         // if it has then output the result and update the engine state.
         if engine_state == State::Searching {
             // Don't block for the result here
-             engine_state = complete_search(search_output_rx.try_recv(), &search_input_tx);
+            match search_output_rx.try_recv() {
+                Err(_) => (),
+                Ok(result) => engine_state = complete_search(result, &search_input_tx),
+            }
         }
 
         // Check for a new input and process the command if it is present.
@@ -101,7 +106,6 @@ pub fn uci_main() -> () {
                 // Procedure from an uninitialized state
                 (State::Uninitialized, Input::Uci) => {
                     engine_state = State::Configuring;
-                    //println!("{:?}", engine_state);
                     initialize();
                 }
 
@@ -109,13 +113,13 @@ pub fn uci_main() -> () {
                 // since we don't actually support any config.
                 (State::Configuring, Input::IsReady) => {
                     engine_state = State::WaitingForPosition;
-                    //println!("{:?}", engine_state);
                     println!("{}", READYOK)
                 }
 
                 // Procedure from the positional setup state.
                 (State::WaitingForPosition, Input::UciNewGame) => (),
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
+                    // TODO refactor this logic into separate function
                     match crate::eval::new_board(&fen) {
                         Err(_) => continue,
                         Ok(mut board) => {
@@ -132,53 +136,24 @@ pub fn uci_main() -> () {
                             if parsed_correctly {
                                 engine_state = State::WaitingForGo;
                                 search_input_tx.send(SearchCommand::Root(board)).unwrap();
-                                //println!("{:?}", engine_state);
                             }
                         }
                     }
                 }
 
                 (State::WaitingForGo, Input::Go(commands)) => {
-                    let mut sent = false;
-                    let (mut w_base, mut w_inc, mut b_base, mut b_inc) = (0, 0, 0, 0);
-                    for command in commands {
-                        match command {
-                            GoCommand::WhiteTime(time) => w_base = time,
-                            GoCommand::WhiteInc(time) => w_inc = time,
-                            GoCommand::BlackTime(time) => b_base = time,
-                            GoCommand::BlackInc(time) => b_inc = time,
-                            GoCommand::Infinite => {
-                                search_input_tx.send(SearchCommand::Infinite).unwrap();
-                                sent = true;
-                            }
-                            GoCommand::Depth(depth) => {
-                                search_input_tx.send(SearchCommand::Depth(depth)).unwrap();
-                                sent = true;
-                            }
-                            GoCommand::MoveTime(time) => {
-                                search_input_tx.send(SearchCommand::Time(time)).unwrap();
-                                sent = true;
-                            }
-                        }
-                    }
-                    if !sent {
-                        search_input_tx.send(SearchCommand::GameTime {
-                            w_base,
-                            w_inc,
-                            b_base,
-                            b_inc,
-                        }).unwrap()
+                    for cmd in convert_go_setup_commands(commands) {
+                        search_input_tx.send(cmd).unwrap();
                     }
                     engine_state = State::Searching;
-                    //println!("{:?}", engine_state);
                     search_input_tx.send(SearchCommand::Go).unwrap();
                 }
 
                 (State::Searching, Input::Stop) => {
                     // block for the result
                     search_input_tx.send(SearchCommand::Stop).unwrap();
-                    engine_state = complete_search(search_output_rx.recv(), &search_input_tx);
-                    //println!("{:?}", engine_state);
+                    let result = search_output_rx.recv().unwrap();
+                    engine_state = complete_search(result, &search_input_tx);
                 }
 
                 (_, Input::IsReady) => println!("{}", READYOK),
@@ -186,6 +161,31 @@ pub fn uci_main() -> () {
                 _ => (),
             },
         }
+    }
+}
+
+fn convert_go_setup_commands<B: EvalBoard>(commands: Vec<GoCommand>) -> Vec<SearchCommand<B>> {
+    let (mut infinite, mut max_depth, mut max_time) = (false, -1, -1);
+    let (mut w_base, mut w_inc, mut b_base, mut b_inc) = (0, 0, 0, 0);
+    for command in commands {
+        match command {
+            GoCommand::WhiteTime(time) => w_base = time,
+            GoCommand::WhiteInc(time) => w_inc = time,
+            GoCommand::BlackTime(time) => b_base = time,
+            GoCommand::BlackInc(time) => b_inc = time,
+            GoCommand::Infinite => infinite = true,
+            GoCommand::Depth(depth) => max_depth = depth as i32,
+            GoCommand::MoveTime(time) => max_time = time as i32,
+        }
+    }
+    if infinite {
+        vec!(SearchCommand::Infinite)
+    } else if max_depth > 0 {
+        vec!(SearchCommand::Depth(max_depth as usize))
+    } else if max_time > 0 {
+        vec!(SearchCommand::Time(max_time as usize))
+    } else {
+        vec!(SearchCommand::GameTime {w_base, w_inc, b_base, b_inc})
     }
 }
 
@@ -335,13 +335,13 @@ fn parse_position_command(content: String) -> Option<Input> {
     }
 }
 
-#[cfg(test)]
-mod test {
-    #[test]
-    fn test_parse_position() {
-
-    }
-}
+//#[cfg(test)]
+//mod test {
+//    #[test]
+//    fn test_parse_position() {
+//
+//    }
+//}
 
 fn int_re() -> &'static Regex {
     lazy_static! {
