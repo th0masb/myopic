@@ -68,7 +68,7 @@ fn mate_benchmark() {
     let mut search_duration = Duration::from_secs(0);
     let (mut err_count, mut case_count) = (0, 0);
     let (search_input_tx, search_output_rx) = crate::search::init();
-    search_input_tx.send(SearchCommand::Time {max_depth: DEPTH, max_time: Duration::from_secs(10000)}).unwrap();
+    search_input_tx.send(SearchCommand::Depth(DEPTH)).unwrap();
     let print_progress = |cases: usize, errs: usize, d: Duration| {
         println!(
             "Depth: {}, Cases: {}, Errors: {}, Time: {}ms",

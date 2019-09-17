@@ -2,9 +2,9 @@ use std::cmp;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::time::{Duration, Instant};
 
+use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
-use crate::board::Move;
 use crate::eval;
 use crate::eval::EvalBoard;
 
@@ -19,7 +19,10 @@ pub enum SearchCommand<B: EvalBoard> {
     Stop,
     Close,
     Root(B),
-    Time { max_depth: usize, max_time: Duration },
+    Infinite,
+    Depth(usize),
+    Time(usize),
+    GameTime { w_base: usize, w_inc: usize, b_base: usize, b_inc: usize },
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -32,28 +35,35 @@ pub struct SearchDetails {
 }
 
 pub type SearchResult = Result<SearchDetails, ()>;
+const INFINITE_DURATION: Duration = Duration::from_secs(1_000_000);
+const MAX_DEPTH: usize = 1_000;
 
 ///
 pub fn init<B: EvalBoard + 'static>() -> (Sender<SearchCommand<B>>, Receiver<SearchResult>) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<SearchResult>();
     std::thread::spawn(move || {
-        let mut searcher = Search::new(input_rx, output_tx);
+        let mut search = Search::new(input_rx, output_tx);
         loop {
-            match &searcher.input_rx.recv() {
+            match &search.input_rx.recv() {
                 Err(_) => continue,
                 Ok(input) => match input.to_owned() {
                     SearchCommand::Close => break,
                     SearchCommand::Stop => (),
-                    SearchCommand::Root(root) => searcher.root = Some(root),
-                    SearchCommand::Go => searcher.search_send(),
-                    SearchCommand::GoOnce => {
-                        searcher.search_send();
-                        break;
+                    SearchCommand::Go => search.execute_then_send(),
+                    SearchCommand::Root(root) => search.root = Some(root),
+                    SearchCommand::Depth(max_depth) => search.max_depth = max_depth,
+                    SearchCommand::Time(max_time) => search.set_max_time(max_time),
+                    SearchCommand::GameTime { w_base, w_inc, b_base, b_inc } => {
+                        search.set_game_time(w_base, w_inc, b_base, b_inc)
                     }
-                    SearchCommand::Time { max_depth, max_time } => {
-                        searcher.max_depth = max_depth;
-                        searcher.max_time = max_time;
+                    SearchCommand::Infinite => {
+                        search.max_time = INFINITE_DURATION;
+                        search.max_depth = MAX_DEPTH;
+                    }
+                    SearchCommand::GoOnce => {
+                        search.execute_then_send();
+                        break;
                     }
                 },
             }
@@ -87,7 +97,15 @@ impl<B: EvalBoard> Search<B> {
         }
     }
 
-    pub fn search_send(&self) -> () {
+    pub fn set_max_time(&mut self, time: usize) {
+        self.max_time = Duration::from_millis(time as u64);
+    }
+
+    pub fn set_game_time(&mut self, w_base: usize, w_inc: usize, b_base: usize, b_inc: usize) {
+        unimplemented!()
+    }
+
+    pub fn execute_then_send(&self) -> () {
         if self.root.is_some() {
             match self.output_tx.send(self.execute()) {
                 _ => (),
@@ -225,9 +243,7 @@ mod test {
     fn test_impl<B: EvalBoard + 'static>(board: B, expected_move_pool: Vec<Move>, is_won: bool) {
         let (input, output) = super::init();
         input.send(SearchCommand::Root(board)).unwrap();
-        input
-            .send(SearchCommand::Time { max_depth: DEPTH, max_time: Duration::from_secs(120) })
-            .unwrap();
+        input.send(SearchCommand::Depth(DEPTH)).unwrap();
         input.send(SearchCommand::GoOnce).unwrap();
         match output.recv() {
             Err(_) => panic!(),

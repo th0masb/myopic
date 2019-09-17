@@ -1,16 +1,19 @@
 use std::io;
 use std::sync::mpsc;
-use std::sync::mpsc::{Receiver};
+use std::sync::mpsc::Receiver;
 use std::thread;
 
 use regex::{Match, Regex};
 
 use crate::base::square::Square;
 use crate::base::StrResult;
+use crate::board::Move::Standard;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
 use crate::eval::SimpleEvalBoard;
 use crate::pieces::Piece;
+use crate::search;
 use crate::search::SearchCommand;
+use std::time::Duration;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 enum State {
@@ -53,22 +56,23 @@ const ENGINE_AUTHOR: &'static str = "Thomas Ball";
 pub fn uci_main() -> () {
     // Engine input command channel
     let cmd_input_rx = initialize_input_thread();
-    let (search_input_rx, search_output_tx) = crate::search::init::<SimpleEvalBoard<BoardImpl>>();
+    let (search_input_tx, search_output_rx) = search::init::<SimpleEvalBoard<BoardImpl>>();
     // Begin the main control loop
     let mut engine_state = State::Uninitialized;
     loop {
         // If currently in a search state then check if a best move has been computed,
         // if it has then output the result and update the engine state.
         if engine_state == State::Searching {
-            match search_output_tx.try_recv() {
+            match search_output_rx.try_recv() {
                 Err(_) => (),
-                Ok(result) => match result {
-                    Err(_) => engine_state = State::WaitingForPosition,
-                    Ok(details) => {
-                        engine_state = State::WaitingForPosition;
-                        println!("bestmove {}", format_move(details.best_move))
+                Ok(result) => {
+                    engine_state = State::WaitingForPosition;
+                    search_input_tx.send(SearchCommand::Infinite);
+                    match result {
+                        Err(_) => (),
+                        Ok(details) => println!("bestmove {}", format_move(details.best_move)),
                     }
-                },
+                }
             }
         }
 
@@ -109,14 +113,47 @@ pub fn uci_main() -> () {
                             }
                             if parsed_correctly {
                                 engine_state = State::WaitingForGo;
-                                search_input_rx.send(SearchCommand::Root(board)).unwrap();
+                                search_input_tx.send(SearchCommand::Root(board)).unwrap();
                             }
                         }
                     }
                 }
 
-                (_, Input::IsReady) => println!("readyok"),
+                (State::WaitingForGo, Input::Go(commands)) => {
+                    let mut sent = false;
+                    let (mut w_base, mut w_inc, mut b_base, mut b_inc) = (0, 0, 0, 0);
+                    for command in commands {
+                        match command {
+                            GoCommand::WhiteTime(time) => w_base = time,
+                            GoCommand::WhiteInc(time) => w_inc = time,
+                            GoCommand::BlackTime(time) => b_base = time,
+                            GoCommand::BlackInc(time) => b_inc = time,
+                            GoCommand::Infinite => {
+                                search_input_tx.send(SearchCommand::Infinite).unwrap();
+                                sent = true;
+                            }
+                            GoCommand::Depth(depth) => {
+                                search_input_tx.send(SearchCommand::Depth(depth)).unwrap();
+                                sent = true;
+                            }
+                            GoCommand::MoveTime(time) => {
+                                search_input_tx.send(SearchCommand::Time(time));
+                                sent = true;
+                            }
+                        }
+                    }
+                    if !sent {
+                        search_input_tx.send(SearchCommand::GameTime {
+                            w_base,
+                            w_inc,
+                            b_base,
+                            b_inc,
+                        }).unwrap()
+                    }
+                }
 
+                (_, Input::IsReady) => println!("readyok"),
+                // Otherwise do nothing
                 _ => (),
             },
         }
