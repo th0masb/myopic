@@ -11,7 +11,7 @@ use crate::base::StrResult;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
 use crate::eval::{EvalBoard, SimpleEvalBoard};
 use crate::pieces::Piece;
-use crate::search;
+use crate::{search, board};
 use crate::search::{SearchCmdTx, SearchCommand, SearchResult};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -118,7 +118,6 @@ pub fn uci_main() -> () {
                 // Procedure from the positional setup state.
                 (State::WaitingForPosition, Input::UciNewGame) => (),
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
-                    println!("hello");
                     // TODO refactor this logic into separate function
                     match crate::eval::new_board(&fen) {
                         Err(_) => continue,
@@ -134,7 +133,6 @@ pub fn uci_main() -> () {
                                 }
                             }
                             if parsed_correctly {
-                                println!("hello2");
                                 engine_state = State::WaitingForGo;
                                 search_input_tx.send(SearchCommand::Root(board)).unwrap();
                             }
@@ -323,33 +321,11 @@ fn parse_go_command(content: String) -> Vec<GoCommand> {
 
 fn parse_position_command(content: String) -> Option<Input> {
     let c_ref = content.as_str();
-    let position = position_extractor().find(c_ref).map(|m| match m.as_str() {
-        "startpos" => crate::board::START_FEN.to_owned(),
-        x => x.to_owned(),
-    });
-    let moves = moves_extractor()
-        .find(c_ref)
-        .map(|m| space_re().split(m.as_str()).map(|s| s.to_owned()).collect());
-
-    position.map(|p| Input::Position(p, moves.unwrap_or(vec![])))
-    //    match position {
-    //        Some(x) => Some(Input::Position(x, moves)),
-    //        _ =>
-    //    }
-    //
-    //    let split: Vec<String> = space_re().split(content.as_str()).map(|x|
-    // x.to_owned()).collect();    let switch_start = |content: String| match
-    // content.as_str() {        "startpos" =>
-    // crate::board::START_FEN.to_owned(),        _ => content,
-    //    };
-    //    match split.len() {
-    //        0 | 1 => None,
-    //        _ => {
-    //            let first = split.get(1).unwrap().to_owned();
-    //            let rest = split.into_iter().skip(2).collect();
-    //            Some(Input::Position(switch_start(first), rest))
-    //        }
-    //    }
+    let moves = move_re().find_iter(c_ref).map(|m| m.as_str().to_owned()).collect();
+    position_re().find(c_ref).map(|m| match m.as_str() {
+        "startpos" => Input::Position(board::START_FEN.to_owned(), moves),
+        x => Input::Position(x.to_owned(), moves),
+    })
 }
 
 #[cfg(test)]
@@ -361,11 +337,11 @@ mod test {
     fn test_fen_regex() {
         let fen_re = fen_re();
         assert!(fen_re.is_match("4r1r1/pb1Q2bp/1p1Rnkp1/5p2/2P1P3/4BP2/qP2B1PP/2R3K1 w - - 1 0"));
-        assert!(fen_re.is_match("3r4/4RRpk/5n1N/8/p1p2qPP/P1Qp1P2/1P4K1/3b4 w - - 1 0"));
+        assert!(fen_re.is_match("3r4/4RRpk/5n1N/8/p1p2qPP/P1Qp1P2/1P4K1/3b4 w Qk c2 5 21"));
+        assert!(fen_re.is_match("8/7p/4Nppk/R7/6PP/3n2K1/Pr6/8 w KkQq - 0 10"));
     }
 
     #[test]
-    #[ignore]
     fn test_parse_position() {
         let ppc = super::parse_position_command;
         assert_eq!(
@@ -391,18 +367,11 @@ fn fen_re() -> &'static Regex {
     &RE
 }
 
-fn position_extractor() -> &'static Regex {
+fn position_re() -> &'static Regex {
     lazy_static! {
-        static ref PE: Regex = re(r"(?<=^position\s+).+(?=\s+moves?)".to_owned());
+        static ref PE: Regex = re(format!("(startpos|{})", fen_re().as_str()));
     }
     &PE
-}
-
-fn moves_extractor() -> &'static Regex {
-    lazy_static! {
-        static ref RE: Regex = re(r"(?<=moves?\s+).+$".to_owned());
-    }
-    &RE
 }
 
 fn int_re() -> &'static Regex {
