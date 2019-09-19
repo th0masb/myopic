@@ -7,7 +7,7 @@ use crate::board::MoveComputeType;
 use crate::board::Termination;
 use crate::eval;
 use crate::eval::EvalBoard;
-use std::cmp::max;
+use std::cmp::{max, min};
 use crate::base::Side;
 
 #[cfg(test)]
@@ -89,6 +89,7 @@ struct Search<B: EvalBoard> {
 }
 
 const DEFAULT_SEARCH_DURATION: Duration = Duration::from_secs(1_000_000);
+const MAX_GAME_SEARCH: Duration = Duration::from_secs(45);
 const DEFAULT_SEARCH_DEPTH: usize = 100;
 
 impl<B: EvalBoard> Search<B> {
@@ -115,7 +116,7 @@ impl<B: EvalBoard> Search<B> {
                 Side::White => w_base / 10,
                 Side::Black => b_base / 10,
             };
-            self.set_max_time(time);
+            self.set_max_time(min(time, MAX_GAME_SEARCH.as_millis() as usize));
         }
     }
 

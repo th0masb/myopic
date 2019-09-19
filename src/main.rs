@@ -8,6 +8,7 @@ extern crate rand;
 extern crate regex;
 
 use crate::uci::uci_main;
+use regex::Regex;
 
 mod base;
 mod board;
@@ -18,7 +19,9 @@ mod search;
 mod uci;
 
 fn main() -> () {
-    uci_main()
+    let re = Regex::new(r"\s+").unwrap();
+    println!("{:?}", re.split("ab").collect::<Vec<_>>());
+    //uci_main()
 //    let fen = "rnb1k1nr/p2p1ppp/5q2/1pb2N1P/4PBP1/2NP1Q2/PPP5/R4KR1 w kq - 3 17";
 //    let board = eval::new_board(fen).unwrap();
 //    let (input_tx, output_rx) = search::init::<SimpleEvalBoard<BoardImpl>>();

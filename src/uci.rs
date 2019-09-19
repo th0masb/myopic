@@ -62,7 +62,6 @@ const UCINEWGAME: &'static str = "ucinewgame";
 const POSITION: &'static str = "position";
 const GO: &'static str = "go";
 
-
 fn complete_search<B: EvalBoard>(result: SearchResult, tx: &SearchCmdTx<B>) -> State {
     match result {
         Err(_) => State::Searching,
@@ -77,7 +76,7 @@ fn complete_search<B: EvalBoard>(result: SearchResult, tx: &SearchCmdTx<B>) -> S
     }
 }
 
-const SLEEP_TIME: Duration = Duration::from_millis(500);
+const SLEEP_TIME: Duration = Duration::from_millis(100);
 
 pub fn uci_main() -> () {
     // Engine input command channel
@@ -119,6 +118,7 @@ pub fn uci_main() -> () {
                 // Procedure from the positional setup state.
                 (State::WaitingForPosition, Input::UciNewGame) => (),
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
+                    println!("hello");
                     // TODO refactor this logic into separate function
                     match crate::eval::new_board(&fen) {
                         Err(_) => continue,
@@ -134,6 +134,7 @@ pub fn uci_main() -> () {
                                 }
                             }
                             if parsed_correctly {
+                                println!("hello2");
                                 engine_state = State::WaitingForGo;
                                 search_input_tx.send(SearchCommand::Root(board)).unwrap();
                             }
@@ -147,6 +148,7 @@ pub fn uci_main() -> () {
                     }
                     engine_state = State::Searching;
                     search_input_tx.send(SearchCommand::Go).unwrap();
+                    println!("Beginning search");
                 }
 
                 (State::Searching, Input::Stop) => {
@@ -179,13 +181,13 @@ fn convert_go_setup_commands<B: EvalBoard>(commands: Vec<GoCommand>) -> Vec<Sear
         }
     }
     if infinite {
-        vec!(SearchCommand::Infinite)
+        vec![SearchCommand::Infinite]
     } else if max_depth > 0 {
-        vec!(SearchCommand::Depth(max_depth as usize))
+        vec![SearchCommand::Depth(max_depth as usize)]
     } else if max_time > 0 {
-        vec!(SearchCommand::Time(max_time as usize))
+        vec![SearchCommand::Time(max_time as usize)]
     } else {
-        vec!(SearchCommand::GameTime {w_base, w_inc, b_base, b_inc})
+        vec![SearchCommand::GameTime { w_base, w_inc, b_base, b_inc }]
     }
 }
 
@@ -320,28 +322,88 @@ fn parse_go_command(content: String) -> Vec<GoCommand> {
 }
 
 fn parse_position_command(content: String) -> Option<Input> {
-    let split: Vec<String> = space_re().split(content.as_str()).map(|x| x.to_owned()).collect();
-    let switch_start = |content: String| match content.as_str() {
+    let c_ref = content.as_str();
+    let position = position_extractor().find(c_ref).map(|m| match m.as_str() {
         "startpos" => crate::board::START_FEN.to_owned(),
-        _ => content
-    };
-    match split.len() {
-        0 | 1 => None,
-        _ => {
-            let first = split.get(1).unwrap().to_owned();
-            let rest = split.into_iter().skip(2).collect();
-            Some(Input::Position(switch_start(first), rest))
-        }
+        x => x.to_owned(),
+    });
+    let moves = moves_extractor()
+        .find(c_ref)
+        .map(|m| space_re().split(m.as_str()).map(|s| s.to_owned()).collect());
+
+    position.map(|p| Input::Position(p, moves.unwrap_or(vec![])))
+    //    match position {
+    //        Some(x) => Some(Input::Position(x, moves)),
+    //        _ =>
+    //    }
+    //
+    //    let split: Vec<String> = space_re().split(content.as_str()).map(|x|
+    // x.to_owned()).collect();    let switch_start = |content: String| match
+    // content.as_str() {        "startpos" =>
+    // crate::board::START_FEN.to_owned(),        _ => content,
+    //    };
+    //    match split.len() {
+    //        0 | 1 => None,
+    //        _ => {
+    //            let first = split.get(1).unwrap().to_owned();
+    //            let rest = split.into_iter().skip(2).collect();
+    //            Some(Input::Position(switch_start(first), rest))
+    //        }
+    //    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::board;
+    use crate::uci::{Input, fen_re};
+
+    #[test]
+    fn test_fen_regex() {
+        let fen_re = fen_re();
+        assert!(fen_re.is_match("4r1r1/pb1Q2bp/1p1Rnkp1/5p2/2P1P3/4BP2/qP2B1PP/2R3K1 w - - 1 0"));
+        assert!(fen_re.is_match("3r4/4RRpk/5n1N/8/p1p2qPP/P1Qp1P2/1P4K1/3b4 w - - 1 0"));
+    }
+
+    #[test]
+    #[ignore]
+    fn test_parse_position() {
+        let ppc = super::parse_position_command;
+        assert_eq!(
+            Some(Input::Position(board::START_FEN.to_owned(), vec!["e2e4".to_owned()])),
+            ppc("position startpos moves e2e4".to_owned())
+        );
     }
 }
 
-//#[cfg(test)]
-//mod test {
-//    #[test]
-//    fn test_parse_position() {
-//
-//    }
-//}
+const FEN_RNK: &'static str = "([pnbrqkPNBRQK1-8]{1,8})";
+const FEN_SIDE: &'static str = "([bw])";
+const FEN_RIGHTS: &'static str = r"(-|([kqKQ]{1,4}))";
+const FEN_EP: &'static str = r"(-|([a-h][1-8]))";
+const INT: &'static str = "([0-9]+)";
+
+fn fen_re() -> &'static Regex {
+    lazy_static! {
+        static ref RE: Regex = re(format!(
+            r"({}/){{7}}{} {} {} {} {} {}",
+            FEN_RNK, FEN_RNK, FEN_SIDE, FEN_RIGHTS, FEN_EP, INT, INT
+        ));
+    }
+    &RE
+}
+
+fn position_extractor() -> &'static Regex {
+    lazy_static! {
+        static ref PE: Regex = re(r"(?<=^position\s+).+(?=\s+moves?)".to_owned());
+    }
+    &PE
+}
+
+fn moves_extractor() -> &'static Regex {
+    lazy_static! {
+        static ref RE: Regex = re(r"(?<=moves?\s+).+$".to_owned());
+    }
+    &RE
+}
 
 fn int_re() -> &'static Regex {
     lazy_static! {
