@@ -1,9 +1,10 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
-use crate::base::hash;
+use crate::base::{hash, StrResult};
 use crate::base::Reflectable;
 use crate::base::Side;
+use crate::parse::patterns;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct Castling {
@@ -28,17 +29,21 @@ fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
 }
 
 impl Castling {
-    pub fn from_fen(fen_string: &String) -> Castling {
-        let rights: CastleZoneSet = CastleZone::iter()
-            .zip(vec!["K", "Q", "k", "q"].into_iter())
-            .filter(|(_, pat)| fen_string.contains(pat))
-            .map(|(z, _)| z)
-            .collect();
-        let white_status =
-            if rights.intersects(CastleZoneSet::WHITE) { None } else { Some(CastleZone::WK) };
-        let black_status =
-            if rights.intersects(CastleZoneSet::BLACK) { None } else { Some(CastleZone::BK) };
-        Castling { remaining_rights: rights, white_status, black_status }
+    pub fn from_fen(fen_string: String) -> StrResult<Castling> {
+        if !patterns::fen_rights().is_match(&fen_string) {
+            Err(fen_string)
+        } else {
+            let rights: CastleZoneSet = CastleZone::iter()
+                .zip(vec!["K", "Q", "k", "q"].into_iter())
+                .filter(|(_, pat)| fen_string.contains(pat))
+                .map(|(z, _)| z)
+                .collect();
+            let white_status =
+                if rights.intersects(CastleZoneSet::WHITE) { None } else { Some(CastleZone::WK) };
+            let black_status =
+                if rights.intersects(CastleZoneSet::BLACK) { None } else { Some(CastleZone::BK) };
+            Ok(Castling { remaining_rights: rights, white_status, black_status })
+        }
     }
 
     pub fn new(

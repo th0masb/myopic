@@ -3,8 +3,8 @@ use regex::Regex;
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
-use crate::base::Reflectable;
 use crate::base::Side;
+use crate::base::{Reflectable, StrResult};
 use crate::board::implementation::cache::CalculationCache;
 use crate::board::implementation::castling::Castling;
 use crate::board::implementation::history::History;
@@ -14,7 +14,7 @@ use crate::board::Discards;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
-use crate::pgn::find_matches;
+use crate::parse::patterns;
 use crate::pieces::Piece;
 use std::cmp::max;
 
@@ -38,69 +38,95 @@ pub struct BoardImpl {
     cache: CalculationCache,
 }
 
-lazy_static! {
-    static ref NOT_WHITESPACE: Regex = Regex::new(r"[^ ]+").unwrap();
-    static ref RANK: Regex = Regex::new(r"[PpNnBbRrQqKk1-8]{1, 8}").unwrap();
-    static ref ACTIVE: Regex = Regex::new(r"[wb]").unwrap();
-    static ref RIGHTS: Regex = Regex::new(r"([KkQq]{1, 4})|[-]").unwrap();
-    static ref ENPASSANT: Regex = Regex::new(r"([a-h][36])|[-]").unwrap();
-    static ref COUNT: Regex = Regex::new(r"[0-9]+").unwrap();
-}
-
-fn fen_metadata_matchers<'a>() -> impl Iterator<Item = &'a Regex> {
-    let mut dest: Vec<&'a Regex> = Vec::new();
-    dest.extend_from_slice(&[&ACTIVE, &RIGHTS, &ENPASSANT, &COUNT, &COUNT]);
-    dest.into_iter()
-}
-
-fn side_from_fen(fen: &String) -> Side {
-    match fen.to_lowercase().as_ref() {
-        "w" => Side::White,
-        "b" => Side::Black,
-        _ => panic!(),
+fn side_from_fen(fen: &String) -> StrResult<Side> {
+    match patterns::fen_side().find(fen).map(|m| m.as_str()).ok_or(fen.clone())? {
+        "w" => Ok(Side::White),
+        "b" => Ok(Side::Black),
+        _ => Err(fen.clone()),
     }
 }
 
 fn enpassant_from_fen(fen: &String) -> Option<Square> {
-    if fen.contains("-") {
-        None
+    patterns::fen_enpassant().find(fen).and_then(|m| Square::from_string(m.as_str()).ok())
+}
+
+fn positions_from_fen(fen: &String) -> StrResult<Positions> {
+    let positions = patterns::fen_positions().find(&fen).map(|m| m.as_str()).ok_or(fen.clone())?;
+    Positions::from_fen(String::from(positions))
+}
+
+fn rights_from_fen(fen: &String) -> StrResult<Castling> {
+    let rights = patterns::fen_rights().find(&fen).map(|m| m.as_str()).ok_or(fen.clone())?;
+    Castling::from_fen(String::from(rights))
+}
+
+fn clock_history_from_fen(fen: &String, active: Side) -> StrResult<(usize, usize)> {
+    let ints: Vec<_> =
+        patterns::int().find_iter(fen).map(|m| m.as_str().parse::<usize>().unwrap()).collect();
+    if ints.len() < 2 {
+        Err(fen.clone())
     } else {
-        Square::from_string(fen).ok()
+        let n = ints.len();
+        let (clock, moves_played) = (ints[n - 2], ints[n - 1]);
+        let history = 2 * (max(moves_played, 1) - 1) + (active as usize);
+        Ok((clock, history))
     }
 }
 
 impl BoardImpl {
-    pub(super) fn from_fen(fen_string: String) -> Result<BoardImpl, String> {
-        let initial_split = find_matches(&fen_string, &NOT_WHITESPACE);
-        if initial_split.len() != 6 {
-            Err(fen_string)
+    pub(super) fn from_fen(fen: String) -> StrResult<BoardImpl> {
+        if patterns::fen().is_match(&fen) {
+            let space_split: Vec<_> = patterns::space().split(&fen).map(|s| s.to_owned()).collect();
+            let pieces = positions_from_fen(&space_split[0])?;
+            let active = side_from_fen(&space_split[1])?;
+            let castling = rights_from_fen(&space_split[2])?;
+            let enpassant = enpassant_from_fen(&space_split[3]);
+            let (clock, history) = clock_history_from_fen(&fen, active)?;
+            let hash = hash(&pieces, &castling, active, enpassant);
+            Ok(BoardImpl {
+                pieces,
+                active,
+                enpassant,
+                castling,
+                clock,
+                history: History::new(hash, history),
+                cache: CalculationCache::empty(),
+            })
         } else {
-            let ranks = find_matches(&initial_split[0], &RANK);
-            let meta_match =
-                fen_metadata_matchers().zip(&initial_split[1..]).all(|(re, s)| re.is_match(s));
-            if ranks.len() != 8 || !meta_match {
-                Err(fen_string)
-            } else {
-                // We know all parts are valid here...
-                let pieces = Positions::from_fen(ranks);
-                let active = side_from_fen(&initial_split[1]);
-                let castling = Castling::from_fen(&initial_split[2]);
-                let enpassant = enpassant_from_fen(&initial_split[3]);
-                let clock = *(&initial_split[4].parse::<usize>().unwrap());
-                let move_count = *(&initial_split[5].parse::<usize>().unwrap());
-                let hash = hash(&pieces, &castling, active, enpassant);
-                let n_previous_pos = 2 * (max(move_count, 1) - 1) + (active as usize);
-                Ok(BoardImpl {
-                    pieces,
-                    castling,
-                    active,
-                    enpassant,
-                    clock,
-                    history: History::new(hash, n_previous_pos),
-                    cache: CalculationCache::empty(),
-                })
-            }
+            Err(fen)
         }
+
+        //        let initial_split = find_matches(&fen_string, &NOT_WHITESPACE);
+        //        if initial_split.len() != 6 {
+        //            Err(fen_string)
+        //        } else {
+        //            let ranks = find_matches(&initial_split[0], &RANK);
+        //            let meta_match =
+        //                fen_metadata_matchers().zip(&initial_split[1..]).all(|(re, s)|
+        // re.is_match(s));            if ranks.len() != 8 || !meta_match {
+        //                Err(fen_string)
+        //            } else {
+        //                // We know all parts are valid here...
+        //                let pieces = Positions::from_fen(ranks);
+        //                let active = side_from_fen(&initial_split[1]);
+        //                let castling = Castling::from_fen(&initial_split[2]);
+        //                let enpassant = enpassant_from_fen(&initial_split[3]);
+        //                let clock = *(&initial_split[4].parse::<usize>().unwrap());
+        //                let move_count =
+        // *(&initial_split[5].parse::<usize>().unwrap());                let
+        // hash = hash(&pieces, &castling, active, enpassant);
+        // let n_previous_pos = 2 * (max(move_count, 1) - 1) + (active as usize);
+        //                Ok(BoardImpl {
+        //                    pieces,
+        //                    castling,
+        //                    active,
+        //                    enpassant,
+        //                    clock,
+        //                    history: History::new(hash, n_previous_pos),
+        //                    cache: CalculationCache::empty(),
+        //                })
+        //            }
+        //        }
     }
 
     fn switch_side(&mut self) {
@@ -149,15 +175,15 @@ mod fen_test {
     use crate::base::castlezone::CastleZoneSet;
     use crate::base::square::Square;
     use crate::base::Side;
-    use crate::board::BoardImpl;
     use crate::board::implementation::test::TestBoard;
+    use crate::board::BoardImpl;
 
     fn test(expected: TestBoard, fen_string: String) {
         assert_eq!(BoardImpl::from(expected), BoardImpl::from_fen(fen_string).unwrap())
     }
 
     #[test]
-    fn case_1() {
+    fn fen_to_board_case_1() {
         let fen = "r1br2k1/1pq1npb1/p2pp1pp/8/2PNP3/P1N5/1P1QBPPP/3R1RK1 w - - 3 19";
         let board = TestBoard {
             whites: vec![A3 | B2 | C4 | E4 | F2 | G2 | H2, C3 | D4, E2, D1 | F1, D2, G1],
@@ -174,7 +200,7 @@ mod fen_test {
     }
 
     #[test]
-    fn case_2() {
+    fn fen_to_board_case_2() {
         let fen = "rnb2rk1/ppp2ppp/4pq2/8/2PP4/5N2/PP3PPP/R2QKB1R w KQ - 2 9";
         let board = TestBoard {
             whites: vec![A2 | B2 | C4 | D4 | F2 | G2 | H2, F3, F1, A1 | H1, D1, E1],
@@ -191,7 +217,7 @@ mod fen_test {
     }
 
     #[test]
-    fn case_3() {
+    fn fen_to_board_case_3() {
         let fen = "r1bqkbnr/ppp1pppp/n7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3";
         let board = TestBoard {
             whites: vec![A2 | B2 | C2 | D2 | E5 | F2 | G2 | H2, B1 | G1, C1 | F1, A1 | H1, D1, E1],
@@ -208,7 +234,7 @@ mod fen_test {
     }
 
     #[test]
-    fn case_4() {
+    fn fen_to_board_case_4() {
         let fen = "r6k/p5pp/p1b2qnN/8/3Q4/2P1B3/PP4PP/R5K1 b - - 2 21";
         let board = TestBoard {
             whites: vec![A2 | B2 | C3 | G2 | H2, H6, E3, A1, D4, G1],

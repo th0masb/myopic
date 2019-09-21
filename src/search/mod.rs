@@ -108,6 +108,7 @@ impl<B: EvalBoard> Search<B> {
         self.max_time = Duration::from_millis(time as u64);
     }
 
+    // TODO This lets time run out with an increment...
     pub fn set_game_time(&mut self, w_base: usize, w_inc: usize, b_base: usize, b_inc: usize) {
         if self.root.is_some() {
             let active = self.root.as_ref().unwrap().active();
@@ -178,7 +179,10 @@ impl<B: EvalBoard> SearchImpl<'_, B> {
         for i in 1..self.max_depth + 1 {
             match self.best_move(i) {
                 Err(_) => break,
-                Ok((mv, eval)) => best_move = Ok((mv, eval, i)),
+                Ok((mv, eval)) => {
+                    best_move = Ok((mv, eval, i));
+                    //println!("{:?}", best_move);
+                },
             }
         }
         best_move

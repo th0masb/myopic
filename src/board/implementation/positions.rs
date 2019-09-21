@@ -1,8 +1,9 @@
 use crate::base::bitboard::BitBoard;
-use crate::base::hash;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
+use crate::base::{hash, StrResult};
+use crate::parse::patterns;
 use crate::pieces::Piece;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
@@ -73,24 +74,28 @@ fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
 }
 
 impl Positions {
-    pub fn from_fen(ranks: Vec<String>) -> Positions {
-        assert_eq!(8, ranks.len());
-        let mut board =
-            ranks.into_iter().flat_map(|r| convert_rank(r).into_iter()).collect::<Vec<_>>();
-        assert_eq!(64, board.len());
-        board.reverse();
-        let mut bitboards = [BitBoard::EMPTY; 12];
-        for (i, x) in board.into_iter().enumerate() {
-            match x {
-                Some(p) => bitboards[p as usize] |= Square::from_index(i),
-                _ => (),
+    pub fn from_fen(ranks: String) -> StrResult<Positions> {
+        if !patterns::fen_positions().is_match(&ranks) {
+            Err(ranks)
+        } else {
+            let mut board = patterns::fen_rank()
+                .find_iter(&ranks)
+                .flat_map(|m| convert_rank(m.as_str().to_owned()))
+                .collect::<Vec<_>>();
+            board.reverse();
+            let mut bitboards = [BitBoard::EMPTY; 12];
+            for (i, x) in board.into_iter().enumerate() {
+                match x {
+                    Some(p) => bitboards[p as usize] |= Square::from_index(i),
+                    _ => (),
+                }
             }
-        }
-        Positions {
-            boards: bitboards,
-            hash: hash_boards(&bitboards),
-            whites: compute_whites(&bitboards),
-            blacks: compute_blacks(&bitboards),
+            Ok(Positions {
+                boards: bitboards,
+                hash: hash_boards(&bitboards),
+                whites: compute_whites(&bitboards),
+                blacks: compute_blacks(&bitboards),
+            })
         }
     }
 

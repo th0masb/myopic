@@ -33,9 +33,9 @@ impl Square {
 
     /// Performs linear search to find a square whose name matches
     /// the given string (case-insensitive).
-    pub fn from_string(square: &String) -> StrResult<Square> {
+    pub fn from_string(square: &str) -> StrResult<Square> {
         let upper = square.to_uppercase();
-        Square::iter().find(|sq| format!("{:?}", sq) == upper).ok_or(square.clone())
+        Square::iter().find(|sq| format!("{:?}", sq) == upper).ok_or(square.to_owned())
     }
 
     /// Return the index of the rank on which this square resides.

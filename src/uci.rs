@@ -333,13 +333,6 @@ mod test {
     use crate::board;
     use crate::uci::{Input, fen_re};
 
-    #[test]
-    fn test_fen_regex() {
-        let fen_re = fen_re();
-        assert!(fen_re.is_match("4r1r1/pb1Q2bp/1p1Rnkp1/5p2/2P1P3/4BP2/qP2B1PP/2R3K1 w - - 1 0"));
-        assert!(fen_re.is_match("3r4/4RRpk/5n1N/8/p1p2qPP/P1Qp1P2/1P4K1/3b4 w Qk c2 5 21"));
-        assert!(fen_re.is_match("8/7p/4Nppk/R7/6PP/3n2K1/Pr6/8 w KkQq - 0 10"));
-    }
 
     #[test]
     fn test_parse_position() {

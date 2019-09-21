@@ -7,55 +7,55 @@ use crate::pieces::Piece;
 use crate::regex::Regex;
 use patterns::*;
 
-mod patterns;
+pub mod patterns;
 
-pub fn parse_pgn<B: Board>(start: &B, pgn_moves: &String) -> Result<Vec<Move>, String> {
+pub fn pgn<B: Board>(start: &B, moves: &String) -> StrResult<Vec<Move>> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
-    for evolve in find_matches(&pgn_moves, move_regex()) {
-        match parse_single_move(&mut mutator_board, &evolve) {
+    for evolve in pgn_move().find_iter(moves) {
+        match parse_single_move(&mut mutator_board, evolve.as_str()) {
             Ok(result) => dest.push(result.clone()),
-            Err(_) => return Err(format!("Failed at {} in: {}", evolve, pgn_moves)),
+            Err(_) => return Err(format!("Failed at {} in: {}", evolve.as_str(), moves)),
         };
         mutator_board.evolve(dest.last().unwrap());
     }
     if dest.len() > 0 {
         Ok(dest)
     } else {
-        Err(pgn_moves.clone())
+        Err(moves.clone())
     }
 }
 
-pub fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
-    regex.captures_iter(source).map(|cap| String::from(&cap[0])).collect()
-}
+//pub fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
+//    regex.captures_iter(source).map(|cap| String::from(&cap[0])).collect()
+//}
 
-fn parse_single_move<B: Board>(start: &mut B, pgn_move: &String) -> StrResult<Move> {
+fn parse_single_move<B: Board>(start: &mut B, pgn_move: &str) -> StrResult<Move> {
     // If a castle move we can retrieve straight away
-    if pgn_move.as_str() == "O-O" {
+    if pgn_move == "O-O" {
         return Ok(Castle(CastleZone::kingside(start.active())));
-    } else if pgn_move.as_str() == "O-O-O" {
+    } else if pgn_move == "O-O-O" {
         return Ok(Castle(CastleZone::queenside(start.active())));
     }
 
     // Otherwise we need to get more involved and look through the legal moves.
     let legal = start.compute_moves(MoveComputeType::All);
     // The target square of the move.
-    let target = find_matches(&pgn_move, square_regex())
-        .into_iter()
-        .map(|s| Square::from_string(&s).ok().unwrap())
+    let target = square()
+        .find_iter(pgn_move)
+        .map(|m| Square::from_string(m.as_str()).unwrap())
         .last()
         .map(|mv| mv.clone());
 
     // Functionality for checking if a piece type matches the pgn move.
-    let (move_piece_ordinal, promote_piece_ordinal) = piece_ordinals(&pgn_move);
+    let (move_piece_ordinal, promote_piece_ordinal) = piece_ordinals(pgn_move);
     let move_piece_matches = |p: Piece| move_piece_ordinal == (p as usize % 6);
     let promote_piece_matches = |p: Piece| promote_piece_ordinal == (p as usize % 6);
     let move_matches_pawn = move_piece_matches(Piece::WP);
 
     // Functionality for differentiating ambiguous moves.
-    let file = find_differentiating_rank_or_file(&pgn_move, file_regex());
-    let rank = find_differentiating_rank_or_file(&pgn_move, rank_regex());
+    let file = find_differentiating_rank_or_file(pgn_move, file());
+    let rank = find_differentiating_rank_or_file(pgn_move, rank());
     let matches_start = |sq: Square| matches_square(file, rank, sq);
 
     // Retrieve the unique move which matches target square, piece type and
@@ -83,7 +83,7 @@ fn parse_single_move<B: Board>(start: &mut B, pgn_move: &String) -> StrResult<Mo
     if matching.len() == 1 {
         Ok((&matching[0]).clone())
     } else {
-        Err(pgn_move.clone())
+        Err(pgn_move.to_owned())
     }
 }
 
@@ -103,8 +103,8 @@ fn char_at(string: &String, index: usize) -> char {
     string.chars().nth(index).unwrap()
 }
 
-fn find_differentiating_rank_or_file(pgn_move: &String, re: &Regex) -> Option<char> {
-    let all_matches = find_matches(pgn_move, re);
+fn find_differentiating_rank_or_file(pgn_move: &str, re: &Regex) -> Option<char> {
+    let all_matches: Vec<_> = re.find_iter(pgn_move).map(|m| m.as_str().to_owned()).collect();
     if all_matches.len() == 1 {
         None
     } else {
@@ -112,8 +112,9 @@ fn find_differentiating_rank_or_file(pgn_move: &String, re: &Regex) -> Option<ch
     }
 }
 
-fn piece_ordinals(pgn_move: &String) -> (usize, usize) {
-    let matches = find_matches(&pgn_move, piece_regex());
+fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
+    let matches: Vec<_> =
+        pgn_piece().find_iter(pgn_move).map(|m| m.as_str().to_owned()).collect();
     let is_promotion = pgn_move.contains("=");
     let (move_piece, promote_piece) = if matches.is_empty() {
         (None, None)
@@ -141,7 +142,7 @@ mod test {
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
         let finish = crate::board::from_fen(expected_finish).unwrap();
         let mut board = crate::board::start();
-        for evolve in parse_pgn(&board, &String::from(pgn)).unwrap() {
+        for evolve in super::pgn(&board, &String::from(pgn)).unwrap() {
             board.evolve(&evolve);
         }
         assert_eq!(finish, board);

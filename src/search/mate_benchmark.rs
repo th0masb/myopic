@@ -5,6 +5,7 @@ use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::time::{Duration};
+use crate::parse;
 
 const DATA_PATH: &'static str = r"/home/t/git/myopic/data/formatted-three-puzzles";
 const MAX_CASES: usize = 500;
@@ -120,7 +121,7 @@ fn load_cases() -> Vec<TestCase> {
                 println!("Error with position parsing: {}", line_clone);
                 continue;
             }
-            Ok(board) => match crate::pgn::parse_pgn(&board, pgn) {
+            Ok(board) => match parse::pgn(&board, pgn) {
                 Err(_) => {
                     println!("Error with move parsing: {}", line_clone);
                     continue;

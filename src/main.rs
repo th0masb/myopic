@@ -7,26 +7,44 @@ extern crate lazy_static;
 extern crate rand;
 extern crate regex;
 
-use crate::uci::uci_main;
+use std::thread;
+use std::time::Duration;
+
 use regex::Regex;
+
+use crate::board::BoardImpl;
+use crate::eval::SimpleEvalBoard;
+use crate::search::SearchCommand;
 
 mod base;
 mod board;
 mod eval;
-mod pgn;
+mod parse;
 mod pieces;
 mod search;
 mod uci;
 
 fn main() -> () {
-    uci_main()
-//    let fen = "rnb1k1nr/p2p1ppp/5q2/1pb2N1P/4PBP1/2NP1Q2/PPP5/R4KR1 w kq - 3 17";
+    uci::uci_main()
+//    // Start depth 5
+//    let fen = board::START_FEN;
+//    let fen = "rnbqkbnr/pppppppp/8/8/8/7N/PPPPPPPP/RNBQKB1R b KQkq - 1 1";
+//    let fen = "rnbqkb1r/pppppppp/5n2/8/8/7N/PPPPPPPP/RNBQKB1R w KQkq - 2 2";
+//    let fen = "rnbqkb1r/pppppppp/5n2/8/8/2N4N/PPPPPPPP/R1BQKB1R b KQkq - 3 2";
+//    let fen = "r1bqkb1r/pppppppp/2n2n2/8/8/2N4N/PPPPPPPP/R1BQKB1R w KQkq - 4 3";
+//    // It thinks this is the best position, evals as 37 because it gets
+//    // the knights in a better position
+//    let fen = "r1bqkb1r/pppppppp/2n2n2/8/5N2/2N5/PPPPPPPP/R1BQKB1R b KQkq - 5 3";
+//
+//    // Lets try a different line
+//    let fen = board::START_FEN;
+//    let fen = "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1";
+//    let fen = "rnbqkb1r/pppppppp/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 1 2";
 //    let board = eval::new_board(fen).unwrap();
 //    let (input_tx, output_rx) = search::init::<SimpleEvalBoard<BoardImpl>>();
+//    input_tx.send(SearchCommand::Depth(3)).unwrap();
 //    input_tx.send(SearchCommand::Root(board)).unwrap();
 //    input_tx.send(SearchCommand::GoOnce).unwrap();
-//    thread::sleep(Duration::from_secs(10));
-//    input_tx.send(SearchCommand::Stop).unwrap();
 //    match output_rx.recv() {
 //        Err(_) => panic!(),
 //        Ok(result) => match result {
@@ -34,16 +52,5 @@ fn main() -> () {
 //            Ok(details) => println!("{:?}", details),
 //        }
 //    }
-
-//    //uci_main()
-//    let fen = "8/6bk/1p6/5pBp/1P2b3/6QP/P5PK/5q2 b - - 1 0";
-//    let fen = "8/7k/1p6/4bpBp/1P2b3/6QP/P5PK/5q2 w - - 1 2";
-////    let fen = "8/7k/1p6/4bp1p/1P2bB2/6QP/P5PK/5q2 b - - 2 2";
-////    let fen = "8/7k/1p6/5p1p/1P2bb2/6QP/P5PK/5q2 w - - 0 3";
-////    let fen = "8/7k/1p6/5p1p/PP2bb2/6QP/6PK/5q2 b - - 0 3";
-//    let mut root = eval::new_board(fen).unwrap();
-//    //let res = search::quiescent::search(&mut root, -eval::INFTY, eval::INFTY, -1);
-//    let search_res = Search::depth_capped(root, 4).execute();
-//    println!("{:?}", search_res);
 }
 
