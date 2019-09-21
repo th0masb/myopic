@@ -26,6 +26,7 @@ enum State {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 enum Input {
+    WhatState,
     Uci,
     IsReady,
     UciNewGame,
@@ -48,6 +49,7 @@ enum GoCommand {
 
 const ENGINE_NAME: &'static str = "Myopic";
 const ENGINE_AUTHOR: &'static str = "Thomas Ball";
+const WHAT_STATE: &'static str = "whatstate";
 const READYOK: &'static str = "readyok";
 const BESTMOVE: &'static str = "bestmove";
 const ISREADY: &'static str = "isready";
@@ -87,6 +89,8 @@ pub fn uci_main() -> () {
             Ok(cmd) => match (engine_state, cmd) {
                 // In any state if we get a quit command then break.
                 (_, Input::Quit) => break,
+                // Debug command to print the current engine state
+                (_, Input::WhatState) => println!("{:?}", engine_state),
                 // Procedure from an uninitialized state
                 (State::Uninitialized, Input::Uci) => {
                     engine_state = State::Configuring;
@@ -201,7 +205,7 @@ fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) -> StrResult<
     }
     let source = Square::from_string(&mv.chars().take(2).collect::<String>())?;
     let target = Square::from_string(&mv.chars().skip(2).take(2).collect::<String>())?;
-    let promote = mv.chars().nth(5).map(|c| c.to_string());
+    let promote = mv.chars().nth(4).map(|c| c.to_string());
     board
         .compute_moves(MoveComputeType::All)
         .into_iter()
@@ -276,6 +280,7 @@ fn initialize_input_thread() -> Receiver<Input> {
 
 fn parse_engine_command(content: String) -> Option<Input> {
     match content.as_str() {
+        WHAT_STATE => Some(Input::WhatState),
         UCI => Some(Input::Uci),
         ISREADY => Some(Input::IsReady),
         UCINEWGAME => Some(Input::UciNewGame),
