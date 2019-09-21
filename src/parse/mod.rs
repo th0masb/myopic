@@ -137,8 +137,6 @@ fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
         let finish = crate::board::from_fen(expected_finish).unwrap();
         let mut board = crate::board::start();

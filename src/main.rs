@@ -7,15 +7,6 @@ extern crate lazy_static;
 extern crate rand;
 extern crate regex;
 
-use std::thread;
-use std::time::Duration;
-
-use regex::Regex;
-
-use crate::board::BoardImpl;
-use crate::eval::SimpleEvalBoard;
-use crate::search::SearchCommand;
-
 mod base;
 mod board;
 mod eval;

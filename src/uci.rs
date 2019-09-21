@@ -6,12 +6,13 @@ use std::time::Duration;
 
 use regex::{Match, Regex};
 
+use crate::{board, search};
 use crate::base::square::Square;
 use crate::base::StrResult;
 use crate::board::{Board, BoardImpl, Move, MoveComputeType};
 use crate::eval::{EvalBoard, SimpleEvalBoard};
+use crate::parse::patterns;
 use crate::pieces::Piece;
-use crate::{search, board};
 use crate::search::{SearchCmdTx, SearchCommand, SearchResult};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -21,7 +22,6 @@ enum State {
     WaitingForPosition,
     WaitingForGo,
     Searching,
-    //Pondering,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -30,7 +30,6 @@ enum Input {
     IsReady,
     UciNewGame,
     Stop,
-    //PonderHit,
     Quit,
     Position(String, Vec<String>),
     Go(Vec<GoCommand>),
@@ -38,14 +37,12 @@ enum Input {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 enum GoCommand {
-    //SearchMoves(Vec<String>),
     Depth(usize),
     MoveTime(usize),
     WhiteTime(usize),
     BlackTime(usize),
     WhiteInc(usize),
     BlackInc(usize),
-    //Ponder,
     Infinite,
 }
 
@@ -62,26 +59,14 @@ const UCINEWGAME: &'static str = "ucinewgame";
 const POSITION: &'static str = "position";
 const GO: &'static str = "go";
 
-fn complete_search<B: EvalBoard>(result: SearchResult, tx: &SearchCmdTx<B>) -> State {
-    match result {
-        Err(_) => State::Searching,
-        Ok(details) => {
-            // Print best move if there is one.
-            println!("{} {}", BESTMOVE, format_move(details.best_move));
-            // Reset the search timing
-            tx.send(SearchCommand::Infinite).unwrap();
-            // Return
-            State::WaitingForPosition
-        }
-    }
-}
 
 const SLEEP_TIME: Duration = Duration::from_millis(100);
+type DefaultBoard = SimpleEvalBoard<BoardImpl>;
 
 pub fn uci_main() -> () {
     // Engine input command channel
     let cmd_input_rx = initialize_input_thread();
-    let (search_input_tx, search_output_rx) = search::init::<SimpleEvalBoard<BoardImpl>>();
+    let (search_input_tx, search_output_rx) = search::init::<DefaultBoard>();
     // Begin the main control loop
     let mut engine_state = State::Uninitialized;
     loop {
@@ -118,28 +103,10 @@ pub fn uci_main() -> () {
                 // Procedure from the positional setup state.
                 (State::WaitingForPosition, Input::UciNewGame) => (),
                 (State::WaitingForPosition, Input::Position(fen, moves)) => {
-                    // TODO refactor this logic into separate function
-                    match crate::eval::new_board(&fen) {
-                        Err(_) => continue,
-                        Ok(mut board) => {
-                            let mut parsed_correctly = true;
-                            for mv in moves {
-                                match parse_long_algebraic_move(&mut board, &mv) {
-                                    Err(_) => parsed_correctly = false,
-                                    Ok(parsed_move) => {
-                                        board.evolve(&parsed_move);
-                                        ()
-                                    }
-                                }
-                            }
-                            if parsed_correctly {
-                                engine_state = State::WaitingForGo;
-                                search_input_tx.send(SearchCommand::Root(board)).unwrap();
-                            }
-                        }
-                    }
+                    engine_state = update_position(fen, moves, &search_input_tx);
                 }
 
+                // Procedure from the pre-searching state.
                 (State::WaitingForGo, Input::Go(commands)) => {
                     for cmd in convert_go_setup_commands(commands) {
                         search_input_tx.send(cmd).unwrap();
@@ -149,6 +116,7 @@ pub fn uci_main() -> () {
                     println!("Beginning search");
                 }
 
+                // Procedure from the searching state.
                 (State::Searching, Input::Stop) => {
                     // block for the result
                     search_input_tx.send(SearchCommand::Stop).unwrap();
@@ -160,6 +128,44 @@ pub fn uci_main() -> () {
                 // Otherwise do nothing
                 _ => (),
             },
+        }
+    }
+}
+
+fn complete_search<B: EvalBoard>(result: SearchResult, tx: &SearchCmdTx<B>) -> State {
+    match result {
+        Err(_) => State::Searching,
+        Ok(details) => {
+            // Print best move if there is one.
+            println!("{} {}", BESTMOVE, format_move(details.best_move));
+            // Reset the search timing
+            tx.send(SearchCommand::Infinite).unwrap();
+            // Return
+            State::WaitingForPosition
+        }
+    }
+}
+
+fn update_position(fen: String, moves: Vec<String>, tx: &SearchCmdTx<DefaultBoard>) -> State {
+    match crate::eval::new_board(&fen) {
+        Err(_) => State::WaitingForPosition,
+        Ok(mut board) => {
+            let mut parsed_correctly = true;
+            for mv in moves {
+                match parse_long_algebraic_move(&mut board, &mv) {
+                    Err(_) => parsed_correctly = false,
+                    Ok(parsed_move) => {
+                        board.evolve(&parsed_move);
+                        ()
+                    }
+                }
+            }
+            if parsed_correctly {
+                tx.send(SearchCommand::Root(board)).unwrap();
+                State::WaitingForGo
+            } else {
+                State::WaitingForPosition
+            }
         }
     }
 }
@@ -274,7 +280,6 @@ fn parse_engine_command(content: String) -> Option<Input> {
         ISREADY => Some(Input::IsReady),
         UCINEWGAME => Some(Input::UciNewGame),
         STOP => Some(Input::Stop),
-        //"ponderhit" => Some(Input::PonderHit),
         QUIT => Some(Input::Quit),
         x => {
             if x.starts_with(POSITION) {
@@ -292,37 +297,31 @@ fn parse_go_command(content: String) -> Vec<GoCommand> {
     lazy_static! {
             static ref INFINITE: Regex = re("infinite".to_owned());
             static ref PONDER: Regex = re("ponder".to_owned());
-            static ref DEPTH: Regex = re(format!("depth {}", int_re().as_str()));
-            static ref MOVETIME: Regex = re(format!("movetime {}", int_re().as_str()));
-            static ref WHITETIME: Regex = re(format!("wtime {}", int_re().as_str()));
-            static ref BLACKTIME: Regex = re(format!("btime {}", int_re().as_str()));
-            static ref WHITEINC: Regex = re(format!("winc {}", int_re().as_str()));
-            static ref BLACKINC: Regex = re(format!("binc {}", int_re().as_str()));
-    //        static ref SEARCHMOVES: Regex =
-    //            re(format!("searchmoves({}{})+", space_re().as_str(), move_re().as_str()));
+            static ref DEPTH: Regex = re(format!("depth {}", patterns::int().as_str()));
+            static ref MOVETIME: Regex = re(format!("movetime {}", patterns::int().as_str()));
+            static ref WHITETIME: Regex = re(format!("wtime {}", patterns::int().as_str()));
+            static ref BLACKTIME: Regex = re(format!("btime {}", patterns::int().as_str()));
+            static ref WHITEINC: Regex = re(format!("winc {}", patterns::int().as_str()));
+            static ref BLACKINC: Regex = re(format!("binc {}", patterns::int().as_str()));
         }
     let content_ref = content.as_str();
-    let extract = |m: Match| int_re().find(m.as_str()).unwrap().as_str().parse::<usize>().unwrap();
+    let extract =
+        |m: Match| patterns::int().find(m.as_str()).unwrap().as_str().parse::<usize>().unwrap();
     let mut dest = Vec::new();
     &INFINITE.find(content_ref).map(|_| dest.push(GoCommand::Infinite));
-    //&PONDER.find(content_ref).map(|_| dest.push(GoCommand::Ponder));
     &DEPTH.find(content_ref).map(|m| dest.push(GoCommand::Depth(extract(m))));
     &MOVETIME.find(content_ref).map(|m| dest.push(GoCommand::MoveTime(extract(m))));
     &WHITETIME.find(content_ref).map(|m| dest.push(GoCommand::WhiteTime(extract(m))));
     &BLACKTIME.find(content_ref).map(|m| dest.push(GoCommand::BlackTime(extract(m))));
     &WHITEINC.find(content_ref).map(|m| dest.push(GoCommand::WhiteInc(extract(m))));
     &BLACKINC.find(content_ref).map(|m| dest.push(GoCommand::BlackInc(extract(m))));
-    //    &SEARCHMOVES.find(content_ref).map(|m| {
-    //        let moves = move_re().find_iter(m.as_str()).map(|n|
-    // n.as_str().to_owned()).collect();        dest.push(GoCommand::
-    // SearchMoves(moves));    });
     dest
 }
 
 fn parse_position_command(content: String) -> Option<Input> {
     let c_ref = content.as_str();
-    let moves = move_re().find_iter(c_ref).map(|m| m.as_str().to_owned()).collect();
-    position_re().find(c_ref).map(|m| match m.as_str() {
+    let moves = la_move().find_iter(c_ref).map(|m| m.as_str().to_owned()).collect();
+    position().find(c_ref).map(|m| match m.as_str() {
         "startpos" => Input::Position(board::START_FEN.to_owned(), moves),
         x => Input::Position(x.to_owned(), moves),
     })
@@ -331,8 +330,7 @@ fn parse_position_command(content: String) -> Option<Input> {
 #[cfg(test)]
 mod test {
     use crate::board;
-    use crate::uci::{Input, fen_re};
-
+    use crate::uci::Input;
 
     #[test]
     fn test_parse_position() {
@@ -344,43 +342,14 @@ mod test {
     }
 }
 
-const FEN_RNK: &'static str = "([pnbrqkPNBRQK1-8]{1,8})";
-const FEN_SIDE: &'static str = "([bw])";
-const FEN_RIGHTS: &'static str = r"(-|([kqKQ]{1,4}))";
-const FEN_EP: &'static str = r"(-|([a-h][1-8]))";
-const INT: &'static str = "([0-9]+)";
-
-fn fen_re() -> &'static Regex {
+fn position() -> &'static Regex {
     lazy_static! {
-        static ref RE: Regex = re(format!(
-            r"({}/){{7}}{} {} {} {} {} {}",
-            FEN_RNK, FEN_RNK, FEN_SIDE, FEN_RIGHTS, FEN_EP, INT, INT
-        ));
-    }
-    &RE
-}
-
-fn position_re() -> &'static Regex {
-    lazy_static! {
-        static ref PE: Regex = re(format!("(startpos|{})", fen_re().as_str()));
+        static ref PE: Regex = re(format!("(startpos|{})", patterns::fen().as_str()));
     }
     &PE
 }
 
-fn int_re() -> &'static Regex {
-    lazy_static! {
-        static ref INT_RE: Regex = re(r"[0-9]+".to_owned());
-    }
-    &INT_RE
-}
-fn space_re() -> &'static Regex {
-    lazy_static! {
-        static ref WHITESPACE: Regex = re(r"\s+".to_owned());
-    }
-    &WHITESPACE
-}
-
-fn move_re() -> &'static Regex {
+fn la_move() -> &'static Regex {
     lazy_static! {
         static ref MOVE: Regex = re(r"([a-h][1-8]){2}[qrnb]?".to_owned());
     }

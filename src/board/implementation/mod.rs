@@ -1,22 +1,21 @@
-use regex::Regex;
+use std::cmp::max;
 
+use crate::base::{Reflectable, StrResult};
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
-use crate::base::square::Square;
 use crate::base::Side;
-use crate::base::{Reflectable, StrResult};
+use crate::base::square::Square;
+use crate::board::Board;
+use crate::board::Discards;
 use crate::board::implementation::cache::CalculationCache;
 use crate::board::implementation::castling::Castling;
 use crate::board::implementation::history::History;
 use crate::board::implementation::positions::Positions;
-use crate::board::Board;
-use crate::board::Discards;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
 use crate::parse::patterns;
 use crate::pieces::Piece;
-use std::cmp::max;
 
 mod cache;
 mod castling;
@@ -36,6 +35,41 @@ pub struct BoardImpl {
     enpassant: Option<Square>,
     clock: usize,
     cache: CalculationCache,
+}
+
+impl BoardImpl {
+    pub(super) fn from_fen(fen: String) -> StrResult<BoardImpl> {
+        if patterns::fen().is_match(&fen) {
+            let space_split: Vec<_> = patterns::space().split(&fen).map(|s| s.to_owned()).collect();
+            let pieces = positions_from_fen(&space_split[0])?;
+            let active = side_from_fen(&space_split[1])?;
+            let castling = rights_from_fen(&space_split[2])?;
+            let enpassant = enpassant_from_fen(&space_split[3]);
+            let (clock, history) = clock_history_from_fen(&fen, active)?;
+            let hash = hash(&pieces, &castling, active, enpassant);
+            Ok(BoardImpl {
+                pieces,
+                active,
+                enpassant,
+                castling,
+                clock,
+                history: History::new(hash, history),
+                cache: CalculationCache::empty(),
+            })
+        } else {
+            Err(fen)
+        }
+    }
+
+    fn switch_side(&mut self) {
+        self.active = self.active.reflect();
+    }
+
+    /// Combines the various components of the hash together and pushes the
+    /// result onto the head of the cache.
+    fn update_hash(&mut self) {
+        self.history.push_head(hash(&self.pieces, &self.castling, self.active, self.enpassant))
+    }
 }
 
 fn side_from_fen(fen: &String) -> StrResult<Side> {
@@ -73,72 +107,6 @@ fn clock_history_from_fen(fen: &String, active: Side) -> StrResult<(usize, usize
     }
 }
 
-impl BoardImpl {
-    pub(super) fn from_fen(fen: String) -> StrResult<BoardImpl> {
-        if patterns::fen().is_match(&fen) {
-            let space_split: Vec<_> = patterns::space().split(&fen).map(|s| s.to_owned()).collect();
-            let pieces = positions_from_fen(&space_split[0])?;
-            let active = side_from_fen(&space_split[1])?;
-            let castling = rights_from_fen(&space_split[2])?;
-            let enpassant = enpassant_from_fen(&space_split[3]);
-            let (clock, history) = clock_history_from_fen(&fen, active)?;
-            let hash = hash(&pieces, &castling, active, enpassant);
-            Ok(BoardImpl {
-                pieces,
-                active,
-                enpassant,
-                castling,
-                clock,
-                history: History::new(hash, history),
-                cache: CalculationCache::empty(),
-            })
-        } else {
-            Err(fen)
-        }
-
-        //        let initial_split = find_matches(&fen_string, &NOT_WHITESPACE);
-        //        if initial_split.len() != 6 {
-        //            Err(fen_string)
-        //        } else {
-        //            let ranks = find_matches(&initial_split[0], &RANK);
-        //            let meta_match =
-        //                fen_metadata_matchers().zip(&initial_split[1..]).all(|(re, s)|
-        // re.is_match(s));            if ranks.len() != 8 || !meta_match {
-        //                Err(fen_string)
-        //            } else {
-        //                // We know all parts are valid here...
-        //                let pieces = Positions::from_fen(ranks);
-        //                let active = side_from_fen(&initial_split[1]);
-        //                let castling = Castling::from_fen(&initial_split[2]);
-        //                let enpassant = enpassant_from_fen(&initial_split[3]);
-        //                let clock = *(&initial_split[4].parse::<usize>().unwrap());
-        //                let move_count =
-        // *(&initial_split[5].parse::<usize>().unwrap());                let
-        // hash = hash(&pieces, &castling, active, enpassant);
-        // let n_previous_pos = 2 * (max(move_count, 1) - 1) + (active as usize);
-        //                Ok(BoardImpl {
-        //                    pieces,
-        //                    castling,
-        //                    active,
-        //                    enpassant,
-        //                    clock,
-        //                    history: History::new(hash, n_previous_pos),
-        //                    cache: CalculationCache::empty(),
-        //                })
-        //            }
-        //        }
-    }
-
-    fn switch_side(&mut self) {
-        self.active = self.active.reflect();
-    }
-
-    /// Combines the various components of the hash together and pushes the
-    /// result onto the head of the cache.
-    fn update_hash(&mut self) {
-        self.history.push_head(hash(&self.pieces, &self.castling, self.active, self.enpassant))
-    }
-}
 
 fn hash(pt: &Positions, ct: &Castling, active: Side, ep: Option<Square>) -> u64 {
     pt.hash()
@@ -173,10 +141,10 @@ mod fen_test {
     use crate::base::bitboard::constants::*;
     use crate::base::castlezone::CastleZone;
     use crate::base::castlezone::CastleZoneSet;
-    use crate::base::square::Square;
     use crate::base::Side;
-    use crate::board::implementation::test::TestBoard;
+    use crate::base::square::Square;
     use crate::board::BoardImpl;
+    use crate::board::implementation::test::TestBoard;
 
     fn test(expected: TestBoard, fen_string: String) {
         assert_eq!(BoardImpl::from(expected), BoardImpl::from_fen(fen_string).unwrap())
