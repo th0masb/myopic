@@ -18,8 +18,9 @@ const Q_CHECK_CAP: i32 = -2;
 pub(super) fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> i32 {
     if depth == Q_DEPTH_CAP || state.termination_status().is_some() {
         return match state.termination_status() {
-            Some(Termination::Loss) => eval::LOSS_VALUE,
+            Some(Termination::Win) => eval::WIN_VALUE,
             Some(Termination::Draw) => eval::DRAW_VALUE,
+            Some(Termination::Loss) => eval::LOSS_VALUE,
             None => state.static_eval(),
         };
     }

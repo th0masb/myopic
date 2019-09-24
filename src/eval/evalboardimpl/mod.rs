@@ -220,6 +220,7 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
 impl<B: Board> EvalBoard for SimpleEvalBoard<B> {
     fn static_eval(&mut self) -> i32 {
         match self.termination_status() {
+            Some(Termination::Win) => super::WIN_VALUE,
             Some(Termination::Draw) => super::DRAW_VALUE,
             Some(Termination::Loss) => super::LOSS_VALUE,
             None => {

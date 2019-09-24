@@ -215,8 +215,9 @@ impl<B: EvalBoard> SearchImpl<'_, B> {
             return Err(());
         } else if depth == 0 || root.termination_status().is_some() {
             return Ok(match root.termination_status() {
-                Some(Termination::Loss) => eval::LOSS_VALUE,
+                Some(Termination::Win) => eval::WIN_VALUE,
                 Some(Termination::Draw) => eval::DRAW_VALUE,
+                Some(Termination::Loss) => eval::LOSS_VALUE,
                 None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
             });
         }
