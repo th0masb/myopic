@@ -10,13 +10,14 @@ impl BoardImpl {
         let locs = |side: Side| self.side(side);
         let (active, passive) = (locs(self.active), locs(self.active.reflect()));
         let king_loc = self.pieces.king_location(self.active.reflect());
-        let mut discovery_rays: Vec<(Square, BitBoard)> = Vec::with_capacity(2);
+        let (mut discovery_rays, mut i) = (super::empty_ray_pairs(), 0);
         let mut discovers = BitBoard::EMPTY;
         for xrayer in self.compute_xrayers(king_loc) {
             let cord = BitBoard::cord(king_loc, xrayer);
-            if (cord & active).size() == 2 && (cord & passive).size() == 1 {
+            if (cord & active).size() == 2 && (cord & passive).size() == 1 && i < super::MAX_SIZE {
                 let discov_loc = ((cord & active) - xrayer).first().unwrap();
-                discovery_rays.push((discov_loc, cord));
+                discovery_rays[i] = Some((discov_loc, cord));
+                i += 1;
                 discovers |= discov_loc;
             }
         }
@@ -38,6 +39,7 @@ mod test {
     use crate::base::bitboard::constants::*;
 
     use super::*;
+    use super::super::empty_ray_pairs;
 
     fn execute_test(fen: &'static str, expected_discoveries: RaySet) {
         let board = crate::board::from_fen(fen).unwrap();
@@ -48,12 +50,12 @@ mod test {
     #[test]
     fn case_one() {
         let fen = "6r1/5p1k/4pP2/4N3/3PN3/6P1/2B3PK/7R w - - 1 10";
+        let mut rays = empty_ray_pairs();
+        rays[0] = Some((Square::E4, C2 | D3 | E4 | F5 | G6 | H7));
+        rays[1] = Some((Square::H2, H1 | H2 | H3 | H4 | H5 | H6 | H7));
         let expected_pinned = RaySet {
             ray_points: E4 | H2,
-            rays: vec![
-                (Square::E4, C2 | D3 | E4 | F5 | G6 | H7),
-                (Square::H2, H1 | H2 | H3 | H4 | H5 | H6 | H7),
-            ],
+            rays,
         };
         execute_test(fen, expected_pinned);
     }

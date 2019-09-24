@@ -28,13 +28,14 @@ impl BoardImpl {
         let locs = |side: Side| self.side(side);
         let (active, passive) = (locs(self.active), locs(self.active.reflect()));
         let king_loc = self.pieces.king_location(self.active);
-        let mut constraint_areas: Vec<(Square, BitBoard)> = Vec::with_capacity(2);
+        let (mut constraint_areas, mut i) = (super::empty_ray_pairs(), 0);
         let mut pinned_locations = BitBoard::EMPTY;
         for potential_pinner in self.compute_potential_pinners(king_loc) {
             let cord = BitBoard::cord(king_loc, potential_pinner);
-            if (cord & active).size() == 2 && (cord & passive).size() == 1 {
+            if (cord & active).size() == 2 && (cord & passive).size() == 1 && i < super::MAX_SIZE {
                 let pinned_loc = ((cord & active) - king_loc).into_iter().next().unwrap();
-                constraint_areas.push((pinned_loc, cord));
+                constraint_areas[i] = Some((pinned_loc, cord));
+                i += 1;
                 pinned_locations |= pinned_loc;
             }
         }
@@ -56,6 +57,7 @@ mod test {
     use crate::base::bitboard::constants::*;
 
     use super::*;
+    use super::super::empty_ray_pairs;
 
     fn execute_test(fen: &'static str, expected_pinned: RaySet) {
         let board = crate::board::from_fen(fen).unwrap();
@@ -66,13 +68,13 @@ mod test {
     #[test]
     fn case_one() {
         let fen = "K2Q4/7p/1B4n1/2bq4/2rkp1R1/4p3/5br1/6B1 b KQkq - 5 10";
+        let mut rays = empty_ray_pairs();
+        rays[0] = Some((Square::E4, D4 | E4 | F4 | G4));
+        rays[1] = Some((Square::C5, B6 | C5 | D4));
+        rays[2] = Some((Square::D5, D4 | D5 | D6 | D7 | D8));
         let expected_pinned = RaySet {
             ray_points: C5 | D5 | E4,
-            rays: vec![
-                (Square::E4, D4 | E4 | F4 | G4),
-                (Square::C5, B6 | C5 | D4),
-                (Square::D5, D4 | D5 | D6 | D7 | D8),
-            ],
+            rays,
         };
         execute_test(fen, expected_pinned);
     }
