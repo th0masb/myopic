@@ -34,12 +34,11 @@ pub enum MoveComputeType {
     /// If a promoting move causes check then all promoting moves for
     /// the four different target pieces will be included for that pawn.
     AttacksChecks,
-    // Pseudo means that some moves generated may leave the king in
-    // check and so are illegal but we can prune these moves at the
-    // search stage.
-//    PseudoAll,
-//    PseudoAttacks,
-//    PseudoAttacksChecks,
+    /// Pseudo means that pins are ignored, otherwise moves generated
+    /// are the same.
+    PseudoAll,
+    PseudoAttacks,
+    PseudoAttacksChecks,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]

@@ -15,6 +15,7 @@ mod termination;
 pub struct CalculationCache {
     termination_status: Option<Option<Termination>>,
     passive_control: Option<BitBoard>,
+    active_control: Option<BitBoard>,
     pinned_set: Option<RaySet>,
     move_constraints: Option<MoveConstraints>,
 }
@@ -24,6 +25,7 @@ impl CalculationCache {
         CalculationCache {
             termination_status: None,
             passive_control: None,
+            active_control: None,
             pinned_set: None,
             move_constraints: None,
         }
@@ -34,6 +36,7 @@ impl BoardImpl {
     pub fn clear_cache(&mut self) {
         self.cache.termination_status = None;
         self.cache.passive_control = None;
+        self.cache.active_control = None;
         self.cache.pinned_set = None;
         self.cache.move_constraints = None;
     }

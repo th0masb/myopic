@@ -17,6 +17,17 @@ impl BoardImpl {
         }
     }
 
+    pub fn active_control_impl(&mut self) -> BitBoard {
+        match &self.cache.active_control {
+            Some(x) => *x,
+            None => {
+                let result = self.compute_control(self.active);
+                self.cache.active_control = Some(result);
+                result
+            }
+        }
+    }
+
     /// Computes the total area of control on the board for a given side. Note
     /// that the passive king is treated as invisible so that if it is in
     /// check it cannot create it's own escape squares by blocking the

@@ -5,7 +5,7 @@ use crate::base::Side;
 use crate::board::implementation::cache::rays::RaySet;
 use crate::board::implementation::BoardImpl;
 use crate::board::Board;
-use crate::board::MoveComputeType;
+use crate::board::MoveComputeType::{self, *};
 use crate::pieces::Piece;
 use std::fmt::Debug;
 use std::fmt::Error;
@@ -61,12 +61,19 @@ impl MoveConstraints {
     }
 }
 
+fn is_psuedo(compute_type: MoveComputeType) -> bool {
+    match compute_type {
+        MoveComputeType::All => false,
+        MoveComputeType::Attacks => false,
+        MoveComputeType::AttacksChecks => false,
+        _ => true,
+    }
+}
+
 impl BoardImpl {
     pub fn constraints_impl(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
         match computation_type {
-            MoveComputeType::Attacks => self.compute_constraints(computation_type),
-            MoveComputeType::AttacksChecks => self.compute_constraints(computation_type),
-            _ => match &self.cache.move_constraints {
+            MoveComputeType::All => match &self.cache.move_constraints {
                 Some(x) => x.clone(),
                 None => {
                     let result = self.compute_constraints(computation_type);
@@ -74,19 +81,21 @@ impl BoardImpl {
                     result
                 }
             },
+            other => self.compute_constraints(other),
         }
     }
 
     fn compute_constraints(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
         let passive_control = self.passive_control_impl();
-        let pinned = self.pinned_set_impl();
+        let pseudo = is_psuedo(computation_type);
+        let pinned = if pseudo { self.pinned_set_impl() } else { RaySet::empty() };
         if passive_control.contains(self.king(self.active)) {
             self.check(passive_control, &pinned)
         } else {
             match computation_type {
-                MoveComputeType::All => self.any(passive_control, &pinned),
-                MoveComputeType::Attacks => self.attacks(passive_control, &pinned, false),
-                MoveComputeType::AttacksChecks => self.attacks(passive_control, &pinned, true),
+                All | PseudoAll => self.any(passive_control, &pinned),
+                Attacks | PseudoAttacks => self.attacks(passive_control, &pinned, false),
+                AttacksChecks | PseudoAttacksChecks => self.attacks(passive_control, &pinned, true),
             }
         }
     }

@@ -53,6 +53,13 @@ impl PartialEq<RaySet> for RaySet {
 }
 
 impl RaySet {
+    pub fn empty() -> RaySet {
+        RaySet {
+            ray_points: BitBoard::EMPTY,
+            rays: empty_ray_pairs(),
+        }
+    }
+
     pub fn ray(&self, loc: Square) -> Option<BitBoard> {
         if self.ray_points.contains(loc) {
             self.rays.iter().filter_map(|x| x.as_ref()).find(|(sq, _)| *sq == loc).map(|(_, c)| *c)

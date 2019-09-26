@@ -1,6 +1,6 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
-use crate::base::Side;
+use crate::base::{Reflectable, Side};
 use crate::board::Board;
 use crate::board::BoardImpl;
 use crate::board::MoveComputeType;
@@ -22,6 +22,8 @@ impl BoardImpl {
     fn compute_termination(&mut self) -> Option<Termination> {
         if self.half_move_clock() >= 50 || self.history.has_three_repetitions() {
             return Some(Termination::Draw);
+        } else if self.active_control_impl().contains(self.king(self.active.reflect())) {
+            return Some(Termination::Win);
         }
         let active = self.active;
         let active_king = self.king(active);
@@ -102,6 +104,11 @@ mod test {
         let mut board = crate::board::from_fen(fen).unwrap();
         assert_eq!(expected, board.termination_status_impl());
         assert_eq!(expected, board.reflect().termination_status_impl());
+    }
+
+    #[test]
+    fn search_terminating_win() {
+        test(Some(Termination::Win), "1r5k/p5qQ/1p1P1p2/2p3p1/3nBb2/3P3R/PP5P/2R3K1 w - - 0 32")
     }
 
     #[test]
