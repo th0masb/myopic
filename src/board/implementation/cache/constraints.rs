@@ -88,7 +88,7 @@ impl BoardImpl {
     fn compute_constraints(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
         let passive_control = self.passive_control_impl();
         let pseudo = is_psuedo(computation_type);
-        let pinned = if pseudo { self.pinned_set_impl() } else { RaySet::empty() };
+        let pinned = if pseudo { RaySet::empty() } else { self.pinned_set_impl() };
         if passive_control.contains(self.king(self.active)) {
             self.check(passive_control, &pinned)
         } else {
