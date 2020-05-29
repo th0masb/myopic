@@ -5,7 +5,7 @@ pipeline {
             steps {
                 // Bit of a hack to set the build name
                 script {
-                    currentBuild.displayName = "#${currentBuild.number} ${BRANCH}"
+                    currentBuild.displayName = "#${currentBuild.number}, branch: ${BRANCH}, project: ${PROJECT}"
                 }
                 sh "rustup update"
             }
@@ -23,6 +23,7 @@ pipeline {
             steps {
                 dir(path: "./${PROJECT}") {
                     echo pwd()
+                    sh 'cargo clean'
                     sh 'cargo check'
                     sh 'cargo test --release'
                 }
