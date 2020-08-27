@@ -1,23 +1,14 @@
-#[macro_use]
-extern crate itertools;
-#[macro_use]
-extern crate lazy_static;
-extern crate rand;
-
-mod bitboard;
-mod pieces;
-mod reflectable;
-mod castlezone;
-mod direction;
-mod hash;
-mod square;
-
 use crate::bitboard::BitBoard;
 use crate::direction::Dir;
 use crate::direction::N;
 use crate::direction::S;
 use std::collections::BTreeSet;
 
+pub mod bitboard;
+pub mod castlezone;
+pub mod direction;
+pub mod hash;
+pub mod square;
 
 /// Represents the two different teams in a game of chess.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
@@ -71,4 +62,3 @@ impl Side {
         }
     }
 }
-
