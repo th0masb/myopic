@@ -5,7 +5,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::Side;
 use crate::base::square::Square;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::board::Discards;
 use crate::board::implementation::cache::CalculationCache;
 use crate::board::implementation::castling::Castling;
@@ -261,7 +261,7 @@ impl PartialEq<BoardImpl> for BoardImpl {
     }
 }
 
-impl Board for BoardImpl {
+impl MutBoard for BoardImpl {
     fn evolve(&mut self, action: &Move) -> Discards {
         self.evolve(action)
     }

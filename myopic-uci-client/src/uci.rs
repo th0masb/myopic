@@ -9,7 +9,7 @@ use regex::{Match, Regex};
 use crate::{board, search};
 use crate::base::square::Square;
 use crate::base::StrResult;
-use crate::board::{Board, BoardImpl, Move, MoveComputeType};
+use crate::board::{MutBoard, BoardImpl, Move, MoveComputeType};
 use crate::eval::{EvalBoard, SimpleEvalBoard};
 use crate::parse::patterns;
 use crate::pieces::Piece;
@@ -199,7 +199,7 @@ fn convert_go_setup_commands<B: EvalBoard>(commands: Vec<GoCommand>) -> Vec<Sear
     }
 }
 
-fn parse_long_algebraic_move<B: Board>(board: &mut B, mv: &String) -> StrResult<Move> {
+fn parse_long_algebraic_move<B: MutBoard>(board: &mut B, mv: &String) -> StrResult<Move> {
     if mv.len() < 4 || mv.len() > 5 {
         return Err(format!("Illegal length: {}", mv.len()));
     }

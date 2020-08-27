@@ -1,5 +1,5 @@
 use crate::board;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::board::BoardImpl;
 
 pub use self::evalboardimpl::SimpleEvalBoard;
@@ -23,7 +23,7 @@ pub const LOSS_VALUE: i32 = -WIN_VALUE;
 pub const DRAW_VALUE: i32 = 0;
 
 /// Extension of the Board trait which adds a static evaluation function.
-pub trait EvalBoard: Board {
+pub trait EvalBoard: MutBoard {
     /// The static evaluation function assigns a score to this exact
     /// position at the point of time it is called. It does not take
     /// into account potential captures/recaptures etc. It must follow

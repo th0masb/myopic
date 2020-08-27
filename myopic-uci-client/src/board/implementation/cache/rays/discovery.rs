@@ -2,7 +2,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::{Reflectable, Side};
 use crate::board::implementation::cache::rays::RaySet;
-use crate::board::{Board, BoardImpl};
+use crate::board::{MutBoard, BoardImpl};
 use crate::pieces::Piece;
 
 impl BoardImpl {

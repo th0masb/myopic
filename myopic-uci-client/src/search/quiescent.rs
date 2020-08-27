@@ -1,6 +1,6 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::Reflectable;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
@@ -52,7 +52,7 @@ pub(super) fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, dep
     return result;
 }
 
-fn compute_quiescent_moves<B: Board>(state: &mut B, depth: i32) -> Vec<Move> {
+fn compute_quiescent_moves<B: MutBoard>(state: &mut B, depth: i32) -> Vec<Move> {
     let mut moves = if depth < Q_CHECK_CAP {
         state.compute_moves(MoveComputeType::Attacks)
     } else {
@@ -81,7 +81,7 @@ fn compute_quiescent_moves<B: Board>(state: &mut B, depth: i32) -> Vec<Move> {
         .collect()
 }
 
-fn score_attack<B: Board>(state: &mut B, attack: &Move) -> i32 {
+fn score_attack<B: MutBoard>(state: &mut B, attack: &Move) -> i32 {
     match attack {
         &Move::Enpassant(_, _) => 10000,
         &Move::Promotion(_, _, _) => 20000,

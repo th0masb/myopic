@@ -2,7 +2,7 @@ use crate::base::castlezone::CastleZone;
 use crate::base::square::Square::*;
 use crate::base::Reflectable;
 use crate::board;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::board::Move;
 use crate::board::Move::*;
 use crate::eval::evalboardimpl::SimpleEvalBoard;
@@ -10,23 +10,23 @@ use crate::pieces::Piece::*;
 use crate::base::square::Square;
 
 #[derive(Clone, Eq, PartialEq)]
-struct TestCase<B: Board> {
+struct TestCase<B: MutBoard> {
     start_position: B,
     moves: Vec<Move>,
 }
 
-impl<B: Board> Reflectable for TestCase<B> {
+impl<B: MutBoard> Reflectable for TestCase<B> {
     fn reflect(&self) -> Self {
         TestCase { start_position: self.start_position.reflect(), moves: self.moves.reflect() }
     }
 }
 
-fn execute_test<B: Board>(test_case: TestCase<B>) {
+fn execute_test<B: MutBoard>(test_case: TestCase<B>) {
     execute_test_impl(test_case.clone());
     execute_test_impl(test_case.reflect());
 }
 
-fn execute_test_impl<B: Board>(test_case: TestCase<B>) {
+fn execute_test_impl<B: MutBoard>(test_case: TestCase<B>) {
     let mut start = SimpleEvalBoard::new(test_case.start_position);
     for evolution in test_case.moves {
         let discards = start.evolve(&evolution);

@@ -14,8 +14,6 @@ pub struct History {
     pop_dist: usize,
     /// Fixed size array which maintains the hash values.
     cache: [u64; CACHE_SIZE],
-    // Tree map also storing the hash values to allow for rapid repetition check.
-    //cache_map: BTreeMap<u64, usize>,
 }
 
 impl History {
@@ -57,41 +55,17 @@ impl History {
     }
 
     pub fn push_head(&mut self, new_head: u64) {
-//        self.increment_count(new_head);
-//        self.decrement_count(self.tail());
         self.pop_dist += 1;
         self.cache[self.head_index()] = new_head;
     }
 
     pub fn pop_head(&mut self, new_tail: u64) {
         debug_assert!(self.pop_dist > 0);
-//        self.increment_count(new_tail);
-//        self.decrement_count(self.head());
         self.cache[self.head_index()] = new_tail;
         self.pop_dist -= 1;
     }
 
-//    fn increment_count(&mut self, hash: u64) {
-//        match self.cache_map.get(&hash).cloned() {
-//            None => self.cache_map.insert(hash, 1),
-//            Some(n) => self.cache_map.insert(hash, n + 1),
-//        };
-//    }
-//
-//    fn decrement_count(&mut self, hash: u64) {
-//        match self.cache_map.get(&hash).cloned() {
-//            None => panic!(),
-//            Some(1) => self.cache_map.remove(&hash),
-//            Some(n) => self.cache_map.insert(hash, n - 1),
-//        };
-//    }
-
     pub fn has_three_repetitions(&self) -> bool {
-//        if self.pop_dist < CACHE_SIZE {
-//            false
-//        } else {
-//            self.cache_map.values().any(|count| *count > 2)
-//        }
         if self.pop_dist < CACHE_SIZE {
             false
         } else {
@@ -99,7 +73,7 @@ impl History {
             cache.sort();
             let mut count = 1;
             let mut last = cache[0];
-            for &hash in cache.into_iter().skip(1) {
+            for &hash in cache.iter().skip(1) {
                 if hash == last {
                     count += 1;
                     if count == 3 {
