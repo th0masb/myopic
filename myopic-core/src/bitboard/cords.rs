@@ -1,16 +1,9 @@
 use std::cmp;
 
 use crate::bitboard::BitBoard;
-use crate::direction::Dir;
-use crate::direction::E;
-use crate::direction::N;
-use crate::direction::NE;
-use crate::direction::NW;
-use crate::direction::S;
-use crate::direction::SE;
-use crate::direction::SW;
-use crate::direction::W;
-use crate::square::Square;
+use crate::Dir;
+
+use crate::Square;
 
 pub fn get_cord(source: Square, target: Square) -> BitBoard {
     let (min, max) = (cmp::min(source, target), cmp::max(source, target));
@@ -42,7 +35,7 @@ fn compute_cord_cache() -> Vec<BitBoard> {
 }
 
 fn compute_cord_impl(source: Square, target: Square) -> BitBoard {
-    [N, NE, E, SE, S, SW, W, NW]
+    [Dir::N, Dir::NE, Dir::E, Dir::SE, Dir::S, Dir::SW, Dir::W, Dir::NW]
         .iter()
         .find(|&d| source.search(*d).contains(target))
         .map_or(BitBoard::EMPTY, |&d| takewhile_inc(source, target, d) | source)
@@ -54,7 +47,7 @@ fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {
 
 #[cfg(test)]
 mod test {
-    use crate::base::square::Square::*;
+    use crate::Square::*;
 
     use super::*;
 

@@ -1,6 +1,6 @@
 use std::num::Wrapping;
 
-use crate::square::Square;
+use crate::Square;
 
 /// The iterator implementation struct produced by a bitboard. It simply
 /// wraps a long value used to track the remaining set bits.

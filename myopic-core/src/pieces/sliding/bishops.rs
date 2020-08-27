@@ -1,7 +1,7 @@
 use std::iter::repeat;
 
 use crate::bitboard::BitBoard;
-use crate::square::Square;
+use crate::Square;
 
 use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
 
@@ -43,7 +43,7 @@ fn compute_move_database() -> Moves {
 
 #[cfg(test)]
 mod test {
-    use crate::base::square::Square::*;
+    use crate::Square::*;
 
     use super::{compute_bishop_index, compute_move_database, Moves};
 

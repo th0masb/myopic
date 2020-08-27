@@ -1,5 +1,5 @@
 use crate::bitboard::BitBoard;
-use crate::square::Square;
+use crate::Square;
 
 pub fn control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
     CONTROL[loc as usize]
@@ -90,7 +90,7 @@ const CONTROL: [BitBoard; 64] = [
 
 #[cfg(test)]
 mod white_test {
-    use crate::square::Square::*;
+    use crate::Square::*;
     use crate::pieces::Piece;
 
     use super::*;
@@ -116,7 +116,7 @@ mod white_test {
 
 #[cfg(test)]
 mod black_test {
-    use crate::base::square::Square::*;
+    use crate::Square::*;
     use crate::pieces::Piece;
 
     use super::*;
@@ -132,10 +132,4 @@ mod black_test {
     fn test_moves() {
         assert_eq!(C4 | D3 | D1, Piece::BN.moves(B2, D1 | B1, A4 | D7));
     }
-
-    //    #[test]
-    //    fn test_attacks() {
-    //        let bn = BlackKnight;
-    //        assert_eq!(D1.lift(), bn.attacks(B2, D1 | B1, A4 | D7));
-    //    }
 }

@@ -1,10 +1,8 @@
 use std::num::Wrapping;
 
 use crate::bitboard::BitBoard;
-use crate::direction::Dir;
-use crate::direction::{E, N, S, W};
-use crate::direction::{NE, NW, SE, SW};
-use crate::square::Square;
+use crate::Dir;
+use crate::Square;
 
 pub mod bishops;
 pub mod queens;
@@ -35,12 +33,12 @@ fn compute_magic_index(occupancy: u64, magic: u64, shift: usize) -> usize {
 // Implementation details and related tests.
 /// Computes a vector containing all the directions a bishop can move in.
 fn bishop_dirs() -> Vec<Dir> {
-    vec![NE, SE, SW, NW]
+    vec![Dir::NE, Dir::SE, Dir::SW, Dir::NW]
 }
 
 /// Computes a vector containing all the directions a rook can move in.
 fn rook_dirs() -> Vec<Dir> {
-    vec![N, E, S, W]
+    vec![Dir::N, Dir::E, Dir::S, Dir::W]
 }
 
 /// Computes a vector containing the occupancy masks for each base.square. The
@@ -66,7 +64,7 @@ fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
 
 #[cfg(test)]
 mod mask_tests {
-    use crate::base::square::Square::*;
+    use crate::Square::*;
 
     use super::*;
 
@@ -110,7 +108,7 @@ fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
 mod powerset_test {
     use std::collections::HashSet;
 
-    use crate::base::square::Square::*;
+    use crate::Square::*;
 
     use super::*;
 
@@ -140,7 +138,7 @@ fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
     let mut res = 0u64;
     for &dir in dirs {
         for sq in loc.search_vec(dir) {
-            res |= 1u64 << (sq as usize);
+            res |= 1u64 << (sq as u64);
             if !(occ & sq).is_empty() {
                 break;
             }
@@ -151,7 +149,7 @@ fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
 
 #[cfg(test)]
 mod control_tests {
-    use crate::base::square::Square::*;
+    use crate::Square::*;
 
     use super::*;
 
@@ -161,7 +159,7 @@ mod control_tests {
         let loc = D4;
         let whites = D1 | F4 | D6 | G7 | H8;
         let blacks = B2 | B4 | E3 | A7;
-        let dirs = vec![N, NE, E, SE, S, SW, W, NW];
+        let dirs = vec![Dir::N, Dir::NE, Dir::E, Dir::SE, Dir::S, Dir::SW, Dir::W, Dir::NW];
         let expected_control =
             D5 | D6 | E5 | F6 | G7 | E4 | F4 | E3 | D3 | D2 | D1 | C3 | B2 | C4 | B4 | C5 | B6 | A7;
         assert_eq!(expected_control, compute_control(loc, whites | blacks, &dirs));

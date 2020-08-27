@@ -1,5 +1,5 @@
 use crate::bitboard::BitBoard;
-use crate::square::Square;
+use crate::Square;
 use crate::reflectable::Reflectable;
 use crate::Side;
 

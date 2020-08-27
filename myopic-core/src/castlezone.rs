@@ -4,21 +4,21 @@ use std::ops;
 use crate::Side;
 use crate::reflectable::Reflectable;
 use crate::bitboard::BitBoard;
-use crate::square::Square;
-use crate::square::Square::A1;
-use crate::square::Square::A8;
-use crate::square::Square::C1;
-use crate::square::Square::C8;
-use crate::square::Square::D1;
-use crate::square::Square::D8;
-use crate::square::Square::E1;
-use crate::square::Square::E8;
-use crate::square::Square::F1;
-use crate::square::Square::F8;
-use crate::square::Square::G1;
-use crate::square::Square::G8;
-use crate::square::Square::H1;
-use crate::square::Square::H8;
+use crate::Square;
+use crate::Square::A1;
+use crate::Square::A8;
+use crate::Square::C1;
+use crate::Square::C8;
+use crate::Square::D1;
+use crate::Square::D8;
+use crate::Square::E1;
+use crate::Square::E8;
+use crate::Square::F1;
+use crate::Square::F8;
+use crate::Square::G1;
+use crate::Square::G8;
+use crate::Square::H1;
+use crate::Square::H8;
 use crate::pieces::Piece;
 
 /// Represents one of the four different areas on a chessboard where
@@ -136,7 +136,7 @@ impl Reflectable for CastleZone {
 }
 
 const fn sq(i: usize) -> u64 {
-    1u64 << i
+    1u64 << i as u64
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]

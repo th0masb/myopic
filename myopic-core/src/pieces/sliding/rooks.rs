@@ -1,7 +1,7 @@
 use std::iter::repeat;
 
 use crate::bitboard::BitBoard;
-use crate::square::Square;
+use crate::Square;
 
 use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, ROOK_MASKS};
 
@@ -43,7 +43,7 @@ fn compute_move_database() -> Moves {
 
 #[cfg(test)]
 mod test {
-    use crate::base::square::Square::*;
+    use crate::Square::*;
 
     use super::{compute_move_database, compute_rook_index, Moves};
 
