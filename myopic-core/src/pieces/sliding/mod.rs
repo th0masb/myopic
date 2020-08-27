@@ -45,6 +45,7 @@ fn rook_dirs() -> Vec<Dir> {
 /// occupancy mask at a base.square for some direction set is defined to be the
 /// locations a piece could move to on an empty board excluding the last
 /// base.square in each of the direction 'rays'.
+#[allow(dead_code)]
 fn compute_masks(dirs: &Vec<Dir>) -> Vec<u64> {
     Square::iter()
         .map(|sq| dirs.iter().map(|&dir| search_remove_last(sq, dir)).collect())
@@ -54,6 +55,7 @@ fn compute_masks(dirs: &Vec<Dir>) -> Vec<u64> {
 
 /// Computes the set of squares in a given direction from some source
 /// base.square with the furthest away excluded.
+#[allow(dead_code)]
 fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
     let mut res = loc.search_vec(dir);
     if res.len() > 0 {
@@ -82,6 +84,7 @@ mod mask_tests {
 
 /// Computes the magic bitshift values for all squares which is defined to
 /// be the 1 count of the corresponding occupancy mask subtracted from 64.
+#[allow(dead_code)]
 fn compute_shifts(dirs: &Vec<Dir>) -> Vec<usize> {
     let f = |x: u64| 64 - BitBoard(x).size();
     compute_masks(dirs).into_iter().map(f).collect()
@@ -89,6 +92,7 @@ fn compute_shifts(dirs: &Vec<Dir>) -> Vec<usize> {
 
 /// Computes the powerset of some set of squares with the resulting elements
 /// of the powerset represented as bitboards.
+#[allow(dead_code)]
 fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
     if squares.is_empty() {
         vec![BitBoard::EMPTY]

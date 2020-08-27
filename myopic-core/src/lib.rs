@@ -11,7 +11,6 @@ pub mod castlezone;
 pub mod hash;
 
 use crate::bitboard::BitBoard;
-use std::collections::BTreeSet;
 use std::fmt::Debug;
 
 

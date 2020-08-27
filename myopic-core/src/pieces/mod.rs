@@ -169,10 +169,3 @@ const ALL: [Piece; 12] = [
 const WHITE: [Piece; 6] = [Piece::WP, Piece::WN, Piece::WB, Piece::WR, Piece::WQ, Piece::WK];
 
 const BLACK: [Piece; 6] = [Piece::BP, Piece::BN, Piece::BB, Piece::BR, Piece::BQ, Piece::BK];
-
-const PAWNS: [Piece; 2] = [Piece::WP, Piece::BP];
-const KNIGHTS: [Piece; 2] = [Piece::WN, Piece::BN];
-const BISHOPS: [Piece; 2] = [Piece::WB, Piece::BB];
-const ROOKS: [Piece; 2] = [Piece::WR, Piece::BR];
-const QUEENS: [Piece; 2] = [Piece::WQ, Piece::BQ];
-const KINGS: [Piece; 2] = [Piece::WK, Piece::BK];
