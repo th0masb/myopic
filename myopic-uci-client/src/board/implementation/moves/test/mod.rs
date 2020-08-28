@@ -8,7 +8,7 @@ use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::board::implementation::BoardImpl;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::pieces::Piece;

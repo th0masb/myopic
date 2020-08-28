@@ -4,7 +4,7 @@ use crate::base::Reflectable;
 use crate::base::Side;
 use crate::board::implementation::cache::rays::RaySet;
 use crate::board::implementation::BoardImpl;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::pieces::Piece;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};

@@ -1,7 +1,7 @@
 use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Side;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::board::BoardImpl;
 use crate::board::MoveComputeType;
 use crate::board::Termination;

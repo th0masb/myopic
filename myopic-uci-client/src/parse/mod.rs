@@ -2,14 +2,14 @@ use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
 use crate::base::StrResult;
 use crate::board::Move::Castle;
-use crate::board::{Board, Move, MoveComputeType};
+use crate::board::{MutBoard, Move, MoveComputeType};
 use crate::pieces::Piece;
 use crate::regex::Regex;
 use patterns::*;
 
 pub mod patterns;
 
-pub fn pgn<B: Board>(start: &B, moves: &String) -> StrResult<Vec<Move>> {
+pub fn pgn<B: MutBoard>(start: &B, moves: &String) -> StrResult<Vec<Move>> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in pgn_move().find_iter(moves) {
@@ -30,7 +30,7 @@ pub fn pgn<B: Board>(start: &B, moves: &String) -> StrResult<Vec<Move>> {
 //    regex.captures_iter(source).map(|cap| String::from(&cap[0])).collect()
 //}
 
-fn parse_single_move<B: Board>(start: &mut B, pgn_move: &str) -> StrResult<Move> {
+fn parse_single_move<B: MutBoard>(start: &mut B, pgn_move: &str) -> StrResult<Move> {
     // If a castle move we can retrieve straight away
     if pgn_move == "O-O" {
         return Ok(Castle(CastleZone::kingside(start.active())));

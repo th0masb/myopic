@@ -3,7 +3,7 @@ use crate::base::castlezone::CastleZone;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::board::Discards;
 use crate::board::Move;
 use crate::board::MoveComputeType;
@@ -16,14 +16,14 @@ use crate::pieces::Piece;
 mod test;
 
 #[derive(Clone, Eq, PartialEq)]
-pub struct SimpleEvalBoard<B: Board> {
+pub struct SimpleEvalBoard<B: MutBoard> {
     mid_eval: i32,
     end_eval: i32,
     phase: i32,
     board: B,
 }
 
-impl<B: Board> Reflectable for SimpleEvalBoard<B> {
+impl<B: MutBoard> Reflectable for SimpleEvalBoard<B> {
     fn reflect(&self) -> Self {
         SimpleEvalBoard {
             mid_eval: -self.mid_eval,
@@ -39,7 +39,7 @@ const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
     + 4 * (PHASE_VALUES[1] + PHASE_VALUES[2] + PHASE_VALUES[3])
     + 2 * PHASE_VALUES[4];
 
-fn compute_phase<B: Board>(board: &B) -> i32 {
+fn compute_phase<B: MutBoard>(board: &B) -> i32 {
     let pieces: Vec<_> = Piece::iter_w().take(5).chain(Piece::iter_b().take(5)).collect();
     let phase_sub: i32 = pieces
         .into_iter()
@@ -48,21 +48,21 @@ fn compute_phase<B: Board>(board: &B) -> i32 {
     TOTAL_PHASE - phase_sub
 }
 
-fn compute_midgame<B: Board>(board: &B) -> i32 {
+fn compute_midgame<B: MutBoard>(board: &B) -> i32 {
     Piece::iter()
         .flat_map(|p| board.locs(p).iter().map(move |loc| (p, loc)))
         .map(|(p, loc)| tables::midgame(p, loc) + values::midgame(p))
         .sum()
 }
 
-fn compute_endgame<B: Board>(board: &B) -> i32 {
+fn compute_endgame<B: MutBoard>(board: &B) -> i32 {
     Piece::iter()
         .flat_map(|p| board.locs(p).iter().map(move |loc| (p, loc)))
         .map(|(p, loc)| tables::endgame(p, loc) + values::endgame(p))
         .sum()
 }
 
-impl<B: Board> SimpleEvalBoard<B> {
+impl<B: MutBoard> SimpleEvalBoard<B> {
     pub fn new(board: B) -> SimpleEvalBoard<B> {
         SimpleEvalBoard {
             mid_eval: compute_midgame(&board),
@@ -85,7 +85,7 @@ impl<B: Board> SimpleEvalBoard<B> {
     }
 }
 
-impl<B: Board> Board for SimpleEvalBoard<B> {
+impl<B: MutBoard> MutBoard for SimpleEvalBoard<B> {
     fn evolve(&mut self, action: &Move) -> Discards {
         match action {
             &Move::Standard(moving, src, target) => {
@@ -217,7 +217,7 @@ impl<B: Board> Board for SimpleEvalBoard<B> {
     }
 }
 
-impl<B: Board> EvalBoard for SimpleEvalBoard<B> {
+impl<B: MutBoard> EvalBoard for SimpleEvalBoard<B> {
     fn static_eval(&mut self) -> i32 {
         match self.termination_status() {
             Some(Termination::Draw) => super::DRAW_VALUE,

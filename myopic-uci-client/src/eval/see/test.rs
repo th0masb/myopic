@@ -2,7 +2,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::board;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::eval::see::See;
 use crate::pieces::Piece;
 
@@ -13,12 +13,12 @@ fn value(piece: Piece) -> i32 {
 }
 
 #[derive(Clone, Debug)]
-struct TestCase<B: Board> {
+struct TestCase<B: MutBoard> {
     board: B,
     expected: Vec<(Square, Square, i32)>,
 }
 
-impl<B: Board> Reflectable for TestCase<B> {
+impl<B: MutBoard> Reflectable for TestCase<B> {
     fn reflect(&self) -> Self {
         let mut reflected_expected = Vec::new();
         for (src, targ, result) in self.expected.iter() {
@@ -28,12 +28,12 @@ impl<B: Board> Reflectable for TestCase<B> {
     }
 }
 
-fn execute_case<B: Board>(test_case: TestCase<B>) {
+fn execute_case<B: MutBoard>(test_case: TestCase<B>) {
     execute_case_impl(test_case.clone());
     execute_case_impl(test_case.reflect())
 }
 
-fn execute_case_impl<B: Board>(test_case: TestCase<B>) {
+fn execute_case_impl<B: MutBoard>(test_case: TestCase<B>) {
     let board = test_case.board;
     for (source, target, expected_value) in test_case.expected.into_iter() {
         let see = See { board: &board, source, target, value };

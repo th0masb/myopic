@@ -4,7 +4,7 @@ use crate::base::bitboard::BitBoard;
 use crate::base::square::Square;
 use crate::base::Reflectable;
 use crate::base::Side;
-use crate::board::Board;
+use crate::board::MutBoard;
 use crate::eval::values;
 use crate::pieces::Piece;
 
@@ -18,21 +18,21 @@ mod test;
 /// the attacker, higher is good for the attacker. Positive means a good
 /// exchange, negative mean a bad one. If the pieces are on the same side the
 /// result is undefined.
-pub fn exchange_value<B: Board>(board: &B, source: Square, target: Square) -> i32 {
+pub fn exchange_value<B: MutBoard>(board: &B, source: Square, target: Square) -> i32 {
     See { board, source, target, value: values::abs_midgame }.exchange_value()
 }
 
 type BitBoardPair = (BitBoard, BitBoard);
 
 /// Static exchange evaluator
-struct See<'a, B: Board> {
+struct See<'a, B: MutBoard> {
     board: &'a B,
     source: Square,
     target: Square,
     value: fn(Piece) -> i32,
 }
 
-impl<B: Board> See<'_, B> {
+impl<B: MutBoard> See<'_, B> {
     fn exchange_value(&self) -> i32 {
         let board = self.board;
         let first_attacker = board.piece(self.source).unwrap();
