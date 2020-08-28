@@ -1,11 +1,10 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::Side;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::{Side, Square};
 use crate::board::MutBoard;
 use crate::board::BoardImpl;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
-use crate::pieces::Piece;
+use myopic_core::pieces::Piece;
 
 impl BoardImpl {
     pub fn termination_status_impl(&mut self) -> Option<Termination> {
@@ -90,7 +89,7 @@ fn qrbnp<'a>(side: Side) -> &'a [Piece] {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::base::Reflectable;
+    use myopic_core::reflectable::Reflectable;
 
     #[derive(Clone, Debug)]
     struct TestCase {

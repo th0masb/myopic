@@ -29,7 +29,7 @@ fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
 }
 
 impl Castling {
-    pub fn from_fen(fen_string: String) -> StrResult<Castling> {
+    pub fn from_fen(fen_string: String) -> Result<Castling, String> {
         if !patterns::fen_rights().is_match(&fen_string) {
             Err(fen_string)
         } else {
@@ -87,7 +87,7 @@ impl Castling {
     }
 
     pub fn hash(&self) -> u64 {
-        hash::castle_features(self.remaining_rights)
+        hash::zones(self.remaining_rights)
     }
 
     pub fn rights(&self) -> CastleZoneSet {

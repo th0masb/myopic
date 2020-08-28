@@ -1,13 +1,13 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::castlezone::CastleZone;
-use crate::base::square::Square;
-use crate::base::Reflectable;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::CastleZone;
+use myopic_core::Square;
+use myopic_core::reflectable::Reflectable;
 use crate::board::implementation::cache::MoveConstraints;
 use crate::board::implementation::BoardImpl;
 use crate::board::MutBoard;
 use crate::board::Move;
 use crate::board::MoveComputeType;
-use crate::pieces::Piece;
+use myopic_core::pieces::Piece;
 
 #[cfg(test)]
 mod test;
@@ -96,7 +96,7 @@ impl BoardImpl {
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
         let enpassant_source =
             self.enpassant.map_or(BitBoard::EMPTY, |sq| enpassant_source::squares(self.active, sq));
-        let promotion_rank = self.active.pawn_promoting_rank();
+        let promotion_rank = self.active.pawn_promoting_src_rank();
         let pawn_locs = self.locs(Piece::pawn(self.active));
         (
             pawn_locs - enpassant_source - promotion_rank,

@@ -15,7 +15,12 @@ use crate::board::Move;
 use crate::board::MoveComputeType;
 use crate::board::Termination;
 use crate::parse::patterns;
+<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
 use crate::pieces::Piece;
+=======
+use myopic_core::reflectable::Reflectable;
+use myopic_core::pieces::Piece;
+>>>>>>> [MYO-005] Got all related code compiling:myopic-board/src/board/implementation/mod.rs
 
 mod cache;
 mod castling;
@@ -38,7 +43,7 @@ pub struct BoardImpl {
 }
 
 impl BoardImpl {
-    pub(super) fn from_fen(fen: String) -> StrResult<BoardImpl> {
+    pub(super) fn from_fen(fen: String) -> Result<BoardImpl, String> {
         if patterns::fen().is_match(&fen) {
             let space_split: Vec<_> = patterns::space().split(&fen).map(|s| s.to_owned()).collect();
             let pieces = positions_from_fen(&space_split[0])?;
@@ -72,7 +77,7 @@ impl BoardImpl {
     }
 }
 
-fn side_from_fen(fen: &String) -> StrResult<Side> {
+fn side_from_fen(fen: &String) -> Result<Side, String> {
     match patterns::fen_side().find(fen).map(|m| m.as_str()).ok_or(fen.clone())? {
         "w" => Ok(Side::White),
         "b" => Ok(Side::Black),
@@ -84,17 +89,17 @@ fn enpassant_from_fen(fen: &String) -> Option<Square> {
     patterns::fen_enpassant().find(fen).and_then(|m| Square::from_string(m.as_str()).ok())
 }
 
-fn positions_from_fen(fen: &String) -> StrResult<Positions> {
+fn positions_from_fen(fen: &String) -> Result<Positions, String> {
     let positions = patterns::fen_positions().find(&fen).map(|m| m.as_str()).ok_or(fen.clone())?;
     Positions::from_fen(String::from(positions))
 }
 
-fn rights_from_fen(fen: &String) -> StrResult<Castling> {
+fn rights_from_fen(fen: &String) -> Result<Castling, String> {
     let rights = patterns::fen_rights().find(&fen).map(|m| m.as_str()).ok_or(fen.clone())?;
     Castling::from_fen(String::from(rights))
 }
 
-fn clock_history_from_fen(fen: &String, active: Side) -> StrResult<(usize, usize)> {
+fn clock_history_from_fen(fen: &String, active: Side) -> Result<(usize, usize), String> {
     let ints: Vec<_> =
         patterns::int().find_iter(fen).map(|m| m.as_str().parse::<usize>().unwrap()).collect();
     if ints.len() < 2 {
@@ -111,8 +116,13 @@ fn clock_history_from_fen(fen: &String, active: Side) -> StrResult<(usize, usize
 fn hash(pt: &Positions, ct: &Castling, active: Side, ep: Option<Square>) -> u64 {
     pt.hash()
         ^ ct.hash()
+<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
         ^ crate::base::hash::side_feature(active)
         ^ ep.map_or(0u64, |x| crate::base::hash::enpassant_feature(x))
+=======
+        ^ myopic_core::hash::side(active)
+        ^ ep.map_or(0u64, |x| myopic_core::hash::enpassant(x))
+>>>>>>> [MYO-005] Got all related code compiling:myopic-board/src/board/implementation/mod.rs
 }
 
 impl Move {

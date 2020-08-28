@@ -1,9 +1,8 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::Reflectable;
-use crate::base::Side;
 use crate::board::implementation::BoardImpl;
-use crate::pieces::Piece;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
+use myopic_core::pieces::Piece;
 
 impl BoardImpl {
     pub fn passive_control_impl(&mut self) -> BitBoard {
@@ -38,12 +37,12 @@ impl BoardImpl {
 
 #[cfg(test)]
 mod test {
-    use crate::base::bitboard::constants::*;
-    use crate::base::bitboard::BitBoard;
-    use crate::base::castlezone::CastleZoneSet;
-    use crate::base::Side;
+    use myopic_core::bitboard::constants::*;
     use crate::board::implementation::BoardImpl;
     use crate::board::implementation::test::TestBoard;
+    use myopic_core::Side;
+    use myopic_core::bitboard::BitBoard;
+    use myopic_core::castlezone::CastleZoneSet;
 
     struct TestCase {
         board: TestBoard,

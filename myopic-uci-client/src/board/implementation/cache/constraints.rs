@@ -1,15 +1,14 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::Reflectable;
-use crate::base::Side;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::{Side, Square};
 use crate::board::implementation::cache::rays::RaySet;
 use crate::board::implementation::BoardImpl;
 use crate::board::MutBoard;
 use crate::board::MoveComputeType;
-use crate::pieces::Piece;
 use std::fmt::Debug;
 use std::fmt::Error;
 use std::fmt::Formatter;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::pieces::Piece;
 
 #[derive(Clone)]
 pub struct MoveConstraints {
@@ -120,7 +119,7 @@ impl BoardImpl {
             let passive_king = self.king(passive);
             let promotion_rays = Piece::WQ.control(passive_king, whites, blacks);
             let promotion_jumps = Piece::WN.empty_control(passive_king);
-            let promotion_checks = (promotion_rays | promotion_jumps) & active.pawn_last_rank();
+            let promotion_checks = (promotion_rays | promotion_jumps) & active.pawn_promoting_dest_rank();
             for piece in Piece::on_side(active) {
                 let is_pawn = piece.is_pawn();
                 let enpassant = if is_pawn { enpassant_set } else { BitBoard::EMPTY };

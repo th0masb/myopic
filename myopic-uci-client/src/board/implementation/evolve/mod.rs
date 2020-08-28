@@ -1,13 +1,12 @@
-use crate::base::castlezone::CastleZone;
-use crate::base::castlezone::CastleZoneSet;
-use crate::base::square::Square;
-use crate::base::Reflectable;
-use crate::base::Side;
+use myopic_core::castlezone::CastleZone;
+use myopic_core::castlezone::CastleZoneSet;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square, Dir};
 use crate::board::implementation::BoardImpl;
 use crate::board::Discards;
 use crate::board::Move;
 use crate::board::Move::*;
-use crate::pieces::Piece;
+use myopic_core::pieces::Piece;
 
 #[cfg(test)]
 mod test;
@@ -40,7 +39,7 @@ impl BoardImpl {
         }
     }
 
-    fn evolve_s(&mut self, piece: Piece, source: Square, target: Square) -> D {
+                fn evolve_s(&mut self, piece: Piece, source: Square, target: Square) -> D {
         let discarded_piece = self.pieces.erase_square(target);
         let discarded_rights = self.castling.remove_rights(source | target);
         let rev_data = self.create_rev_data(discarded_piece, discarded_rights);
@@ -175,3 +174,4 @@ impl BoardImpl {
         }
     }
 }
+

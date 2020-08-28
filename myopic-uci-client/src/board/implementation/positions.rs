@@ -1,10 +1,9 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::Reflectable;
-use crate::base::Side;
-use crate::base::{hash, StrResult};
+use myopic_core::bitboard::BitBoard;
+use myopic_core::{Side, Square};
+use myopic_core::hash;
 use crate::parse::patterns;
-use crate::pieces::Piece;
+use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct Positions {
@@ -34,7 +33,7 @@ fn hash_boards(boards: &[BitBoard]) -> u64 {
     boards
         .iter()
         .zip(Piece::iter())
-        .flat_map(|(&b, p)| b.into_iter().map(move |sq| hash::piece_feature(p, sq)))
+        .flat_map(|(&b, p)| b.into_iter().map(move |sq| hash::piece(p, sq)))
         .fold(0u64, |a, b| a ^ b)
 }
 
@@ -74,7 +73,7 @@ fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
 }
 
 impl Positions {
-    pub fn from_fen(ranks: String) -> StrResult<Positions> {
+    pub fn from_fen(ranks: String) -> Result<Positions, String> {
         if !patterns::fen_positions().is_match(&ranks) {
             Err(ranks)
         } else {
@@ -145,7 +144,7 @@ impl Positions {
             if self.boards[i].contains(square) {
                 erased_piece = Some(p);
                 self.boards[i] ^= square;
-                self.hash ^= hash::piece_feature(p, square);
+                self.hash ^= hash::piece(p, square);
                 match p.side() {
                     Side::White => self.whites ^= square,
                     Side::Black => self.blacks ^= square,
@@ -160,7 +159,7 @@ impl Positions {
         let mut locationset = BitBoard::EMPTY;
         for &location in locations.iter() {
             locationset ^= location;
-            self.hash ^= hash::piece_feature(piece, location);
+            self.hash ^= hash::piece(piece, location);
         }
         self.boards[piece as usize] ^= locationset;
         match piece.side() {
@@ -176,12 +175,12 @@ impl Positions {
 
 #[cfg(test)]
 mod test {
-    use crate::base::square::Square::C3;
-    use crate::base::square::Square::E4;
-    use crate::base::square::Square::E5;
-    use crate::pieces::Piece;
+    use myopic_core::Square::C3;
+    use myopic_core::Square::E4;
+    use myopic_core::Square::E5;
 
     use super::*;
+    use myopic_core::pieces::Piece;
 
     #[test]
     fn test_erase_square() {

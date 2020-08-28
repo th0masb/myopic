@@ -1,9 +1,9 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::{Reflectable, Side};
+use myopic_core::bitboard::BitBoard;
+use myopic_core::{Side, Square};
 use crate::board::implementation::cache::rays::RaySet;
 use crate::board::{MutBoard, BoardImpl};
-use crate::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::pieces::Piece;
 
 impl BoardImpl {
     pub fn compute_discoveries(&self) -> RaySet {
@@ -35,7 +35,7 @@ impl BoardImpl {
 
 #[cfg(test)]
 mod test {
-    use crate::base::bitboard::constants::*;
+    use myopic_core::bitboard::constants::*;
 
     use super::*;
 

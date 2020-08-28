@@ -1,15 +1,14 @@
-use crate::base::castlezone::CastleZone;
-use crate::base::square::Square;
-use crate::base::StrResult;
+use myopic_core::castlezone::CastleZone;
 use crate::board::Move::Castle;
 use crate::board::{MutBoard, Move, MoveComputeType};
-use crate::pieces::Piece;
 use crate::regex::Regex;
 use patterns::*;
+use myopic_core::Square;
+use myopic_core::pieces::Piece;
 
 pub mod patterns;
 
-pub fn pgn<B: MutBoard>(start: &B, moves: &String) -> StrResult<Vec<Move>> {
+pub fn pgn<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, String> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in pgn_move().find_iter(moves) {
@@ -30,7 +29,7 @@ pub fn pgn<B: MutBoard>(start: &B, moves: &String) -> StrResult<Vec<Move>> {
 //    regex.captures_iter(source).map(|cap| String::from(&cap[0])).collect()
 //}
 
-fn parse_single_move<B: MutBoard>(start: &mut B, pgn_move: &str) -> StrResult<Move> {
+fn parse_single_move<B: MutBoard>(start: &mut B, pgn_move: &str) -> Result<Move, String> {
     // If a castle move we can retrieve straight away
     if pgn_move == "O-O" {
         return Ok(Castle(CastleZone::kingside(start.active())));
@@ -179,7 +178,7 @@ mod test {
 #[cfg(test)]
 mod test_single_move {
     use super::*;
-    use crate::base::square::Square::*;
+    use myopic_core::Square::*;
 
     fn execute_success_test(expected: Move, start_fen: &'static str, pgn: &'static str) {
         let mut board = crate::board::from_fen(start_fen).unwrap();

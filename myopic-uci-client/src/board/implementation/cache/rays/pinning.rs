@@ -1,13 +1,12 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::Reflectable;
-use crate::base::Side;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::{Side, Square};
 use crate::board::implementation::cache::rays::RaySet;
 use crate::board::implementation::BoardImpl;
 use crate::board::MutBoard;
-use crate::pieces::Piece;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
+use myopic_core::reflectable::Reflectable;
+use myopic_core::pieces::Piece;
 
 impl BoardImpl {
     pub fn pinned_set_impl(&mut self) -> RaySet {
@@ -53,7 +52,7 @@ impl BoardImpl {
 
 #[cfg(test)]
 mod test {
-    use crate::base::bitboard::constants::*;
+    use myopic_core::bitboard::constants::*;
 
     use super::*;
 

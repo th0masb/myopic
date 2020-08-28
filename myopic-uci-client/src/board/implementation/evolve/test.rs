@@ -1,13 +1,12 @@
-use crate::base::bitboard::constants::*;
-use crate::base::bitboard::BitBoard;
-use crate::base::castlezone::CastleZone;
-use crate::base::castlezone::CastleZoneSet;
-use crate::base::square::Square;
-use crate::base::Side;
+use myopic_core::bitboard::constants::*;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::CastleZone;
+use myopic_core::castlezone::CastleZoneSet;
+use myopic_core::{Side, Square};
 use crate::board::implementation::BoardImpl;
 use crate::board::Move;
-use crate::pieces::Piece;
 use crate::board::implementation::test::TestBoard;
+use myopic_core::pieces::Piece;
 
 
 #[derive(Debug, Clone)]
