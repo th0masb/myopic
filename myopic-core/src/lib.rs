@@ -50,7 +50,7 @@ impl Side {
 
     /// Get the rank a pawn on this side must be on for it to be able
     /// to promote on it's next move.
-    pub fn pawn_promoting_rank(self) -> BitBoard {
+    pub fn pawn_promoting_src_rank(self) -> BitBoard {
         match self {
             Side::White => BitBoard::RANKS[6],
             Side::Black => BitBoard::RANKS[1],
@@ -58,8 +58,9 @@ impl Side {
     }
 
 
-    /// The rank a pawn on this
-    pub fn pawn_last_rank(self) -> BitBoard {
+    /// The rank a pawn on this side will end up on after promoting to
+    /// another piece.
+    pub fn pawn_promoting_dest_rank(self) -> BitBoard {
         match self {
             Side::White => BitBoard::RANKS[7],
             Side::Black => BitBoard::RANKS[0],
@@ -126,7 +127,7 @@ impl Square {
     /// Return a bitboard representing the file on which this square
     /// resides.
     pub fn file(self) -> BitBoard {
-        unimplemented!()
+        BitBoard::FILES[self.file_index()]
     }
 
     /// 'Lifts' this square to a singleton set of squares.
@@ -137,23 +138,19 @@ impl Square {
     /// Finds the next square on a chessboard from this square in a
     /// given direction if it exists.
     pub fn next(self, dir: Dir) -> Option<Square> {
-        let (dr, df) = match dir {
-            Dir::N => (1, 0),
-            Dir::E => (0, -1),
-            Dir::S => (-1, 0),
-            Dir::W => (0, 1),
-            Dir::NE => (1, -1),
-            Dir::SE => (-1, -1),
-            Dir::SW => (-1, 1),
-            Dir::NW => (1, 1),
-            Dir::NNE => (2, -1),
-            Dir::NEE => (1, -2),
-            Dir::SEE => (-1, -2),
-            Dir::SSE => (-2, -1),
-            Dir::SSW => (-2, 1),
-            Dir::SWW => (-1, 2),
-            Dir::NWW => (1, 2),
-            Dir::NNW => (2, 1)
+        let dr = match dir {
+            Dir::E | Dir::W  => 0,
+            Dir::N | Dir::NE | Dir::NEE | Dir::NW | Dir::NWW => 1,
+            Dir::NNE | Dir::NNW => 2,
+            Dir::S | Dir::SE | Dir::SEE | Dir::SW | Dir::SWW => -1,
+            Dir::SSE | Dir::SSW => -2,
+        };
+        let df = match dir {
+            Dir::N | Dir::S => 0,
+            Dir::W | Dir::NW | Dir::NNW | Dir::SW | Dir::SSW => 1,
+            Dir::NWW | Dir::SWW => 2,
+            Dir::E | Dir::NE | Dir::NNE | Dir::SE | Dir::SSE => -1,
+            Dir::NEE | Dir::SEE => -2,
         };
         let new_rank = (self.rank_index() as i8) + dr;
         let new_file = (self.file_index() as i8) + df;
@@ -279,6 +276,11 @@ mod test {
         assert_eq!(A1 | B1 | C1 | D1 | E1 | F1 | G1 | H1, F1.rank());
         assert_eq!(A4 | B4 | C4 | D4 | E4 | F4 | G4 | H4, D4.rank());
         assert_eq!(A8 | B8 | C8 | D8 | E8 | F8 | G8 | H8, A8.rank());
+    }
+
+    #[test]
+    fn test_file() {
+        assert_eq!(B1 | B2 | B3 | B4 | B5 | B6 | B7 | B8, B4.file())
     }
 
     #[test]

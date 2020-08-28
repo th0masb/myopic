@@ -1,8 +1,25 @@
 [package]
 name = "myopic-core"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Tom <tomoliverball@gmail.com>"]
 edition = "2018"
+license = "MIT"
+repository = "https://github.com/th0masb/myopic"
+description = '''
+Core chess utilities which includes:
+ - Representation of squares on a board
+ - Efficient representation of a set of squares (bitboard)
+ - Representation of pieces involved in a game
+ - Efficient computation of legal moves for sliding pieces (assuming no advanced
+   restrictions like pins/moving into check) using magic bitboards.
+ - Hashing features for a state of play
+
+Note no representation of a board or state of play is included.
+'''
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+]
 
 [dependencies]
 itertools = "0.8"
