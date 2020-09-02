@@ -44,6 +44,7 @@ impl Castling {
         }
     }
 
+    #[cfg(test)]
     pub fn new(
         rights: CastleZoneSet,
         white_status: Option<CastleZone>,

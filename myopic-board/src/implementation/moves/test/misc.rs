@@ -2,8 +2,6 @@ use super::*;
 use myopic_core::bitboard::constants::*;
 use myopic_core::castlezone::CastleZone;
 
-const EMPTY: BitBoard = BitBoard::EMPTY;
-
 #[test]
 fn case_1() {
     execute_test(TestCase {

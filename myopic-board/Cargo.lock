@@ -52,15 +52,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "284f18f85651fe11e8a991b2adb42cb078325c996ed026d994719efcfca1d54b"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -82,7 +73,7 @@ checksum = "3728d817d99e5ac407411fa471ff9800a778d88a24685968b36824eaf4bee400"
 name = "myopic-board"
 version = "1.0.0"
 dependencies = [
- "itertools 0.9.0",
+ "itertools",
  "lazy_static",
  "myopic-core",
  "regex",
@@ -94,7 +85,7 @@ version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9bbeea044da027c65b112574aec5803831911562abafa31f8df9bea723d5134"
 dependencies = [
- "itertools 0.8.2",
+ "itertools",
  "lazy_static",
  "rand",
  "rand_pcg",

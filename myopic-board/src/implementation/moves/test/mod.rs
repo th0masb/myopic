@@ -49,10 +49,6 @@ fn flatten(moves: &Vec<Vec<Move>>) -> MoveSet {
     moves.iter().flat_map(|xs| xs.iter().map(|mv| mv.clone())).collect()
 }
 
-fn sq(set: BitBoard) -> Square {
-    set.into_iter().next().unwrap()
-}
-
 fn convert_moves(case: &TestCase) -> ExpectedMoves {
     vec![
         (MoveComputeType::All, flatten(&case.expected_all)),
