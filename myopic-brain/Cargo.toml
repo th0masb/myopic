@@ -1,7 +1,13 @@
 [package]
+<<<<<<< HEAD:myopic-brain/Cargo.toml
 name = "myopic-brain"
 version = "0.1.0"
 authors = ["Thomas Ball <thomas_ball@starsgroup.com>"]
+=======
+name = "myopic-board"
+version = "1.0.0"
+authors = ["Thomas Ball <tomoliverball@gmail.com>"]
+>>>>>>> [MYO-005] Flattened mod structure for myopic-board:myopic-board/Cargo.toml
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

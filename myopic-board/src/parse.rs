@@ -1,14 +1,15 @@
-use crate::board::Move::Castle;
-use crate::board::{Move, MoveComputeType, MutBoard};
+use crate::Move::Castle;
+use crate::{Move, MoveComputeType, MutBoard};
 use crate::patterns::*;
 use crate::regex::Regex;
 use myopic_core::castlezone::CastleZone;
 use myopic_core::pieces::Piece;
 use myopic_core::Square;
 
-/// Given a string representing a
+/// Extracts the moves encoded in a standard pgn file contained in
+/// a single string.
 pub fn pgn(moves: &String) -> Result<Vec<Move>, String> {
-    return pgn_impl(&crate::board::start(), moves);
+    return pgn_impl(&crate::start_position(), moves);
 }
 
 fn pgn_impl<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, String> {
@@ -135,8 +136,8 @@ fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
 #[cfg(test)]
 mod test {
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
-        let finish = crate::board::from_fen(expected_finish).unwrap();
-        let mut board = crate::board::start();
+        let finish = crate::fen_position(expected_finish).unwrap();
+        let mut board = crate::start_position();
         for evolve in super::pgn_impl(&board, &String::from(pgn)).unwrap() {
             board.evolve(&evolve);
         }
@@ -189,7 +190,7 @@ mod test_single_move {
     use myopic_core::Square::*;
 
     fn execute_success_test(expected: Move, start_fen: &'static str, pgn: &'static str) {
-        let mut board = crate::board::from_fen(start_fen).unwrap();
+        let mut board = crate::fen_position(start_fen).unwrap();
         let pgn_parse = parse_single_move(&mut board, &String::from(pgn)).unwrap();
         assert_eq!(expected, pgn_parse);
     }
