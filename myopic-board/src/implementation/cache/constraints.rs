@@ -1,7 +1,7 @@
-use crate::board::implementation::cache::rays::RaySet;
-use crate::board::implementation::MutBoardImpl;
-use crate::board::MoveComputeType;
-use crate::board::MutBoard;
+use crate::implementation::cache::rays::RaySet;
+use crate::implementation::MutBoardImpl;
+use crate::MoveComputeType;
+use crate::MutBoard;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::pieces::Piece;
 use myopic_core::reflectable::Reflectable;

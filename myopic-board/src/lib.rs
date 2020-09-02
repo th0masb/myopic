@@ -1,12 +1,13 @@
-<<<<<<< HEAD:myopic-uci-client/src/board/mod.rs
-use crate::base::bitboard::BitBoard;
-use crate::base::castlezone::CastleZone;
-use crate::base::castlezone::CastleZoneSet;
-use crate::base::Reflectable;
-use crate::base::Side;
-use crate::base::square::Square;
-use crate::pieces::Piece;
-=======
+#[macro_use]
+extern crate lazy_static;
+extern crate itertools;
+extern crate myopic_core;
+extern crate regex;
+
+pub mod parse;
+mod patterns;
+mod implementation;
+
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZone;
 use myopic_core::castlezone::CastleZoneSet;
@@ -14,11 +15,8 @@ use myopic_core::pieces::Piece;
 use myopic_core::reflectable::Reflectable;
 use myopic_core::Side;
 use myopic_core::Square;
->>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/mod.rs
 
-pub use self::implementation::MutBoardImpl;
-
-mod implementation;
+pub use implementation::MutBoardImpl;
 
 const START_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -48,6 +46,12 @@ pub enum MoveComputeType {
     AttacksChecks,
 }
 
+/// Represents the possible ways a game can be terminated, we only
+/// consider a game to be terminated when a side has no legal moves
+/// to make or if a special draw condition is met like position
+/// repetition. If a side has no legal moves and is currently in check
+/// then the game is lost, if it is not in check then the game is
+/// drawn.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum Termination {
     Draw,
@@ -134,10 +138,13 @@ pub trait MutBoard: Clone + Send + Reflectable {
     }
 }
 
-pub fn from_fen(fen: &str) -> Result<MutBoardImpl, String> {
+/// Create a mutable board state from a fen string if it is valid.
+pub fn fen_position(fen: &str) -> Result<MutBoardImpl, String> {
     MutBoardImpl::from_fen(String::from(fen))
 }
 
-pub fn start() -> MutBoardImpl {
-    from_fen(START_FEN).unwrap()
+/// Create a mutable board state representing the start of a standard
+/// chess game.
+pub fn start_position() -> MutBoardImpl {
+    fen_position(START_FEN).unwrap()
 }

@@ -1,6 +1,6 @@
-use crate::board::implementation::test::TestBoard;
-use crate::board::implementation::MutBoardImpl;
-use crate::board::Move;
+use crate::implementation::test::TestBoard;
+use crate::implementation::MutBoardImpl;
+use crate::Move;
 use myopic_core::bitboard::constants::*;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZone;

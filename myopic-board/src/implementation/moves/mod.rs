@@ -1,8 +1,8 @@
-use crate::board::implementation::cache::MoveConstraints;
-use crate::board::implementation::MutBoardImpl;
-use crate::board::Move;
-use crate::board::MoveComputeType;
-use crate::board::MutBoard;
+use crate::implementation::cache::MoveConstraints;
+use crate::implementation::MutBoardImpl;
+use crate::Move;
+use crate::MoveComputeType;
+use crate::MutBoard;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZone;
 use myopic_core::pieces::Piece;

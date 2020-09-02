@@ -1,8 +1,8 @@
 pub use constraints::MoveConstraints;
 
-use crate::board::implementation::cache::rays::RaySet;
-use crate::board::MutBoardImpl;
-use crate::board::Termination;
+use crate::implementation::cache::rays::RaySet;
+use crate::MutBoardImpl;
+use crate::Termination;
 use myopic_core::bitboard::BitBoard;
 
 mod constraints;

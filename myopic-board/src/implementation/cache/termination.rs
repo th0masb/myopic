@@ -1,7 +1,7 @@
-use crate::board::MoveComputeType;
-use crate::board::MutBoard;
-use crate::board::MutBoardImpl;
-use crate::board::Termination;
+use crate::MoveComputeType;
+use crate::MutBoard;
+use crate::MutBoardImpl;
+use crate::Termination;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::pieces::Piece;
 use myopic_core::{Side, Square};
@@ -98,7 +98,7 @@ mod test {
     }
 
     fn test(expected: Option<Termination>, fen: &str) {
-        let mut board = crate::board::from_fen(fen).unwrap();
+        let mut board = crate::fen_position(fen).unwrap();
         assert_eq!(expected, board.termination_status_impl());
         assert_eq!(expected, board.reflect().termination_status_impl());
     }

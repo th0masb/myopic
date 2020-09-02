@@ -1,14 +1,18 @@
-use myopic_core::castlezone::CastleZone;
-use crate::board::Move::Castle;
-use crate::board::{MutBoard, Move, MoveComputeType};
+use crate::Move::Castle;
+use crate::{Move, MoveComputeType, MutBoard};
+use crate::patterns::*;
 use crate::regex::Regex;
-use patterns::*;
-use myopic_core::Square;
+use myopic_core::castlezone::CastleZone;
 use myopic_core::pieces::Piece;
+use myopic_core::Square;
 
-pub mod patterns;
+/// Extracts the moves encoded in a standard pgn file contained in
+/// a single string.
+pub fn pgn(moves: &String) -> Result<Vec<Move>, String> {
+    return pgn_impl(&crate::start_position(), moves);
+}
 
-pub fn pgn<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, String> {
+fn pgn_impl<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, String> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in pgn_move().find_iter(moves) {
@@ -24,10 +28,6 @@ pub fn pgn<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, String> 
         Err(moves.clone())
     }
 }
-
-//pub fn find_matches(source: &String, regex: &Regex) -> Vec<String> {
-//    regex.captures_iter(source).map(|cap| String::from(&cap[0])).collect()
-//}
 
 fn parse_single_move<B: MutBoard>(start: &mut B, pgn_move: &str) -> Result<Move, String> {
     // If a castle move we can retrieve straight away
@@ -112,8 +112,7 @@ fn find_differentiating_rank_or_file(pgn_move: &str, re: &Regex) -> Option<char>
 }
 
 fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
-    let matches: Vec<_> =
-        pgn_piece().find_iter(pgn_move).map(|m| m.as_str().to_owned()).collect();
+    let matches: Vec<_> = pgn_piece().find_iter(pgn_move).map(|m| m.as_str().to_owned()).collect();
     let is_promotion = pgn_move.contains("=");
     let (move_piece, promote_piece) = if matches.is_empty() {
         (None, None)
@@ -137,9 +136,9 @@ fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
 #[cfg(test)]
 mod test {
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
-        let finish = crate::board::from_fen(expected_finish).unwrap();
-        let mut board = crate::board::start();
-        for evolve in super::pgn(&board, &String::from(pgn)).unwrap() {
+        let finish = crate::fen_position(expected_finish).unwrap();
+        let mut board = crate::start_position();
+        for evolve in super::pgn_impl(&board, &String::from(pgn)).unwrap() {
             board.evolve(&evolve);
         }
         assert_eq!(finish, board);
@@ -166,11 +165,21 @@ mod test {
     fn case_two() {
         execute_success_test(
             "5rk1/pp2p3/3p2pb/2pP4/2q5/3b1B1P/PPn2Q2/R1NK2R1 w - - 0 28",
-            "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.f3 O-O 6.Be3 Nbd7 7.Qd2
+            "
+            [Event \"F/S Return Match\"]
+            [Site \"Belgrade, Serbia JUG\"]
+            [Date \"1992.11.04\"]
+            [Round \"29\"]
+            [White \"Fischer, Robert J.\"]
+            [Black \"Spassky, Boris V.\"]
+            [Result \"1/2-1/2\"]
+
+            1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.f3 O-O 6.Be3 Nbd7 7.Qd2
             c5 8.d5 Ne5 9.h3 Nh5 10.Bf2 f5 11.exf5 Rxf5 12.g4 Rxf3 13.gxh5
             Qf8 14.Ne4 Bh6 15.Qc2 Qf4 16.Ne2 Rxf2 17.Nxf2 Nf3+ 18.Kd1 Qh4
             19.Nd3 Bf5 20.Nec1 Nd2 21.hxg6 hxg6 22.Bg2 Nxc4 23.Qf2 Ne3+
-            24.Ke2 Qc4 25.Bf3 Rf8 26.Rg1 Nc2 27.Kd1 Bxd3 0-1",
+            24.Ke2 Qc4 25.Bf3 Rf8 26.Rg1 Nc2 27.Kd1 Bxd3 0-1
+            ",
         );
     }
 }
@@ -181,7 +190,7 @@ mod test_single_move {
     use myopic_core::Square::*;
 
     fn execute_success_test(expected: Move, start_fen: &'static str, pgn: &'static str) {
-        let mut board = crate::board::from_fen(start_fen).unwrap();
+        let mut board = crate::fen_position(start_fen).unwrap();
         let pgn_parse = parse_single_move(&mut board, &String::from(pgn)).unwrap();
         assert_eq!(expected, pgn_parse);
     }

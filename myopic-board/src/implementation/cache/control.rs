@@ -1,4 +1,4 @@
-use crate::board::implementation::MutBoardImpl;
+use crate::implementation::MutBoardImpl;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::pieces::Piece;
 use myopic_core::reflectable::Reflectable;
@@ -37,8 +37,8 @@ impl MutBoardImpl {
 
 #[cfg(test)]
 mod test {
-    use crate::board::implementation::test::TestBoard;
-    use crate::board::implementation::MutBoardImpl;
+    use crate::implementation::test::TestBoard;
+    use crate::implementation::MutBoardImpl;
     use myopic_core::bitboard::constants::*;
     use myopic_core::bitboard::BitBoard;
     use myopic_core::castlezone::CastleZoneSet;

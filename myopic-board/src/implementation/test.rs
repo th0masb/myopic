@@ -1,23 +1,12 @@
-<<<<<<< HEAD:myopic-uci-client/src/board/implementation/test.rs
-use crate::base::bitboard::BitBoard;
-=======
->>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/test.rs
-use crate::board::implementation::cache::CalculationCache;
-use crate::board::implementation::castling::Castling;
-use crate::board::implementation::history::History;
-use crate::board::implementation::positions::Positions;
-<<<<<<< HEAD:myopic-uci-client/src/board/implementation/test.rs
-use crate::board::implementation::BoardImpl;
-use crate::base::castlezone::{CastleZoneSet, CastleZone};
-use crate::base::{Side, Reflectable};
-use crate::base::square::Square;
-=======
-use crate::board::implementation::MutBoardImpl;
+use crate::implementation::cache::CalculationCache;
+use crate::implementation::castling::Castling;
+use crate::implementation::history::History;
+use crate::implementation::positions::Positions;
+use crate::implementation::MutBoardImpl;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::{CastleZone, CastleZoneSet};
 use myopic_core::reflectable::Reflectable;
 use myopic_core::{Side, Square};
->>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/test.rs
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {

@@ -98,6 +98,7 @@ impl Positions {
         }
     }
 
+    #[cfg(test)]
     pub fn new(initial_boards: &[BitBoard]) -> Positions {
         assert_eq!(12, initial_boards.len());
         let initial_hash = hash_boards(initial_boards);

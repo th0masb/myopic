@@ -1,6 +1,6 @@
-use crate::board::implementation::cache::rays::RaySet;
-use crate::board::implementation::MutBoardImpl;
-use crate::board::MutBoard;
+use crate::implementation::cache::rays::RaySet;
+use crate::implementation::MutBoardImpl;
+use crate::MutBoard;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::{Side, Square};
 
@@ -57,7 +57,7 @@ mod test {
     use super::*;
 
     fn execute_test(fen: &'static str, expected_pinned: RaySet) {
-        let board = crate::board::from_fen(fen).unwrap();
+        let board = crate::fen_position(fen).unwrap();
         assert_eq!(expected_pinned.reflect(), board.reflect().compute_pinned());
         assert_eq!(expected_pinned, board.compute_pinned());
     }

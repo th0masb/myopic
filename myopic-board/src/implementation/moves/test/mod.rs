@@ -1,9 +1,9 @@
 use std::collections::btree_set::BTreeSet;
 
-use crate::board::implementation::MutBoardImpl;
-use crate::board::Move;
-use crate::board::MoveComputeType;
-use crate::board::MutBoard;
+use crate::implementation::MutBoardImpl;
+use crate::Move;
+use crate::MoveComputeType;
+use crate::MutBoard;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZoneSet;
 use myopic_core::pieces::Piece;
@@ -49,10 +49,6 @@ fn flatten(moves: &Vec<Vec<Move>>) -> MoveSet {
     moves.iter().flat_map(|xs| xs.iter().map(|mv| mv.clone())).collect()
 }
 
-fn sq(set: BitBoard) -> Square {
-    set.into_iter().next().unwrap()
-}
-
 fn convert_moves(case: &TestCase) -> ExpectedMoves {
     vec![
         (MoveComputeType::All, flatten(&case.expected_all)),
@@ -62,7 +58,7 @@ fn convert_moves(case: &TestCase) -> ExpectedMoves {
 }
 
 fn execute_test(case: TestCase) {
-    let board = crate::board::from_fen(case.board).unwrap();
+    let board = crate::fen_position(case.board).unwrap();
     let moves = convert_moves(&case);
     let ref_board = board.reflect();
     let ref_moves: Vec<_> = moves.iter().map(|(t, mvs)| (*t, mvs.reflect())).collect();

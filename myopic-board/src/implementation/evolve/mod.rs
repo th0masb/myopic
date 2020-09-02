@@ -1,7 +1,7 @@
-use crate::board::implementation::MutBoardImpl;
-use crate::board::Discards;
-use crate::board::Move;
-use crate::board::Move::*;
+use crate::implementation::MutBoardImpl;
+use crate::Discards;
+use crate::Move;
+use crate::Move::*;
 use myopic_core::castlezone::CastleZone;
 use myopic_core::castlezone::CastleZoneSet;
 use myopic_core::pieces::Piece;

@@ -1,40 +1,20 @@
 use std::cmp::max;
 
-<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
-use crate::base::{Reflectable, StrResult};
-use crate::base::bitboard::BitBoard;
-use crate::base::castlezone::CastleZone;
-use crate::base::Side;
-use crate::base::square::Square;
-use crate::board::MutBoard;
-use crate::board::Discards;
-=======
->>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/mod.rs
-use crate::board::implementation::cache::CalculationCache;
-use crate::board::implementation::castling::Castling;
-use crate::board::implementation::history::History;
-use crate::board::implementation::positions::Positions;
-use crate::board::Discards;
-use crate::board::Move;
-use crate::board::MoveComputeType;
-use crate::board::MutBoard;
-use crate::board::Termination;
-<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
-use crate::parse::patterns;
-<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
-use crate::pieces::Piece;
-=======
-use myopic_core::reflectable::Reflectable;
-use myopic_core::pieces::Piece;
->>>>>>> [MYO-005] Got all related code compiling:myopic-board/src/board/implementation/mod.rs
-=======
+use crate::implementation::cache::CalculationCache;
+use crate::implementation::castling::Castling;
+use crate::implementation::history::History;
+use crate::implementation::positions::Positions;
+use crate::Discards;
+use crate::Move;
+use crate::MoveComputeType;
+use crate::MutBoard;
+use crate::Termination;
 use crate::patterns;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZone;
 use myopic_core::pieces::Piece;
 use myopic_core::reflectable::Reflectable;
 use myopic_core::{Side, Square};
->>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/mod.rs
 
 mod cache;
 mod castling;
@@ -129,13 +109,8 @@ fn clock_history_from_fen(fen: &String, active: Side) -> Result<(usize, usize), 
 fn hash(pt: &Positions, ct: &Castling, active: Side, ep: Option<Square>) -> u64 {
     pt.hash()
         ^ ct.hash()
-<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
-        ^ crate::base::hash::side_feature(active)
-        ^ ep.map_or(0u64, |x| crate::base::hash::enpassant_feature(x))
-=======
         ^ myopic_core::hash::side(active)
         ^ ep.map_or(0u64, |x| myopic_core::hash::enpassant(x))
->>>>>>> [MYO-005] Got all related code compiling:myopic-board/src/board/implementation/mod.rs
 }
 
 impl Move {
@@ -161,22 +136,12 @@ impl Move {
 
 #[cfg(test)]
 mod fen_test {
-<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
-    use crate::base::bitboard::constants::*;
-    use crate::base::castlezone::CastleZone;
-    use crate::base::castlezone::CastleZoneSet;
-    use crate::base::Side;
-    use crate::base::square::Square;
-    use crate::board::BoardImpl;
-    use crate::board::implementation::test::TestBoard;
-=======
-    use crate::board::implementation::test::TestBoard;
-    use crate::board::MutBoardImpl;
+    use crate::implementation::test::TestBoard;
+    use crate::MutBoardImpl;
     use myopic_core::bitboard::constants::*;
     use myopic_core::castlezone::CastleZone;
     use myopic_core::castlezone::CastleZoneSet;
     use myopic_core::{Side, Square};
->>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/mod.rs
 
     fn test(expected: TestBoard, fen_string: String) {
         assert_eq!(MutBoardImpl::from(expected), MutBoardImpl::from_fen(fen_string).unwrap())

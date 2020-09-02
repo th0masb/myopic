@@ -1,5 +1,5 @@
-use crate::board::implementation::cache::rays::RaySet;
-use crate::board::{MutBoard, MutBoardImpl};
+use crate::implementation::cache::rays::RaySet;
+use crate::{MutBoard, MutBoardImpl};
 use myopic_core::bitboard::BitBoard;
 use myopic_core::pieces::Piece;
 use myopic_core::reflectable::Reflectable;
@@ -40,7 +40,7 @@ mod test {
     use super::*;
 
     fn execute_test(fen: &'static str, expected_discoveries: RaySet) {
-        let board = crate::board::from_fen(fen).unwrap();
+        let board = crate::fen_position(fen).unwrap();
         assert_eq!(expected_discoveries.reflect(), board.reflect().compute_discoveries());
         assert_eq!(expected_discoveries, board.compute_discoveries());
     }
