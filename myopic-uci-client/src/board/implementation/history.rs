@@ -24,7 +24,7 @@ impl History {
         let cache = [0u64; CACHE_SIZE];
         let mut cache_map = BTreeMap::new();
         cache_map.insert(0u64, CACHE_SIZE);
-        let mut dest = History { pop_dist: 0, cache};//, cache_map };
+        let mut dest = History { pop_dist: 0, cache }; //, cache_map };
         for i in 0..pop_dist {
             dest.push_head(i as u64);
         }

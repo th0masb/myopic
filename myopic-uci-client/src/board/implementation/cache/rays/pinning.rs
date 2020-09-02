@@ -1,14 +1,14 @@
+use crate::board::implementation::cache::rays::RaySet;
+use crate::board::implementation::MutBoardImpl;
+use crate::board::MutBoard;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::{Side, Square};
-use crate::board::implementation::cache::rays::RaySet;
-use crate::board::implementation::BoardImpl;
-use crate::board::MutBoard;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
-use myopic_core::reflectable::Reflectable;
 use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
 
-impl BoardImpl {
+impl MutBoardImpl {
     pub fn pinned_set_impl(&mut self) -> RaySet {
         match &self.cache.pinned_set {
             Some(x) => x.clone(),

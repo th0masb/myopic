@@ -1,10 +1,10 @@
-use crate::board::implementation::BoardImpl;
+use crate::board::implementation::MutBoardImpl;
 use myopic_core::bitboard::BitBoard;
+use myopic_core::pieces::Piece;
 use myopic_core::reflectable::Reflectable;
 use myopic_core::{Side, Square};
-use myopic_core::pieces::Piece;
 
-impl BoardImpl {
+impl MutBoardImpl {
     pub fn passive_control_impl(&mut self) -> BitBoard {
         match &self.cache.passive_control {
             Some(x) => *x,
@@ -37,12 +37,12 @@ impl BoardImpl {
 
 #[cfg(test)]
 mod test {
-    use myopic_core::bitboard::constants::*;
-    use crate::board::implementation::BoardImpl;
     use crate::board::implementation::test::TestBoard;
-    use myopic_core::Side;
+    use crate::board::implementation::MutBoardImpl;
+    use myopic_core::bitboard::constants::*;
     use myopic_core::bitboard::BitBoard;
     use myopic_core::castlezone::CastleZoneSet;
+    use myopic_core::Side;
 
     struct TestCase {
         board: TestBoard,
@@ -51,7 +51,10 @@ mod test {
     }
 
     fn execute_test(case: TestCase) {
-        assert_eq!(case.expected_control, BoardImpl::from(case.board).compute_control(case.side));
+        assert_eq!(
+            case.expected_control,
+            MutBoardImpl::from(case.board).compute_control(case.side)
+        );
     }
 
     fn get_test_board() -> TestBoard {

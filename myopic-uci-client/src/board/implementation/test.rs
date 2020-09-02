@@ -1,12 +1,23 @@
+<<<<<<< HEAD:myopic-uci-client/src/board/implementation/test.rs
 use crate::base::bitboard::BitBoard;
+=======
+>>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/test.rs
 use crate::board::implementation::cache::CalculationCache;
 use crate::board::implementation::castling::Castling;
 use crate::board::implementation::history::History;
 use crate::board::implementation::positions::Positions;
+<<<<<<< HEAD:myopic-uci-client/src/board/implementation/test.rs
 use crate::board::implementation::BoardImpl;
 use crate::base::castlezone::{CastleZoneSet, CastleZone};
 use crate::base::{Side, Reflectable};
 use crate::base::square::Square;
+=======
+use crate::board::implementation::MutBoardImpl;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::{CastleZone, CastleZoneSet};
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
+>>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/test.rs
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {
@@ -37,8 +48,8 @@ impl Reflectable for TestBoard {
     }
 }
 
-impl BoardImpl {
-    pub fn from(test_board: TestBoard) -> BoardImpl {
+impl MutBoardImpl {
+    pub fn from(test_board: TestBoard) -> MutBoardImpl {
         let pieces = Positions::new(
             vec![test_board.whites, test_board.blacks]
                 .iter()
@@ -53,7 +64,7 @@ impl BoardImpl {
             test_board.black_status,
         );
         let hash = super::hash(&pieces, &castling, test_board.active, test_board.enpassant);
-        BoardImpl {
+        MutBoardImpl {
             history: History::new(hash, test_board.history_count),
             pieces,
             castling,

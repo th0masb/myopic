@@ -1,14 +1,14 @@
-use myopic_core::bitboard::BitBoard;
-use myopic_core::{Side, Square};
 use crate::board::implementation::cache::rays::RaySet;
-use crate::board::implementation::BoardImpl;
-use crate::board::MutBoard;
+use crate::board::implementation::MutBoardImpl;
 use crate::board::MoveComputeType;
+use crate::board::MutBoard;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
 use std::fmt::Debug;
 use std::fmt::Error;
 use std::fmt::Formatter;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::pieces::Piece;
 
 #[derive(Clone)]
 pub struct MoveConstraints {
@@ -60,7 +60,7 @@ impl MoveConstraints {
     }
 }
 
-impl BoardImpl {
+impl MutBoardImpl {
     pub fn constraints_impl(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
         match computation_type {
             MoveComputeType::Attacks => self.compute_constraints(computation_type),
@@ -119,7 +119,8 @@ impl BoardImpl {
             let passive_king = self.king(passive);
             let promotion_rays = Piece::WQ.control(passive_king, whites, blacks);
             let promotion_jumps = Piece::WN.empty_control(passive_king);
-            let promotion_checks = (promotion_rays | promotion_jumps) & active.pawn_promoting_dest_rank();
+            let promotion_checks =
+                (promotion_rays | promotion_jumps) & active.pawn_promoting_dest_rank();
             for piece in Piece::on_side(active) {
                 let is_pawn = piece.is_pawn();
                 let enpassant = if is_pawn { enpassant_set } else { BitBoard::EMPTY };
@@ -171,13 +172,6 @@ impl BoardImpl {
             .flat_map(|&p| self.pieces.locs_impl(p).into_iter().map(move |s| (p, s)))
             .filter(|(p, s)| p.control(*s, whites, blacks).contains(king_loc))
             .collect()
-    }
-}
-
-fn nbrq<'a>(side: Side) -> &'a [Piece; 4] {
-    match side {
-        Side::White => &[Piece::WN, Piece::WB, Piece::WR, Piece::WQ],
-        Side::Black => &[Piece::BN, Piece::BB, Piece::BR, Piece::BQ],
     }
 }
 

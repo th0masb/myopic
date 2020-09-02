@@ -1,7 +1,7 @@
 pub use constraints::MoveConstraints;
 
 use crate::board::implementation::cache::rays::RaySet;
-use crate::board::BoardImpl;
+use crate::board::MutBoardImpl;
 use crate::board::Termination;
 use myopic_core::bitboard::BitBoard;
 
@@ -30,7 +30,7 @@ impl CalculationCache {
     }
 }
 
-impl BoardImpl {
+impl MutBoardImpl {
     pub fn clear_cache(&mut self) {
         self.cache.termination_status = None;
         self.cache.passive_control = None;

@@ -1,22 +1,20 @@
-use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::CastleZone;
-use myopic_core::Square;
-use myopic_core::reflectable::Reflectable;
 use crate::board::implementation::cache::MoveConstraints;
-use crate::board::implementation::BoardImpl;
-use crate::board::MutBoard;
+use crate::board::implementation::MutBoardImpl;
 use crate::board::Move;
 use crate::board::MoveComputeType;
+use crate::board::MutBoard;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::CastleZone;
 use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::Square;
 
 #[cfg(test)]
 mod test;
 
 mod enpassant_source;
 
-const FILES: [BitBoard; 8] = BitBoard::FILES;
-
-impl BoardImpl {
+impl MutBoardImpl {
     pub fn compute_moves_impl(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
         let constraints = self.constraints_impl(computation_type);
         let pawn_moves = self.compute_pawn_moves(&constraints);

@@ -1,3 +1,4 @@
+<<<<<<< HEAD:myopic-uci-client/src/board/mod.rs
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
@@ -5,10 +6,21 @@ use crate::base::Reflectable;
 use crate::base::Side;
 use crate::base::square::Square;
 use crate::pieces::Piece;
+=======
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::CastleZone;
+use myopic_core::castlezone::CastleZoneSet;
+use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::Side;
+use myopic_core::Square;
+>>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/mod.rs
 
-pub use self::implementation::BoardImpl;
+pub use self::implementation::MutBoardImpl;
 
 mod implementation;
+
+const START_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Discards {
@@ -122,12 +134,10 @@ pub trait MutBoard: Clone + Send + Reflectable {
     }
 }
 
-pub const START_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-pub fn from_fen(fen: &str) -> Result<BoardImpl, String> {
-    BoardImpl::from_fen(String::from(fen))
+pub fn from_fen(fen: &str) -> Result<MutBoardImpl, String> {
+    MutBoardImpl::from_fen(String::from(fen))
 }
 
-pub fn start() -> BoardImpl {
+pub fn start() -> MutBoardImpl {
     from_fen(START_FEN).unwrap()
 }

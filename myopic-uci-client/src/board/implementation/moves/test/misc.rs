@@ -1,4 +1,7 @@
 use super::*;
+use myopic_core::bitboard::constants::*;
+use myopic_core::castlezone::CastleZone;
+
 const EMPTY: BitBoard = BitBoard::EMPTY;
 
 #[test]

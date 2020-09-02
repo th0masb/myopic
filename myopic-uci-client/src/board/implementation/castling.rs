@@ -1,3 +1,4 @@
+<<<<<<< HEAD:myopic-uci-client/src/board/implementation/castling.rs
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
 use crate::base::castlezone::CastleZoneSet;
@@ -5,6 +6,13 @@ use crate::base::{hash, StrResult};
 use crate::base::Reflectable;
 use crate::base::Side;
 use crate::parse::patterns;
+=======
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::CastleZone;
+use myopic_core::castlezone::CastleZoneSet;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{hash, Side};
+>>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/castling.rs
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct Castling {
@@ -30,7 +38,7 @@ fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
 
 impl Castling {
     pub fn from_fen(fen_string: String) -> Result<Castling, String> {
-        if !patterns::fen_rights().is_match(&fen_string) {
+        if !crate::patterns::fen_rights().is_match(&fen_string) {
             Err(fen_string)
         } else {
             let rights: CastleZoneSet = CastleZone::iter()

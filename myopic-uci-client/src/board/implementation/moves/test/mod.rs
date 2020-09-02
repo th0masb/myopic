@@ -1,17 +1,14 @@
 use std::collections::btree_set::BTreeSet;
 
-use crate::base::bitboard::constants::*;
-use crate::base::bitboard::BitBoard;
-use crate::base::castlezone::CastleZone;
-use crate::base::castlezone::CastleZoneSet;
-use crate::base::square::Square;
-use crate::base::Reflectable;
-use crate::base::Side;
-use crate::board::implementation::BoardImpl;
-use crate::board::MutBoard;
+use crate::board::implementation::MutBoardImpl;
 use crate::board::Move;
 use crate::board::MoveComputeType;
-use crate::pieces::Piece;
+use crate::board::MutBoard;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::CastleZoneSet;
+use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
 
 type MoveSet = BTreeSet<Move>;
 
@@ -73,7 +70,7 @@ fn execute_test(case: TestCase) {
     execute_test_impl(ref_board, ref_moves);
 }
 
-fn execute_test_impl(mut board: BoardImpl, moves: ExpectedMoves) {
+fn execute_test_impl(mut board: MutBoardImpl, moves: ExpectedMoves) {
     for (computation_type, expected_moves) in moves.into_iter() {
         let actual_moves: MoveSet = board.compute_moves(computation_type).into_iter().collect();
         assert_eq!(

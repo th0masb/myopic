@@ -1,12 +1,12 @@
-use myopic_core::bitboard::BitBoard;
-use myopic_core::{Side, Square};
-use crate::board::MutBoard;
-use crate::board::BoardImpl;
 use crate::board::MoveComputeType;
+use crate::board::MutBoard;
+use crate::board::MutBoardImpl;
 use crate::board::Termination;
+use myopic_core::bitboard::BitBoard;
 use myopic_core::pieces::Piece;
+use myopic_core::{Side, Square};
 
-impl BoardImpl {
+impl MutBoardImpl {
     pub fn termination_status_impl(&mut self) -> Option<Termination> {
         match &self.cache.termination_status {
             Some(x) => *x,
@@ -93,7 +93,7 @@ mod test {
 
     #[derive(Clone, Debug)]
     struct TestCase {
-        board: BoardImpl,
+        board: MutBoardImpl,
         expected: Option<Termination>,
     }
 

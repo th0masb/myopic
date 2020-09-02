@@ -1,5 +1,6 @@
 use std::cmp::max;
 
+<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
 use crate::base::{Reflectable, StrResult};
 use crate::base::bitboard::BitBoard;
 use crate::base::castlezone::CastleZone;
@@ -7,13 +8,18 @@ use crate::base::Side;
 use crate::base::square::Square;
 use crate::board::MutBoard;
 use crate::board::Discards;
+=======
+>>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/mod.rs
 use crate::board::implementation::cache::CalculationCache;
 use crate::board::implementation::castling::Castling;
 use crate::board::implementation::history::History;
 use crate::board::implementation::positions::Positions;
+use crate::board::Discards;
 use crate::board::Move;
 use crate::board::MoveComputeType;
+use crate::board::MutBoard;
 use crate::board::Termination;
+<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
 use crate::parse::patterns;
 <<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
 use crate::pieces::Piece;
@@ -21,6 +27,14 @@ use crate::pieces::Piece;
 use myopic_core::reflectable::Reflectable;
 use myopic_core::pieces::Piece;
 >>>>>>> [MYO-005] Got all related code compiling:myopic-board/src/board/implementation/mod.rs
+=======
+use crate::patterns;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::CastleZone;
+use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
+>>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/mod.rs
 
 mod cache;
 mod castling;
@@ -32,7 +46,7 @@ mod positions;
 mod test;
 
 #[derive(Debug, Clone)]
-pub struct BoardImpl {
+pub struct MutBoardImpl {
     history: History,
     pieces: Positions,
     castling: Castling,
@@ -42,8 +56,8 @@ pub struct BoardImpl {
     cache: CalculationCache,
 }
 
-impl BoardImpl {
-    pub(super) fn from_fen(fen: String) -> Result<BoardImpl, String> {
+impl MutBoardImpl {
+    pub(super) fn from_fen(fen: String) -> Result<MutBoardImpl, String> {
         if patterns::fen().is_match(&fen) {
             let space_split: Vec<_> = patterns::space().split(&fen).map(|s| s.to_owned()).collect();
             let pieces = positions_from_fen(&space_split[0])?;
@@ -52,7 +66,7 @@ impl BoardImpl {
             let enpassant = enpassant_from_fen(&space_split[3]);
             let (clock, history) = clock_history_from_fen(&fen, active)?;
             let hash = hash(&pieces, &castling, active, enpassant);
-            Ok(BoardImpl {
+            Ok(MutBoardImpl {
                 pieces,
                 active,
                 enpassant,
@@ -112,7 +126,6 @@ fn clock_history_from_fen(fen: &String, active: Side) -> Result<(usize, usize), 
     }
 }
 
-
 fn hash(pt: &Positions, ct: &Castling, active: Side, ep: Option<Square>) -> u64 {
     pt.hash()
         ^ ct.hash()
@@ -148,6 +161,7 @@ impl Move {
 
 #[cfg(test)]
 mod fen_test {
+<<<<<<< HEAD:myopic-uci-client/src/board/implementation/mod.rs
     use crate::base::bitboard::constants::*;
     use crate::base::castlezone::CastleZone;
     use crate::base::castlezone::CastleZoneSet;
@@ -155,9 +169,17 @@ mod fen_test {
     use crate::base::square::Square;
     use crate::board::BoardImpl;
     use crate::board::implementation::test::TestBoard;
+=======
+    use crate::board::implementation::test::TestBoard;
+    use crate::board::MutBoardImpl;
+    use myopic_core::bitboard::constants::*;
+    use myopic_core::castlezone::CastleZone;
+    use myopic_core::castlezone::CastleZoneSet;
+    use myopic_core::{Side, Square};
+>>>>>>> [MYO-005] myopic-board compiling and passing tests:myopic-board/src/board/implementation/mod.rs
 
     fn test(expected: TestBoard, fen_string: String) {
-        assert_eq!(BoardImpl::from(expected), BoardImpl::from_fen(fen_string).unwrap())
+        assert_eq!(MutBoardImpl::from(expected), MutBoardImpl::from_fen(fen_string).unwrap())
     }
 
     #[test]
@@ -230,7 +252,7 @@ mod fen_test {
 }
 
 // Trait implementations
-impl Reflectable for BoardImpl {
+impl Reflectable for MutBoardImpl {
     fn reflect(&self) -> Self {
         let pieces = self.pieces.reflect();
         let castling = self.castling.reflect();
@@ -238,7 +260,7 @@ impl Reflectable for BoardImpl {
         let enpassant = self.enpassant.reflect();
         let history_count = self.history_count();
         let hash = hash(&pieces, &castling, active, enpassant);
-        BoardImpl {
+        MutBoardImpl {
             history: History::new(hash, history_count),
             clock: self.clock,
             pieces,
@@ -261,8 +283,8 @@ impl Reflectable for Move {
     }
 }
 
-impl PartialEq<BoardImpl> for BoardImpl {
-    fn eq(&self, other: &BoardImpl) -> bool {
+impl PartialEq<MutBoardImpl> for MutBoardImpl {
+    fn eq(&self, other: &MutBoardImpl) -> bool {
         self.pieces == other.pieces
             && self.castling.rights() == other.castling.rights()
             && self.enpassant == other.enpassant
@@ -271,7 +293,7 @@ impl PartialEq<BoardImpl> for BoardImpl {
     }
 }
 
-impl MutBoard for BoardImpl {
+impl MutBoard for MutBoardImpl {
     fn evolve(&mut self, action: &Move) -> Discards {
         self.evolve(action)
     }

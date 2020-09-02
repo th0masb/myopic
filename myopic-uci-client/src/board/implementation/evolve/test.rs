@@ -1,13 +1,12 @@
+use crate::board::implementation::test::TestBoard;
+use crate::board::implementation::MutBoardImpl;
+use crate::board::Move;
 use myopic_core::bitboard::constants::*;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZone;
 use myopic_core::castlezone::CastleZoneSet;
-use myopic_core::{Side, Square};
-use crate::board::implementation::BoardImpl;
-use crate::board::Move;
-use crate::board::implementation::test::TestBoard;
 use myopic_core::pieces::Piece;
-
+use myopic_core::{Side, Square};
 
 #[derive(Debug, Clone)]
 struct TestCase {
@@ -18,8 +17,8 @@ struct TestCase {
 
 fn check_case(test_case: TestCase) {
     let action = test_case.action.clone();
-    let start = BoardImpl::from(test_case.start.clone());
-    let end = BoardImpl::from(test_case.end.clone());
+    let start = MutBoardImpl::from(test_case.start.clone());
+    let end = MutBoardImpl::from(test_case.end.clone());
 
     let mut forward_subject = start.clone();
     let rev_data = forward_subject.evolve(&action);
@@ -28,7 +27,7 @@ fn check_case(test_case: TestCase) {
     check_constrained_board_equality(start, forward_subject);
 }
 
-fn check_constrained_board_equality(left: BoardImpl, right: BoardImpl) {
+fn check_constrained_board_equality(left: MutBoardImpl, right: MutBoardImpl) {
     assert_eq!(left.clock, right.clock);
     assert_eq!(left.enpassant, right.enpassant);
     assert_eq!(left.active, right.active);

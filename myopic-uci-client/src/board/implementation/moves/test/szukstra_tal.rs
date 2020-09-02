@@ -1,4 +1,6 @@
 use super::*;
+use myopic_core::bitboard::constants::*;
+use myopic_core::castlezone::CastleZone;
 
 #[test]
 fn black_move_eight() {

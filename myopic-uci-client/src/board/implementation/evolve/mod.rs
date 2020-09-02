@@ -1,12 +1,12 @@
-use myopic_core::castlezone::CastleZone;
-use myopic_core::castlezone::CastleZoneSet;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{Side, Square, Dir};
-use crate::board::implementation::BoardImpl;
+use crate::board::implementation::MutBoardImpl;
 use crate::board::Discards;
 use crate::board::Move;
 use crate::board::Move::*;
+use myopic_core::castlezone::CastleZone;
+use myopic_core::castlezone::CastleZoneSet;
 use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
 
 #[cfg(test)]
 mod test;
@@ -15,7 +15,7 @@ type D = Discards;
 
 /// Implementation of board evolution/devolution via some given Move
 /// instance which is assumed to be legal for this board.
-impl BoardImpl {
+impl MutBoardImpl {
     /// Public API for evolving a board. All that is required is a reference to
     /// a move which is assumed to be legal. The information required to reverse
     /// this same move is returned and the board is mutated to the next state.
@@ -39,13 +39,13 @@ impl BoardImpl {
         }
     }
 
-                fn evolve_s(&mut self, piece: Piece, source: Square, target: Square) -> D {
+    fn evolve_s(&mut self, piece: Piece, source: Square, target: Square) -> D {
         let discarded_piece = self.pieces.erase_square(target);
         let discarded_rights = self.castling.remove_rights(source | target);
         let rev_data = self.create_rev_data(discarded_piece, discarded_rights);
         self.pieces.toggle_piece(piece, &[source, target]);
         self.clock = if discarded_piece.is_some() || piece.is_pawn() { 0 } else { self.clock + 1 };
-        self.enpassant = BoardImpl::compute_enpassant(source, target, piece);
+        self.enpassant = MutBoardImpl::compute_enpassant(source, target, piece);
         self.switch_side_update_hash_clear_cache();
         rev_data
     }
@@ -174,4 +174,3 @@ impl BoardImpl {
         }
     }
 }
-

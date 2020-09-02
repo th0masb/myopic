@@ -1,11 +1,11 @@
-use myopic_core::bitboard::BitBoard;
-use myopic_core::{Side, Square};
 use crate::board::implementation::cache::rays::RaySet;
-use crate::board::{MutBoard, BoardImpl};
-use myopic_core::reflectable::Reflectable;
+use crate::board::{MutBoard, MutBoardImpl};
+use myopic_core::bitboard::BitBoard;
 use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
 
-impl BoardImpl {
+impl MutBoardImpl {
     pub fn compute_discoveries(&self) -> RaySet {
         let locs = |side: Side| self.side(side);
         let (active, passive) = (locs(self.active), locs(self.active.reflect()));

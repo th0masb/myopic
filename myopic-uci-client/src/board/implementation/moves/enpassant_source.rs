@@ -1,6 +1,6 @@
-use myopic_core::{Side, Square};
 use myopic_core::bitboard::BitBoard;
 use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
 
 /// TODO Could have adjacent files in a constant array
 pub(super) fn squares(active: Side, enpassant_target: Square) -> BitBoard {
