@@ -1,5 +1,5 @@
-use myopic_board::MutBoard;
-use crate::evalboardimpl::SimpleEvalBoard;
+use crate::eval_impl::EvalBoardImpl;
+use myopic_board::{MutBoard, MutBoardImpl};
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -29,10 +29,10 @@ pub trait EvalBoard: MutBoard {
 
 /// Construct an instance of the default EvalBoard implementation using the
 /// default Board implementation from a fen string.
-pub fn new_board(fen_string: &str) -> Result<SimpleEvalBoard<BoardImpl>, String> {
-    board::from_fen(fen_string).map(SimpleEvalBoard::new)
+pub fn new_board(fen_string: &str) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
+    myopic_board::fen_position(fen_string).map(EvalBoardImpl::new)
 }
 
-pub fn start() -> SimpleEvalBoard<BoardImpl> {
-    SimpleEvalBoard::new(board::start())
+pub fn start() -> EvalBoardImpl<MutBoardImpl> {
+    EvalBoardImpl::new(myopic_board::start_position())
 }

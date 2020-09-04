@@ -1,14 +1,15 @@
-use crate::eval::{SimpleEvalBoard, WIN_VALUE};
+use crate::eval::WIN_VALUE;
+use crate::eval_impl::EvalBoardImpl;
 use crate::search::SearchCommand;
+use myopic_board::{parse, Move, MutBoardImpl};
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
-use std::time::{Duration};
-use crate::evalboardimpl::SimpleEvalBoard;
-use myopic_board::{parse, Move};
+use std::time::Duration;
 
-const DATA_PATH: &'static str = r"/home/t/git/myopic/data/formatted-three-puzzles";
-const MAX_CASES: usize = 500;
+const DATA_PATH: &'static str =
+    r"/Users/tba01/git/myopic/myopic-brain/data/formatted-three-puzzles";
+const MAX_CASES: usize = 200;
 const DEPTH: usize = 4;
 
 #[rustfmt::skip]
@@ -116,19 +117,19 @@ fn load_cases() -> Vec<TestCase> {
             continue;
         }
         let (fen, pgn) = (split.first().unwrap(), split.last().unwrap());
-        match crate::board::from_fen(fen) {
+        match myopic_board::fen_position(fen) {
             Err(_) => {
                 println!("Error with position parsing: {}", line_clone);
                 continue;
             }
-            Ok(board) => match parse::pgn(&board, pgn) {
+            Ok(board) => match parse::partial_pgn(&board, pgn) {
                 Err(_) => {
                     println!("Error with move parsing: {}", line_clone);
                     continue;
                 }
                 Ok(moves) => {
                     let expected_move = moves.first().unwrap().to_owned();
-                    dest.push(TestCase { board: SimpleEvalBoard::new(board), expected_move });
+                    dest.push(TestCase { board: EvalBoardImpl::new(board), expected_move });
                     if dest.len() == MAX_CASES {
                         break;
                     }
@@ -140,6 +141,6 @@ fn load_cases() -> Vec<TestCase> {
 }
 
 struct TestCase {
-    board: SimpleEvalBoard<BoardImpl>,
+    board: EvalBoardImpl<MutBoardImpl>,
     expected_move: Move,
 }

@@ -1,12 +1,10 @@
+use crate::values;
+use myopic_board::MutBoard;
+use myopic_core::bitboard::BitBoard;
+use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
 use std::cmp;
-
-use crate::base::bitboard::BitBoard;
-use crate::base::square::Square;
-use crate::base::Reflectable;
-use crate::base::Side;
-use crate::board::MutBoard;
-use crate::eval::values;
-use crate::pieces::Piece;
 
 /// API function for determining whether an exchange is good on the given
 /// board. The board must have a piece at both the source and target square
@@ -139,13 +137,11 @@ fn is_slider(piece: Piece) -> bool {
 
 #[cfg(test)]
 mod test {
-    use crate::base::bitboard::BitBoard;
-    use crate::base::square::Square;
-    use crate::base::Reflectable;
-    use crate::board;
-    use crate::board::MutBoard;
-    use crate::eval::see::See;
-    use crate::pieces::Piece;
+    use crate::see::See;
+    use myopic_board::MutBoard;
+    use myopic_core::pieces::Piece;
+    use myopic_core::reflectable::Reflectable;
+    use myopic_core::Square;
 
     /// Dummy piece values
     fn value(piece: Piece) -> i32 {
@@ -188,20 +184,20 @@ mod test {
         }
     }
 
-    const ZERO: BitBoard = BitBoard(0);
-
     #[test]
     fn see_case_1() {
+        let position = "1b5k/5n2/3p2q1/2P5/8/3R4/1K1Q4/8 w KQkq - 5 20";
         execute_case(TestCase {
-            board: board::from_fen("1b5k/5n2/3p2q1/2P5/8/3R4/1K1Q4/8 w KQkq - 5 20").unwrap(),
+            board: myopic_board::fen_position(position).unwrap(),
             expected: vec![(Square::C5, Square::D6, 0), (Square::D3, Square::D6, -2)],
         })
     }
 
     #[test]
     fn see_case_2() {
+        let position = "k7/6n1/2q1b2R/1P3P2/5N2/4Q3/8/K7 w KQkq - 10 30";
         execute_case(TestCase {
-            board: board::from_fen("k7/6n1/2q1b2R/1P3P2/5N2/4Q3/8/K7 w KQkq - 10 30").unwrap(),
+            board: myopic_board::fen_position(position).unwrap(),
             expected: vec![
                 (Square::B5, Square::C6, 9),
                 (Square::C6, Square::B5, 1),
@@ -216,10 +212,10 @@ mod test {
 
     #[test]
     fn see_case_3() {
+        let position = "r1n2qk1/pp5p/2ppr1pQ/4p3/8/2N4R/PPP3PP/6K1 w - - 0 3";
         execute_case(TestCase {
-            board: board::from_fen("r1n2qk1/pp5p/2ppr1pQ/4p3/8/2N4R/PPP3PP/6K1 w - - 0 3").unwrap(),
+            board: myopic_board::fen_position(position).unwrap(),
             expected: vec![(Square::H6, Square::H7, 1)],
         })
     }
 }
-

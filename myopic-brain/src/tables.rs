@@ -1,7 +1,6 @@
-use crate::base::square::Square;
-use crate::base::Reflectable;
-use crate::base::Side;
-use crate::pieces::Piece;
+use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
 
 /// API method for retrieving the evaluation for a piece at a given location
 /// in the midgame.
@@ -134,11 +133,11 @@ const PAWN: [(i32, i32); 64] = [
 
 #[cfg(test)]
 mod test {
-    use crate::base::square::Square::*;
-    use crate::base::Reflectable;
-    use crate::pieces::Piece;
+    use myopic_core::Square::*;
 
     use super::{endgame, midgame};
+    use myopic_core::pieces::Piece;
+    use myopic_core::reflectable::Reflectable;
 
     #[test]
     fn test_reflect() {

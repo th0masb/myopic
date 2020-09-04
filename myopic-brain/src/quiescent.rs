@@ -1,11 +1,8 @@
-use crate::base::bitboard::BitBoard;
-use crate::base::Reflectable;
-use crate::board::MutBoard;
-use crate::board::Move;
-use crate::board::MoveComputeType;
-use crate::board::Termination;
-use crate::eval;
 use crate::eval::EvalBoard;
+use crate::{eval, see};
+use myopic_board::{Move, MoveComputeType, MutBoard, Termination};
+use myopic_core::bitboard::BitBoard;
+use myopic_core::reflectable::Reflectable;
 use std::cmp;
 
 const Q_DEPTH_CAP: i32 = -8;
@@ -61,7 +58,7 @@ fn compute_quiescent_moves<B: MutBoard>(state: &mut B, depth: i32) -> Vec<Move> 
     let enemies = state.side(state.active().reflect());
     let is_attack_filter = |mv: &Move| is_attack(mv, enemies);
     // If in check don't filter out any attacks, we must check all available moves.
-    let good_attack_threshold = if state.in_check() {-eval::INFTY} else {0};
+    let good_attack_threshold = if state.in_check() { -eval::INFTY } else { 0 };
     let split_index = itertools::partition(&mut moves, is_attack_filter);
     // Score attacks using see and filter bad exchanges before sorting and
     // recombining.
@@ -85,7 +82,7 @@ fn score_attack<B: MutBoard>(state: &mut B, attack: &Move) -> i32 {
     match attack {
         &Move::Enpassant(_, _) => 10000,
         &Move::Promotion(_, _, _) => 20000,
-        &Move::Standard(_, source, target) => eval::exchange_value(state, source, target),
+        &Move::Standard(_, source, target) => see::exchange_value(state, source, target),
         _ => panic!(),
     }
 }

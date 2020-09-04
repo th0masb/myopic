@@ -2,17 +2,11 @@ use std::cmp;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::time::{Duration, Instant};
 
-use crate::board::Move;
-use crate::board::MoveComputeType;
-use crate::board::Termination;
-use crate::eval;
 use crate::eval::EvalBoard;
+use crate::{eval, quiescent};
+use myopic_board::{Move, MoveComputeType, Termination};
+use myopic_core::Side;
 use std::cmp::{max, min};
-use crate::base::Side;
-
-#[cfg(test)]
-mod mate_benchmark;
-pub mod quiescent;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SearchCommand<B: EvalBoard> {
@@ -36,15 +30,15 @@ pub struct SearchDetails {
     pub ponder: Option<Move>,
 }
 
-pub type SearchResult = Result<SearchDetails, ()>;
-pub type SearchCmdTx<B> = Sender<SearchCommand<B>>;
+pub type SearchResult = Result<SearchDetails, String>;
+pub type SearchCommandTx<B> = Sender<SearchCommand<B>>;
 pub type SearchResultRx = Receiver<SearchResult>;
 
 const INFINITE_DURATION: Duration = Duration::from_secs(1_000_000);
 const MAX_DEPTH: usize = 1_000;
 
 ///
-pub fn init<B: EvalBoard + 'static>() -> (SearchCmdTx<B>, SearchResultRx) {
+pub fn init<B: EvalBoard + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<SearchResult>();
     std::thread::spawn(move || {
@@ -94,7 +88,6 @@ const DEFAULT_SEARCH_DEPTH: usize = 100;
 
 impl<B: EvalBoard> Search<B> {
     pub fn new(input_rx: CmdRx<B>, output_tx: ResultTx) -> Search<B> {
-
         Search {
             input_rx,
             output_tx,
@@ -112,7 +105,13 @@ impl<B: EvalBoard> Search<B> {
     pub fn set_game_time(&mut self, w_base: usize, w_inc: usize, b_base: usize, b_inc: usize) {
         if self.root.is_some() {
             let active = self.root.as_ref().unwrap().active();
-            let mut time = max(500, match active {Side::White => w_inc, _ => b_inc});
+            let mut time = max(
+                500,
+                match active {
+                    Side::White => w_inc,
+                    _ => b_inc,
+                },
+            );
             time += match active {
                 Side::White => w_base / 10,
                 Side::Black => b_base / 10,
@@ -129,7 +128,7 @@ impl<B: EvalBoard> Search<B> {
         }
     }
 
-    pub fn execute(&self) -> Result<SearchDetails, ()> {
+    pub fn execute(&self) -> Result<SearchDetails, String> {
         let search_start = Instant::now();
         let tracker = SearchTerminationImpl {
             search_start,
@@ -174,15 +173,15 @@ impl<B: EvalBoard> SearchTerminationImpl<'_, B> {
 }
 
 impl<B: EvalBoard> SearchImpl<'_, B> {
-    fn search(&self) -> Result<(Move, i32, usize), ()> {
-        let mut best_move = Err(());
+    fn search(&self) -> Result<(Move, i32, usize), String> {
+        let mut best_move = Err(String::from("Terminated before search began"));
         for i in 1..self.max_depth + 1 {
             match self.best_move(i) {
                 Err(_) => break,
                 Ok((mv, eval)) => {
                     best_move = Ok((mv, eval, i));
                     //println!("{:?}", best_move);
-                },
+                }
             }
         }
         best_move
@@ -240,14 +239,14 @@ impl<B: EvalBoard> SearchImpl<'_, B> {
 /// checkmating or escaping checkmate etc.
 #[cfg(test)]
 mod test {
-    use crate::base::square::Square;
-    use crate::base::square::Square::*;
-    use crate::base::Reflectable;
-    use crate::board::Move;
-    use crate::board::Move::*;
     use crate::eval::EvalBoard;
-    use crate::pieces::Piece;
     use crate::search::SearchCommand;
+    use myopic_board::Move;
+    use myopic_board::Move::Standard;
+    use myopic_core::pieces::Piece;
+    use myopic_core::reflectable::Reflectable;
+    use myopic_core::Square;
+    use myopic_core::Square::*;
 
     const DEPTH: usize = 3;
 

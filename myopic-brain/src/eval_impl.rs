@@ -1,23 +1,23 @@
-use myopic_board::{MutBoard, Move, Discards, MoveComputeType, Termination};
-use myopic_core::reflectable::Reflectable;
-use myopic_core::pieces::Piece;
-use crate::{tables, values};
-use myopic_core::{Square, Side};
-use myopic_core::castlezone::CastleZone;
-use myopic_core::bitboard::BitBoard;
 use crate::eval::EvalBoard;
+use crate::{eval, tables, values};
+use myopic_board::{Discards, Move, MoveComputeType, MutBoard, Termination};
+use myopic_core::bitboard::BitBoard;
+use myopic_core::castlezone::CastleZone;
+use myopic_core::pieces::Piece;
+use myopic_core::reflectable::Reflectable;
+use myopic_core::{Side, Square};
 
 #[derive(Clone, Eq, PartialEq)]
-pub struct SimpleEvalBoard<B: MutBoard> {
+pub struct EvalBoardImpl<B: MutBoard> {
     mid_eval: i32,
     end_eval: i32,
     phase: i32,
     board: B,
 }
 
-impl<B: MutBoard> Reflectable for SimpleEvalBoard<B> {
+impl<B: MutBoard> Reflectable for EvalBoardImpl<B> {
     fn reflect(&self) -> Self {
-        SimpleEvalBoard {
+        EvalBoardImpl {
             mid_eval: -self.mid_eval,
             end_eval: -self.end_eval,
             phase: self.phase,
@@ -54,9 +54,9 @@ fn compute_endgame<B: MutBoard>(board: &B) -> i32 {
         .sum()
 }
 
-impl<B: MutBoard> SimpleEvalBoard<B> {
-    pub fn new(board: B) -> SimpleEvalBoard<B> {
-        SimpleEvalBoard {
+impl<B: MutBoard> EvalBoardImpl<B> {
+    pub fn new(board: B) -> EvalBoardImpl<B> {
+        EvalBoardImpl {
             mid_eval: compute_midgame(&board),
             end_eval: compute_endgame(&board),
             phase: compute_phase(&board),
@@ -77,7 +77,7 @@ impl<B: MutBoard> SimpleEvalBoard<B> {
     }
 }
 
-impl<B: MutBoard> MutBoard for SimpleEvalBoard<B> {
+impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
     fn evolve(&mut self, action: &Move) -> Discards {
         match action {
             &Move::Standard(moving, src, target) => {
@@ -209,11 +209,11 @@ impl<B: MutBoard> MutBoard for SimpleEvalBoard<B> {
     }
 }
 
-impl<B: MutBoard> EvalBoard for SimpleEvalBoard<B> {
+impl<B: MutBoard> EvalBoard for EvalBoardImpl<B> {
     fn static_eval(&mut self) -> i32 {
         match self.termination_status() {
-            Some(Termination::Draw) => super::DRAW_VALUE,
-            Some(Termination::Loss) => super::LOSS_VALUE,
+            Some(Termination::Draw) => eval::DRAW_VALUE,
+            Some(Termination::Loss) => eval::LOSS_VALUE,
             None => {
                 let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
                 let (mid, end) = (self.mid_eval, self.end_eval);
@@ -229,12 +229,12 @@ impl<B: MutBoard> EvalBoard for SimpleEvalBoard<B> {
 
 #[cfg(test)]
 mod test {
+    use crate::eval_impl::EvalBoardImpl;
     use myopic_board::Move::*;
-    use myopic_core::pieces::Piece::*;
-    use myopic_board::{MutBoard, Move};
-    use myopic_core::reflectable::Reflectable;
-    use crate::evalboardimpl::SimpleEvalBoard;
+    use myopic_board::{Move, MutBoard};
     use myopic_core::castlezone::CastleZone;
+    use myopic_core::pieces::Piece::*;
+    use myopic_core::reflectable::Reflectable;
     use myopic_core::Square::*;
 
     #[derive(Clone, Eq, PartialEq)]
@@ -255,7 +255,7 @@ mod test {
     }
 
     fn execute_test_impl<B: MutBoard>(test_case: TestCase<B>) {
-        let mut start = SimpleEvalBoard::new(test_case.start_position);
+        let mut start = EvalBoardImpl::new(test_case.start_position);
         for evolution in test_case.moves {
             let discards = start.evolve(&evolution);
             assert_eq!(super::compute_midgame(&start), start.mid_eval);
@@ -268,7 +268,10 @@ mod test {
     }
 
     fn test(start_fen: &'static str, moves: Vec<Move>) {
-        execute_test(TestCase { start_position: board::from_fen(start_fen).unwrap(), moves })
+        execute_test(TestCase {
+            start_position: myopic_board::fen_position(start_fen).unwrap(),
+            moves,
+        })
     }
 
     #[test]

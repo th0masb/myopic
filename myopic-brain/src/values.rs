@@ -1,5 +1,5 @@
-use crate::base::Side;
-use crate::pieces::Piece;
+use myopic_core::pieces::Piece;
+use myopic_core::Side;
 
 /// Retrieve the midgame value of the given piece.
 pub fn midgame(piece: Piece) -> i32 {

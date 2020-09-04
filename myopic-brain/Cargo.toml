@@ -1,12 +1,21 @@
 [package]
 name = "myopic-brain"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
 edition = "2018"
+license = "MIT"
+repository = "https://github.com/th0masb/myopic"
+description = "Search and evaluation for determining best move available in a chess game"
+readme = "README.md"
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+    "README.md",
+]
 
 [dependencies]
 myopic-core = "1.0.1"
-myopic-board = "1.0.0"
+myopic-board = "1.0.1"
 lazy_static = "1.4.0"
 itertools = "0.9.0"
 regex = "1"
