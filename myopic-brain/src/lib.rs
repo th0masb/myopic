@@ -1,7 +1,14 @@
+extern crate myopic_core;
+extern crate myopic_board;
+extern crate itertools;
+
+pub mod eval;
+pub mod search;
+mod evalboardimpl;
+mod quiescent;
+mod see;
+mod tables;
+mod values;
+
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+mod mate_benchmark;
