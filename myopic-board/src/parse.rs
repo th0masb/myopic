@@ -6,13 +6,15 @@ use myopic_core::castlezone::CastleZone;
 use myopic_core::pieces::Piece;
 use myopic_core::Square;
 
-/// Extracts the moves encoded in a standard pgn file contained in
+/// Extracts the moves encoded in standard pgn format contained in
 /// a single string.
 pub fn pgn(moves: &String) -> Result<Vec<Move>, String> {
-    return pgn_impl(&crate::start_position(), moves);
+    return partial_pgn(&crate::start_position(), moves);
 }
 
-fn pgn_impl<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, String> {
+/// Extracts the moves encoded in standard pgn format starting at
+/// a custom board position.
+pub fn partial_pgn<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, String> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in pgn_move().find_iter(moves) {
@@ -138,7 +140,7 @@ mod test {
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
         let finish = crate::fen_position(expected_finish).unwrap();
         let mut board = crate::start_position();
-        for evolve in super::pgn_impl(&board, &String::from(pgn)).unwrap() {
+        for evolve in super::partial_pgn(&board, &String::from(pgn)).unwrap() {
             board.evolve(&evolve);
         }
         assert_eq!(finish, board);
