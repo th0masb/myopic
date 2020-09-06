@@ -1,22 +1,21 @@
 [package]
-<<<<<<< HEAD:myopic-brain/Cargo.toml
 name = "myopic-brain"
-version = "0.1.0"
-authors = ["Thomas Ball <thomas_ball@starsgroup.com>"]
-=======
-name = "myopic-board"
 version = "1.0.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
->>>>>>> [MYO-005] Flattened mod structure for myopic-board:myopic-board/Cargo.toml
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+repository = "https://github.com/th0masb/myopic"
+description = "Search and evaluation for determining best move available in a chess game"
+readme = "README.md"
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+    "README.md",
+]
 
 [dependencies]
-<<<<<<< HEAD:myopic-brain/Cargo.toml
-=======
 myopic-core = "1.0.1"
+myopic-board = "1.0.1"
 lazy_static = "1.4.0"
 itertools = "0.9.0"
 regex = "1"
->>>>>>> [MYO-005] Got all related code compiling:myopic-board/Cargo.toml
