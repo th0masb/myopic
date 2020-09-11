@@ -1,6 +1,6 @@
 use crate::eval::WIN_VALUE;
 use crate::eval_impl::EvalBoardImpl;
-use crate::search::SearchCommand;
+use crate::search::search;
 use myopic_board::{parse, Move, MutBoardImpl};
 use regex::Regex;
 use std::fs;
@@ -69,8 +69,6 @@ fn mate_benchmark() {
     let cases = load_cases();
     let mut search_duration = Duration::from_secs(0);
     let (mut err_count, mut case_count) = (0, 0);
-    let (search_input_tx, search_output_rx) = crate::search::init();
-    search_input_tx.send(SearchCommand::Depth(DEPTH)).unwrap();
     let print_progress = |cases: usize, errs: usize, d: Duration| {
         println!(
             "Depth: {}, Cases: {}, Errors: {}, Time: {}ms",
@@ -81,24 +79,18 @@ fn mate_benchmark() {
         if i % 5 == 0 {
             print_progress(case_count, err_count, search_duration.clone());
         }
-        search_input_tx.send(SearchCommand::Root(test_case.board)).unwrap();
-        search_input_tx.send(SearchCommand::Go).unwrap();
-        match search_output_rx.recv() {
-            Err(_) => panic!(),
-            Ok(result) => match result {
-                Err(_) => panic!(),
-                Ok(details) => {
-                    search_duration += details.time;
-                    if test_case.expected_move != details.best_move || WIN_VALUE != details.eval {
-                        err_count += 1;
-                        println!("Error at index {}", i);
-                    }
+        match search(test_case.board, DEPTH) {
+            Err(message) => panic!("{}", message),
+            Ok(outcome) => {
+                search_duration += outcome.time;
+                if test_case.expected_move != outcome.best_move || WIN_VALUE != outcome.eval {
+                    err_count += 1;
+                    println!("Error at index {}", i);
                 }
             }
         }
         case_count += 1;
     }
-    search_input_tx.send(SearchCommand::Close).unwrap();
     print_progress(case_count, err_count, search_duration);
 }
 

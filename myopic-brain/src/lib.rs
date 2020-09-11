@@ -18,8 +18,10 @@ mod mate_benchmark;
 
 pub use eval::EvalBoard;
 pub use eval_impl::EvalBoardImpl;
-pub use search::SearchCommand;
-pub use search::SearchCommandTx;
-pub use search::SearchDetails;
-pub use search::SearchResult;
-pub use search::SearchResultRx;
+pub use search::interactive::interactive_search;
+pub use search::interactive::InteractiveSearchCommand;
+pub use search::interactive::InteractiveSearchCommandTx;
+pub use search::interactive::InteractiveSearchResultRx;
+pub use search::search;
+pub use search::SearchOutcome;
+pub use search::SearchTerminator;
