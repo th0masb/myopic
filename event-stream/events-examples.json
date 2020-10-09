@@ -1,0 +1,132 @@
+[
+    {
+      "type": "gameStart",
+      "game": {
+        "id": "1lsvP62l"
+      }
+    },
+
+    {
+      "type": "challenge",
+      "challenge": {
+        "id": "qG23jvtf",
+        "url": "https://lichess.org/qG23jvtf",
+        "status": "created",
+        "challenger": {
+          "id": "th0masb",
+          "name": "th0masb",
+          "title": null,
+          "rating": 1500,
+          "provisional": true,
+          "online": true
+        },
+        "destUser": {
+          "id": "myopic-bot",
+          "name": "myopic-bot",
+          "title": "BOT",
+          "rating": 1500,
+          "provisional": true,
+          "online": true
+        },
+        "variant": {
+          "key": "standard",
+          "name": "Standard",
+          "short": "Std"
+        },
+        "rated": true,
+        "speed": "correspondence",
+        "timeControl": {
+          "type": "correspondence",
+          "daysPerTurn": 2
+        },
+        "color": "random",
+        "perf": {
+          "icon": ";",
+          "name": "Correspondence"
+        }
+      }
+    },
+
+    {
+      "type": "challenge",
+      "challenge": {
+        "id": "x0ORBDis",
+        "url": "https://lichess.org/x0ORBDis",
+        "status": "created",
+        "challenger": {
+          "id": "th0masb",
+          "name": "th0masb",
+          "title": null,
+          "rating": 1500,
+          "provisional": true,
+          "online": true
+        },
+        "destUser": {
+          "id": "myopic-bot",
+          "name": "myopic-bot",
+          "title": "BOT",
+          "rating": 1500,
+          "provisional": true,
+          "online": true
+        },
+        "variant": {
+          "key": "standard",
+          "name": "Standard",
+          "short": "Std"
+        },
+        "rated": true,
+        "speed": "correspondence",
+        "timeControl": {
+          "type": "unlimited"
+        },
+        "color": "random",
+        "perf": {
+          "icon": ";",
+          "name": "Correspondence"
+        }
+      }
+    },
+
+    {
+      "type": "challenge",
+      "challenge": {
+        "id": "fLIBOP1V",
+        "url": "https://lichess.org/fLIBOP1V",
+        "status": "created",
+        "challenger": {
+          "id": "th0masb",
+          "name": "th0masb",
+          "title": null,
+          "rating": 1841,
+          "provisional": true,
+          "online": true
+        },
+        "destUser": {
+          "id": "myopic-bot",
+          "name": "myopic-bot",
+          "title": "BOT",
+          "rating": 1500,
+          "provisional": true,
+          "online": true
+        },
+        "variant": {
+          "key": "standard",
+          "name": "Standard",
+          "short": "Std"
+        },
+        "rated": true,
+        "speed": "rapid",
+        "timeControl": {
+          "type": "clock",
+          "limit": 600,
+          "increment": 3,
+          "show": "10+3"
+        },
+        "color": "random",
+        "perf": {
+          "icon": "#",
+          "name": "Rapid"
+        }
+      }
+    }
+]
