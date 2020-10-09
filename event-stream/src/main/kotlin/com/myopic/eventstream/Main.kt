@@ -29,7 +29,7 @@ fun main() {
                         },
 
                         onFailure = {
-                            logger.warn { "Received unexpected event: $event, error: ${it.message}" }
+                            logger.warn { "Received unexpected event: $event" }
                         }
                     )
                 }
