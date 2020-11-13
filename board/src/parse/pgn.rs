@@ -1,7 +1,7 @@
+use crate::parse::patterns::*;
+use crate::regex::Regex;
 use crate::Move::Castle;
 use crate::{Move, MoveComputeType, MutBoard};
-use crate::patterns::*;
-use crate::regex::Regex;
 use myopic_core::castlezone::CastleZone;
 use myopic_core::pieces::Piece;
 use myopic_core::Square;

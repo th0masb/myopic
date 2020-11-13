@@ -28,7 +28,7 @@ fn compute_rights_removed(move_components: BitBoard) -> CastleZoneSet {
 
 impl Castling {
     pub fn from_fen(fen_string: String) -> Result<Castling, String> {
-        if !crate::patterns::fen_rights().is_match(&fen_string) {
+        if !crate::parse::patterns::fen_rights().is_match(&fen_string) {
             Err(fen_string)
         } else {
             let rights: CastleZoneSet = CastleZone::iter()
