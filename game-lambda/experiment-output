@@ -1,6 +1,6 @@
 Bot playing as white:
 
-1/ {"id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
+1/ {"_id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"_id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"_id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
 
 bot moves e2e4
 
@@ -16,7 +16,7 @@ bot moves b1c3
 
 bot disconnects and reconnects without player moving
 
-5/ {"id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"e2e4 e7e5 b1c3","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
+5/ {"_id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"_id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"_id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"e2e4 e7e5 b1c3","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
 
 player moves b8c6
 
@@ -28,8 +28,8 @@ bot moves f1b4
 
 bot disconnects, player moves a7a6 then bot reconnects
 
-8/ {"id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"e2e4 e7e5 b1c3 b8c6 f1b5 a7a6","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
+8/ {"_id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"_id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"_id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"e2e4 e7e5 b1c3 b8c6 f1b5 a7a6","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
 
 bot disconnects and reconnects
 
-9/ {"id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"e2e4 e7e5 b1c3 b8c6 f1b5 a7a6","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
+9/ {"_id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"_id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"_id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"e2e4 e7e5 b1c3 b8c6 f1b5 a7a6","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
