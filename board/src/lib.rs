@@ -4,9 +4,8 @@ extern crate itertools;
 extern crate myopic_core;
 extern crate regex;
 
-pub mod parse;
-mod patterns;
 mod implementation;
+pub mod parse;
 
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZone;

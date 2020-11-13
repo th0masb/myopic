@@ -1,4 +1,4 @@
-use crate::patterns;
+use crate::parse::patterns;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::hash;
 use myopic_core::pieces::Piece;

@@ -118,6 +118,13 @@ pub fn pgn_non_castle_move() -> &'static Regex {
     &RE
 }
 
+pub fn uci_move() -> &'static Regex {
+    lazy_static! {
+        static ref RE: Regex = rgx(UCI_MOVE.to_owned());
+    }
+    &RE
+}
+
 type StrConst = &'static str;
 
 /// Standard patterns
@@ -136,6 +143,9 @@ const FEN_RNK: StrConst = "([pnbrqkPNBRQK1-8]{1,8})";
 const FEN_SIDE: StrConst = "([bw])";
 const FEN_RIGHTS: StrConst = r"(-|([kqKQ]{1,4}))";
 const FEN_EP: StrConst = r"(-|([a-h][1-8]))";
+
+/// UCI patterns
+const UCI_MOVE: StrConst = r"(([a-h][1-8]){2}[nbrq]?)";
 
 fn rgx(pattern: String) -> Regex {
     Regex::from_str(pattern.as_ref()).unwrap()
@@ -162,5 +172,12 @@ mod test {
         assert!(re.is_match("Qe4xe7#"));
         assert!(re.is_match("fxg8+"));
         assert!(re.is_match("dxc8=Q+"))
+    }
+
+    #[test]
+    fn test_uci_move_regex() {
+        let re = uci_move();
+        assert!(re.is_match("e2e4"));
+        assert!(re.is_match("c7d8q"));
     }
 }
