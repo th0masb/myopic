@@ -6,9 +6,9 @@ use serde;
 pub enum GameEvent {
     #[serde(rename = "gameFull")]
     GameFull {
-        id: String,
         white: Player,
         black: Player,
+        clock: Clock,
         state: GameState,
     },
 
@@ -38,6 +38,12 @@ pub struct Player {
     pub title: Option<String>,
     pub rating: usize,
     pub provisional: bool,
+}
+
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct Clock {
+    initial: u64,
+    increment: u64,
 }
 
 #[cfg(test)]
@@ -100,6 +106,10 @@ mod test {
                 "rating": 1500,
                 "provisional": true
             },
+            "clock": {
+                "initial": 1200000,
+                "increment": 10000
+            },
             "state": {
                 "moves": "e2e4 e7e5",
                 "wtime": 1000,
@@ -116,8 +126,9 @@ mod test {
             Err(error) => panic!(format!("Parse error {:?}", error)),
             Ok(event) => match event {
                 GameEvent::State { .. } => panic!(format!("Wrong type {:?}", event)),
-                GameEvent::GameFull { id, white, black, state } => {
-                    assert_eq!("123", id);
+                GameEvent::GameFull {
+                    white, black, clock, state
+                } => {
                     assert_eq!(Player {
                         id: String::from("th0masb"),
                         name: String::from("th0masb"),
@@ -132,6 +143,10 @@ mod test {
                         rating: 1500,
                         provisional: true
                     }, black);
+                    assert_eq!(Clock {
+                        initial: 1200000,
+                        increment: 10000,
+                    }, clock);
                     assert_eq!(GameState {
                         moves: String::from("e2e4 e7e5"),
                         wtime: 1000,

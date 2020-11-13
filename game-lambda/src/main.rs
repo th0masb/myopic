@@ -1,5 +1,4 @@
 mod events;
-mod parse;
 
 extern crate reqwest;
 extern crate serde;
@@ -12,10 +11,15 @@ use reqwest::blocking::{Client, Request, Response};
 use std::io::{Read, BufReader, BufRead};
 use events::{GameEvent, GameState, Player};
 use myopic_core::Side;
+use myopic_board::{parse, MutBoard};
+use myopic_board::start_position;
+use std::time::Duration;
 
 struct Tracking {
-    side: Side
+    side: Side,
 }
+
+
 
 const LAMBDA_ID: &'static str = "myopic-bot";
 
@@ -39,7 +43,7 @@ fn main() {
                         Err(error) => Err(format!("Error during parse: {:?}", error)),
                         Ok(event) => match event {
                             GameEvent::GameFull {
-                                id: _id, white, black, state
+                                white, black, clock,  state
                             } => process_game_full(white, black, state, &mut tracking),
                             GameEvent::State {
                                 state
@@ -68,7 +72,20 @@ fn process_game_full(
 }
 
 fn process_game_state(lambda_side: Side, state: GameState) -> Result<(), String> {
-    return Ok(())
+    let moves = parse::uci(&state.moves)?;
+    let mut board = start_position();
+    moves.iter().for_each(|mv| { board.evolve(mv); });
+
+    if board.active() == lambda_side {
+        let thinking_time = compute_thinking_time(moves.len(), &state);
+        unimplemented!()
+    } else {
+        Ok(())
+    }
+}
+
+fn compute_thinking_time(move_count: usize, state: &GameState) -> Duration {
+    unimplemented!()
 }
 
 //fn main() {

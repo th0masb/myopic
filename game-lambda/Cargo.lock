@@ -1108,9 +1108,9 @@ dependencies = [
 
 [[package]]
 name = "myopic-board"
-version = "1.0.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc78cb4f68718fb4a9b6023ff114e90dca816f47f79c8f3d935bd75394ceff4f"
+checksum = "ec4df1fed12f6df43990f6abf345b6bb7c42ffaa77bbdaec209a42bfe9ae9fac"
 dependencies = [
  "itertools 0.8.2",
  "lazy_static",

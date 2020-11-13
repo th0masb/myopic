@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 myopic-brain = "1.1.0"
-myopic-board = "1.0.1"
+myopic-board = "1.1.0"
 myopic-core = "1.0.1"
 lambda_runtime = "0.2.1"
 serde_derive = "1.0.115"
