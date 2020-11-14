@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-myopic-brain = "1.1.0"
+myopic-brain = "1.1.1"
 myopic-board = "1.1.0"
 myopic-core = "1.0.1"
 lambda_runtime = "0.2.1"

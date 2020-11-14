@@ -1120,9 +1120,9 @@ dependencies = [
 
 [[package]]
 name = "myopic-brain"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e630c798b9a6b7499ec5448d8854f0fbab7cd5937077ecdb145652609173a3b0"
+checksum = "263ca33350a955c0cf5792843b8596a5b2f1637cd57689e82f8d6b01bd16566d"
 dependencies = [
  "itertools 0.9.0",
  "lazy_static",

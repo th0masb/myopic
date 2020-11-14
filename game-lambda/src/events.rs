@@ -6,17 +6,22 @@ use serde;
 pub enum GameEvent {
     #[serde(rename = "gameFull")]
     GameFull {
-        white: Player,
-        black: Player,
-        clock: Clock,
-        state: GameState,
+        #[serde(flatten)]
+        content: GameFull
     },
-
     #[serde(rename = "gameState")]
     State {
         #[serde(flatten)]
-        state: GameState
+        content: GameState
     }
+}
+
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct GameFull {
+    pub white: Player,
+    pub black: Player,
+    pub clock: Clock,
+    pub state: GameState,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
@@ -42,8 +47,8 @@ pub struct Player {
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct Clock {
-    initial: u64,
-    increment: u64,
+    pub initial: u64,
+    pub increment: u64,
 }
 
 #[cfg(test)]
@@ -70,7 +75,7 @@ mod test {
             Err(error) => panic!(format!("Parse error {:?}", error)),
             Ok(event) => match event {
                 GameEvent::GameFull { .. }  => panic!(format!("Wrong event {:?}", event)),
-                GameEvent::State { state } => assert_eq!(
+                GameEvent::State { content: state } => assert_eq!(
                     GameState {
                         moves: String::from("e2e4 c7c5"),
                         wtime: 1000,
@@ -126,27 +131,25 @@ mod test {
             Err(error) => panic!(format!("Parse error {:?}", error)),
             Ok(event) => match event {
                 GameEvent::State { .. } => panic!(format!("Wrong type {:?}", event)),
-                GameEvent::GameFull {
-                    white, black, clock, state
-                } => {
+                GameEvent::GameFull { content } => {
                     assert_eq!(Player {
                         id: String::from("th0masb"),
                         name: String::from("th0masb"),
                         title: None,
                         rating: 1500,
                         provisional: true
-                    }, white);
+                    }, content.white);
                     assert_eq!(Player {
                         id: String::from("myopic-bot"),
                         name: String::from("myopic-bot"),
                         title: Some(String::from("BOT")),
                         rating: 1500,
                         provisional: true
-                    }, black);
+                    }, content.black);
                     assert_eq!(Clock {
                         initial: 1200000,
                         increment: 10000,
-                    }, clock);
+                    }, content.clock);
                     assert_eq!(GameState {
                         moves: String::from("e2e4 e7e5"),
                         wtime: 1000,
@@ -156,7 +159,7 @@ mod test {
                         wdraw: false,
                         bdraw: false,
                         status: String::from("started")
-                    }, state);
+                    }, content.state);
                 }
             }
         }
