@@ -11,6 +11,21 @@ pub enum GameEvent {
         #[serde(flatten)]
         content: GameState,
     },
+    #[serde(rename = "chatLine")]
+    ChatLine {
+        #[serde(flatten)]
+        content: ChatLine
+    }
+}
+
+// Make all fields optional for now, don't want
+// anything to break due to bad deserialization
+// of a chat event
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct ChatLine {
+    pub username: Option<String>,
+    pub text: Option<String>,
+    pub room: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
@@ -54,6 +69,32 @@ mod test {
     use serde_json;
 
     #[test]
+    fn deserialize_chat_line() {
+        let json = r#"{
+            "type": "chatLine",
+            "username": "th0masb",
+            "text": "Hello there",
+            "room": null
+        }"#;
+
+        match serde_json::from_str::<GameEvent>(json) {
+            Err(error) => panic!(format!("Parse error {:?}", error)),
+            Ok(event) => match event {
+                GameEvent::ChatLine { content } => assert_eq!(
+                    ChatLine {
+                        username: Some("th0masb".to_owned()),
+                        text: Some("Hello there".to_owned()),
+                        room: None,
+                    },
+                    content
+                ),
+                _ => panic!(format!("Wrong event {:?}", event)),
+            }
+
+        }
+    }
+
+    #[test]
     fn deserialize_state() {
         let json = r#"{
             "type": "gameState",
@@ -71,7 +112,6 @@ mod test {
         match serde_json::from_str::<GameEvent>(json) {
             Err(error) => panic!(format!("Parse error {:?}", error)),
             Ok(event) => match event {
-                GameEvent::GameFull { .. } => panic!(format!("Wrong event {:?}", event)),
                 GameEvent::State { content: state } => assert_eq!(
                     GameState {
                         moves: String::from("e2e4 c7c5"),
@@ -85,6 +125,7 @@ mod test {
                     },
                     state
                 ),
+                _ => panic!(format!("Wrong event {:?}", event)),
             },
         }
     }
@@ -129,7 +170,6 @@ mod test {
         match serde_json::from_str::<GameEvent>(json) {
             Err(error) => panic!(format!("Parse error {:?}", error)),
             Ok(event) => match event {
-                GameEvent::State { .. } => panic!(format!("Wrong type {:?}", event)),
                 GameEvent::GameFull { content } => {
                     assert_eq!(
                         Player {
@@ -165,7 +205,8 @@ mod test {
                         },
                         content.state
                     );
-                }
+                },
+                _ => panic!(format!("Wrong type {:?}", event)),
             },
         }
     }

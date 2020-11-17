@@ -1,4 +1,4 @@
-use crate::events::{Clock, GameEvent, GameFull, GameState, Player};
+use crate::events::{Clock, GameEvent, GameFull, GameState, ChatLine};
 use crate::helper::*;
 use myopic_board::{parse, Move, MutBoard};
 use myopic_core::Side;
@@ -19,7 +19,9 @@ pub struct Game {
     lambda_player_id: String,
     expected_half_moves: u32,
     metadata: Vec<GameMetadata>,
+    auth_token: String,
     client: Client,
+    is_finished: bool,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -29,13 +31,20 @@ pub enum GameExecutionState {
 }
 
 impl Game {
-    pub fn new(id: String, lambda_player_id: String, expected_half_moves: u32) -> Game {
+    pub fn new(
+        id: String,
+        lambda_player_id: String,
+        expected_half_moves: u32,
+        auth_token: &str,
+    ) -> Game {
         Game {
             id,
             lambda_player_id,
             expected_half_moves,
             metadata: Vec::new(),
+            auth_token: auth_token.to_owned(),
             client: reqwest::blocking::Client::new(),
+            is_finished: false,
         }
     }
 
@@ -45,7 +54,17 @@ impl Game {
             Ok(event) => match event {
                 GameEvent::GameFull { content } => self.process_game_full(content),
                 GameEvent::State { content } => self.process_game_state(content),
+                GameEvent::ChatLine { content } => self.process_chat_line(content),
             },
+        }
+    }
+
+    fn process_chat_line(&self, _chat_line: ChatLine) -> Result<GameExecutionState, String> {
+        // Do nothing for now
+        if self.is_finished {
+            Ok(GameExecutionState::Finished)
+        } else {
+            Ok(GameExecutionState::Running)
         }
     }
 
@@ -64,7 +83,7 @@ impl Game {
         self.process_game_state(game_full.state)
     }
 
-    fn process_game_state(&self, state: GameState) -> Result<GameExecutionState, String> {
+    fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState, String> {
         let metadata = self.get_latest_metadata()?;
         let moves = parse::uci(&state.moves)?;
         let mut board = myopic_brain::eval::start();
@@ -73,8 +92,12 @@ impl Game {
         });
 
         match board.termination_status() {
-            Some(_) => Ok(GameExecutionState::Finished),
+            Some(_) => {
+                self.is_finished = true;
+                Ok(GameExecutionState::Finished)
+            },
             None => {
+                self.is_finished = false;
                 if board.active() != metadata.lambda_side {
                     Ok(GameExecutionState::Running)
                 } else {
@@ -99,7 +122,7 @@ impl Game {
         // Add timeout and retry logic
         self.client
             .post(format!("{}/{}/move/{}", MOVE_ENDPOINT, self.id, move_to_uci(&mv)).as_str())
-            .bearer_auth("xxx")
+            .bearer_auth(&self.auth_token)
             .send()
             .map(|_| GameExecutionState::Running)
             .map_err(|error| format!("Error posting move: {}", error))

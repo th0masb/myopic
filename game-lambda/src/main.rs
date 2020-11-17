@@ -40,7 +40,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput, HandlerError> {
-    let mut game = Game::new(e.game_id.to_owned(), e.bot_id.to_owned(), e.expected_half_moves);
+    let mut game = Game::new(
+        e.game_id.to_owned(),
+        e.bot_id.to_owned(),
+        e.expected_half_moves,
+        e.auth_token.as_str(),
+    );
 
     let mut reader = open_game_stream(e.game_id, e.auth_token)?;
     while let read_result = readline(&mut reader)? {
@@ -48,7 +53,6 @@ fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput, Handl
             ReadResult::End => break,
             ReadResult::Line(s) => {
                 if !s.is_empty() {
-                    // Need to add chat event support
                     match game
                         .process_event(s.as_str())
                         .map_err(|err| HandlerError::from(err.as_str()))?
