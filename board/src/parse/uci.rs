@@ -21,11 +21,7 @@ pub fn partial_uci<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, 
         };
         mutator_board.evolve(dest.last().unwrap());
     }
-    if dest.len() > 0 {
-        Ok(dest)
-    } else {
-        Err(moves.clone())
-    }
+    Ok(dest)
 }
 
 fn parse_single_move<B: MutBoard>(start: &mut B, uci_move: &str) -> Result<Move, String> {
@@ -78,6 +74,14 @@ mod test {
             board.evolve(&evolve);
         }
         assert_eq!(finish, board);
+    }
+
+    #[test]
+    fn case_zero() {
+        execute_success_test(
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            ""
+        )
     }
 
     #[test]
