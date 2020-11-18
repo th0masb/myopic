@@ -50,11 +50,23 @@ impl Game {
 
     pub fn process_event(&mut self, event_json: &str) -> Result<GameExecutionState, String> {
         match serde_json::from_str(event_json) {
-            Err(error) => Err(format!("{}", error)),
+            Err(error) => {
+                log::warn!("Error parsing event {}", error);
+                Err(format!("{}", error))
+            },
             Ok(event) => match event {
-                GameEvent::GameFull { content } => self.process_game_full(content),
-                GameEvent::State { content } => self.process_game_state(content),
-                GameEvent::ChatLine { content } => self.process_chat_line(content),
+                GameEvent::GameFull { content } => {
+                    log::info!("Parsed full game information");
+                    self.process_game_full(content)
+                },
+                GameEvent::State { content } => {
+                    log::info!("Parsed individual game state");
+                    self.process_game_state(content)
+                },
+                GameEvent::ChatLine { content } => {
+                    log::info!("Parsed chat line");
+                    self.process_chat_line(content)
+                },
             },
         }
     }
@@ -73,8 +85,10 @@ impl Game {
         self.metadata.push(GameMetadata {
             clock: game_full.clock,
             lambda_side: if self.lambda_player_id == game_full.white.id {
+                log::info!("Detected lambda is playing as white");
                 Side::White
             } else if self.lambda_player_id == game_full.black.id {
+                log::info!("Detected lambda is playing as black");
                 Side::Black
             } else {
                 return Err(format!("Unrecognized names"));
@@ -93,12 +107,14 @@ impl Game {
 
         match board.termination_status() {
             Some(_) => {
+                log::info!("Game has finished! Terminating execution");
                 self.is_finished = true;
                 Ok(GameExecutionState::Finished)
             },
             None => {
                 self.is_finished = false;
                 if board.active() != metadata.lambda_side {
+                    log::info!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
                     let thinking_time = compute_thinking_time(ThinkingTimeParams {
@@ -107,7 +123,9 @@ impl Game {
                         initial: Duration::from_millis(metadata.clock.initial),
                         increment: Duration::from_millis(metadata.clock.increment),
                     });
+                    log::info!("Computed we should spend {}s thinking", thinking_time.as_secs());
                     let result = myopic_brain::search(board, thinking_time)?;
+                    log::info!("Completed search: {:?}", result);
                     self.post_move(result.best_move)
                 }
             }
