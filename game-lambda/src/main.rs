@@ -44,9 +44,9 @@ struct PlayGameOutput {}
 fn main() -> Result<(), Box<dyn Error>> {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init()?;
     uncontextualised_game_handler(PlayGameEvent {
-        game_id: "".to_owned(),
-        auth_token: "".to_owned(),
-        bot_id: "".to_owned(),
+        game_id: "zkKOz7gT".to_owned(),
+        auth_token: "h9aFqfXSa9mxQdze".to_owned(),
+        bot_id: "myopic-bot".to_owned(),
         expected_half_moves: 60
     })
         .map(|_| ())

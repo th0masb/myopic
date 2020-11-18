@@ -99,6 +99,7 @@ impl Game {
 
     fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState, String> {
         let metadata = self.get_latest_metadata()?;
+        log::info!("Parsing previous game moves: {}", state.moves);
         let moves = parse::uci(&state.moves)?;
         let mut board = myopic_brain::eval::start();
         moves.iter().for_each(|mv| {
