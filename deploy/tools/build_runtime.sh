@@ -1,15 +1,10 @@
-# Builds and moves the lambda runtime for the game lambda into this project
-# ready for deployment. Deposits the resulting zipped runtime into the
-# deploy/runtime directory
+# Lifts an existing binary which has been compiled against amazonlinux2
+# and massages it into an acceptable format for a lambda function
+DEPLOY_DIR="$(pwd)/$(dirname "$0")/.."
+LAMBDA_DIR="$DEPLOY_DIR/../game-lambda"
 
-LAMBDA_TARGET=x86_64-unknown-linux-musl
-PWD=$(pwd)
-SCRIPT_DIR=$(dirname "$0")
-LAMBDA_DIR="$PWD/$SCRIPT_DIR/../../game-lambda"
-DEPLOY_DIR="$PWD/$SCRIPT_DIR/.."
-
-cargo build --target "$LAMBDA_TARGET" --manifest-path "$LAMBDA_DIR/Cargo.toml" --release
-cp "$LAMBDA_DIR/target/$LAMBDA_TARGET/release/game-lambda" "$DEPLOY_DIR/runtime/bootstrap"
-zip "$DEPLOY_DIR/runtime/lambda.zip" "$DEPLOY_DIR/runtime/bootstrap"
+cp "$LAMBDA_DIR/target/amazonlinux2/game-lambda" "$DEPLOY_DIR/runtime/bootstrap"
+# We need to junk everything except the filename of the binary
+zip -j "$DEPLOY_DIR/runtime/lambda.zip" "$DEPLOY_DIR/runtime/bootstrap"
 rm "$DEPLOY_DIR/runtime/bootstrap"
 
