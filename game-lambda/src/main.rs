@@ -2,6 +2,7 @@ mod events;
 mod game;
 mod helper;
 
+extern crate dotenv;
 extern crate reqwest;
 extern crate serde;
 extern crate serde_json;
@@ -15,6 +16,7 @@ use reqwest::blocking::Response;
 use simple_logger::SimpleLogger;
 use std::error::Error;
 use std::io::{BufRead, BufReader, Read};
+use std::env;
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
 
@@ -42,12 +44,13 @@ struct PlayGameOutput {}
 
 /// Entry point for standard rust app for testing
 fn main() -> Result<(), Box<dyn Error>> {
+    dotenv::dotenv().ok();
     SimpleLogger::new().with_level(log::LevelFilter::Info).init()?;
     uncontextualised_game_handler(PlayGameEvent {
-        game_id: "zkKOz7gT".to_owned(),
-        auth_token: "h9aFqfXSa9mxQdze".to_owned(),
-        bot_id: "myopic-bot".to_owned(),
-        expected_half_moves: 60
+        game_id: env::var("GAME_ID")?,
+        auth_token: env::var("AUTH_TOKEN")?,
+        bot_id: env::var("BOT_ID")?,
+        expected_half_moves: env::var("EXPECTED_HALF_MOVES")?.parse()?
     })
         .map(|_| ())
         .map_err(|err| Box::new(err) as Box<dyn Error>)
