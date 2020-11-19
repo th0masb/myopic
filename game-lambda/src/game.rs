@@ -35,14 +35,14 @@ impl Game {
         id: String,
         lambda_player_id: String,
         expected_half_moves: u32,
-        auth_token: &str,
+        auth_token: String,
     ) -> Game {
         Game {
             id,
             lambda_player_id,
             expected_half_moves,
             metadata: Vec::new(),
-            auth_token: auth_token.to_owned(),
+            auth_token,
             client: reqwest::blocking::Client::new(),
             is_finished: false,
         }
