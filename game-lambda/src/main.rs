@@ -35,26 +35,26 @@ struct PlayGameEvent {
 #[derive(Serialize, Clone)]
 struct PlayGameOutput {}
 
-///// Entry point for the lambda function implementation
-//fn main() -> Result<(), Box<dyn Error>> {
-//    SimpleLogger::new().with_level(log::LevelFilter::Info).init()?;
-//    lambda!(game_handler);
-//    Ok(())
-//}
-
-/// Entry point for standard rust app for testing
+/// Entry point for the lambda function implementation
 fn main() -> Result<(), Box<dyn Error>> {
-    dotenv::dotenv().ok();
     SimpleLogger::new().with_level(log::LevelFilter::Info).init()?;
-    uncontextualised_game_handler(PlayGameEvent {
-        game_id: env::var("GAME_ID")?,
-        auth_token: env::var("AUTH_TOKEN")?,
-        bot_id: env::var("BOT_ID")?,
-        expected_half_moves: env::var("EXPECTED_HALF_MOVES")?.parse()?
-    })
-        .map(|_| ())
-        .map_err(|err| Box::new(err) as Box<dyn Error>)
+    lambda!(game_handler);
+    Ok(())
 }
+
+///// Entry point for standard rust app for testing
+//fn main() -> Result<(), Box<dyn Error>> {
+//    dotenv::dotenv().ok();
+//    SimpleLogger::new().with_level(log::LevelFilter::Info).init()?;
+//    uncontextualised_game_handler(PlayGameEvent {
+//        game_id: env::var("GAME_ID")?,
+//        auth_token: env::var("AUTH_TOKEN")?,
+//        bot_id: env::var("BOT_ID")?,
+//        expected_half_moves: env::var("EXPECTED_HALF_MOVES")?.parse()?
+//    })
+//        .map(|_| ())
+//        .map_err(|err| Box::new(err) as Box<dyn Error>)
+//}
 
 fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput, HandlerError> {
     uncontextualised_game_handler(e)
