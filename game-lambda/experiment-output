@@ -33,3 +33,14 @@ bot disconnects, player moves a7a6 then bot reconnects
 bot disconnects and reconnects
 
 9/ {"_id":"mtjmNyVe","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":null,"speed":"correspondence","perf":{"name":"Correspondence"},"rated":false,"createdAt":1605261777140,"white":{"_id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"_id":"th0masb","name":"th0masb","title":null,"rating":1500,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"e2e4 e7e5 b1c3 b8c6 f1b5 a7a6","wtime":2147483647,"btime":2147483647,"winc":0,"binc":0,"wdraw":false,"bdraw":false,"status":"started"}}
+
+
+// What happens when someone resigns. What can the values of "status" in the gamestate be?
+╭─tba01@SBGML04221 in ~
+╰$ curl -H 'Authorization: Bearer h9aFqfXSa9mxQdze' https://lichess.org/api/bot/game/stream/TclWPHNz
+{"id":"TclWPHNz","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":{"initial":300000,"increment":8000},"speed":"rapid","perf":{"name":"Rapid"},"rated":false,"createdAt":1605815436512,"white":{"id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"id":"th0masb","name":"th0masb","title":null,"rating":1841,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"g1f3 d7d5 b1c3 c7c5 d2d4 b8c6 d4c5 e7e5 d1d5 d8c7 c3b5 c7a5 b5c3 c8e6 d5e4 g8f6 e4a4 a5c7 c3b5 c7d8 c1e3 f8e7","wtime":73330,"btime":298690,"winc":8000,"binc":8000,"wdraw":false,"bdraw":false,"status":"started"}}
+
+{"type":"gameState","moves":"g1f3 d7d5 b1c3 c7c5 d2d4 b8c6 d4c5 e7e5 d1d5 d8c7 c3b5 c7a5 b5c3 c8e6 d5e4 g8f6 e4a4 a5c7 c3b5 c7d8 c1e3 f8e7","wtime":65830,"btime":298690,"winc":8000,"binc":8000,"wdraw":false,"bdraw":false,"status":"resign","winner":"white"}
+╭─tba01@SBGML04221 in ~
+╰$ curl -H 'Authorization: Bearer h9aFqfXSa9mxQdze' https://lichess.org/api/bot/game/stream/TclWPHNz
+{"id":"TclWPHNz","variant":{"key":"standard","name":"Standard","short":"Std"},"clock":{"initial":300000,"increment":8000},"speed":"rapid","perf":{"name":"Rapid"},"rated":false,"createdAt":1605815436512,"white":{"id":"myopic-bot","name":"myopic-bot","title":"BOT","rating":1500,"provisional":true},"black":{"id":"th0masb","name":"th0masb","title":null,"rating":1841,"provisional":true},"initialFen":"startpos","type":"gameFull","state":{"type":"gameState","moves":"g1f3 d7d5 b1c3 c7c5 d2d4 b8c6 d4c5 e7e5 d1d5 d8c7 c3b5 c7a5 b5c3 c8e6 d5e4 g8f6 e4a4 a5c7 c3b5 c7d8 c1e3 f8e7","wtime":65830,"btime":298690,"winc":8000,"binc":8000,"wdraw":false,"bdraw":false,"status":"resign","winner":"white"}}

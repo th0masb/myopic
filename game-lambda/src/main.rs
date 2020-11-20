@@ -15,6 +15,7 @@ use reqwest::blocking::Response;
 use simple_logger::SimpleLogger;
 use std::error::Error;
 use std::io::{BufRead, BufReader, Read};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
 
@@ -42,7 +43,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput, HandlerError> {
+fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, HandlerError> {
     log::info!("Initializing game loop");
     let mut game = Game::new(
         e.game_id.clone(),
@@ -69,7 +70,12 @@ fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput, Handl
             }
         }
     }
-    Ok(PlayGameOutput {output: format!("finished")})
+    Ok(PlayGameOutput {
+        output: format!(
+            "Deadline was {}, time now is {}",
+            ctx.deadline,
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis())
+    })
 }
 
 fn open_game_stream(
