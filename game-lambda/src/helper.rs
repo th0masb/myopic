@@ -1,6 +1,10 @@
 use myopic_board::Move;
 use myopic_core::pieces::Piece;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+pub fn timestamp_millis() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis() as u64
+}
 
 pub struct ThinkingTimeParams {
     pub expected_half_move_count: u32,
@@ -24,7 +28,7 @@ pub fn compute_thinking_time(params: ThinkingTimeParams) -> Duration {
 
 #[cfg(test)]
 mod thinking_time_test {
-    use super::{ThinkingTimeParams, compute_thinking_time};
+    use super::{compute_thinking_time, ThinkingTimeParams};
     use std::time::Duration;
 
     #[test]
@@ -101,8 +105,8 @@ pub fn move_to_uci(mv: &Move) -> String {
 mod uci_conversion_test {
     use super::move_to_uci;
     use myopic_board::Move;
-    use myopic_core::{pieces::Piece, Square};
     use myopic_core::castlezone::CastleZone;
+    use myopic_core::{pieces::Piece, Square};
 
     #[test]
     fn test_pawn_standard_conversion() {
@@ -130,17 +134,11 @@ mod uci_conversion_test {
 
     #[test]
     fn test_promotion_conversion() {
-        assert_eq!(
-            "e7d8q",
-            move_to_uci(&Move::Promotion(Square::E7, Square::D8, Piece::WQ))
-        )
+        assert_eq!("e7d8q", move_to_uci(&Move::Promotion(Square::E7, Square::D8, Piece::WQ)))
     }
 
     #[test]
     fn test_enpassant_conversion() {
-        assert_eq!(
-            "e5d6",
-            move_to_uci(&Move::Enpassant(Square::E5, Square::D6))
-        )
+        assert_eq!("e5d6", move_to_uci(&Move::Enpassant(Square::E5, Square::D6)))
     }
 }

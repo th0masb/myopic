@@ -14,8 +14,8 @@ pub enum GameEvent {
     #[serde(rename = "chatLine")]
     ChatLine {
         #[serde(flatten)]
-        content: ChatLine
-    }
+        content: ChatLine,
+    },
 }
 
 // Make all fields optional for now, don't want
@@ -89,8 +89,7 @@ mod test {
                     content
                 ),
                 _ => panic!(format!("Wrong event {:?}", event)),
-            }
-
+            },
         }
     }
 
@@ -205,7 +204,7 @@ mod test {
                         },
                         content.state
                     );
-                },
+                }
                 _ => panic!(format!("Wrong type {:?}", event)),
             },
         }
