@@ -12,3 +12,4 @@ cdk.out
 
 .env
 runtime
+response.json

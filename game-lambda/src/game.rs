@@ -1,14 +1,17 @@
 use crate::events::{Clock, GameEvent, GameFull, GameState, ChatLine};
 use crate::helper::*;
-use myopic_board::{parse, Move, MutBoard};
+use myopic_board::{parse, Move, MutBoard, MutBoardImpl};
 use myopic_core::Side;
 use reqwest::blocking::Client;
 use std::time::Duration;
+use myopic_brain::EvalBoardImpl;
 
 const MOVE_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
+const STARTED_STATUS: &'static str = "started";
+const CREATED_STATUS: &'static str = "created";
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-struct GameMetadata {
+struct InferredGameMetadata {
     lambda_side: Side,
     clock: Clock,
 }
@@ -18,7 +21,7 @@ pub struct Game {
     id: String,
     lambda_player_id: String,
     expected_half_moves: u32,
-    metadata: Vec<GameMetadata>,
+    inferred_metadata: Option<InferredGameMetadata>,
     auth_token: String,
     client: Client,
     is_finished: bool,
@@ -41,7 +44,7 @@ impl Game {
             id,
             lambda_player_id,
             expected_half_moves,
-            metadata: Vec::new(),
+            inferred_metadata: None,
             auth_token,
             client: reqwest::blocking::Client::new(),
             is_finished: false,
@@ -82,7 +85,7 @@ impl Game {
 
     fn process_game_full(&mut self, game_full: GameFull) -> Result<GameExecutionState, String> {
         // Track info required for playing future gamestates
-        self.metadata.push(GameMetadata {
+        self.inferred_metadata = Some(InferredGameMetadata {
             clock: game_full.clock,
             lambda_side: if self.lambda_player_id == game_full.white.id {
                 log::info!("Detected lambda is playing as white");
@@ -97,44 +100,46 @@ impl Game {
         self.process_game_state(game_full.state)
     }
 
-    fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState, String> {
-        let metadata = self.get_latest_metadata()?;
-        log::info!("Parsing previous game moves: {}", state.moves);
-        let moves = parse::uci(&state.moves)?;
-        let mut board = myopic_brain::eval::start();
-        moves.iter().for_each(|mv| {
-            board.evolve(mv);
-        });
 
-        match board.termination_status() {
-            Some(_) => {
-                log::info!("Game has finished! Terminating execution");
-                self.is_finished = true;
-                Ok(GameExecutionState::Finished)
-            },
-            None => {
+    fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState, String> {
+        log::info!("Parsing previous game moves: {}", state.moves);
+        let (board, n_moves) = get_game_state(&state.moves)?;
+
+        match state.status.as_str() {
+            STARTED_STATUS | CREATED_STATUS =>  {
                 self.is_finished = false;
-                if board.active() != metadata.lambda_side {
+                if board.active() != self.get_latest_metadata()?.lambda_side {
                     log::info!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
-                    let thinking_time = compute_thinking_time(ThinkingTimeParams {
-                        expected_half_move_count: self.expected_half_moves,
-                        half_moves_played: moves.len() as u32,
-                        initial: Duration::from_millis(metadata.clock.initial),
-                        increment: Duration::from_millis(metadata.clock.increment),
-                    });
+                    let thinking_time = self.compute_thinking_time(n_moves)?;
                     log::info!("Computed we should spend {}s thinking", thinking_time.as_secs());
                     let result = myopic_brain::search(board, thinking_time)?;
                     log::info!("Completed search: {:?}", result);
                     self.post_move(result.best_move)
                 }
+            },
+            // All other possibilities indicate the game is over
+            status => {
+                log::info!("Game has finished with status: {}! Terminating execution", status);
+                self.is_finished = true;
+                Ok(GameExecutionState::Finished)
             }
         }
     }
 
-    fn get_latest_metadata(&self) -> Result<GameMetadata, String> {
-        self.metadata.get(0).cloned().ok_or(format!("Metadata not initialized"))
+    fn compute_thinking_time(&self, moves_played: u32) -> Result<Duration, String> {
+        let metadata = self.get_latest_metadata()?;
+        Ok(compute_thinking_time(ThinkingTimeParams {
+            expected_half_move_count: self.expected_half_moves,
+            half_moves_played: moves_played,
+            initial: Duration::from_millis(metadata.clock.initial),
+            increment: Duration::from_millis(metadata.clock.increment),
+        }))
+    }
+
+    fn get_latest_metadata(&self) -> Result<&InferredGameMetadata, String> {
+        self.inferred_metadata.as_ref().ok_or(format!("Metadata not initialized"))
     }
 
     fn post_move(&self, mv: Move) -> Result<GameExecutionState, String> {
@@ -146,4 +151,13 @@ impl Game {
             .map(|_| GameExecutionState::Running)
             .map_err(|error| format!("Error posting move: {}", error))
     }
+}
+
+fn get_game_state(moves: &String) -> Result<(EvalBoardImpl<MutBoardImpl>, u32), String> {
+    let moves = parse::uci(moves)?;
+    let mut board = myopic_brain::eval::start();
+    moves.iter().for_each(|mv| {
+        board.evolve(mv);
+    });
+    Ok((board, moves.len() as u32))
 }
