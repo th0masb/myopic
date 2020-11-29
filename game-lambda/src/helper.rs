@@ -1,4 +1,6 @@
-use myopic_board::Move;
+use myopic_board::parse;
+use myopic_board::{Move, MutBoard, MutBoardImpl};
+use myopic_brain::EvalBoardImpl;
 use myopic_core::pieces::Piece;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -141,4 +143,13 @@ mod uci_conversion_test {
     fn test_enpassant_conversion() {
         assert_eq!("e5d6", move_to_uci(&Move::Enpassant(Square::E5, Square::D6)))
     }
+}
+
+pub fn get_game_state(moves: &String) -> Result<(EvalBoardImpl<MutBoardImpl>, u32), String> {
+    let moves = parse::uci(moves)?;
+    let mut board = myopic_brain::eval::start();
+    moves.iter().for_each(|mv| {
+        board.evolve(mv);
+    });
+    Ok((board, moves.len() as u32))
 }
