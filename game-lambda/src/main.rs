@@ -1,8 +1,10 @@
 mod events;
+mod first_moves;
 mod game;
 mod helper;
 
 extern crate bytes;
+extern crate rand;
 extern crate reqwest;
 extern crate serde;
 extern crate serde_json;

@@ -18,6 +18,7 @@ simple-error = "0.2.2"
 simple_logger = "1.9.0"
 log = "0.4.11"
 bytes = "0.5.6"
+rand = "0.5.0"
 tokio = { version = "0.2.22", default_features = false, features = ["rt-core"] }
 reqwest = { version = "0.10.8", default_features = false, features = ["rustls-tls", "blocking"] }
 rusoto_core = { version = "0.45.0", default_features = false, features = ["rustls"] }

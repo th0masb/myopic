@@ -1,10 +1,13 @@
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
+use crate::first_moves;
+use crate::first_moves::FirstMoveMap;
 use crate::helper::*;
 use crate::TimeConstraints;
-use myopic_board::{parse, Move, MutBoard, MutBoardImpl};
-use myopic_brain::EvalBoardImpl;
+use myopic_board::MutBoard;
+use myopic_brain::{EvalBoard};
 use myopic_core::Side;
 use reqwest::blocking::Client;
+
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
@@ -33,6 +36,7 @@ pub struct Game {
     inferred_metadata: Option<InferredGameMetadata>,
     client: Client,
     is_finished: bool,
+    first_moves: FirstMoveMap,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -49,6 +53,7 @@ impl Game {
             inferred_metadata: None,
             client: reqwest::blocking::Client::new(),
             is_finished: false,
+            first_moves: first_moves::as_map(),
         }
     }
 
@@ -116,18 +121,9 @@ impl Game {
                     log::info!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
-                    let thinking_time = self.compute_thinking_time(n_moves)?;
-                    let lambda_end_instant = self.props.time_constraints.lambda_end_instant();
-                    if Instant::now().add(thinking_time) >= lambda_end_instant {
-                        Ok(GameExecutionState::Recurse)
-                    } else {
-                        log::info!(
-                            "Computed we should spend {}s thinking",
-                            thinking_time.as_secs()
-                        );
-                        let result = myopic_brain::search(board, thinking_time)?;
-                        log::info!("Completed search: {:?}", result);
-                        self.post_move(result.best_move)
+                    match self.get_opening_move(&state.moves) {
+                        Some(mv) => self.post_move(mv),
+                        None => self.compute_move(board, self.compute_thinking_time(n_moves)?),
                     }
                 }
             }
@@ -137,6 +133,31 @@ impl Game {
                 self.is_finished = true;
                 Ok(GameExecutionState::Finished)
             }
+        }
+    }
+
+    fn compute_move<B: EvalBoard>(
+        &self,
+        board: B,
+        time: Duration,
+    ) -> Result<GameExecutionState, String> {
+        let lambda_end_instant = self.props.time_constraints.lambda_end_instant();
+        if Instant::now().add(time) >= lambda_end_instant {
+            Ok(GameExecutionState::Recurse)
+        } else {
+            log::info!("Computed we should spend {}s thinking", time.as_secs());
+            let result = myopic_brain::search(board, time)?;
+            log::info!("Completed search: {:?}", result);
+            self.post_move(move_to_uci(&result.best_move))
+        }
+    }
+
+    fn get_opening_move(&self, current_sequence: &String) -> Option<String> {
+        let moves = self.first_moves.get_moves(current_sequence.trim());
+        if moves.is_empty() {
+            None
+        } else {
+            Some(moves[rand::random::<usize>() % moves.len()].to_owned())
         }
     }
 
@@ -154,25 +175,13 @@ impl Game {
         self.inferred_metadata.as_ref().ok_or(format!("Metadata not initialized"))
     }
 
-    fn post_move(&self, mv: Move) -> Result<GameExecutionState, String> {
+    fn post_move(&self, mv: String) -> Result<GameExecutionState, String> {
         // Add timeout and retry logic
         self.client
-            .post(
-                format!("{}/{}/move/{}", MOVE_ENDPOINT, self.props.game_id, move_to_uci(&mv))
-                    .as_str(),
-            )
+            .post(format!("{}/{}/move/{}", MOVE_ENDPOINT, self.props.game_id, mv).as_str())
             .bearer_auth(&self.props.auth_token)
             .send()
             .map(|_| GameExecutionState::Running)
             .map_err(|error| format!("Error posting move: {}", error))
     }
-}
-
-fn get_game_state(moves: &String) -> Result<(EvalBoardImpl<MutBoardImpl>, u32), String> {
-    let moves = parse::uci(moves)?;
-    let mut board = myopic_brain::eval::start();
-    moves.iter().for_each(|mv| {
-        board.evolve(mv);
-    });
-    Ok((board, moves.len() as u32))
 }
