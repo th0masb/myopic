@@ -1,49 +1,90 @@
 use myopic_core::pieces::Piece;
+use myopic_core::pieces::Piece::*;
 use myopic_core::reflectable::Reflectable;
 use myopic_core::{Side, Square};
 
-/// API method for retrieving the evaluation for a piece at a given location
-/// in the midgame.
-pub fn midgame(piece: Piece, location: Square) -> i32 {
-    if piece.is_pawn() {
-        let (table_index, parity) = compute_pawn_index_and_parity(piece, location);
-        parity * PAWN[table_index].0
-    } else {
-        let (table_index, parity) = compute_non_pawn_index_and_parity(piece, location);
-        parity * NON_PAWN_TABLES[((piece as usize) % 6) - 1][table_index].0
-    }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq)]
+pub struct PositionTables {
+    // Asymmetric, split across 2 arrays
+    pub pawn_1_4: [(i32, i32); 32],
+    pub pawn_5_8: [(i32, i32); 32],
+    // Symmetric
+    pub knight: [(i32, i32); 32],
+    pub bishop: [(i32, i32); 32],
+    pub rook: [(i32, i32); 32],
+    pub queen: [(i32, i32); 32],
+    pub king: [(i32, i32); 32],
 }
 
-/// API method for retrieving the evaluation for a piece at a given location
-/// in the endgame.
-pub fn endgame(piece: Piece, location: Square) -> i32 {
-    if piece.is_pawn() {
-        let (table_index, parity) = compute_pawn_index_and_parity(piece, location);
-        parity * PAWN[table_index].1
-    } else {
-        let (table_index, parity) = compute_non_pawn_index_and_parity(piece, location);
-        parity * NON_PAWN_TABLES[((piece as usize) % 6) - 1][table_index].1
-    }
-}
-
-fn compute_pawn_index_and_parity(pawn: Piece, location: Square) -> (usize, i32) {
-    match pawn.side() {
-        Side::White => (location as usize, 1),
-        Side::Black => (location.reflect() as usize, -1),
-    }
-}
-
-fn compute_non_pawn_index_and_parity(piece: Piece, location: Square) -> (usize, i32) {
+fn parity(piece: Piece) -> i32 {
     match piece.side() {
-        Side::White => (compute_table_index_non_pawn(location), 1),
-        Side::Black => (compute_table_index_non_pawn(location.reflect()), -1),
+        Side::White => 1,
+        Side::Black => -1,
     }
 }
 
-fn compute_table_index_non_pawn(location: Square) -> usize {
-    let file_index = location.file_index();
-    let column_index = if file_index < 4 { file_index } else { 7 - file_index };
-    location.rank_index() * 4 + column_index
+fn table_index(piece: Piece, adjusted_location: Square) -> usize {
+    if piece.is_pawn() {
+        (adjusted_location as usize) % 32
+    } else {
+        let file_index = adjusted_location.file_index();
+        let column_index = if file_index < 4 { file_index } else { 7 - file_index };
+        adjusted_location.rank_index() * 4 + column_index
+    }
+}
+
+fn adjust_location(side: Side, location: Square) -> Square {
+    match side {
+        Side::White => location,
+        Side::Black => location.reflect(),
+    }
+}
+
+impl PositionTables {
+    pub fn default() -> PositionTables {
+        PositionTables {
+            pawn_1_4: PAWN_1_4,
+            pawn_5_8: PAWN_5_8,
+            knight: KNIGHT,
+            bishop: BISHOP,
+            rook: ROOK,
+            queen: QUEEN,
+            king: KING,
+        }
+    }
+
+    /// API method for retrieving the evaluation for a piece at a given location
+    /// in the midgame.
+    pub fn midgame(&self, piece: Piece, location: Square) -> i32 {
+        self.access(piece, location, |(mid, _end)| mid)
+    }
+
+    /// API method for retrieving the evaluation for a piece at a given location
+    /// in the midgame.
+    pub fn endgame(&self, piece: Piece, location: Square) -> i32 {
+        self.access(piece, location, |(_mid, end)| end)
+    }
+
+    fn access(&self, piece: Piece, location: Square, f: fn((i32, i32)) -> i32) -> i32 {
+        let adjusted_location = adjust_location(piece.side(), location);
+        let table_index = table_index(piece, adjusted_location);
+        parity(piece)
+            * match piece {
+                WN | BN => f(self.knight[table_index]),
+                WB | BB => f(self.bishop[table_index]),
+                WR | BR => f(self.rook[table_index]),
+                WQ | BQ => f(self.queen[table_index]),
+                WK | BK => f(self.king[table_index]),
+                WP | BP => {
+                    if (adjusted_location as usize) < 32 {
+                        f(self.pawn_1_4[table_index])
+                    } else {
+                        f(self.pawn_5_8[table_index])
+                    }
+                }
+            }
+    }
 }
 
 /// Tables lifted from stockfish here: https://github.com/official-stockfish/Stockfish/blob/master/src/psqt.cpp
@@ -115,16 +156,20 @@ const KING: [(i32, i32); 32] = [
     ( 64,   5), ( 87,  60), ( 49,  75), (  0,  75),
 ];
 
-const NON_PAWN_TABLES: [[(i32, i32); 32]; 5] = [KNIGHT, BISHOP, ROOK, QUEEN, KING];
-
 #[rustfmt::skip]
-const PAWN: [(i32, i32); 64] = [
+const PAWN_1_4: [(i32, i32); 32] = [
     // Pawn (asymmetric distribution) (note H file is on the left here
     // Rank 1
     (  0,   0), (  0,   0), (  0,   0), ( 0,   0), (  0,   0), (  0,   0), (  0,   0), ( 0,   0),
     ( -5, -19), (  7,  -5), ( 19,   7), (16,  14), ( 19,   0), ( 10,  10), (  3,  -6), ( 3, -10),
     (-22,  -4), (  5,  -6), ( 22,   3), (32,   4), ( 15,   4), ( 11, -10), (-15, -10), (-9, -10),
     (-12,  -9), (  4, -10), ( 17, -12), (40, -13), ( 20,  -4), (  6,  -8), (-23,  -2), (-8,   6),
+];
+
+#[rustfmt::skip]
+const PAWN_5_8: [(i32, i32); 32] = [
+    // Pawn (asymmetric distribution) (note H file is on the left here
+    // Rank 5
     (  5,   8), (-13,  13), ( -2,  -6), (11, -12), (  1, -12), (-13,   3), (  0,   4), (13,   9),
     (-18,  13), (-15,   6), ( -5,   7), (-8,  30), ( 22,  28), ( -7,  21), (-12,  20), (-5,  28),
     ( -8,   7), ( 10,   4), (-16,  19), ( 5,  25), (-13,  21), ( -3,  12), (  7, -11), (-7,   0),
@@ -135,9 +180,34 @@ const PAWN: [(i32, i32); 64] = [
 mod test {
     use myopic_core::Square::*;
 
-    use super::{endgame, midgame};
+    use crate::tables::PositionTables;
+    
     use myopic_core::pieces::Piece;
     use myopic_core::reflectable::Reflectable;
+    use myopic_core::Square;
+
+    // Fully connected pawn table
+    #[rustfmt::skip]
+    const PAWN: [(i32, i32); 64] = [
+        // Pawn (asymmetric distribution) (note H file is on the left here
+        // Rank 1
+        (  0,   0), (  0,   0), (  0,   0), ( 0,   0), (  0,   0), (  0,   0), (  0,   0), ( 0,   0),
+        ( -5, -19), (  7,  -5), ( 19,   7), (16,  14), ( 19,   0), ( 10,  10), (  3,  -6), ( 3, -10),
+        (-22,  -4), (  5,  -6), ( 22,   3), (32,   4), ( 15,   4), ( 11, -10), (-15, -10), (-9, -10),
+        (-12,  -9), (  4, -10), ( 17, -12), (40, -13), ( 20,  -4), (  6,  -8), (-23,  -2), (-8,   6),
+        (  5,   8), (-13,  13), ( -2,  -6), (11, -12), (  1, -12), (-13,   3), (  0,   4), (13,   9),
+        (-18,  13), (-15,   6), ( -5,   7), (-8,  30), ( 22,  28), ( -7,  21), (-12,  20), (-5,  28),
+        ( -8,   7), ( 10,   4), (-16,  19), ( 5,  25), (-13,  21), ( -3,  12), (  7, -11), (-7,   0),
+        (  0,   0), (  0,   0), (  0,   0), ( 0,   0), (  0,   0), (  0,   0), (  0,   0), ( 0,   0),
+    ];
+
+    #[test]
+    fn test_pawn_table_conjunction() {
+        let tables = PositionTables::default();
+        for i in 0..64 {
+            assert_eq!(PAWN[i as usize].0, tables.midgame(Piece::WP, Square::from_index(i)))
+        }
+    }
 
     #[test]
     fn test_reflect() {
@@ -149,43 +219,45 @@ mod test {
 
     #[test]
     fn test_midgame() {
-        assert_eq!(-7, midgame(Piece::WP, C6));
-        assert_eq!(7, midgame(Piece::BP, C3));
+        let tables = PositionTables::default();
+        assert_eq!(-7, tables.midgame(Piece::WP, C6));
+        assert_eq!(7, tables.midgame(Piece::BP, C3));
 
-        assert_eq!(19, midgame(Piece::WN, D3));
-        assert_eq!(-19, midgame(Piece::BN, D6));
+        assert_eq!(19, tables.midgame(Piece::WN, D3));
+        assert_eq!(-19, tables.midgame(Piece::BN, D6));
 
-        assert_eq!(26, midgame(Piece::WB, C4));
-        assert_eq!(-26, midgame(Piece::BB, C5));
+        assert_eq!(26, tables.midgame(Piece::WB, C4));
+        assert_eq!(-26, tables.midgame(Piece::BB, C5));
 
-        assert_eq!(-5, midgame(Piece::WR, F2));
-        assert_eq!(5, midgame(Piece::BR, F7));
+        assert_eq!(-5, tables.midgame(Piece::WR, F2));
+        assert_eq!(5, tables.midgame(Piece::BR, F7));
 
-        assert_eq!(6, midgame(Piece::WQ, B3));
-        assert_eq!(-6, midgame(Piece::BQ, B6));
+        assert_eq!(6, tables.midgame(Piece::WQ, B3));
+        assert_eq!(-6, tables.midgame(Piece::BQ, B6));
 
-        assert_eq!(325, midgame(Piece::WK, B1));
-        assert_eq!(-325, midgame(Piece::BK, B8));
+        assert_eq!(325, tables.midgame(Piece::WK, B1));
+        assert_eq!(-325, tables.midgame(Piece::BK, B8));
     }
 
     #[test]
     fn test_endgame() {
-        assert_eq!(21, endgame(Piece::WP, C6));
-        assert_eq!(-21, endgame(Piece::BP, C3));
+        let tables = PositionTables::default();
+        assert_eq!(21, tables.endgame(Piece::WP, C6));
+        assert_eq!(-21, tables.endgame(Piece::BP, C3));
 
-        assert_eq!(-18, endgame(Piece::WN, E1));
-        assert_eq!(18, endgame(Piece::BN, E8));
+        assert_eq!(-18, tables.endgame(Piece::WN, E1));
+        assert_eq!(18, tables.endgame(Piece::BN, E8));
 
-        assert_eq!(16, endgame(Piece::WB, D4));
-        assert_eq!(-16, endgame(Piece::BB, D5));
+        assert_eq!(16, tables.endgame(Piece::WB, D4));
+        assert_eq!(-16, tables.endgame(Piece::BB, D5));
 
-        assert_eq!(-2, endgame(Piece::WR, D3));
-        assert_eq!(2, endgame(Piece::BR, D6));
+        assert_eq!(-2, tables.endgame(Piece::WR, D3));
+        assert_eq!(2, tables.endgame(Piece::BR, D6));
 
-        assert_eq!(-23, endgame(Piece::WQ, A4));
-        assert_eq!(23, endgame(Piece::BQ, A5));
+        assert_eq!(-23, tables.endgame(Piece::WQ, A4));
+        assert_eq!(23, tables.endgame(Piece::BQ, A5));
 
-        assert_eq!(141, endgame(Piece::WK, D7));
-        assert_eq!(-141, endgame(Piece::BK, D2));
+        assert_eq!(141, tables.endgame(Piece::WK, D7));
+        assert_eq!(-141, tables.endgame(Piece::BK, D2));
     }
 }

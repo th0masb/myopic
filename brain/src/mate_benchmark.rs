@@ -1,6 +1,8 @@
 use crate::eval::WIN_VALUE;
 use crate::eval_impl::EvalBoardImpl;
 use crate::search::search;
+use crate::tables::PositionTables;
+use crate::values::PieceValues;
 use myopic_board::{parse, Move, MutBoardImpl};
 use regex::Regex;
 use std::fs;
@@ -121,7 +123,14 @@ fn load_cases() -> Vec<TestCase> {
                 }
                 Ok(moves) => {
                     let expected_move = moves.first().unwrap().to_owned();
-                    dest.push(TestCase { board: EvalBoardImpl::new(board), expected_move });
+                    dest.push(TestCase {
+                        board: EvalBoardImpl::new(
+                            board,
+                            PositionTables::default(),
+                            PieceValues::default(),
+                        ),
+                        expected_move,
+                    });
                     if dest.len() == MAX_CASES {
                         break;
                     }

@@ -1,6 +1,10 @@
 extern crate itertools;
 extern crate myopic_board;
 extern crate myopic_core;
+extern crate serde;
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 #[macro_use]
 #[cfg(test)]
 extern crate lazy_static;
@@ -16,7 +20,7 @@ mod values;
 #[cfg(test)]
 mod mate_benchmark;
 
-pub use eval::EvalBoard;
+pub use eval::*;
 pub use eval_impl::EvalBoardImpl;
 pub use search::interactive::interactive_search;
 pub use search::interactive::InteractiveSearchCommand;
