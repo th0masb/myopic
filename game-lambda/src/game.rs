@@ -4,7 +4,7 @@ use crate::first_moves::FirstMoveMap;
 use crate::helper::*;
 use crate::TimeConstraints;
 use myopic_board::MutBoard;
-use myopic_brain::{EvalBoard};
+use myopic_brain::EvalBoard;
 use myopic_core::Side;
 use reqwest::blocking::Client;
 
