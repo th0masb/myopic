@@ -43,18 +43,12 @@ pub struct GameState {
     pub btime: u64,
     pub winc: u64,
     pub binc: u64,
-    pub wdraw: bool,
-    pub bdraw: bool,
     pub status: String,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct Player {
     pub id: String,
-    pub name: String,
-    pub title: Option<String>,
-    pub rating: usize,
-    pub provisional: bool,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
@@ -118,8 +112,6 @@ mod test {
                         btime: 1000,
                         winc: 0,
                         binc: 0,
-                        wdraw: false,
-                        bdraw: false,
                         status: String::from("started")
                     },
                     state
@@ -170,26 +162,8 @@ mod test {
             Err(error) => panic!(format!("Parse error {:?}", error)),
             Ok(event) => match event {
                 GameEvent::GameFull { content } => {
-                    assert_eq!(
-                        Player {
-                            id: String::from("th0masb"),
-                            name: String::from("th0masb"),
-                            title: None,
-                            rating: 1500,
-                            provisional: true
-                        },
-                        content.white
-                    );
-                    assert_eq!(
-                        Player {
-                            id: String::from("myopic-bot"),
-                            name: String::from("myopic-bot"),
-                            title: Some(String::from("BOT")),
-                            rating: 1500,
-                            provisional: true
-                        },
-                        content.black
-                    );
+                    assert_eq!(Player { id: format!("th0masb") }, content.white);
+                    assert_eq!(Player { id: format!("myopic-bot") }, content.black);
                     assert_eq!(Clock { initial: 1200000, increment: 10000 }, content.clock);
                     assert_eq!(
                         GameState {
@@ -198,8 +172,6 @@ mod test {
                             btime: 1000,
                             winc: 0,
                             binc: 0,
-                            wdraw: false,
-                            bdraw: false,
                             status: String::from("started")
                         },
                         content.state

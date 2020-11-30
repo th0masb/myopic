@@ -1,8 +1,6 @@
-
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::Hash;
-
 
 const SEP: &'static str = "|";
 const FIRST_MOVES: [(&str, &str); 21] = [
