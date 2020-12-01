@@ -1,4 +1,5 @@
-use crate::values;
+
+
 use myopic_board::MutBoard;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::pieces::Piece;
@@ -13,8 +14,13 @@ use std::cmp;
 /// the attacker, higher is good for the attacker. Positive means a good
 /// exchange, negative mean a bad one. If the pieces are on the same side the
 /// result is undefined.
-pub fn exchange_value<B: MutBoard>(board: &B, source: Square, target: Square) -> i32 {
-    See { board, source, target, value: values::abs_midgame }.exchange_value()
+pub fn exchange_value<B: MutBoard>(
+    board: &B,
+    source: Square,
+    target: Square,
+    piece_values: &[i32; 6],
+) -> i32 {
+    See { board, source, target, values: piece_values }.exchange_value()
 }
 
 type BitBoardPair = (BitBoard, BitBoard);
@@ -24,17 +30,21 @@ struct See<'a, B: MutBoard> {
     board: &'a B,
     source: Square,
     target: Square,
-    value: fn(Piece) -> i32,
+    values: &'a [i32; 6],
 }
 
 impl<B: MutBoard> See<'_, B> {
+    fn value(&self, piece: Piece) -> i32 {
+        self.values[(piece as usize) % 6]
+    }
+
     fn exchange_value(&self) -> i32 {
         let board = self.board;
         let first_attacker = board.piece(self.source).unwrap();
         let first_victim = board.piece(self.target).unwrap();
         let mut d = 0;
         let mut gain: [i32; 32] = [0; 32];
-        gain[d] = (self.value)(first_victim);
+        gain[d] = self.value(first_victim);
 
         let mut attacker = first_attacker;
         let mut active = first_attacker.side();
@@ -43,7 +53,7 @@ impl<B: MutBoard> See<'_, B> {
         let (mut attadef, mut xray) = self.pieces_involved();
         loop {
             d += 1;
-            gain[d] = (self.value)(attacker) - gain[d - 1];
+            gain[d] = self.value(attacker) - gain[d - 1];
             // TODO Can add this optimization in if we only want to know is exchange is good
             //if cmp::max(-gain[d - 1], gain[d]) < 0 {
             //    break;
@@ -138,15 +148,14 @@ fn is_slider(piece: Piece) -> bool {
 #[cfg(test)]
 mod test {
     use crate::see::See;
+    
     use myopic_board::MutBoard;
-    use myopic_core::pieces::Piece;
+    
     use myopic_core::reflectable::Reflectable;
     use myopic_core::Square;
 
-    /// Dummy piece values
-    fn value(piece: Piece) -> i32 {
-        let values = [1, 3, 3, 5, 9, 1000];
-        values[(piece as usize) % 6]
+    fn dummy_values() -> [i32; 6] {
+        [1, 3, 3, 5, 9, 1000]
     }
 
     #[derive(Clone, Debug)]
@@ -173,7 +182,7 @@ mod test {
     fn execute_case_impl<B: MutBoard>(test_case: TestCase<B>) {
         let board = test_case.board;
         for (source, target, expected_value) in test_case.expected.into_iter() {
-            let see = See { board: &board, source, target, value };
+            let see = See { board: &board, source, target, values: &dummy_values() };
             assert_eq!(
                 expected_value,
                 see.exchange_value(),

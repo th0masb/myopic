@@ -1,5 +1,7 @@
 use crate::eval::EvalBoard;
-use crate::{eval, tables, values};
+use crate::tables::PositionTables;
+use crate::values::PieceValues;
+use crate::{eval};
 use myopic_board::{Discards, Move, MoveComputeType, MutBoard, Termination};
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZone;
@@ -13,6 +15,8 @@ pub struct EvalBoardImpl<B: MutBoard> {
     end_eval: i32,
     phase: i32,
     board: B,
+    piece_values: PieceValues,
+    position_tables: PositionTables,
 }
 
 impl<B: MutBoard> Reflectable for EvalBoardImpl<B> {
@@ -22,6 +26,8 @@ impl<B: MutBoard> Reflectable for EvalBoardImpl<B> {
             end_eval: -self.end_eval,
             phase: self.phase,
             board: self.board.reflect(),
+            piece_values: self.piece_values.clone(),
+            position_tables: self.position_tables.clone(),
         }
     }
 }
@@ -40,39 +46,43 @@ fn compute_phase<B: MutBoard>(board: &B) -> i32 {
     TOTAL_PHASE - phase_sub
 }
 
-fn compute_midgame<B: MutBoard>(board: &B) -> i32 {
+fn compute_midgame<B: MutBoard>(board: &B, tables: &PositionTables, values: &PieceValues) -> i32 {
     Piece::iter()
         .flat_map(|p| board.locs(p).iter().map(move |loc| (p, loc)))
-        .map(|(p, loc)| tables::midgame(p, loc) + values::midgame(p))
+        .map(|(p, loc)| tables.midgame(p, loc) + values.midgame(p))
         .sum()
 }
 
-fn compute_endgame<B: MutBoard>(board: &B) -> i32 {
+fn compute_endgame<B: MutBoard>(board: &B, tables: &PositionTables, values: &PieceValues) -> i32 {
     Piece::iter()
         .flat_map(|p| board.locs(p).iter().map(move |loc| (p, loc)))
-        .map(|(p, loc)| tables::endgame(p, loc) + values::endgame(p))
+        .map(|(p, loc)| tables.endgame(p, loc) + values.endgame(p))
         .sum()
 }
 
 impl<B: MutBoard> EvalBoardImpl<B> {
-    pub fn new(board: B) -> EvalBoardImpl<B> {
+    pub fn new(board: B, tables: PositionTables, values: PieceValues) -> EvalBoardImpl<B> {
         EvalBoardImpl {
-            mid_eval: compute_midgame(&board),
-            end_eval: compute_endgame(&board),
+            mid_eval: compute_midgame(&board, &tables, &values),
+            end_eval: compute_endgame(&board, &tables, &values),
             phase: compute_phase(&board),
             board,
+            piece_values: PieceValues::default(),
+            position_tables: PositionTables::default(),
         }
     }
 
     fn remove(&mut self, piece: Piece, location: Square) {
-        self.mid_eval -= tables::midgame(piece, location) + values::midgame(piece);
-        self.end_eval -= tables::endgame(piece, location) + values::endgame(piece);
+        let (tables, values) = (&self.position_tables, &self.piece_values);
+        self.mid_eval -= tables.midgame(piece, location) + values.midgame(piece);
+        self.end_eval -= tables.endgame(piece, location) + values.endgame(piece);
         self.phase += PHASE_VALUES[(piece as usize) % 6];
     }
 
     fn add(&mut self, piece: Piece, location: Square) {
-        self.mid_eval += tables::midgame(piece, location) + values::midgame(piece);
-        self.end_eval += tables::endgame(piece, location) + values::endgame(piece);
+        let (tables, values) = (&self.position_tables, &self.piece_values);
+        self.mid_eval += tables.midgame(piece, location) + values.midgame(piece);
+        self.end_eval += tables.endgame(piece, location) + values.endgame(piece);
         self.phase -= PHASE_VALUES[(piece as usize) % 6];
     }
 }
@@ -160,6 +170,18 @@ impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
         self.board.termination_status()
     }
 
+    fn in_check(&mut self) -> bool {
+        self.board.in_check()
+    }
+
+    fn side(&self, side: Side) -> BitBoard {
+        self.board.side(side)
+    }
+
+    fn sides(&self) -> (BitBoard, BitBoard) {
+        self.board.sides()
+    }
+
     fn hash(&self) -> u64 {
         self.board.hash()
     }
@@ -184,14 +206,6 @@ impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
         self.board.king(side)
     }
 
-    fn side(&self, side: Side) -> BitBoard {
-        self.board.side(side)
-    }
-
-    fn sides(&self) -> (BitBoard, BitBoard) {
-        self.board.sides()
-    }
-
     fn piece(&self, location: Square) -> Option<Piece> {
         self.board.piece(location)
     }
@@ -202,10 +216,6 @@ impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
 
     fn history_count(&self) -> usize {
         self.board.history_count()
-    }
-
-    fn in_check(&mut self) -> bool {
-        self.board.in_check()
     }
 }
 
@@ -225,11 +235,18 @@ impl<B: MutBoard> EvalBoard for EvalBoardImpl<B> {
             }
         }
     }
+
+    // TODO For now we just use midgame values, should take into account phase
+    fn piece_values(&self) -> &[i32; 6] {
+        &self.piece_values.midgame
+    }
 }
 
 #[cfg(test)]
 mod test {
     use crate::eval_impl::EvalBoardImpl;
+    use crate::tables::PositionTables;
+    use crate::values::PieceValues;
     use myopic_board::Move::*;
     use myopic_board::{Move, MutBoard};
     use myopic_core::castlezone::CastleZone;
@@ -255,14 +272,17 @@ mod test {
     }
 
     fn execute_test_impl<B: MutBoard>(test_case: TestCase<B>) {
-        let mut start = EvalBoardImpl::new(test_case.start_position);
+        let (tables, values) = (PositionTables::default(), PieceValues::default());
+        let mut start =
+            EvalBoardImpl::new(test_case.start_position, tables.clone(), values.clone());
+
         for evolution in test_case.moves {
             let discards = start.evolve(&evolution);
-            assert_eq!(super::compute_midgame(&start), start.mid_eval);
-            assert_eq!(super::compute_endgame(&start), start.end_eval);
+            assert_eq!(super::compute_midgame(&start, &tables, &values), start.mid_eval);
+            assert_eq!(super::compute_endgame(&start, &tables, &values), start.end_eval);
             start.devolve(&evolution, discards);
-            assert_eq!(super::compute_midgame(&start), start.mid_eval);
-            assert_eq!(super::compute_endgame(&start), start.end_eval);
+            assert_eq!(super::compute_midgame(&start, &tables, &values), start.mid_eval);
+            assert_eq!(super::compute_endgame(&start, &tables, &values), start.end_eval);
             start.evolve(&evolution);
         }
     }
