@@ -1,7 +1,7 @@
+use crate::eval;
 use crate::eval::EvalBoard;
 use crate::tables::PositionTables;
 use crate::values::PieceValues;
-use crate::{eval};
 use myopic_board::{Discards, Move, MoveComputeType, MutBoard, Termination};
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::CastleZone;

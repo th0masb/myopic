@@ -144,10 +144,7 @@ mod test {
 
     #[test]
     fn case_zero() {
-        execute_success_test(
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-            ""
-        )
+        execute_success_test("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "")
     }
 
     #[test]

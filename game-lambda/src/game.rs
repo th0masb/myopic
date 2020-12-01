@@ -145,9 +145,9 @@ impl Game {
         if Instant::now().add(time) >= lambda_end_instant {
             Ok(GameExecutionState::Recurse)
         } else {
-            log::info!("Computed we should spend {}s thinking", time.as_secs());
+            log::info!("Spending {}ms thinking", time.as_millis());
             let result = myopic_brain::search(board, time)?;
-            log::info!("Completed search: {:?}", result);
+            log::info!("Search output: {}", serde_json::to_string(&result).expect("Unable to serialise search result"));
             self.post_move(move_to_uci(&result.best_move))
         }
     }

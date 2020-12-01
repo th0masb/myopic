@@ -8,6 +8,7 @@ test('Empty Stack', () => {
     const stack = new Deploy.MyopicGameLambdaStack(app, 'MyTestStack', {
       functionName: "MyTestFunction",
       timeout: cdk.Duration.minutes(15),
+      memorySize: 1024
     });
     // THEN
     expectCDK(stack).to(matchTemplate({
