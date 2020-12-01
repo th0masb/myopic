@@ -6,6 +6,7 @@ import * as path from 'path';
 
 export interface MyopicGameLambdaStackProps extends cdk.StackProps {
   functionName: string
+  memorySize: number
   timeout: Duration
 }
 
@@ -22,6 +23,7 @@ export class MyopicGameLambdaStack extends cdk.Stack {
       functionName: props.functionName,
       timeout: props.timeout,
       retryAttempts: 0,
+      memorySize: props.memorySize
     });
 
     // Add permissions for recursive invoking of the function
