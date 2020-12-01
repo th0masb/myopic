@@ -1,7 +1,7 @@
-use crate::{Move, MutBoard, MoveComputeType};
 use crate::parse::patterns::uci_move;
-use myopic_core::Square;
+use crate::{Move, MoveComputeType, MutBoard};
 use myopic_core::pieces::Piece;
+use myopic_core::Square;
 
 /// Extracts the moves encoded in standard pgn format contained in
 /// a single string.
@@ -30,29 +30,22 @@ fn parse_single_move<B: MutBoard>(start: &mut B, uci_move: &str) -> Result<Move,
         .compute_moves(MoveComputeType::All)
         .into_iter()
         .find(|mv| match mv {
-                &Move::Standard(_, s, d) => s == src && d == dest,
-                &Move::Enpassant(s, d) => s == src && d == dest,
-                &Move::Promotion(s, d, p) => {
-                    s == src
-                        && d == dest
-                        && promoting.map(|c| piece_char(p) == c).unwrap_or(false)
-                },
-                &Move::Castle(zone) => {
-                    let (_, king_src, king_dest) = zone.king_data();
-                    src == king_src && dest == king_dest
-                }
+            &Move::Standard(_, s, d) => s == src && d == dest,
+            &Move::Enpassant(s, d) => s == src && d == dest,
+            &Move::Promotion(s, d, p) => {
+                s == src && d == dest && promoting.map(|c| piece_char(p) == c).unwrap_or(false)
             }
-        )
+            &Move::Castle(zone) => {
+                let (_, king_src, king_dest) = zone.king_data();
+                src == king_src && dest == king_dest
+            }
+        })
         .ok_or(format!("No moves matching {}", uci_move))
 }
 
 fn extract_uci_component(pgn_move: &str) -> Result<(Square, Square, Option<char>), String> {
-    let src = Square::from_string(
-        pgn_move.chars().take(2).collect::<String>().as_str()
-    )?;
-    let dest = Square::from_string(
-        pgn_move.chars().skip(2).take(2).collect::<String>().as_str()
-    )?;
+    let src = Square::from_string(pgn_move.chars().take(2).collect::<String>().as_str())?;
+    let dest = Square::from_string(pgn_move.chars().skip(2).take(2).collect::<String>().as_str())?;
     Ok((src, dest, pgn_move.chars().skip(4).next()))
 }
 
@@ -62,7 +55,7 @@ fn piece_char(piece: Piece) -> char {
         Piece::WR | Piece::BR => 'r',
         Piece::WB | Piece::BB => 'b',
         Piece::WN | Piece::BN => 'n',
-        _ => 'x'
+        _ => 'x',
     }
 }
 #[cfg(test)]
@@ -78,10 +71,7 @@ mod test {
 
     #[test]
     fn case_zero() {
-        execute_success_test(
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-            ""
-        )
+        execute_success_test("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "")
     }
 
     #[test]
@@ -93,34 +83,34 @@ mod test {
         );
     }
 
-//    #[test]
-//    fn case_two() {
-//        execute_success_test(
-//            "5rk1/pp2p3/3p2pb/2pP4/2q5/3b1B1P/PPn2Q2/R1NK2R1 w - - 0 28",
-//            "
-//            [Event \"F/S Return Match\"]
-//            [Site \"Belgrade, Serbia JUG\"]
-//            [Date \"1992.11.04\"]
-//            [Round \"29\"]
-//            [White \"Fischer, Robert J.\"]
-//            [Black \"Spassky, Boris V.\"]
-//            [Result \"1/2-1/2\"]
-//
-//            1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.f3 O-O 6.Be3 Nbd7 7.Qd2
-//            c5 8.d5 Ne5 9.h3 Nh5 10.Bf2 f5 11.exf5 Rxf5 12.g4 Rxf3 13.gxh5
-//            Qf8 14.Ne4 Bh6 15.Qc2 Qf4 16.Ne2 Rxf2 17.Nxf2 Nf3+ 18.Kd1 Qh4
-//            19.Nd3 Bf5 20.Nec1 Nd2 21.hxg6 hxg6 22.Bg2 Nxc4 23.Qf2 Ne3+
-//            24.Ke2 Qc4 25.Bf3 Rf8 26.Rg1 Nc2 27.Kd1 Bxd3 0-1
-//            ",
-//        );
-//    }
+    //    #[test]
+    //    fn case_two() {
+    //        execute_success_test(
+    //            "5rk1/pp2p3/3p2pb/2pP4/2q5/3b1B1P/PPn2Q2/R1NK2R1 w - - 0 28",
+    //            "
+    //            [Event \"F/S Return Match\"]
+    //            [Site \"Belgrade, Serbia JUG\"]
+    //            [Date \"1992.11.04\"]
+    //            [Round \"29\"]
+    //            [White \"Fischer, Robert J.\"]
+    //            [Black \"Spassky, Boris V.\"]
+    //            [Result \"1/2-1/2\"]
+    //
+    //            1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.f3 O-O 6.Be3 Nbd7 7.Qd2
+    //            c5 8.d5 Ne5 9.h3 Nh5 10.Bf2 f5 11.exf5 Rxf5 12.g4 Rxf3 13.gxh5
+    //            Qf8 14.Ne4 Bh6 15.Qc2 Qf4 16.Ne2 Rxf2 17.Nxf2 Nf3+ 18.Kd1 Qh4
+    //            19.Nd3 Bf5 20.Nec1 Nd2 21.hxg6 hxg6 22.Bg2 Nxc4 23.Qf2 Ne3+
+    //            24.Ke2 Qc4 25.Bf3 Rf8 26.Rg1 Nc2 27.Kd1 Bxd3 0-1
+    //            ",
+    //        );
+    //    }
 }
 
 #[cfg(test)]
 mod test_single_move {
     use super::*;
-    use myopic_core::Square::*;
     use myopic_core::castlezone::CastleZone;
+    use myopic_core::Square::*;
 
     fn execute_success_test(expected: Move, start_fen: &'static str, uci: &'static str) {
         let mut board = crate::fen_position(start_fen).unwrap();

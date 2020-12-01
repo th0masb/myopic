@@ -17,7 +17,8 @@ use myopic_core::Square;
 
 pub use implementation::MutBoardImpl;
 
-const START_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+/// The start position of a chess game encoded in FEN format
+pub const STARTPOS_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Discards {
@@ -34,6 +35,34 @@ pub enum Move {
     Enpassant(Square, Square),
     Promotion(Square, Square, Piece),
     Castle(CastleZone),
+}
+
+impl Move {
+    /// Convert this move into a human readable uci long format string.
+    pub fn uci_format(&self) -> String {
+        match self {
+            &Move::Standard(_, src, dest) => format!("{}{}", src, dest),
+            &Move::Enpassant(src, dest) => format!("{}{}", src, dest),
+            &Move::Promotion(src, dest, piece) => format!(
+                "{}{}{}",
+                src,
+                dest,
+                match piece {
+                    Piece::WQ | Piece::BQ => "q",
+                    Piece::WR | Piece::BR => "r",
+                    Piece::WB | Piece::BB => "b",
+                    Piece::WN | Piece::BN => "n",
+                    _ => "",
+                }
+            ),
+            &Move::Castle(zone) => {
+                let (_, src, dest) = zone.king_data();
+                format!("{}{}", src, dest)
+            }
+        }
+        .to_lowercase()
+        .to_owned()
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
@@ -145,5 +174,46 @@ pub fn fen_position(fen: &str) -> Result<MutBoardImpl, String> {
 /// Create a mutable board state representing the start of a standard
 /// chess game.
 pub fn start_position() -> MutBoardImpl {
-    fen_position(START_FEN).unwrap()
+    fen_position(STARTPOS_FEN).unwrap()
+}
+
+#[cfg(test)]
+mod uci_conversion_test {
+    use super::Move;
+    use myopic_core::castlezone::CastleZone;
+    use myopic_core::{pieces::Piece, Square};
+
+    #[test]
+    fn test_pawn_standard_conversion() {
+        assert_eq!(
+            "e2e4",
+            Move::Standard(Piece::WP, Square::E2, Square::E4).uci_format()
+        );
+    }
+
+    #[test]
+    fn test_rook_standard_conversion() {
+        assert_eq!(
+            "h1h7",
+            Move::Standard(Piece::BR, Square::H1, Square::H7).uci_format()
+        );
+    }
+
+    #[test]
+    fn test_castling_conversion() {
+        assert_eq!("e1g1", Move::Castle(CastleZone::WK).uci_format());
+        assert_eq!("e1c1", Move::Castle(CastleZone::WQ).uci_format());
+        assert_eq!("e8g8", Move::Castle(CastleZone::BK).uci_format());
+        assert_eq!("e8c8", Move::Castle(CastleZone::BQ).uci_format());
+    }
+
+    #[test]
+    fn test_promotion_conversion() {
+        assert_eq!("e7d8q", Move::Promotion(Square::E7, Square::D8, Piece::WQ).uci_format())
+    }
+
+    #[test]
+    fn test_enpassant_conversion() {
+        assert_eq!("e5d6", Move::Enpassant(Square::E5, Square::D6).uci_format())
+    }
 }
