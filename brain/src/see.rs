@@ -1,5 +1,3 @@
-
-
 use myopic_board::MutBoard;
 use myopic_core::bitboard::BitBoard;
 use myopic_core::pieces::Piece;
@@ -148,9 +146,9 @@ fn is_slider(piece: Piece) -> bool {
 #[cfg(test)]
 mod test {
     use crate::see::See;
-    
+
     use myopic_board::MutBoard;
-    
+
     use myopic_core::reflectable::Reflectable;
     use myopic_core::Square;
 

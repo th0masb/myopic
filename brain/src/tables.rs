@@ -3,7 +3,6 @@ use myopic_core::pieces::Piece::*;
 use myopic_core::reflectable::Reflectable;
 use myopic_core::{Side, Square};
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq)]
 pub struct PositionTables {
     // Asymmetric, split across 2 arrays
@@ -181,7 +180,7 @@ mod test {
     use myopic_core::Square::*;
 
     use crate::tables::PositionTables;
-    
+
     use myopic_core::pieces::Piece;
     use myopic_core::reflectable::Reflectable;
     use myopic_core::Square;

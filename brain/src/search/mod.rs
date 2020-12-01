@@ -4,6 +4,8 @@ use std::time::{Duration, Instant};
 use crate::eval::EvalBoard;
 use crate::{eval, quiescent};
 use myopic_board::{Move, MoveComputeType, Termination};
+use serde::ser::SerializeStruct;
+use serde::Serializer;
 
 pub mod interactive;
 
@@ -16,6 +18,43 @@ pub struct SearchOutcome {
     pub eval: i32,
     pub depth: usize,
     pub time: Duration,
+}
+
+impl serde::Serialize for SearchOutcome {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("SearchOutcome", 4)?;
+        state.serialize_field("bestMove", &self.best_move.uci_format())?;
+        state.serialize_field("positionEval", &self.eval)?;
+        state.serialize_field("depthSearched", &self.depth)?;
+        state.serialize_field("searchDurationMillis", &self.time.as_millis())?;
+        state.end()
+    }
+}
+
+#[cfg(test)]
+mod searchoutcome_serialize_test {
+    use super::SearchOutcome;
+    use myopic_board::Move;
+    use myopic_core::castlezone::CastleZone;
+    use serde_json;
+    use std::time::Duration;
+
+    #[test]
+    fn test_json_serialize() {
+        let search_outcome = SearchOutcome {
+            best_move: Move::Castle(CastleZone::WK),
+            eval: -125,
+            depth: 5,
+            time: Duration::from_millis(3000),
+        };
+        assert_eq!(
+            r#"{"bestMove":"e1g1","positionEval":-125,"depthSearched":5,"searchDurationMillis":3000}"#,
+            serde_json::to_string(&search_outcome).expect("Serialization failed")
+        );
+    }
 }
 
 /// API function for executing search on the calling thread, we pass a root
