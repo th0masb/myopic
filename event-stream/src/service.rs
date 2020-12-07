@@ -10,14 +10,14 @@ use std::str::FromStr;
 const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
 const STANDARD_VARIANT_KEY: &'static str = "standard";
 
-pub(super) struct LichessClient {
+pub(super) struct LichessService {
     parameters: ApplicationParameters,
     client: blocking::Client,
 }
 
-impl LichessClient {
-    pub(super) fn new(parameters: ApplicationParameters) -> LichessClient {
-        LichessClient { parameters, client: blocking::Client::new() }
+impl LichessService {
+    pub(super) fn new(parameters: ApplicationParameters) -> LichessService {
+        LichessService { parameters, client: blocking::Client::new() }
     }
 
     pub(super) fn process_challenge(&self, challenge: Challenge) -> Result<String, Box<dyn Error>> {
