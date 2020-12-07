@@ -8,13 +8,13 @@ use myopic_core::Square;
 
 /// Extracts the moves encoded in standard pgn format contained in
 /// a single string.
-pub fn pgn(moves: &String) -> Result<Vec<Move>, String> {
+pub fn pgn(moves: &str) -> Result<Vec<Move>, String> {
     return partial_pgn(&crate::start_position(), moves);
 }
 
 /// Extracts the moves encoded in standard pgn format starting at
 /// a custom board position.
-pub fn partial_pgn<B: MutBoard>(start: &B, moves: &String) -> Result<Vec<Move>, String> {
+pub fn partial_pgn<B: MutBoard>(start: &B, moves: &str) -> Result<Vec<Move>, String> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in pgn_move().find_iter(moves) {

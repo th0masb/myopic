@@ -11,7 +11,7 @@ use crate::MoveComputeType;
 use crate::MutBoard;
 use crate::Termination;
 use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::CastleZone;
+use myopic_core::castlezone::{CastleZone, CastleZoneSet};
 use myopic_core::pieces::Piece;
 use myopic_core::reflectable::Reflectable;
 use myopic_core::{Side, Square};
@@ -19,6 +19,7 @@ use myopic_core::{Side, Square};
 mod cache;
 mod castling;
 mod evolve;
+mod fen;
 mod history;
 mod moves;
 mod positions;
@@ -324,5 +325,13 @@ impl MutBoard for MutBoardImpl {
 
     fn history_count(&self) -> usize {
         self.history.position_count()
+    }
+
+    fn remaining_rights(&self) -> CastleZoneSet {
+        self.castling.rights()
+    }
+
+    fn to_timeless_fen(&self) -> String {
+        fen::to_timeless_impl(self)
     }
 }

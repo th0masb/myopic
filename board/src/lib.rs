@@ -154,8 +154,25 @@ pub trait MutBoard: Clone + Send + Reflectable {
     /// Return the total number of half moves played to reach this position.
     fn history_count(&self) -> usize;
 
+    /// Return the remaining castling rights from this position.
+    fn remaining_rights(&self) -> CastleZoneSet;
+
+    /// Return the FEN representation of this position minus the two suffix
+    /// move counts.
+    fn to_timeless_fen(&self) -> String;
+
+    /// Return the complete FEN representation of this position.
+    fn to_fen(&self) -> String {
+        let mut timeless_fen = self.to_timeless_fen();
+        timeless_fen.push(' ');
+        timeless_fen.push_str(&self.half_move_clock().to_string());
+        timeless_fen.push(' ');
+        timeless_fen.push_str(&((self.history_count() + 1) / 2).to_string());
+        timeless_fen
+    }
+
     /// Returns the locations of a set of pieces as a single bitboard.
-    fn locs_n(&self, pieces: &[Piece]) -> BitBoard {
+    fn multi_locs(&self, pieces: &[Piece]) -> BitBoard {
         pieces.into_iter().map(|&p| self.locs(p)).collect()
     }
 
@@ -185,18 +202,12 @@ mod uci_conversion_test {
 
     #[test]
     fn test_pawn_standard_conversion() {
-        assert_eq!(
-            "e2e4",
-            Move::Standard(Piece::WP, Square::E2, Square::E4).uci_format()
-        );
+        assert_eq!("e2e4", Move::Standard(Piece::WP, Square::E2, Square::E4).uci_format());
     }
 
     #[test]
     fn test_rook_standard_conversion() {
-        assert_eq!(
-            "h1h7",
-            Move::Standard(Piece::BR, Square::H1, Square::H7).uci_format()
-        );
+        assert_eq!("h1h7", Move::Standard(Piece::BR, Square::H1, Square::H7).uci_format());
     }
 
     #[test]

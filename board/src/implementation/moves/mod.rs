@@ -77,7 +77,7 @@ impl MutBoardImpl {
             return true;
         }
         let (r, q) = (Piece::rook(passive), Piece::queen(passive));
-        let potential_attackers = self.locs_n(&[r, q]) & third_rank;
+        let potential_attackers = self.multi_locs(&[r, q]) & third_rank;
         let all_pieces = self.all_pieces();
         for loc in potential_attackers {
             let cord = BitBoard::cord(loc, active_king) & all_pieces;
