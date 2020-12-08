@@ -21,6 +21,7 @@ const MYOPIC_MIN_INCREMENT_SECS: &'static str = "MYOPIC_MIN_INCREMENT_SECS";
 const MYOPIC_MAX_INCREMENT_SECS: &'static str = "MYOPIC_MAX_INCREMENT_SECS";
 const MYOPIC_MAX_LAMBDA_DURATION_MINS: &'static str = "MYOPIC_MAX_LAMBDA_DURATION_MINS";
 const MYOPIC_INCREMENT_ALLOWANCE_MINS: &'static str = "MYOPIC_INCREMENT_ALLOWANCE_MINS";
+const MYOPIC_RETRY_WAIT_DURATION_SECS: &'static str = "MYOPIC_RETRY_WAIT_DURATION_SECS";
 
 #[derive(Debug, Clone)]
 pub struct ApplicationParameters {
@@ -39,6 +40,7 @@ pub struct ApplicationParameters {
     pub max_increment_secs: u32,
     pub max_lambda_duration_mins: u8,
     pub increment_allowance_mins: u8,
+    pub retry_wait_duration_secs: u64,
 }
 
 impl ApplicationParameters {
@@ -59,6 +61,7 @@ impl ApplicationParameters {
             max_increment_secs: env::var(MYOPIC_MAX_INCREMENT_SECS)?.parse()?,
             max_lambda_duration_mins: env::var(MYOPIC_MAX_LAMBDA_DURATION_MINS)?.parse()?,
             increment_allowance_mins: env::var(MYOPIC_INCREMENT_ALLOWANCE_MINS)?.parse()?,
+            retry_wait_duration_secs: env::var(MYOPIC_RETRY_WAIT_DURATION_SECS)?.parse()?,
         })
     }
 
