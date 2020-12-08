@@ -1,7 +1,9 @@
+mod dynamodb_openings;
 mod events;
 mod first_moves;
 mod game;
 mod helper;
+mod lichess;
 
 extern crate bytes;
 extern crate rand;
@@ -12,7 +14,8 @@ extern crate tokio;
 #[macro_use]
 extern crate serde_derive;
 
-use crate::game::{GameExecutionState, GameProps};
+use crate::dynamodb_openings::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
+use crate::game::{DynamoDbGameConfig, GameExecutionState};
 use crate::helper::timestamp_millis;
 use bytes::Bytes;
 use game::Game;
@@ -33,30 +36,44 @@ const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/str
 #[derive(Serialize, Deserialize, Clone)]
 struct PlayGameEvent {
     /// The current call depth of the lambda invokation
-    depth: u8,
+    #[serde(rename = "functionDepthRemaining")]
+    function_depth_remaining: u8,
     /// The region this lambda is deployed in
-    region: String,
+    #[serde(rename = "functionRegion")]
+    function_region: String,
     /// The name of this lambda function
     #[serde(rename = "functionName")]
     function_name: String,
     /// The lichess game id this lambda will participate in
-    #[serde(rename = "gameId")]
-    game_id: String,
+    #[serde(rename = "lichessGameId")]
+    lichess_game_id: String,
     /// An auth token for the lichess bot this lambda will play as
-    #[serde(rename = "authToken")]
-    auth_token: String,
+    #[serde(rename = "lichessAuthToken")]
+    lichess_auth_token: String,
     /// The id of the lichess bot this lambda will play as
-    #[serde(rename = "botId")]
-    bot_id: String,
+    #[serde(rename = "lichessBotId")]
+    lichess_bot_id: String,
+    /// The name of the dynamodb table used to store opening positions
+    #[serde(rename = "openingTableName")]
+    opening_table_name: String,
+    /// The region in which the opening table is deployed
+    #[serde(rename = "openingTableRegion")]
+    opening_table_region: String,
+    /// The name of the position key used as a pk in the opening table
+    #[serde(rename = "openingTablePositionKey")]
+    opening_table_position_key: String,
+    /// The name of the move key used in the opening table
+    #[serde(rename = "openingTableMoveKey")]
+    opening_table_move_key: String,
     /// How many half moves we expect the game to last for
     #[serde(rename = "expectedHalfMoves")]
     expected_half_moves: u32,
 }
 
 impl PlayGameEvent {
-    fn decrement_depth(&self) -> PlayGameEvent {
+    fn increment_depth(&self) -> PlayGameEvent {
         let mut new_event = self.clone();
-        new_event.depth = self.depth - 1;
+        new_event.function_depth_remaining = self.function_depth_remaining - 1;
         new_event
     }
 }
@@ -84,30 +101,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn init_game(e: &PlayGameEvent, ctx: &Context) -> Game {
-    Game::new(GameProps {
-        game_id: e.game_id.clone(),
-        lambda_player_id: e.bot_id.clone(),
-        expected_half_moves: e.expected_half_moves,
-        auth_token: e.auth_token.clone(),
-        time_constraints: TimeConstraints {
-            start_time: Instant::now(),
-            // Reduce the actual max duration by a constant fraction
-            // to allow a buffer of time to invoke new lambda
-            max_execution_duration: (4 * Duration::from_millis(
-                ctx.deadline as u64 - timestamp_millis(),
-            )) / 5,
-        },
-    })
-}
-
 fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, HandlerError> {
     log::info!("Initializing game loop");
-    let mut game = init_game(&e, &ctx);
+    let mut game = init_game(&e, &ctx)?;
 
     // Enter the game loop
     let mut invoke_next = false;
-    for read_result in open_game_stream(&e.game_id, &e.auth_token)?.lines() {
+    for read_result in open_game_stream(&e.lichess_game_id, &e.lichess_auth_token)?.lines() {
         match read_result {
             Err(error) => {
                 log::warn!("Problem reading from game stream {}", error);
@@ -138,7 +138,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
     }
 
     // If we got here then there isn't enough time in this lambda to complete the game
-    if invoke_next && e.depth > 0 {
+    if invoke_next && e.function_depth_remaining > 0 {
         // Async invoke lambda here
         recurse(&e)
     } else {
@@ -148,24 +148,36 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
     }
 }
 
-fn recurse(source_event: &PlayGameEvent) -> Result<PlayGameOutput, HandlerError> {
-    // Inject region as part of the PlayGameEvent
-    let next_event = source_event.decrement_depth();
-    let region = Region::from_str(next_event.region.as_str())
-        .map_err(|err| HandlerError::from(err.to_string().as_str()))?;
-    tokio::runtime::Runtime::new()
-        .map_err(|err| HandlerError::from(err.to_string().as_str()))?
-        .block_on(LambdaClient::new(region).invoke_async(InvokeAsyncRequest {
-            function_name: next_event.function_name.clone(),
-            invoke_args: Bytes::from(serde_json::to_string(&next_event)?),
-        }))
-        .map_err(|err| HandlerError::from(err.to_string().as_str()))
-        .map(|response| PlayGameOutput {
-            message: format!(
-                "Recursively invoked lambda at depth {} with status {:?}",
-                next_event.depth, response.status
-            ),
-        })
+fn init_game(
+    e: &PlayGameEvent,
+    ctx: &Context,
+) -> Result<Game<DynamoDbOpeningService>, HandlerError> {
+    Ok(game::new_dynamodb(DynamoDbGameConfig {
+        game_id: e.lichess_game_id.clone(),
+        bot_id: e.lichess_bot_id.clone(),
+        expected_half_moves: e.expected_half_moves,
+        lichess_auth_token: e.lichess_auth_token.clone(),
+
+        time_constraints: TimeConstraints {
+            start_time: Instant::now(),
+            // Reduce the actual max duration by a constant fraction
+            // to allow a buffer of time to invoke new lambda
+            max_execution_duration: (4 * Duration::from_millis(
+                ctx.deadline as u64 - timestamp_millis(),
+            )) / 5,
+        },
+
+        dynamodb_openings_config: DynamoDbOpeningServiceConfig {
+            table_name: e.opening_table_name.clone(),
+            position_key: e.opening_table_position_key.clone(),
+            move_key: e.opening_table_move_key.clone(),
+            table_region: parse_region(e.opening_table_region.as_str())?,
+        },
+    }))
+}
+
+fn parse_region(region: &str) -> Result<Region, HandlerError> {
+    Region::from_str(region).map_err(|err| HandlerError::from(format!("{}", err).as_str()))
 }
 
 fn open_game_stream(
@@ -178,4 +190,23 @@ fn open_game_stream(
         .send()
         .map(|response| BufReader::new(response))
         .map_err(|err| HandlerError::from(format!("{}", err).as_str()))
+}
+
+fn recurse(source_event: &PlayGameEvent) -> Result<PlayGameOutput, HandlerError> {
+    // Inject region as part of the PlayGameEvent
+    let next_event = source_event.increment_depth();
+    let region = parse_region(next_event.function_region.as_str())?;
+    tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(LambdaClient::new(region).invoke_async(InvokeAsyncRequest {
+            function_name: next_event.function_name.clone(),
+            invoke_args: Bytes::from(serde_json::to_string(&next_event)?),
+        }))
+        .map_err(|err| HandlerError::from(err.to_string().as_str()))
+        .map(|response| PlayGameOutput {
+            message: format!(
+                "Recursively invoked lambda at depth {} with status {:?}",
+                next_event.function_depth_remaining, response.status
+            ),
+        })
 }

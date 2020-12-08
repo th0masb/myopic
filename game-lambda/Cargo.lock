@@ -556,6 +556,7 @@ dependencies = [
  "rand 0.5.6",
  "reqwest",
  "rusoto_core",
+ "rusoto_dynamodb",
  "rusoto_lambda",
  "serde",
  "serde_derive",
@@ -1111,9 +1112,9 @@ dependencies = [
 
 [[package]]
 name = "myopic-board"
-version = "1.1.2"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0f7def5bee0b2918076e197b1b817dca122b184fc6ef81dc66506445aa54262"
+checksum = "8185f9f8276dc2c363b73db04584f7a2a8511601c8a393ad85e6dc3ae5638cb4"
 dependencies = [
  "itertools 0.8.2",
  "lazy_static",
@@ -1123,9 +1124,9 @@ dependencies = [
 
 [[package]]
 name = "myopic-brain"
-version = "1.2.1"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fed52212cbe2aa9513af629fbae689065b5a6c26dc99b6d60c59b0fdaeca5d8"
+checksum = "ea145c8794289995cfea2a059c8b559cebbf1e72d649f3c6ab0f605b4a9374b9"
 dependencies = [
  "itertools 0.9.0",
  "lazy_static",
@@ -1605,6 +1606,20 @@ dependencies = [
  "shlex",
  "tokio 0.2.22",
  "zeroize",
+]
+
+[[package]]
+name = "rusoto_dynamodb"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a1473bb1c1dd54f61c5e150aec47bcbf4a992963dcc3c60e12be5af3245cefc"
+dependencies = [
+ "async-trait",
+ "bytes 0.5.6",
+ "futures 0.3.8",
+ "rusoto_core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
