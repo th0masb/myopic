@@ -5,7 +5,10 @@ import * as iam from '@aws-cdk/aws-iam';
 import * as path from 'path';
 
 export interface MyopicGameLambdaStackProps extends cdk.StackProps {
+  account: string
+  region: string
   functionName: string
+  openingsTableName: string
   memorySize: number
   timeout: Duration
 }
@@ -26,10 +29,13 @@ export class MyopicGameLambdaStack extends cdk.Stack {
       memorySize: props.memorySize
     });
 
-    // Add permissions for recursive invoking of the function
+    // Add permissions for recursive invoking of the function and access to the opening database
     const ps = new iam.PolicyStatement()
-    ps.addAllResources()
-    ps.addActions("lambda:InvokeFunction")
+    ps.addActions("lambda:InvokeFunction", "dynamodb:GetItem")
+    ps.addResources(
+      `arn:aws:lambda:${props.region}:${props.account}:function:${props.functionName}`,
+      `arn:aws:dynamodb:${props.region}:${props.account}:table/${props.openingsTableName}`
+    )
     gameHandler.addToRolePolicy(ps)
   }
 }

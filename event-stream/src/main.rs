@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let client = LichessClient::new(parameters.clone());
 
     log::info!("Opening event stream");
-    for read_result in open_event_stream(&parameters.auth_token)?.lines() {
+    for read_result in open_event_stream(&parameters.lichess_auth_token)?.lines() {
         match read_result {
             Err(read_error) => log::warn!("Stream read error: {}", read_error),
             Ok(line) => {
