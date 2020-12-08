@@ -61,7 +61,7 @@ impl LichessClient {
         time_control: &ClockTimeControl,
     ) -> Result<Option<i64>, Box<dyn Error>> {
         let max_depth = self.compute_max_depth(&time_control);
-        let region = Region::from_str(self.parameters.region.as_str())?;
+        let region = Region::from_str(self.parameters.function_region.as_str())?;
         let payload = self.parameters.to_lambda_invocation_payload(game_id.clone(), max_depth)?;
 
         tokio::runtime::Runtime::new()?
@@ -80,7 +80,7 @@ impl LichessClient {
     ) -> Result<StatusCode, Box<dyn Error>> {
         self.client
             .post(format!("{}/{}/{}", CHALLENGE_ENDPOINT, challenge.id, decision).as_str())
-            .bearer_auth(&self.parameters.auth_token)
+            .bearer_auth(&self.parameters.lichess_auth_token)
             .send()
             .map(|response| response.status())
             .map_err(|error| Box::new(error) as Box<dyn Error>)
