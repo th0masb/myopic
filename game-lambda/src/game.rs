@@ -1,6 +1,4 @@
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
-use crate::first_moves;
-use crate::first_moves::FirstMoveMap;
 use crate::helper::*;
 use crate::TimeConstraints;
 use myopic_board::MutBoard;
@@ -8,12 +6,17 @@ use myopic_brain::EvalBoard;
 use myopic_core::Side;
 use reqwest::blocking::Client;
 
+use crate::dynamodb_openings::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
+use crate::lichess::LichessService;
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
-const MOVE_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
+
+pub trait OpeningService {
+    fn get_recommended_move(&self, uci_sequence: &str) -> Result<Option<String>, String>;
+}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 struct InferredGameMetadata {
@@ -22,21 +25,23 @@ struct InferredGameMetadata {
 }
 
 #[derive(Debug, Clone)]
-pub struct GameProps {
+pub struct DynamoDbGameConfig {
     pub game_id: String,
-    pub lambda_player_id: String,
+    pub bot_id: String,
     pub expected_half_moves: u32,
     pub time_constraints: TimeConstraints,
-    pub auth_token: String,
+    pub lichess_auth_token: String,
+    pub dynamodb_openings_config: DynamoDbOpeningServiceConfig,
 }
 
 #[derive(Debug)]
-pub struct Game {
-    props: GameProps,
+pub struct Game<O: OpeningService> {
+    bot_id: String,
+    expected_half_moves: u32,
+    time_constraints: TimeConstraints,
     inferred_metadata: Option<InferredGameMetadata>,
-    client: Client,
-    is_finished: bool,
-    first_moves: FirstMoveMap,
+    lichess_service: LichessService,
+    opening_service: O,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -46,19 +51,20 @@ pub enum GameExecutionState {
     Recurse,
 }
 
-impl Game {
-    pub fn new(props: GameProps) -> Game {
-        Game {
-            props,
-            inferred_metadata: None,
-            client: reqwest::blocking::Client::new(),
-            is_finished: false,
-            first_moves: first_moves::as_map(),
-        }
+pub fn new_dynamodb(props: DynamoDbGameConfig) -> Game<DynamoDbOpeningService> {
+    Game {
+        lichess_service: LichessService::new(props.lichess_auth_token, props.game_id),
+        opening_service: DynamoDbOpeningService::new(props.dynamodb_openings_config),
+        bot_id: props.bot_id,
+        expected_half_moves: props.expected_half_moves,
+        inferred_metadata: None,
+        time_constraints: props.time_constraints,
     }
+}
 
+impl<O: OpeningService> Game<O> {
     pub fn time_constraints(&self) -> &TimeConstraints {
-        &self.props.time_constraints
+        &self.time_constraints
     }
 
     pub fn process_event(&mut self, event_json: &str) -> Result<GameExecutionState, String> {
@@ -86,21 +92,17 @@ impl Game {
 
     fn process_chat_line(&self, _chat_line: ChatLine) -> Result<GameExecutionState, String> {
         // Do nothing for now
-        if self.is_finished {
-            Ok(GameExecutionState::Finished)
-        } else {
-            Ok(GameExecutionState::Running)
-        }
+        Ok(GameExecutionState::Running)
     }
 
     fn process_game_full(&mut self, game_full: GameFull) -> Result<GameExecutionState, String> {
         // Track info required for playing future gamestates
         self.inferred_metadata = Some(InferredGameMetadata {
             clock: game_full.clock,
-            lambda_side: if self.props.lambda_player_id == game_full.white.id {
+            lambda_side: if self.bot_id == game_full.white.id {
                 log::info!("Detected lambda is playing as white");
                 Side::White
-            } else if self.props.lambda_player_id == game_full.black.id {
+            } else if self.bot_id == game_full.black.id {
                 log::info!("Detected lambda is playing as black");
                 Side::Black
             } else {
@@ -116,13 +118,12 @@ impl Game {
 
         match state.status.as_str() {
             STARTED_STATUS | CREATED_STATUS => {
-                self.is_finished = false;
                 if board.active() != self.get_latest_metadata()?.lambda_side {
                     log::info!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
                     match self.get_opening_move(&state.moves) {
-                        Some(mv) => self.post_move(mv),
+                        Some(mv) => self.lichess_service.post_move(mv),
                         None => self.compute_move(board, self.compute_thinking_time(n_moves)?),
                     }
                 }
@@ -130,7 +131,6 @@ impl Game {
             // All other possibilities indicate the game is over
             status => {
                 log::info!("Game has finished with status: {}! Terminating execution", status);
-                self.is_finished = true;
                 Ok(GameExecutionState::Finished)
             }
         }
@@ -141,30 +141,34 @@ impl Game {
         board: B,
         time: Duration,
     ) -> Result<GameExecutionState, String> {
-        let lambda_end_instant = self.props.time_constraints.lambda_end_instant();
+        let lambda_end_instant = self.time_constraints.lambda_end_instant();
         if Instant::now().add(time) >= lambda_end_instant {
             Ok(GameExecutionState::Recurse)
         } else {
             log::info!("Spending {}ms thinking", time.as_millis());
             let result = myopic_brain::search(board, time)?;
-            log::info!("Search output: {}", serde_json::to_string(&result).expect("Unable to serialise search result"));
-            self.post_move(move_to_uci(&result.best_move))
+            log::info!(
+                "Search output: {}",
+                serde_json::to_string(&result).expect("Unable to serialise search result")
+            );
+            self.lichess_service.post_move(move_to_uci(&result.best_move))
         }
     }
 
-    fn get_opening_move(&self, current_sequence: &String) -> Option<String> {
-        let moves = self.first_moves.get_moves(current_sequence.trim());
-        if moves.is_empty() {
-            None
-        } else {
-            Some(moves[rand::random::<usize>() % moves.len()].to_owned())
+    fn get_opening_move(&self, current_sequence: &str) -> Option<String> {
+        match self.opening_service.get_recommended_move(current_sequence) {
+            Ok(result) => result,
+            Err(error) => {
+                log::info!("Error retrieving opening move: {}", error);
+                None
+            }
         }
     }
 
     fn compute_thinking_time(&self, moves_played: u32) -> Result<Duration, String> {
         let metadata = self.get_latest_metadata()?;
         Ok(compute_thinking_time(ThinkingTimeParams {
-            expected_half_move_count: self.props.expected_half_moves,
+            expected_half_move_count: self.expected_half_moves,
             half_moves_played: moves_played,
             initial: Duration::from_millis(metadata.clock.initial),
             increment: Duration::from_millis(metadata.clock.increment),
@@ -173,15 +177,5 @@ impl Game {
 
     fn get_latest_metadata(&self) -> Result<&InferredGameMetadata, String> {
         self.inferred_metadata.as_ref().ok_or(format!("Metadata not initialized"))
-    }
-
-    fn post_move(&self, mv: String) -> Result<GameExecutionState, String> {
-        // Add timeout and retry logic
-        self.client
-            .post(format!("{}/{}/move/{}", MOVE_ENDPOINT, self.props.game_id, mv).as_str())
-            .bearer_auth(&self.props.auth_token)
-            .send()
-            .map(|_| GameExecutionState::Running)
-            .map_err(|error| format!("Error posting move: {}", error))
     }
 }
