@@ -4,7 +4,7 @@ use crate::tables::PositionTables;
 use crate::values::PieceValues;
 use myopic_board::{Discards, Move, MoveComputeType, MutBoard, Termination};
 use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::CastleZone;
+use myopic_core::castlezone::{CastleZone, CastleZoneSet};
 use myopic_core::pieces::Piece;
 use myopic_core::reflectable::Reflectable;
 use myopic_core::{Side, Square};
@@ -216,6 +216,14 @@ impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
 
     fn history_count(&self) -> usize {
         self.board.history_count()
+    }
+
+    fn remaining_rights(&self) -> CastleZoneSet {
+        self.board.remaining_rights()
+    }
+
+    fn to_timeless_fen(&self) -> String {
+        self.board.to_timeless_fen()
     }
 }
 
