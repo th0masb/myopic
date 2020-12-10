@@ -1,5 +1,5 @@
 use crate::game::OpeningService;
-use myopic_board::{parse, MutBoard};
+use myopic_board::{parse, MutBoard, FenComponent};
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use serde::export::fmt::Debug;
@@ -22,7 +22,13 @@ pub struct DynamoDbOpeningServiceConfig {
 
 impl OpeningService for DynamoDbOpeningService {
     fn get_recommended_move(&self, uci_sequence: &str) -> Result<Option<String>, String> {
-        let query_position = parse::position_from_uci(uci_sequence)?.to_timeless_fen();
+        let query_position = parse::position_from_uci(uci_sequence)?.to_partial_fen(
+            &[
+                FenComponent::Board,
+                FenComponent::Active,
+                FenComponent::CastlingRights,
+            ]
+        );
         log::info!("Querying table {} for position {}", self.table_name, query_position);
         tokio::runtime::Runtime::new()
             .unwrap()
