@@ -2,7 +2,7 @@ use crate::eval;
 use crate::eval::EvalBoard;
 use crate::tables::PositionTables;
 use crate::values::PieceValues;
-use myopic_board::{Discards, Move, MoveComputeType, MutBoard, Termination};
+use myopic_board::{Discards, Move, MoveComputeType, MutBoard, Termination, FenComponent};
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::{CastleZone, CastleZoneSet};
 use myopic_core::pieces::Piece;
@@ -222,8 +222,8 @@ impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
         self.board.remaining_rights()
     }
 
-    fn to_timeless_fen(&self) -> String {
-        self.board.to_timeless_fen()
+    fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {
+        self.board.to_partial_fen(cmps)
     }
 }
 
