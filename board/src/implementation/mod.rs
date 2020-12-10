@@ -5,7 +5,7 @@ use crate::implementation::castling::Castling;
 use crate::implementation::history::History;
 use crate::implementation::positions::Positions;
 use crate::parse::patterns;
-use crate::Discards;
+use crate::{Discards, FenComponent};
 use crate::Move;
 use crate::MoveComputeType;
 use crate::MutBoard;
@@ -331,7 +331,7 @@ impl MutBoard for MutBoardImpl {
         self.castling.rights()
     }
 
-    fn to_timeless_fen(&self) -> String {
-        fen::to_timeless_impl(self)
+    fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {
+        fen::to_fen_impl(self, cmps)
     }
 }

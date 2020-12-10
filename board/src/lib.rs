@@ -86,6 +86,18 @@ pub enum Termination {
     Loss,
 }
 
+/// Represents the individual components which make up a board position
+/// encoded as a FEN string.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub enum FenComponent {
+    Board,
+    Active,
+    CastlingRights,
+    Enpassant,
+    HalfMoveCount,
+    MoveCount
+}
+
 /// Trait representing a mutable state of play of a chess game
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
@@ -157,18 +169,20 @@ pub trait MutBoard: Clone + Send + Reflectable {
     /// Return the remaining castling rights from this position.
     fn remaining_rights(&self) -> CastleZoneSet;
 
-    /// Return the FEN representation of this position minus the two suffix
-    /// move counts.
-    fn to_timeless_fen(&self) -> String;
+    /// Return the specified components of the FEN encoding of this position
+    /// in the given order with components separated by a space.
+    fn to_partial_fen(&self, cmps: &[FenComponent]) -> String;
 
     /// Return the complete FEN representation of this position.
     fn to_fen(&self) -> String {
-        let mut timeless_fen = self.to_timeless_fen();
-        timeless_fen.push(' ');
-        timeless_fen.push_str(&self.half_move_clock().to_string());
-        timeless_fen.push(' ');
-        timeless_fen.push_str(&((self.history_count() + 1) / 2).to_string());
-        timeless_fen
+        self.to_partial_fen(&[
+            FenComponent::Board,
+            FenComponent::Active,
+            FenComponent::CastlingRights,
+            FenComponent::Enpassant,
+            FenComponent::HalfMoveCount,
+            FenComponent::MoveCount,
+        ])
     }
 
     /// Returns the locations of a set of pieces as a single bitboard.
