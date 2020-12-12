@@ -11,6 +11,8 @@ const app = new cdk.App();
 new MyopicDatabaseStack(app, 'MyopicDatabaseStack', {
   openingsTableName: process.env.OPENINGS_TABLE_NAME!,
   positionAttributeName: process.env.POSITION_ATTRIBUTE_NAME!,
+  readCapacity: Number.parseInt(process.env.READ_CAPACITY!),
+  writeCapacity: Number.parseInt(process.env.WRITE_CAPACITY!),
   env: {
     region: process.env.REGION!,
     account: process.env.ACCOUNT!,
