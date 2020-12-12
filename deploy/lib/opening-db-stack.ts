@@ -4,6 +4,8 @@ import * as db from '@aws-cdk/aws-dynamodb';
 export interface OpeningDatabaseStackProps extends cdk.StackProps {
   readonly openingsTableName: string,
   readonly positionAttributeName: string
+  readonly readCapacity: number
+  readonly writeCapacity: number
 }
 
 export class MyopicDatabaseStack extends cdk.Stack {
@@ -13,7 +15,9 @@ export class MyopicDatabaseStack extends cdk.Stack {
 
     new db.Table(this, `${id}-Openings`, {
       tableName: props.openingsTableName,
-      billingMode: db.BillingMode.PAY_PER_REQUEST,
+      billingMode: db.BillingMode.PROVISIONED,
+      readCapacity: props.readCapacity,
+      writeCapacity: props.writeCapacity,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       partitionKey: {
         name: props.positionAttributeName,
