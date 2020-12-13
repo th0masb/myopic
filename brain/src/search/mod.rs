@@ -181,7 +181,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
 /// checkmating or escaping checkmate etc.
 #[cfg(test)]
 mod test {
-    use crate::eval;
+    use crate::{eval, EvalParameters};
     use crate::eval::EvalBoard;
     use myopic_board::Move;
     use myopic_board::Move::Standard;
@@ -235,6 +235,8 @@ mod test {
         test("8/8/8/4Q3/8/6R1/2n1pkBK/8 w - - 0 1", vec![Standard(Piece::WR, G3, D3)], true)
     }
 
+
+
     #[test]
     fn mate_2() {
         test(
@@ -272,6 +274,25 @@ mod test {
             true,
         )
     }
+
+    //// I think the issue here is the shortest checkmate path isn't chosen,
+    //// and it plays with its food, if you will.
+//    #[test]
+//    fn mate_6() {
+////        test(
+////            "r2r2k1/ppp2p1p/1b2bQ1B/3p4/3P4/6P1/PP3P1P/2R2RK1 w - - 0 1",
+////            vec![Standard(Piece::WQ, F6, G7)],
+////            true
+////        )
+//        let pos = crate::eval::init_board(
+//            "r2r2k1/ppp2p1p/1b2bQ1B/3p4/3P4/6P1/PP3P1P/2R2RK1 w - - 0 1",
+//            EvalParameters::default()
+//        ).unwrap();
+//
+//        let search = crate::search(pos, DEPTH).unwrap();
+//
+//        println!("{}", serde_json::to_string_pretty(&search).unwrap());
+//    }
 
     #[test]
     fn tactic_1() {
