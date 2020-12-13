@@ -26,6 +26,6 @@ pub use search::interactive::interactive_search;
 pub use search::interactive::InteractiveSearchCommand;
 pub use search::interactive::InteractiveSearchCommandTx;
 pub use search::interactive::InteractiveSearchResultRx;
+pub use search::negamax::NegamaxTerminator;
 pub use search::search;
 pub use search::SearchOutcome;
-pub use search::SearchTerminator;

@@ -1,11 +1,11 @@
-use crate::search::{search, SearchTerminator};
+use crate::search::{search, NegamaxContext, NegamaxTerminator};
 use crate::{EvalBoard, SearchOutcome};
 use myopic_core::Side;
 use std::cmp::{max, min};
 use std::rc::Rc;
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 const INFINITE_DURATION: Duration = Duration::from_secs(1_000_000);
 const INFINITE_DEPTH: usize = 1_000;
@@ -134,10 +134,10 @@ struct InteractiveSearchTerminator<B: EvalBoard> {
     stop_signal: Rc<CmdRx<B>>,
 }
 
-impl<B: EvalBoard> SearchTerminator for InteractiveSearchTerminator<B> {
-    fn should_terminate(&self, start_time: Instant, depth: usize) -> bool {
-        start_time.elapsed() > self.max_time
-            || depth >= self.max_depth
+impl<B: EvalBoard> NegamaxTerminator for InteractiveSearchTerminator<B> {
+    fn should_terminate(&self, ctx: &NegamaxContext) -> bool {
+        ctx.start_time.elapsed() > self.max_time
+            || ctx.depth_remaining >= self.max_depth
             || match self.stop_signal.try_recv() {
                 Ok(InteractiveSearchCommand::Stop) => true,
                 _ => false,

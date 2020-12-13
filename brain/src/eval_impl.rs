@@ -2,7 +2,7 @@ use crate::eval;
 use crate::eval::EvalBoard;
 use crate::tables::PositionTables;
 use crate::values::PieceValues;
-use myopic_board::{Discards, Move, MoveComputeType, MutBoard, Termination, FenComponent};
+use myopic_board::{Discards, FenComponent, Move, MoveComputeType, MutBoard, Termination};
 use myopic_core::bitboard::BitBoard;
 use myopic_core::castlezone::{CastleZone, CastleZoneSet};
 use myopic_core::pieces::Piece;
