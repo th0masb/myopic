@@ -548,6 +548,7 @@ name = "game-lambda"
 version = "0.1.0"
 dependencies = [
  "bytes 0.5.6",
+ "itertools 0.8.2",
  "lambda_runtime",
  "log",
  "myopic-board",
