@@ -1,5 +1,5 @@
 use super::*;
-use myopic_core::{CastleZone, constants::*};
+use myopic_core::{constants::*, CastleZone};
 
 #[test]
 fn case_1() {
@@ -45,7 +45,11 @@ fn case_2() {
         board: "1r5r/P1k2ppp/2n3b1/b2p4/B2P4/2N5/p4PP1/1R2K2R w Kk - 5 20",
         expected_all: vec![
             s(Piece::WB, A4, B3 | C2 | D1 | B5 | C6),
-            s(Piece::WR, B1, B2 | B3 | B4 | B5 | B6 | B7 | B8 | A1 | C1 | D1),
+            s(
+                Piece::WR,
+                B1,
+                B2 | B3 | B4 | B5 | B6 | B7 | B8 | A1 | C1 | D1,
+            ),
             s(Piece::WK, E1, E2 | D1 | D2 | F1),
             s(Piece::WP, F2, F3 | F4),
             s(Piece::WP, G2, G3 | G4),

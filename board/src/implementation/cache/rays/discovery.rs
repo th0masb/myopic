@@ -17,7 +17,10 @@ impl MutBoardImpl {
                 discovers |= discov_loc;
             }
         }
-        RaySet { ray_points: discovers, rays: discovery_rays }
+        RaySet {
+            ray_points: discovers,
+            rays: discovery_rays,
+        }
     }
 
     fn compute_xrayers(&self, king_loc: Square) -> BitBoard {
@@ -26,7 +29,10 @@ impl MutBoardImpl {
             Side::Black => super::BLACK_SLIDERS,
         };
         let locs = |p: Piece| self.locs(p);
-        active_sliders.iter().flat_map(|&p| locs(p) & p.empty_control(king_loc)).collect()
+        active_sliders
+            .iter()
+            .flat_map(|&p| locs(p) & p.empty_control(king_loc))
+            .collect()
     }
 }
 
@@ -38,7 +44,10 @@ mod test {
 
     fn execute_test(fen: &'static str, expected_discoveries: RaySet) {
         let board = crate::fen_position(fen).unwrap();
-        assert_eq!(expected_discoveries.reflect(), board.reflect().compute_discoveries());
+        assert_eq!(
+            expected_discoveries.reflect(),
+            board.reflect().compute_discoveries()
+        );
         assert_eq!(expected_discoveries, board.compute_discoveries());
     }
 

@@ -39,6 +39,9 @@ impl RaySet {
 
 impl Reflectable for RaySet {
     fn reflect(&self) -> Self {
-        RaySet { ray_points: self.ray_points.reflect(), rays: self.rays.reflect() }
+        RaySet {
+            ray_points: self.ray_points.reflect(),
+            rays: self.rays.reflect(),
+        }
     }
 }

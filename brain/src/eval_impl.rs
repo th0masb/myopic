@@ -36,7 +36,10 @@ const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
     + 2 * PHASE_VALUES[4];
 
 fn compute_phase<B: MutBoard>(board: &B) -> i32 {
-    let pieces: Vec<_> = Piece::iter_w().take(5).chain(Piece::iter_b().take(5)).collect();
+    let pieces: Vec<_> = Piece::iter_w()
+        .take(5)
+        .chain(Piece::iter_b().take(5))
+        .collect();
     let phase_sub: i32 = pieces
         .into_iter()
         .map(|p| board.locs(p).size() as i32 * PHASE_VALUES[(p as usize) % 6])
@@ -253,7 +256,7 @@ mod test {
     use crate::eval_impl::EvalBoardImpl;
     use crate::tables::PositionTables;
     use crate::values::PieceValues;
-    use myopic_board::{Move, MutBoard, Move::*, CastleZone, Piece::*, Reflectable, Square::*};
+    use myopic_board::{CastleZone, Move, Move::*, MutBoard, Piece::*, Reflectable, Square::*};
 
     #[derive(Clone, Eq, PartialEq)]
     struct TestCase<B: MutBoard> {
@@ -263,7 +266,10 @@ mod test {
 
     impl<B: MutBoard> Reflectable for TestCase<B> {
         fn reflect(&self) -> Self {
-            TestCase { start_position: self.start_position.reflect(), moves: self.moves.reflect() }
+            TestCase {
+                start_position: self.start_position.reflect(),
+                moves: self.moves.reflect(),
+            }
         }
     }
 
@@ -279,11 +285,23 @@ mod test {
 
         for evolution in test_case.moves {
             let discards = start.evolve(&evolution);
-            assert_eq!(super::compute_midgame(&start, &tables, &values), start.mid_eval);
-            assert_eq!(super::compute_endgame(&start, &tables, &values), start.end_eval);
+            assert_eq!(
+                super::compute_midgame(&start, &tables, &values),
+                start.mid_eval
+            );
+            assert_eq!(
+                super::compute_endgame(&start, &tables, &values),
+                start.end_eval
+            );
             start.devolve(&evolution, discards);
-            assert_eq!(super::compute_midgame(&start, &tables, &values), start.mid_eval);
-            assert_eq!(super::compute_endgame(&start, &tables, &values), start.end_eval);
+            assert_eq!(
+                super::compute_midgame(&start, &tables, &values),
+                start.mid_eval
+            );
+            assert_eq!(
+                super::compute_endgame(&start, &tables, &values),
+                start.end_eval
+            );
             start.evolve(&evolution);
         }
     }

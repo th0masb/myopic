@@ -17,7 +17,10 @@ pub(super) struct LichessService {
 
 impl LichessService {
     pub(super) fn new(parameters: ApplicationParameters) -> LichessService {
-        LichessService { parameters, client: blocking::Client::new() }
+        LichessService {
+            parameters,
+            client: blocking::Client::new(),
+        }
     }
 
     pub(super) fn process_challenge(&self, challenge: Challenge) -> Result<String, Box<dyn Error>> {
@@ -39,7 +42,9 @@ impl LichessService {
                                     "Failed to accept challenge for {} with status ",
                                     &challenge.id
                                 );
-                                Err(Box::new(SimpleError { message: "".to_owned() }))
+                                Err(Box::new(SimpleError {
+                                    message: "".to_owned(),
+                                }))
                             }
                         })
                         .map(|status| match status {
@@ -62,7 +67,9 @@ impl LichessService {
     ) -> Result<Option<i64>, Box<dyn Error>> {
         let max_depth = self.compute_max_depth(&time_control);
         let region = Region::from_str(self.parameters.function_region.as_str())?;
-        let payload = self.parameters.to_lambda_invocation_payload(game_id.clone(), max_depth)?;
+        let payload = self
+            .parameters
+            .to_lambda_invocation_payload(game_id.clone(), max_depth)?;
 
         tokio::runtime::Runtime::new()?
             .block_on(LambdaClient::new(region).invoke_async(InvokeAsyncRequest {

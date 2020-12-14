@@ -34,7 +34,9 @@ fn p(side: Side, src: BitBoard, targets: BitBoard) -> Vec<Move> {
 }
 
 fn e(src: BitBoard, enpassant_target: Square) -> Vec<Move> {
-    src.iter().map(|s| Move::Enpassant(s, enpassant_target)).collect()
+    src.iter()
+        .map(|s| Move::Enpassant(s, enpassant_target))
+        .collect()
 }
 
 fn c(zones: CastleZoneSet) -> Vec<Move> {
@@ -42,14 +44,20 @@ fn c(zones: CastleZoneSet) -> Vec<Move> {
 }
 
 fn flatten(moves: &Vec<Vec<Move>>) -> MoveSet {
-    moves.iter().flat_map(|xs| xs.iter().map(|mv| mv.clone())).collect()
+    moves
+        .iter()
+        .flat_map(|xs| xs.iter().map(|mv| mv.clone()))
+        .collect()
 }
 
 fn convert_moves(case: &TestCase) -> ExpectedMoves {
     vec![
         (MoveComputeType::All, flatten(&case.expected_all)),
         (MoveComputeType::Attacks, flatten(&case.expected_attacks)),
-        (MoveComputeType::AttacksChecks, flatten(&case.expected_attacks_checks)),
+        (
+            MoveComputeType::AttacksChecks,
+            flatten(&case.expected_attacks_checks),
+        ),
     ]
 }
 

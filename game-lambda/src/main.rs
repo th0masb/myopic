@@ -88,7 +88,9 @@ impl TimeConstraints {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    SimpleLogger::new().with_level(log::LevelFilter::Info).init()?;
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Info)
+        .init()?;
     lambda!(game_handler);
     Ok(())
 }

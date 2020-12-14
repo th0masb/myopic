@@ -16,9 +16,9 @@ const DEPTH_UPPER_BOUND: usize = 10;
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
 pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome, String>
-    where
-        B: EvalBoard,
-        T: SearchTerminator,
+where
+    B: EvalBoard,
+    T: SearchTerminator,
 {
     Search { root, terminator }.search()
 }
@@ -45,7 +45,11 @@ impl serde::Serialize for SearchOutcome {
         state.serialize_field("searchDurationMillis", &self.time.as_millis())?;
         state.serialize_field(
             "optimalPath",
-            &self.optimal_path.iter().map(|m| m.uci_format()).collect::<Vec<_>>(),
+            &self
+                .optimal_path
+                .iter()
+                .map(|m| m.uci_format())
+                .collect::<Vec<_>>(),
         )?;
         state.end()
     }
@@ -54,7 +58,7 @@ impl serde::Serialize for SearchOutcome {
 #[cfg(test)]
 mod searchoutcome_serialize_test {
     use super::SearchOutcome;
-    use myopic_board::{Move, CastleZone, Piece, Square};
+    use myopic_board::{CastleZone, Move, Piece, Square};
     use serde_json;
     use std::time::Duration;
 
@@ -109,13 +113,15 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
             }
         }
 
-        best_move_response.ok_or(break_message).map(|response| SearchOutcome {
-            best_move: response.best_move,
-            eval: response.eval,
-            depth: response.depth,
-            time: search_start.elapsed(),
-            optimal_path: response.path,
-        })
+        best_move_response
+            .ok_or(break_message)
+            .map(|response| SearchOutcome {
+                best_move: response.best_move,
+                eval: response.eval,
+                depth: response.depth,
+                time: search_start.elapsed(),
+                optimal_path: response.path,
+            })
     }
 
     fn best_move(
@@ -128,26 +134,37 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
             return Err(format!("Illegal depth: {}", depth));
         }
 
-        let SearchResponse { eval, mut path } =
-            Searcher { terminator: &self.terminator, principle_variation }.search(
-                &mut self.root.clone(),
-                SearchContext {
-                    depth_remaining: depth,
-                    start_time: search_start,
-                    alpha: -eval::INFTY,
-                    beta: eval::INFTY,
-                    precursors: vec![],
-                },
-            )?;
+        let SearchResponse { eval, mut path } = Searcher {
+            terminator: &self.terminator,
+            principle_variation,
+        }
+        .search(
+            &mut self.root.clone(),
+            SearchContext {
+                depth_remaining: depth,
+                start_time: search_start,
+                alpha: -eval::INFTY,
+                beta: eval::INFTY,
+                precursors: vec![],
+            },
+        )?;
 
         // The path returned from the negamax function is ordered deepest move -> shallowest
         // so we reverse as the shallowest move is the one we make in this position.
         path.reverse();
         // If the path returned is empty then there must be no legal moves in this position
         if path.is_empty() {
-            Err(format!("No moves found for position {}", self.root.to_fen()))
+            Err(format!(
+                "No moves found for position {}",
+                self.root.to_fen()
+            ))
         } else {
-            Ok(BestMoveResponse { best_move: path.get(0).unwrap().clone(), eval, path, depth })
+            Ok(BestMoveResponse {
+                best_move: path.get(0).unwrap().clone(),
+                eval,
+                path,
+                depth,
+            })
         }
     }
 }
@@ -202,7 +219,11 @@ mod test {
 
     #[test]
     fn mate_1() {
-        test("8/8/8/4Q3/8/6R1/2n1pkBK/8 w - - 0 1", vec![Standard(Piece::WR, G3, D3)], true)
+        test(
+            "8/8/8/4Q3/8/6R1/2n1pkBK/8 w - - 0 1",
+            vec![Standard(Piece::WR, G3, D3)],
+            true,
+        )
     }
 
     #[test]

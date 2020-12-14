@@ -95,8 +95,11 @@ pub fn pgn_piece() -> &'static Regex {
 
 pub fn pgn_move() -> &'static Regex {
     lazy_static! {
-        static ref RE: Regex =
-            rgx(format!("({}|{})", pgn_non_castle_move().as_str(), pgn_castle_move().as_str()));
+        static ref RE: Regex = rgx(format!(
+            "({}|{})",
+            pgn_non_castle_move().as_str(),
+            pgn_castle_move().as_str()
+        ));
     }
     &RE
 }

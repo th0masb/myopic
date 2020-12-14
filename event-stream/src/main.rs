@@ -36,7 +36,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             handle_stream_read(&service, read_result)
         }
 
-        log::info!("Sleeping for {} seconds", parameters.retry_wait_duration_secs);
+        log::info!(
+            "Sleeping for {} seconds",
+            parameters.retry_wait_duration_secs
+        );
         thread::sleep(Duration::from_secs(parameters.retry_wait_duration_secs));
     }
 
@@ -45,7 +48,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn init_environment() -> Result<(), Box<dyn Error>> {
     dotenv::dotenv().ok();
-    SimpleLogger::new().with_level(log::LevelFilter::Info).init()?;
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Info)
+        .init()?;
     Ok(())
 }
 

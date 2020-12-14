@@ -14,7 +14,13 @@ pub fn exchange_value<B: MutBoard>(
     target: Square,
     piece_values: &[i32; 6],
 ) -> i32 {
-    See { board, source, target, values: piece_values }.exchange_value()
+    See {
+        board,
+        source,
+        target,
+        values: piece_values,
+    }
+    .exchange_value()
 }
 
 type BitBoardPair = (BitBoard, BitBoard);
@@ -129,7 +135,14 @@ impl<B: MutBoard> See<'_, B> {
 }
 
 fn sliders<'a>() -> &'a [Piece] {
-    &[Piece::WB, Piece::WR, Piece::WQ, Piece::BB, Piece::BR, Piece::BQ]
+    &[
+        Piece::WB,
+        Piece::WR,
+        Piece::WQ,
+        Piece::BB,
+        Piece::BR,
+        Piece::BQ,
+    ]
 }
 
 fn is_slider(piece: Piece) -> bool {
@@ -161,7 +174,10 @@ mod test {
             for (src, targ, result) in self.expected.iter() {
                 reflected_expected.push((src.reflect(), targ.reflect(), *result));
             }
-            TestCase { board: self.board.reflect(), expected: reflected_expected }
+            TestCase {
+                board: self.board.reflect(),
+                expected: reflected_expected,
+            }
         }
     }
 
@@ -173,7 +189,12 @@ mod test {
     fn execute_case_impl<B: MutBoard>(test_case: TestCase<B>) {
         let board = test_case.board;
         for (source, target, expected_value) in test_case.expected.into_iter() {
-            let see = See { board: &board, source, target, values: &dummy_values() };
+            let see = See {
+                board: &board,
+                source,
+                target,
+                values: &dummy_values(),
+            };
             assert_eq!(
                 expected_value,
                 see.exchange_value(),

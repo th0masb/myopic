@@ -40,7 +40,11 @@ impl MutBoardImpl {
         let discarded_rights = self.castling.remove_rights(source | target);
         let rev_data = self.create_rev_data(discarded_piece, discarded_rights);
         self.pieces.toggle_piece(piece, &[source, target]);
-        self.clock = if discarded_piece.is_some() || piece.is_pawn() { 0 } else { self.clock + 1 };
+        self.clock = if discarded_piece.is_some() || piece.is_pawn() {
+            0
+        } else {
+            self.clock + 1
+        };
         self.enpassant = MutBoardImpl::compute_enpassant(source, target, piece);
         self.switch_side_update_hash_clear_cache();
         rev_data

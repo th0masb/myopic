@@ -13,7 +13,7 @@ pub mod values;
 #[cfg(test)]
 mod mate_benchmark;
 
-pub use eval::{EvalBoard, EvalParameters, position, position_and_params, start};
+pub use eval::{position, position_and_params, start, EvalBoard, EvalParameters};
 pub use eval_impl::EvalBoardImpl;
 pub use myopic_board::*;
 

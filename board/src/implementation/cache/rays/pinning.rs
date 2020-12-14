@@ -34,7 +34,10 @@ impl MutBoardImpl {
                 pinned_locations |= pinned_loc;
             }
         }
-        RaySet { ray_points: pinned_locations, rays: constraint_areas }
+        RaySet {
+            ray_points: pinned_locations,
+            rays: constraint_areas,
+        }
     }
 
     fn compute_potential_pinners(&self, king_loc: Square) -> BitBoard {
@@ -43,7 +46,10 @@ impl MutBoardImpl {
             Side::Black => WHITE_SLIDERS,
         };
         let locs = |p: Piece| self.pieces.locs_impl(p);
-        passive_sliders.iter().flat_map(|&p| locs(p) & p.empty_control(king_loc)).collect()
+        passive_sliders
+            .iter()
+            .flat_map(|&p| locs(p) & p.empty_control(king_loc))
+            .collect()
     }
 }
 

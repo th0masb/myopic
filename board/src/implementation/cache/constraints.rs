@@ -14,7 +14,10 @@ pub struct MoveConstraints {
 
 impl PartialEq<MoveConstraints> for MoveConstraints {
     fn eq(&self, other: &MoveConstraints) -> bool {
-        self.data.iter().zip(other.data.iter()).all(|(l, r)| *l == *r)
+        self.data
+            .iter()
+            .zip(other.data.iter())
+            .all(|(l, r)| *l == *r)
     }
 }
 
@@ -30,15 +33,21 @@ impl MoveConstraints {
     }
 
     pub fn all_universal() -> MoveConstraints {
-        MoveConstraints { data: [BitBoard::ALL; 64] }
+        MoveConstraints {
+            data: [BitBoard::ALL; 64],
+        }
     }
 
     pub fn all_empty() -> MoveConstraints {
-        MoveConstraints { data: [BitBoard::EMPTY; 64] }
+        MoveConstraints {
+            data: [BitBoard::EMPTY; 64],
+        }
     }
 
     pub fn all(bitboard: BitBoard) -> MoveConstraints {
-        MoveConstraints { data: [bitboard; 64] }
+        MoveConstraints {
+            data: [bitboard; 64],
+        }
     }
 
     fn intersect(&mut self, location: Square, constraint: BitBoard) {
@@ -106,7 +115,11 @@ impl MutBoardImpl {
         let passive_locs = self.side(passive);
         if !checks {
             for piece in Piece::on_side(active) {
-                let enpassant = if piece.is_pawn() { enpassant_set } else { BitBoard::EMPTY };
+                let enpassant = if piece.is_pawn() {
+                    enpassant_set
+                } else {
+                    BitBoard::EMPTY
+                };
                 for loc in self.locs(piece) {
                     constraints.intersect(loc, passive_locs | enpassant);
                 }
@@ -120,9 +133,17 @@ impl MutBoardImpl {
                 (promotion_rays | promotion_jumps) & active.pawn_promoting_dest_rank();
             for piece in Piece::on_side(active) {
                 let is_pawn = piece.is_pawn();
-                let enpassant = if is_pawn { enpassant_set } else { BitBoard::EMPTY };
+                let enpassant = if is_pawn {
+                    enpassant_set
+                } else {
+                    BitBoard::EMPTY
+                };
                 let check_squares = piece.reflect().control(passive_king, whites, blacks);
-                let promotion = if is_pawn { promotion_checks } else { BitBoard::EMPTY };
+                let promotion = if is_pawn {
+                    promotion_checks
+                } else {
+                    BitBoard::EMPTY
+                };
                 for loc in self.locs(piece) {
                     let discov = discoveries.ray(loc).map(|r| !r).unwrap_or(BitBoard::EMPTY);
                     constraints.intersect(

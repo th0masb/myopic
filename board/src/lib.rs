@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate lazy_static;
 
-pub use myopic_core::*;
 pub use crate::implementation::MutBoardImpl;
+pub use myopic_core::*;
 
 mod implementation;
 pub mod parse;
@@ -205,12 +205,18 @@ mod uci_conversion_test {
 
     #[test]
     fn test_pawn_standard_conversion() {
-        assert_eq!("e2e4", Move::Standard(Piece::WP, Square::E2, Square::E4).uci_format());
+        assert_eq!(
+            "e2e4",
+            Move::Standard(Piece::WP, Square::E2, Square::E4).uci_format()
+        );
     }
 
     #[test]
     fn test_rook_standard_conversion() {
-        assert_eq!("h1h7", Move::Standard(Piece::BR, Square::H1, Square::H7).uci_format());
+        assert_eq!(
+            "h1h7",
+            Move::Standard(Piece::BR, Square::H1, Square::H7).uci_format()
+        );
     }
 
     #[test]
@@ -223,7 +229,10 @@ mod uci_conversion_test {
 
     #[test]
     fn test_promotion_conversion() {
-        assert_eq!("e7d8q", Move::Promotion(Square::E7, Square::D8, Piece::WQ).uci_format())
+        assert_eq!(
+            "e7d8q",
+            Move::Promotion(Square::E7, Square::D8, Piece::WQ).uci_format()
+        )
     }
 
     #[test]

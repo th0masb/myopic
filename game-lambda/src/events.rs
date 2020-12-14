@@ -164,9 +164,25 @@ mod test {
             Err(error) => panic!(format!("Parse error {:?}", error)),
             Ok(event) => match event {
                 GameEvent::GameFull { content } => {
-                    assert_eq!(Player { id: format!("th0masb") }, content.white);
-                    assert_eq!(Player { id: format!("myopic-bot") }, content.black);
-                    assert_eq!(Clock { initial: 1200000, increment: 10000 }, content.clock);
+                    assert_eq!(
+                        Player {
+                            id: format!("th0masb")
+                        },
+                        content.white
+                    );
+                    assert_eq!(
+                        Player {
+                            id: format!("myopic-bot")
+                        },
+                        content.black
+                    );
+                    assert_eq!(
+                        Clock {
+                            initial: 1200000,
+                            increment: 10000
+                        },
+                        content.clock
+                    );
                     assert_eq!(
                         GameState {
                             moves: String::from("e2e4 e7e5"),

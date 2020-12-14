@@ -28,21 +28,40 @@ fn compute_cord_cache() -> Vec<BitBoard> {
     let mut dest: Vec<BitBoard> = Vec::with_capacity(2016);
     for i in 0..63 {
         for j in i + 1..64 {
-            dest.push(compute_cord_impl(Square::from_index(i), Square::from_index(j)));
+            dest.push(compute_cord_impl(
+                Square::from_index(i),
+                Square::from_index(j),
+            ));
         }
     }
     dest
 }
 
 fn compute_cord_impl(source: Square, target: Square) -> BitBoard {
-    [Dir::N, Dir::NE, Dir::E, Dir::SE, Dir::S, Dir::SW, Dir::W, Dir::NW]
-        .iter()
-        .find(|&d| source.search(*d).contains(target))
-        .map_or(BitBoard::EMPTY, |&d| takewhile_inc(source, target, d) | source)
+    [
+        Dir::N,
+        Dir::NE,
+        Dir::E,
+        Dir::SE,
+        Dir::S,
+        Dir::SW,
+        Dir::W,
+        Dir::NW,
+    ]
+    .iter()
+    .find(|&d| source.search(*d).contains(target))
+    .map_or(BitBoard::EMPTY, |&d| {
+        takewhile_inc(source, target, d) | source
+    })
 }
 
 fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {
-    source.search_vec(dir).into_iter().take_while(|&sq| sq != target).collect::<BitBoard>() | target
+    source
+        .search_vec(dir)
+        .into_iter()
+        .take_while(|&sq| sq != target)
+        .collect::<BitBoard>()
+        | target
 }
 
 #[cfg(test)]

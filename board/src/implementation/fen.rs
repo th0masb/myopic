@@ -57,7 +57,11 @@ fn to_fen_side<B: MutBoard>(board: &B) -> String {
 }
 
 fn to_fen_castling_rights<B: MutBoard>(board: &B) -> String {
-    let rights = board.remaining_rights().iter().map(castlezone_to_fen).collect::<String>();
+    let rights = board
+        .remaining_rights()
+        .iter()
+        .map(castlezone_to_fen)
+        .collect::<String>();
     if rights.is_empty() {
         format!("-")
     } else {
@@ -121,27 +125,42 @@ mod test {
 
     #[test]
     fn start_position_active() {
-        assert_eq!("w", to_fen_impl(&crate::start_position(), &[FenComponent::Active]))
+        assert_eq!(
+            "w",
+            to_fen_impl(&crate::start_position(), &[FenComponent::Active])
+        )
     }
 
     #[test]
     fn start_position_castling_rights() {
-        assert_eq!("KQkq", to_fen_impl(&crate::start_position(), &[FenComponent::CastlingRights]))
+        assert_eq!(
+            "KQkq",
+            to_fen_impl(&crate::start_position(), &[FenComponent::CastlingRights])
+        )
     }
 
     #[test]
     fn start_position_enpassant() {
-        assert_eq!("-", to_fen_impl(&crate::start_position(), &[FenComponent::Enpassant]))
+        assert_eq!(
+            "-",
+            to_fen_impl(&crate::start_position(), &[FenComponent::Enpassant])
+        )
     }
 
     #[test]
     fn start_position_half_move_count() {
-        assert_eq!("0", to_fen_impl(&crate::start_position(), &[FenComponent::HalfMoveCount]))
+        assert_eq!(
+            "0",
+            to_fen_impl(&crate::start_position(), &[FenComponent::HalfMoveCount])
+        )
     }
 
     #[test]
     fn start_position_move_count() {
-        assert_eq!("1", to_fen_impl(&crate::start_position(), &[FenComponent::MoveCount]))
+        assert_eq!(
+            "1",
+            to_fen_impl(&crate::start_position(), &[FenComponent::MoveCount])
+        )
     }
 
     #[test]
@@ -182,7 +201,10 @@ mod test {
 
     #[test]
     fn position_1_castling_rights() {
-        assert_eq!("Qq", to_fen_impl(&position_1(), &[FenComponent::CastlingRights]))
+        assert_eq!(
+            "Qq",
+            to_fen_impl(&position_1(), &[FenComponent::CastlingRights])
+        )
     }
 
     #[test]
@@ -192,7 +214,10 @@ mod test {
 
     #[test]
     fn position_1_half_move_count() {
-        assert_eq!("0", to_fen_impl(&position_1(), &[FenComponent::HalfMoveCount]))
+        assert_eq!(
+            "0",
+            to_fen_impl(&position_1(), &[FenComponent::HalfMoveCount])
+        )
     }
 
     #[test]
@@ -240,7 +265,10 @@ mod test {
 
     #[test]
     fn position_2_castling_rights() {
-        assert_eq!("-", to_fen_impl(&position_2(), &[FenComponent::CastlingRights]))
+        assert_eq!(
+            "-",
+            to_fen_impl(&position_2(), &[FenComponent::CastlingRights])
+        )
     }
 
     #[test]
@@ -250,7 +278,10 @@ mod test {
 
     #[test]
     fn position_2_half_move_count() {
-        assert_eq!("3", to_fen_impl(&position_2(), &[FenComponent::HalfMoveCount]))
+        assert_eq!(
+            "3",
+            to_fen_impl(&position_2(), &[FenComponent::HalfMoveCount])
+        )
     }
 
     #[test]

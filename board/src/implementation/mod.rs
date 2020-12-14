@@ -36,7 +36,10 @@ pub struct MutBoardImpl {
 impl MutBoardImpl {
     pub(super) fn from_fen(fen: String) -> Result<MutBoardImpl, String> {
         if patterns::fen().is_match(&fen) {
-            let space_split: Vec<_> = patterns::space().split(&fen).map(|s| s.to_owned()).collect();
+            let space_split: Vec<_> = patterns::space()
+                .split(&fen)
+                .map(|s| s.to_owned())
+                .collect();
             let pieces = positions_from_fen(&space_split[0])?;
             let active = side_from_fen(&space_split[1])?;
             let castling = rights_from_fen(&space_split[2])?;
@@ -64,12 +67,21 @@ impl MutBoardImpl {
     /// Combines the various components of the hash together and pushes the
     /// result onto the head of the cache.
     fn update_hash(&mut self) {
-        self.history.push_head(hash(&self.pieces, &self.castling, self.active, self.enpassant))
+        self.history.push_head(hash(
+            &self.pieces,
+            &self.castling,
+            self.active,
+            self.enpassant,
+        ))
     }
 }
 
 fn side_from_fen(fen: &String) -> Result<Side, String> {
-    match patterns::fen_side().find(fen).map(|m| m.as_str()).ok_or(fen.clone())? {
+    match patterns::fen_side()
+        .find(fen)
+        .map(|m| m.as_str())
+        .ok_or(fen.clone())?
+    {
         "w" => Ok(Side::White),
         "b" => Ok(Side::Black),
         _ => Err(fen.clone()),
@@ -77,22 +89,32 @@ fn side_from_fen(fen: &String) -> Result<Side, String> {
 }
 
 fn enpassant_from_fen(fen: &String) -> Option<Square> {
-    patterns::fen_enpassant().find(fen).and_then(|m| Square::from_string(m.as_str()).ok())
+    patterns::fen_enpassant()
+        .find(fen)
+        .and_then(|m| Square::from_string(m.as_str()).ok())
 }
 
 fn positions_from_fen(fen: &String) -> Result<Positions, String> {
-    let positions = patterns::fen_positions().find(&fen).map(|m| m.as_str()).ok_or(fen.clone())?;
+    let positions = patterns::fen_positions()
+        .find(&fen)
+        .map(|m| m.as_str())
+        .ok_or(fen.clone())?;
     Positions::from_fen(String::from(positions))
 }
 
 fn rights_from_fen(fen: &String) -> Result<Castling, String> {
-    let rights = patterns::fen_rights().find(&fen).map(|m| m.as_str()).ok_or(fen.clone())?;
+    let rights = patterns::fen_rights()
+        .find(&fen)
+        .map(|m| m.as_str())
+        .ok_or(fen.clone())?;
     Castling::from_fen(String::from(rights))
 }
 
 fn clock_history_from_fen(fen: &String, active: Side) -> Result<(usize, usize), String> {
-    let ints: Vec<_> =
-        patterns::int().find_iter(fen).map(|m| m.as_str().parse::<usize>().unwrap()).collect();
+    let ints: Vec<_> = patterns::int()
+        .find_iter(fen)
+        .map(|m| m.as_str().parse::<usize>().unwrap())
+        .collect();
     if ints.len() < 2 {
         Err(fen.clone())
     } else {
@@ -112,7 +134,9 @@ fn hash(pt: &Positions, ct: &Castling, active: Side, ep: Option<Square>) -> u64 
 
 impl Move {
     fn standards(moving: Piece, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
-        targets.into_iter().map(move |target| Move::Standard(moving, src, target))
+        targets
+            .into_iter()
+            .map(move |target| Move::Standard(moving, src, target))
     }
 
     fn promotions(side: Side, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
@@ -135,18 +159,35 @@ impl Move {
 mod fen_test {
     use crate::implementation::test::TestBoard;
     use crate::MutBoardImpl;
-    use myopic_core::{Side, Square, CastleZoneSet, CastleZone, constants::*};
+    use myopic_core::{constants::*, CastleZone, CastleZoneSet, Side, Square};
 
     fn test(expected: TestBoard, fen_string: String) {
-        assert_eq!(MutBoardImpl::from(expected), MutBoardImpl::from_fen(fen_string).unwrap())
+        assert_eq!(
+            MutBoardImpl::from(expected),
+            MutBoardImpl::from_fen(fen_string).unwrap()
+        )
     }
 
     #[test]
     fn fen_to_board_case_1() {
         let fen = "r1br2k1/1pq1npb1/p2pp1pp/8/2PNP3/P1N5/1P1QBPPP/3R1RK1 w - - 3 19";
         let board = TestBoard {
-            whites: vec![A3 | B2 | C4 | E4 | F2 | G2 | H2, C3 | D4, E2, D1 | F1, D2, G1],
-            blacks: vec![A6 | B7 | D6 | E6 | F7 | G6 | H6, E7, C8 | G7, A8 | D8, C7, G8],
+            whites: vec![
+                A3 | B2 | C4 | E4 | F2 | G2 | H2,
+                C3 | D4,
+                E2,
+                D1 | F1,
+                D2,
+                G1,
+            ],
+            blacks: vec![
+                A6 | B7 | D6 | E6 | F7 | G6 | H6,
+                E7,
+                C8 | G7,
+                A8 | D8,
+                C7,
+                G8,
+            ],
             castle_rights: CastleZoneSet::NONE,
             white_status: Some(CastleZone::WK),
             black_status: Some(CastleZone::BK),
@@ -179,8 +220,22 @@ mod fen_test {
     fn fen_to_board_case_3() {
         let fen = "r1bqkbnr/ppp1pppp/n7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3";
         let board = TestBoard {
-            whites: vec![A2 | B2 | C2 | D2 | E5 | F2 | G2 | H2, B1 | G1, C1 | F1, A1 | H1, D1, E1],
-            blacks: vec![A7 | B7 | C7 | D5 | E7 | F7 | G7 | H7, A6 | G8, C8 | F8, A8 | H8, D8, E8],
+            whites: vec![
+                A2 | B2 | C2 | D2 | E5 | F2 | G2 | H2,
+                B1 | G1,
+                C1 | F1,
+                A1 | H1,
+                D1,
+                E1,
+            ],
+            blacks: vec![
+                A7 | B7 | C7 | D5 | E7 | F7 | G7 | H7,
+                A6 | G8,
+                C8 | F8,
+                A8 | H8,
+                D8,
+                E8,
+            ],
             castle_rights: CastleZoneSet::ALL,
             white_status: None,
             black_status: None,
@@ -281,7 +336,10 @@ impl MutBoard for MutBoardImpl {
     }
 
     fn sides(&self) -> (BitBoard, BitBoard) {
-        (self.pieces.side_locations(Side::White), self.pieces.side_locations(Side::Black))
+        (
+            self.pieces.side_locations(Side::White),
+            self.pieces.side_locations(Side::Black),
+        )
     }
 
     fn hash(&self) -> u64 {

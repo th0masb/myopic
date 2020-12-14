@@ -1,8 +1,8 @@
 use crate::implementation::test::TestBoard;
 use crate::implementation::MutBoardImpl;
 use crate::Move;
-use myopic_core::*;
 use myopic_core::constants::*;
+use myopic_core::*;
 
 #[derive(Debug, Clone)]
 struct TestCase {

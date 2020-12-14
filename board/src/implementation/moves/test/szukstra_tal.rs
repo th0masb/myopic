@@ -1,5 +1,5 @@
 use super::*;
-use myopic_core::{CastleZone, constants::*};
+use myopic_core::{constants::*, CastleZone};
 
 #[test]
 fn black_move_eight() {
@@ -46,7 +46,11 @@ fn white_move_nine() {
             s(Piece::WR, H1, G1),
             s(Piece::WP, H2, H3 | H4),
         ],
-        expected_attacks: vec![s(Piece::WQ, B3, B7), s(Piece::WB, E3, D4), s(Piece::WN, E2, D4)],
+        expected_attacks: vec![
+            s(Piece::WQ, B3, B7),
+            s(Piece::WB, E3, D4),
+            s(Piece::WN, E2, D4),
+        ],
         expected_attacks_checks: vec![
             s(Piece::WQ, B3, B7),
             s(Piece::WB, E3, D4),
@@ -156,7 +160,11 @@ fn white_move_eleven() {
             c(CastleZone::WQ.lift()),
             s(Piece::WR, A1, B1 | C1 | D1),
             s(Piece::WP, A2, A3 | A4),
-            s(Piece::WQ, B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5),
+            s(
+                Piece::WQ,
+                B3,
+                C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5,
+            ),
             s(Piece::WN, C3, B1 | D1 | D5 | A4 | B5 | E2),
             s(Piece::WK, E1, D1 | D2 | F2 | E2),
             s(Piece::WN, D4, C2 | B5 | E6 | F5 | E2 | C6),
@@ -223,7 +231,11 @@ fn white_move_twelve() {
             s(Piece::WR, H1, G1),
             s(Piece::WP, H2, H3 | H4),
         ],
-        expected_attacks: vec![s(Piece::WQ, B3, B7), s(Piece::WN, D4, C6), s(Piece::WP, D5, C6)],
+        expected_attacks: vec![
+            s(Piece::WQ, B3, B7),
+            s(Piece::WN, D4, C6),
+            s(Piece::WP, D5, C6),
+        ],
         expected_attacks_checks: vec![
             s(Piece::WQ, B3, B7),
             s(Piece::WN, D4, C6),

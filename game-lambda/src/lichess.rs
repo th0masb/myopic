@@ -12,7 +12,11 @@ pub struct LichessService {
 
 impl LichessService {
     pub fn new(auth_token: String, game_id: String) -> LichessService {
-        LichessService { client: blocking::Client::new(), auth_token, game_id }
+        LichessService {
+            client: blocking::Client::new(),
+            auth_token,
+            game_id,
+        }
     }
 
     pub fn post_move(&self, mv: String) -> Result<GameExecutionState, String> {

@@ -4,16 +4,18 @@ use myopic_brain::{eval::new_board, search};
 use myopic_core::castlezone::CastleZone;
 use serde_derive::{Deserialize, Serialize};
 use simple_error::bail;
-use std::cmp::min;
-use std::time::Duration;
 use simple_logger::SimpleLogger;
+use std::cmp::min;
 use std::error::Error;
+use std::time::Duration;
 
 // Five minutes in ms, don't want this lambda to take too long.
 const MAX_EXECUTION_MILLIS: u64 = 5 * 60 * 1000;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    SimpleLogger::new().with_level(log::LevelFilter::Info).init()?;
+    SimpleLogger::new()
+        .with_level(log::LevelFilter::Info)
+        .init()?;
     lambda!(move_compute_handler);
     Ok(())
 }
@@ -50,19 +52,16 @@ fn move_compute_handler(
             best_move: stringify_move(outcome.best_move),
             depth_searched: outcome.depth,
             evaluation: outcome.eval,
-            search_duration_millis: outcome.time.as_millis() as u64
+            search_duration_millis: outcome.time.as_millis() as u64,
         }),
     }
 }
 
 fn stringify_move(mv: Move) -> String {
     match mv {
-        Move::Standard(_, src, dest) =>
-            format!("{}{}", src, dest).to_lowercase(),
-        Move::Promotion(src, dest, piece) =>
-            format!("{}{}{:?}", src, dest, piece).to_lowercase(),
-        Move::Enpassant(src, dest) =>
-            format!("{}{}", src, dest).to_lowercase(),
+        Move::Standard(_, src, dest) => format!("{}{}", src, dest).to_lowercase(),
+        Move::Promotion(src, dest, piece) => format!("{}{}{:?}", src, dest, piece).to_lowercase(),
+        Move::Enpassant(src, dest) => format!("{}{}", src, dest).to_lowercase(),
         Move::Castle(zone) => match zone {
             CastleZone::WK | CastleZone::BK => String::from("O-O"),
             CastleZone::WQ | CastleZone::BQ => String::from("O-O-O"),

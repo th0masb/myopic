@@ -68,7 +68,10 @@ impl MutBoardImpl {
         let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
         for &piece in qrbnp(self.active) {
             let locations = self.locs(piece) & pin_rays;
-            if locations.iter().any(|loc| moves2(piece, loc).is_populated()) {
+            if locations
+                .iter()
+                .any(|loc| moves2(piece, loc).is_populated())
+            {
                 return None;
             }
         }
@@ -103,12 +106,18 @@ mod test {
 
     #[test]
     fn checkmate() {
-        test(Some(Termination::Loss), "5R1k/pp2R2p/8/1b2r3/3p3q/8/PPB3P1/6K1 b - - 0 36")
+        test(
+            Some(Termination::Loss),
+            "5R1k/pp2R2p/8/1b2r3/3p3q/8/PPB3P1/6K1 b - - 0 36",
+        )
     }
 
     #[test]
     fn not_terminal() {
-        test(None, "r1b1qrk1/pp5p/1np2b2/3nNP2/3P2p1/1BN5/PP1BQ1P1/4RRK1 b - - 0 18");
+        test(
+            None,
+            "r1b1qrk1/pp5p/1np2b2/3nNP2/3P2p1/1BN5/PP1BQ1P1/4RRK1 b - - 0 18",
+        );
     }
 
     #[test]
@@ -118,6 +127,9 @@ mod test {
 
     #[test]
     fn stalemate() {
-        test(Some(Termination::Draw), "6k1/6p1/7p/8/1p6/p1qp4/8/3K4 w - - 0 45");
+        test(
+            Some(Termination::Draw),
+            "6k1/6p1/7p/8/1p6/p1qp4/8/3K4 w - - 0 45",
+        );
     }
 }

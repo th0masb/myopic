@@ -26,7 +26,11 @@ fn table_index(piece: Piece, adjusted_location: Square) -> usize {
         (adjusted_location as usize) % 32
     } else {
         let file_index = adjusted_location.file_index();
-        let column_index = if file_index < 4 { file_index } else { 7 - file_index };
+        let column_index = if file_index < 4 {
+            file_index
+        } else {
+            7 - file_index
+        };
         adjusted_location.rank_index() * 4 + column_index
     }
 }
@@ -200,7 +204,10 @@ mod test {
     fn test_pawn_table_conjunction() {
         let tables = PositionTables::default();
         for i in 0..64 {
-            assert_eq!(PAWN[i as usize].0, tables.midgame(Piece::WP, Square::from_index(i)))
+            assert_eq!(
+                PAWN[i as usize].0,
+                tables.midgame(Piece::WP, Square::from_index(i))
+            )
         }
     }
 

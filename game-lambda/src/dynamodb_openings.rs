@@ -55,7 +55,11 @@ impl OpeningService for DynamoDbOpeningService {
             FenComponent::Active,
             FenComponent::CastlingRights,
         ]);
-        log::info!("Querying table {} for position {}", self.table_name, query_position);
+        log::info!(
+            "Querying table {} for position {}",
+            self.table_name,
+            query_position
+        );
         tokio::runtime::Runtime::new()
             .unwrap()
             .block_on(self.client.get_item(self.create_request(query_position)?))
@@ -66,7 +70,9 @@ impl OpeningService for DynamoDbOpeningService {
                     Ok(None)
                 }
                 Some(attributes) => match attributes.get(&self.recommended_move_attribute) {
-                    None => Err(format!("Position exists but missing recommended move attribute")),
+                    None => Err(format!(
+                        "Position exists but missing recommended move attribute"
+                    )),
                     Some(attribute) => match &attribute.ss {
                         None => Err(format!(
                             "Position and recommended move attribute exist but not string set type"
@@ -118,12 +124,18 @@ impl FromStr for MoveRecord {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let split = s.split(MOVE_FREQ_SEPARATOR).map(|s| s.to_string()).collect::<Vec<_>>();
+        let split = s
+            .split(MOVE_FREQ_SEPARATOR)
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
         let err = format!("Cannot parse {} as MoveRecord", s);
         let cmp0 = split.get(0).ok_or(err.clone())?;
         let cmp1 = split.get(1).ok_or(err.clone())?;
         let freq = cmp1.parse::<usize>().map_err(|_| err)?;
-        Ok(MoveRecord { mv: cmp0.clone(), freq })
+        Ok(MoveRecord {
+            mv: cmp0.clone(),
+            freq,
+        })
     }
 }
 
@@ -133,8 +145,12 @@ mod test {
 
     #[test]
     fn test_choose_move() {
-        let choices =
-            vec![format!("a2a3:1"), format!("b2b4:1"), format!("g8f6:3"), format!("e1g1:20")];
+        let choices = vec![
+            format!("a2a3:1"),
+            format!("b2b4:1"),
+            format!("g8f6:3"),
+            format!("e1g1:20"),
+        ];
 
         assert_eq!(Some(format!("a2a3")), choose_move(&choices, || { 0 }));
         assert_eq!(Some(format!("b2b4")), choose_move(&choices, || { 1 }));

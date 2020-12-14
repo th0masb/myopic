@@ -21,8 +21,14 @@ impl MutBoardImpl {
     fn compute_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
-            Side::White => (pieces.whites(), pieces.blacks() - pieces.king_location(Side::Black)),
-            Side::Black => (pieces.whites() - pieces.king_location(Side::White), pieces.blacks()),
+            Side::White => (
+                pieces.whites(),
+                pieces.blacks() - pieces.king_location(Side::Black),
+            ),
+            Side::Black => (
+                pieces.whites() - pieces.king_location(Side::White),
+                pieces.blacks(),
+            ),
         };
         let locs = |piece: Piece| pieces.locs_impl(piece);
         let control = |piece: Piece, square: Square| piece.control(square, whites, blacks);
@@ -36,7 +42,7 @@ impl MutBoardImpl {
 mod test {
     use crate::implementation::test::TestBoard;
     use crate::implementation::MutBoardImpl;
-    use myopic_core::{Side, BitBoard, CastleZoneSet, constants::*};
+    use myopic_core::{constants::*, BitBoard, CastleZoneSet, Side};
 
     struct TestCase {
         board: TestBoard,
@@ -53,8 +59,22 @@ mod test {
 
     fn get_test_board() -> TestBoard {
         TestBoard {
-            whites: vec![A2 | B3 | C2 | D2 | E4 | F2 | G2 | H2, F3, B2 | F1, A1, D1, E1],
-            blacks: vec![A7 | B7 | C7 | D7 | E5 | F7 | G7 | H5, C6 | G8, C8, A8 | H8, F6, E8],
+            whites: vec![
+                A2 | B3 | C2 | D2 | E4 | F2 | G2 | H2,
+                F3,
+                B2 | F1,
+                A1,
+                D1,
+                E1,
+            ],
+            blacks: vec![
+                A7 | B7 | C7 | D7 | E5 | F7 | G7 | H5,
+                C6 | G8,
+                C8,
+                A8 | H8,
+                F6,
+                E8,
+            ],
             castle_rights: CastleZoneSet::ALL,
             white_status: None,
             black_status: None,
@@ -74,7 +94,11 @@ mod test {
         .into_iter()
         .collect();
 
-        execute_test(TestCase { board: get_test_board(), side: Side::White, expected_control })
+        execute_test(TestCase {
+            board: get_test_board(),
+            side: Side::White,
+            expected_control,
+        })
     }
 
     #[test]
@@ -86,6 +110,10 @@ mod test {
         .into_iter()
         .collect();
 
-        execute_test(TestCase { board: get_test_board(), side: Side::Black, expected_control })
+        execute_test(TestCase {
+            board: get_test_board(),
+            side: Side::Black,
+            expected_control,
+        })
     }
 }

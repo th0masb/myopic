@@ -61,11 +61,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let progress = indicatif::ProgressBar::new(total_writes as u64);
     progress.set_message("Upload progress");
-    progress.set_style(indicatif::ProgressStyle::default_bar()
-        .template("{msg} [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}")
-        .progress_chars("##-"));
+    progress.set_style(
+        indicatif::ProgressStyle::default_bar()
+            .template("{msg} [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}")
+            .progress_chars("##-"),
+    );
     while entries.len() > 0 {
-
         let mut request_items = HashMap::new();
         request_items.insert(opt.table.clone(), draw_n_entries(&mut entries, opt.wcu));
 
@@ -80,9 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             match unprocessed_map.remove(&opt.table) {
                 None => {}
                 // If items were not processed put them back in the processing list
-                Some(mut items) => {
-                    entries.append(&mut items)
-                }
+                Some(mut items) => entries.append(&mut items),
             }
         });
 
@@ -137,15 +136,24 @@ impl SourceEntry {
             self.moves
                 .iter()
                 .map(|record| {
-                    format!("{}{}{}", record.mv, &options.frequency_separator, record.freq)
+                    format!(
+                        "{}{}{}",
+                        record.mv, &options.frequency_separator, record.freq
+                    )
                 })
                 .collect(),
         );
 
         let mut item = HashMap::new();
-        item.insert(options.position_attribute.clone().to_string(), position_attribute_value);
+        item.insert(
+            options.position_attribute.clone().to_string(),
+            position_attribute_value,
+        );
         item.insert(options.moves_attribute.clone(), moves_attribute_value);
 
-        WriteRequest { delete_request: None, put_request: Some(PutRequest { item }) }
+        WriteRequest {
+            delete_request: None,
+            put_request: Some(PutRequest { item }),
+        }
     }
 }
