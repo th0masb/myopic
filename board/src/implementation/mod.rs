@@ -5,16 +5,12 @@ use crate::implementation::castling::Castling;
 use crate::implementation::history::History;
 use crate::implementation::positions::Positions;
 use crate::parse::patterns;
-use crate::{Discards, FenComponent};
 use crate::Move;
 use crate::MoveComputeType;
 use crate::MutBoard;
 use crate::Termination;
-use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::{CastleZone, CastleZoneSet};
-use myopic_core::pieces::Piece;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{Side, Square};
+use crate::{Discards, FenComponent};
+use myopic_core::*;
 
 mod cache;
 mod castling;
@@ -139,10 +135,7 @@ impl Move {
 mod fen_test {
     use crate::implementation::test::TestBoard;
     use crate::MutBoardImpl;
-    use myopic_core::bitboard::constants::*;
-    use myopic_core::castlezone::CastleZone;
-    use myopic_core::castlezone::CastleZoneSet;
-    use myopic_core::{Side, Square};
+    use myopic_core::{Side, Square, CastleZoneSet, CastleZone, constants::*};
 
     fn test(expected: TestBoard, fen_string: String) {
         assert_eq!(MutBoardImpl::from(expected), MutBoardImpl::from_fen(fen_string).unwrap())

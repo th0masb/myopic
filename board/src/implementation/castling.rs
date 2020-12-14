@@ -1,8 +1,4 @@
-use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::CastleZone;
-use myopic_core::castlezone::CastleZoneSet;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{hash, Side};
+use myopic_core::*;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct Castling {

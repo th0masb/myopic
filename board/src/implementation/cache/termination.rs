@@ -2,9 +2,7 @@ use crate::MoveComputeType;
 use crate::MutBoard;
 use crate::MutBoardImpl;
 use crate::Termination;
-use myopic_core::bitboard::BitBoard;
-use myopic_core::pieces::Piece;
-use myopic_core::{Side, Square};
+use myopic_core::*;
 
 impl MutBoardImpl {
     pub fn termination_status_impl(&mut self) -> Option<Termination> {
@@ -89,7 +87,7 @@ fn qrbnp<'a>(side: Side) -> &'a [Piece] {
 #[cfg(test)]
 mod test {
     use super::*;
-    use myopic_core::reflectable::Reflectable;
+    use myopic_core::Reflectable;
 
     #[derive(Clone, Debug)]
     struct TestCase {

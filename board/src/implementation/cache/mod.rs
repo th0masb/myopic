@@ -3,7 +3,7 @@ pub use constraints::MoveConstraints;
 use crate::implementation::cache::rays::RaySet;
 use crate::MutBoardImpl;
 use crate::Termination;
-use myopic_core::bitboard::BitBoard;
+use myopic_core::BitBoard;
 
 mod constraints;
 mod control;

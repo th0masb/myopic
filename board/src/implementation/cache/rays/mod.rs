@@ -1,7 +1,4 @@
-use myopic_core::bitboard::BitBoard;
-use myopic_core::pieces::Piece;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::Square;
+use myopic_core::*;
 use std::collections::BTreeSet;
 
 pub const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];

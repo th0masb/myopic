@@ -1,9 +1,5 @@
 use crate::parse::patterns;
-use myopic_core::bitboard::BitBoard;
-use myopic_core::hash;
-use myopic_core::pieces::Piece;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{Side, Square};
+use myopic_core::*;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct Positions {
@@ -181,7 +177,7 @@ mod test {
     use myopic_core::Square::E5;
 
     use super::*;
-    use myopic_core::pieces::Piece;
+    use myopic_core::Piece;
 
     #[test]
     fn test_erase_square() {

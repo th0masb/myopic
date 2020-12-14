@@ -1,6 +1,5 @@
 use super::*;
-use myopic_core::bitboard::constants::*;
-use myopic_core::castlezone::CastleZone;
+use myopic_core::{CastleZone, constants::*};
 
 #[test]
 fn case_1() {

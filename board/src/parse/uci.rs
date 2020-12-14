@@ -1,7 +1,6 @@
 use crate::parse::patterns::uci_move;
 use crate::{Move, MoveComputeType, MutBoard};
-use myopic_core::pieces::Piece;
-use myopic_core::Square;
+use myopic_core::{Piece, Square};
 
 /// Extracts the moves encoded in standard pgn format contained in
 /// a single string.
@@ -109,8 +108,7 @@ mod test {
 #[cfg(test)]
 mod test_single_move {
     use super::*;
-    use myopic_core::castlezone::CastleZone;
-    use myopic_core::Square::*;
+    use myopic_core::{CastleZone, Square::*};
 
     fn execute_success_test(expected: Move, start_fen: &'static str, uci: &'static str) {
         let mut board = crate::fen_position(start_fen).unwrap();

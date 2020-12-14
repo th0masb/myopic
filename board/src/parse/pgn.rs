@@ -1,10 +1,8 @@
 use crate::parse::patterns::*;
-use crate::regex::Regex;
 use crate::Move::Castle;
 use crate::{Move, MoveComputeType, MutBoard};
-use myopic_core::castlezone::CastleZone;
-use myopic_core::pieces::Piece;
-use myopic_core::Square;
+use myopic_core::{CastleZone, Piece, Square};
+use regex::Regex;
 
 /// Extracts the moves encoded in standard pgn format contained in
 /// a single string.
