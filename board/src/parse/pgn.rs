@@ -99,7 +99,10 @@ fn char_at(string: &String, index: usize) -> char {
 }
 
 fn find_differentiating_rank_or_file(pgn_move: &str, re: &Regex) -> Option<char> {
-    let all_matches: Vec<_> = re.find_iter(pgn_move).map(|m| m.as_str().to_owned()).collect();
+    let all_matches: Vec<_> = re
+        .find_iter(pgn_move)
+        .map(|m| m.as_str().to_owned())
+        .collect();
     if all_matches.len() == 1 {
         None
     } else {
@@ -108,7 +111,10 @@ fn find_differentiating_rank_or_file(pgn_move: &str, re: &Regex) -> Option<char>
 }
 
 fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
-    let matches: Vec<_> = pgn_piece().find_iter(pgn_move).map(|m| m.as_str().to_owned()).collect();
+    let matches: Vec<_> = pgn_piece()
+        .find_iter(pgn_move)
+        .map(|m| m.as_str().to_owned())
+        .collect();
     let is_promotion = pgn_move.contains("=");
     let (move_piece, promote_piece) = if matches.is_empty() {
         (None, None)
@@ -142,7 +148,10 @@ mod test {
 
     #[test]
     fn case_zero() {
-        execute_success_test("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "")
+        execute_success_test(
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "",
+        )
     }
 
     #[test]

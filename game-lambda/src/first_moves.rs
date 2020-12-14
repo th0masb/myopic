@@ -47,7 +47,11 @@ impl FirstMoveMap {
 
 pub fn as_map() -> FirstMoveMap {
     FirstMoveMap {
-        internal: FIRST_MOVES.iter().cloned().map(|(x, y)| (x.to_owned(), y.to_owned())).collect(),
+        internal: FIRST_MOVES
+            .iter()
+            .cloned()
+            .map(|(x, y)| (x.to_owned(), y.to_owned()))
+            .collect(),
     }
 }
 
@@ -59,7 +63,10 @@ mod test {
     #[test]
     fn test_get_moves() {
         let move_map = super::as_map();
-        assert_eq!(vec![format!("e2e4"), format!("d2d4"), format!("c2c4")], move_map.get_moves(""));
+        assert_eq!(
+            vec![format!("e2e4"), format!("d2d4"), format!("c2c4")],
+            move_map.get_moves("")
+        );
         assert_eq!(vec![format!("c7c5")], move_map.get_moves("a2a3"));
         assert_eq!(Vec::new() as Vec<String>, move_map.get_moves("a2a5"));
     }
@@ -69,13 +76,23 @@ mod test {
         for (setup, first_moves) in super::as_map().internal {
             let (mut board, _) = helper::get_game_state(&setup).expect("Error in setup");
             let legal_moves = board.compute_moves(MoveComputeType::All);
-            let expanded_first_moves =
-                first_moves.trim().split("|").map(|s| s.to_owned()).collect::<Vec<_>>();
+            let expanded_first_moves = first_moves
+                .trim()
+                .split("|")
+                .map(|s| s.to_owned())
+                .collect::<Vec<_>>();
 
             for first_move in expanded_first_moves {
-                let move_match = legal_moves.iter().find(|m| helper::move_to_uci(m) == first_move);
+                let move_match = legal_moves
+                    .iter()
+                    .find(|m| helper::move_to_uci(m) == first_move);
 
-                assert!(move_match.is_some(), "setup: {} first_move: {}", setup, first_move)
+                assert!(
+                    move_match.is_some(),
+                    "setup: {} first_move: {}",
+                    setup,
+                    first_move
+                )
             }
         }
     }

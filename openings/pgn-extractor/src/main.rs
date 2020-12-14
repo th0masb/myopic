@@ -2,16 +2,10 @@ mod data;
 mod errors;
 mod game_stream;
 
-use chrono::Utc;
 use errors::Errors;
 use game_stream::GameStream;
 use myopic_board::{FenComponent, Move, MutBoard};
-use std::collections::HashMap;
-use std::error::Error;
-use std::fs::File;
-use std::path::PathBuf;
-use std::thread;
-use std::{env, fs};
+use std::{collections::HashMap, error::Error, fs, fs::File, path::PathBuf};
 use structopt::StructOpt;
 
 #[macro_use]
@@ -111,7 +105,9 @@ fn count_games(file_paths: &Vec<PathBuf>) -> Result<HashMap<String, usize>, Box<
 }
 
 fn path_to_string(path: &PathBuf) -> String {
-    path.to_str().expect("Couldn't convert path to string").to_string()
+    path.to_str()
+        .expect("Couldn't convert path to string")
+        .to_string()
 }
 
 fn parse_entries(depth: usize, game: &str) -> Result<Vec<CollectionEntry>, errors::Error> {

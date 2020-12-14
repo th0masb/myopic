@@ -2,7 +2,10 @@ use myopic_brain::{parse, EvalBoardImpl, Move, MutBoard, MutBoardImpl, Piece};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub fn timestamp_millis() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis() as u64
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_millis() as u64
 }
 
 pub struct ThinkingTimeParams {
@@ -131,12 +134,18 @@ mod uci_conversion_test {
 
     #[test]
     fn test_promotion_conversion() {
-        assert_eq!("e7d8q", move_to_uci(&Move::Promotion(Square::E7, Square::D8, Piece::WQ)))
+        assert_eq!(
+            "e7d8q",
+            move_to_uci(&Move::Promotion(Square::E7, Square::D8, Piece::WQ))
+        )
     }
 
     #[test]
     fn test_enpassant_conversion() {
-        assert_eq!("e5d6", move_to_uci(&Move::Enpassant(Square::E5, Square::D6)))
+        assert_eq!(
+            "e5d6",
+            move_to_uci(&Move::Enpassant(Square::E5, Square::D6))
+        )
     }
 }
 

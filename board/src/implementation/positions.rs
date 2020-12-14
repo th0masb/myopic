@@ -116,7 +116,10 @@ impl Positions {
     }
 
     pub fn king_location(&self, side: Side) -> Square {
-        self.locs_impl(Piece::king(side)).into_iter().next().unwrap()
+        self.locs_impl(Piece::king(side))
+            .into_iter()
+            .next()
+            .unwrap()
     }
 
     pub fn whites(&self) -> BitBoard {
@@ -132,7 +135,11 @@ impl Positions {
     }
 
     pub fn piece_at(&self, square: Square) -> Option<Piece> {
-        self.boards.iter().zip(Piece::iter()).find(|(&b, _)| b.contains(square)).map(|(_, p)| p)
+        self.boards
+            .iter()
+            .zip(Piece::iter())
+            .find(|(&b, _)| b.contains(square))
+            .map(|(_, p)| p)
     }
 
     pub fn erase_square(&mut self, square: Square) -> Option<Piece> {

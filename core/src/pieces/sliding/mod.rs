@@ -12,7 +12,11 @@ pub mod rooks;
 /// location with the given piece arrangement on the board.
 fn compute_bishop_index(location: Square, pieces: BitBoard) -> usize {
     let i = location as usize;
-    compute_magic_index(pieces.0 & BISHOP_MASKS[i], BISHOP_MAGICS[i], BISHOP_SHIFTS[i])
+    compute_magic_index(
+        pieces.0 & BISHOP_MASKS[i],
+        BISHOP_MAGICS[i],
+        BISHOP_SHIFTS[i],
+    )
 }
 
 /// API for computing the magic index for a rook positioned at a given
@@ -48,7 +52,11 @@ fn rook_dirs() -> Vec<Dir> {
 #[allow(dead_code)]
 fn compute_masks(dirs: &Vec<Dir>) -> Vec<u64> {
     Square::iter()
-        .map(|sq| dirs.iter().map(|&dir| search_remove_last(sq, dir)).collect())
+        .map(|sq| {
+            dirs.iter()
+                .map(|&dir| search_remove_last(sq, dir))
+                .collect()
+        })
         .map(|bb: BitBoard| bb.0)
         .collect()
 }
@@ -163,10 +171,22 @@ mod control_tests {
         let loc = D4;
         let whites = D1 | F4 | D6 | G7 | H8;
         let blacks = B2 | B4 | E3 | A7;
-        let dirs = vec![Dir::N, Dir::NE, Dir::E, Dir::SE, Dir::S, Dir::SW, Dir::W, Dir::NW];
+        let dirs = vec![
+            Dir::N,
+            Dir::NE,
+            Dir::E,
+            Dir::SE,
+            Dir::S,
+            Dir::SW,
+            Dir::W,
+            Dir::NW,
+        ];
         let expected_control =
             D5 | D6 | E5 | F6 | G7 | E4 | F4 | E3 | D3 | D2 | D1 | C3 | B2 | C4 | B4 | C5 | B6 | A7;
-        assert_eq!(expected_control, compute_control(loc, whites | blacks, &dirs));
+        assert_eq!(
+            expected_control,
+            compute_control(loc, whites | blacks, &dirs)
+        );
     }
 }
 

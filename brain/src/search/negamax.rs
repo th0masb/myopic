@@ -106,10 +106,16 @@ impl<T: SearchTerminator> Searcher<'_, T> {
 
             ctx.alpha = cmp::max(ctx.alpha, result);
             if ctx.alpha > ctx.beta {
-                return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
+                return Ok(SearchResponse {
+                    eval: ctx.beta,
+                    path: vec![],
+                });
             }
         }
-        return Ok(SearchResponse { eval: result, path: best_path });
+        return Ok(SearchResponse {
+            eval: result,
+            path: best_path,
+        });
     }
 
     fn compute_moves<B: EvalBoard>(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {

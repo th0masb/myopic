@@ -127,7 +127,10 @@ impl<O: OpeningService> Game<O> {
             }
             // All other possibilities indicate the game is over
             status => {
-                log::info!("Game has finished with status: {}! Terminating execution", status);
+                log::info!(
+                    "Game has finished with status: {}! Terminating execution",
+                    status
+                );
                 Ok(GameExecutionState::Finished)
             }
         }
@@ -148,7 +151,8 @@ impl<O: OpeningService> Game<O> {
                 "Search output: {}",
                 serde_json::to_string(&result).expect("Unable to serialise search result")
             );
-            self.lichess_service.post_move(move_to_uci(&result.best_move))
+            self.lichess_service
+                .post_move(move_to_uci(&result.best_move))
         }
     }
 
@@ -173,6 +177,8 @@ impl<O: OpeningService> Game<O> {
     }
 
     fn get_latest_metadata(&self) -> Result<&InferredGameMetadata, String> {
-        self.inferred_metadata.as_ref().ok_or(format!("Metadata not initialized"))
+        self.inferred_metadata
+            .as_ref()
+            .ok_or(format!("Metadata not initialized"))
     }
 }

@@ -68,9 +68,12 @@ mod test {
             Err(error) => panic!(format!("Parse error: {}", error)),
             Ok(event) => match event {
                 LichessEvent::Challenge { .. } => panic!(format!("Wrong event: {:?}", event)),
-                LichessEvent::GameStart { game } => {
-                    assert_eq!(GameStart { id: "1lsvP62l".to_owned() }, game)
-                }
+                LichessEvent::GameStart { game } => assert_eq!(
+                    GameStart {
+                        id: "1lsvP62l".to_owned()
+                    },
+                    game
+                ),
             },
         }
     }
@@ -126,7 +129,9 @@ mod test {
                 LichessEvent::Challenge { challenge } => assert_eq!(
                     Challenge {
                         id: "x0ORBDis".to_owned(),
-                        variant: Variant { key: "standard".to_owned() },
+                        variant: Variant {
+                            key: "standard".to_owned()
+                        },
                         time_control: TimeControl::Unlimited
                     },
                     challenge
@@ -187,7 +192,9 @@ mod test {
                 LichessEvent::Challenge { challenge } => assert_eq!(
                     Challenge {
                         id: "qG23jvtf".to_owned(),
-                        variant: Variant { key: "standard".to_owned() },
+                        variant: Variant {
+                            key: "standard".to_owned()
+                        },
                         time_control: TimeControl::Correspondence { days_per_turn: 2 }
                     },
                     challenge
@@ -250,9 +257,14 @@ mod test {
                 LichessEvent::Challenge { challenge } => assert_eq!(
                     Challenge {
                         id: "fLIBOP1V".to_owned(),
-                        variant: Variant { key: "standard".to_owned() },
+                        variant: Variant {
+                            key: "standard".to_owned()
+                        },
                         time_control: TimeControl::Clock {
-                            clock: ClockTimeControl { limit: 600, increment: 3 }
+                            clock: ClockTimeControl {
+                                limit: 600,
+                                increment: 3
+                            }
                         }
                     },
                     challenge

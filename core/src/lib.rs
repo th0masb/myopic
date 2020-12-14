@@ -104,7 +104,9 @@ impl Square {
     /// the given string (case-insensitive).
     pub fn from_string(square: &str) -> Result<Square, String> {
         let upper = square.to_uppercase();
-        Square::iter().find(|sq| format!("{:?}", sq) == upper).ok_or(square.to_owned())
+        Square::iter()
+            .find(|sq| format!("{:?}", sq) == upper)
+            .ok_or(square.to_owned())
     }
 
     /// Return the index of the rank on which this square resides.
@@ -186,7 +188,9 @@ impl Square {
     /// Find the squares adjacent to this square in all of the
     /// given directions and returns them as a set.
     pub fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
-        dirs.iter().flat_map(|&dir| self.next(dir).into_iter()).collect()
+        dirs.iter()
+            .flat_map(|&dir| self.next(dir).into_iter())
+            .collect()
     }
 }
 

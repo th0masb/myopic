@@ -116,7 +116,11 @@ fn load_cases() -> Vec<TestCase> {
     lazy_static! {
         static ref SEP: Regex = Regex::new(r"[$]{4}").unwrap();
     }
-    let data_path = format!("{}/{}", std::env::var("CARGO_MANIFEST_DIR").unwrap(), DATA_PATH);
+    let data_path = format!(
+        "{}/{}",
+        std::env::var("CARGO_MANIFEST_DIR").unwrap(),
+        DATA_PATH
+    );
     let file = fs::File::open(&data_path).unwrap();
     let reader = BufReader::new(file);
     let mut dest = Vec::new();

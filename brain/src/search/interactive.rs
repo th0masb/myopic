@@ -28,14 +28,18 @@ pub enum SearchCommand<B: EvalBoard> {
     Infinite,
     Depth(usize),
     Time(usize),
-    GameTime { w_base: usize, w_inc: usize, b_base: usize, b_inc: usize },
+    GameTime {
+        w_base: usize,
+        w_inc: usize,
+        b_base: usize,
+        b_inc: usize,
+    },
 }
 
 /// Create an interactive search running on a separate thread, communication happens
 /// via an input channel which accepts a variety of commands and an output channel
 /// which transmits the search results.
-pub fn search<B: EvalBoard + 'static>(
-) -> (SearchCommandTx<B>, SearchResultRx) {
+pub fn search<B: EvalBoard + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<Result<SearchOutcome, String>>();
     std::thread::spawn(move || {
@@ -50,9 +54,12 @@ pub fn search<B: EvalBoard + 'static>(
                     SearchCommand::Root(root) => search.root = Some(root),
                     SearchCommand::Depth(max_depth) => search.max_depth = max_depth,
                     SearchCommand::Time(max_time) => search.set_max_time(max_time),
-                    SearchCommand::GameTime { w_base, w_inc, b_base, b_inc } => {
-                        search.set_game_time(w_base, w_inc, b_base, b_inc)
-                    }
+                    SearchCommand::GameTime {
+                        w_base,
+                        w_inc,
+                        b_base,
+                        b_inc,
+                    } => search.set_game_time(w_base, w_inc, b_base, b_inc),
                     SearchCommand::Infinite => {
                         search.max_time = INFINITE_DURATION;
                         search.max_depth = INFINITE_DEPTH;
@@ -106,7 +113,10 @@ impl<B: EvalBoard + 'static> InteractiveSearch<B> {
                 Side::White => w_base / 10,
                 Side::Black => b_base / 10,
             };
-            self.set_max_time(min(time, MAX_COMPUTED_MOVE_SEARCH_DURATION.as_millis() as usize));
+            self.set_max_time(min(
+                time,
+                MAX_COMPUTED_MOVE_SEARCH_DURATION.as_millis() as usize,
+            ));
         }
     }
 

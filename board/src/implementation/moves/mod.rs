@@ -88,8 +88,9 @@ impl MutBoardImpl {
     }
 
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
-        let enpassant_source =
-            self.enpassant.map_or(BitBoard::EMPTY, |sq| enpassant_source::squares(self.active, sq));
+        let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
+            enpassant_source::squares(self.active, sq)
+        });
         let promotion_rank = self.active.pawn_promoting_src_rank();
         let pawn_locs = self.locs(Piece::pawn(self.active));
         (
@@ -104,6 +105,11 @@ impl MutBoardImpl {
         let (whites, blacks) = self.sides();
         let p1 = |z: CastleZone| king_constraint.subsumes(z.uncontrolled_requirement());
         let p2 = |z: CastleZone| !(whites | blacks).intersects(z.unoccupied_requirement());
-        self.castling.rights().iter().filter(|&z| p1(z) && p2(z)).map(Move::Castle).collect()
+        self.castling
+            .rights()
+            .iter()
+            .filter(|&z| p1(z) && p2(z))
+            .map(Move::Castle)
+            .collect()
     }
 }

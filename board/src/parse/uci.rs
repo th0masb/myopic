@@ -44,7 +44,14 @@ fn parse_single_move<B: MutBoard>(start: &mut B, uci_move: &str) -> Result<Move,
 
 fn extract_uci_component(pgn_move: &str) -> Result<(Square, Square, Option<char>), String> {
     let src = Square::from_string(pgn_move.chars().take(2).collect::<String>().as_str())?;
-    let dest = Square::from_string(pgn_move.chars().skip(2).take(2).collect::<String>().as_str())?;
+    let dest = Square::from_string(
+        pgn_move
+            .chars()
+            .skip(2)
+            .take(2)
+            .collect::<String>()
+            .as_str(),
+    )?;
     Ok((src, dest, pgn_move.chars().skip(4).next()))
 }
 
@@ -70,7 +77,10 @@ mod test {
 
     #[test]
     fn case_zero() {
-        execute_success_test("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "")
+        execute_success_test(
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "",
+        )
     }
 
     #[test]

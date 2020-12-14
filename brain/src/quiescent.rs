@@ -24,7 +24,11 @@ pub(super) fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, dep
     // which will improve our score. We cannot make this assumption if we
     // are in check because we will consider all the moves and so we
     // assume lost until proven otherwise.
-    let mut result = if state.in_check() { -eval::INFTY } else { state.static_eval() };
+    let mut result = if state.in_check() {
+        -eval::INFTY
+    } else {
+        state.static_eval()
+    };
 
     // Break immediately if the stand pat is greater than beta.
     if result >= beta {

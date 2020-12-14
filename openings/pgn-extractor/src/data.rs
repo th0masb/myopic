@@ -47,10 +47,14 @@ impl PositionStore {
         match self.inner.get_mut(position.as_str()) {
             None => {
                 self.stats.new_position_inserts += 1;
-                self.inner.insert(position, vec![MoveRecord::new(suggested_move)]);
+                self.inner
+                    .insert(position, vec![MoveRecord::new(suggested_move)]);
             }
             Some(records) => {
-                match records.iter_mut().find(|record| record.mv == suggested_move) {
+                match records
+                    .iter_mut()
+                    .find(|record| record.mv == suggested_move)
+                {
                     None => {
                         self.stats.new_alternate_move_inserts += 1;
                         records.push(MoveRecord::new(suggested_move))
