@@ -1,0 +1,31 @@
+[Event "London2"]
+[Site "London"]
+[Date "1851.??.??"]
+[Round "?"]
+[White "Mayet, Carl"]
+[Black "Anderssen, Adolf"]
+[Result "1-0"]
+[WhiteElo ""]
+[BlackElo ""]
+[ECO "C65"]
+
+1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bd6 5.c3 h6
+9.Bc4 Bc5 10.b4 Ba7 11.Nh4 d5 12.exd5 Nxd5
+
+[Event "London2"]
+[Site "London"]
+[Date "1851.??.??"]
+[Round "?"]
+[White "Bird, Henry Edward"]
+[Black "Anderssen, Adolf"]
+[Result "1-0"]
+[WhiteElo ""]
+[BlackElo ""]
+[ECO "C65"]
+
+1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d4 Nxd4 5.Nxd4 exd4
+9.Be2 d5 10.exd6 Bxd6 11.Qxd4 Bf5 12.Nc3 O-O-O
+
+[WhiteElo ""]
+[BlackElo ""]
+[ECO "C65"]

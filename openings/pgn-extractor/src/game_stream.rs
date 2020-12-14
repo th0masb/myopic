@@ -11,7 +11,9 @@ pub struct GameStream {
 
 impl GameStream {
     pub fn new(f: File) -> GameStream {
-        GameStream { inner: BufReader::new(f).lines() }
+        GameStream {
+            inner: BufReader::new(f).lines(),
+        }
     }
 }
 
@@ -84,6 +86,8 @@ mod test {
     use std::env;
     use std::fs::File;
 
+    const RELATIVE_RESOURCE_PATH: &'static str = "resources/test";
+
     #[test]
     fn game_start_regex() {
         let under_test = super::game_start();
@@ -105,34 +109,33 @@ mod test {
         format!(
             "{}/{}/{}",
             env::var("CARGO_MANIFEST_DIR").unwrap(),
-            env::var("TEST_RESOURCE_PATH").unwrap(),
+            RELATIVE_RESOURCE_PATH,
             name
         )
     }
 
     #[test]
     fn single_game_pgn() {
-        dotenv::dotenv().ok();
-
-        let games: Vec<String> = GameStream::new(File::open(file_path("single_game.pgn")).unwrap())
+        let games: Vec<String> = GameStream::new(File::open(file_path("single-game.pgn")).unwrap())
             .map(|result| result.unwrap())
             .collect();
 
-        assert_eq!(vec!["1.d4 Nf6 2.c4 d6 3.Nc3 g6 4.e4 9.d5 Nf6 10.Bd3 Nbd7 11.Bc2 Qe7"], games)
+        assert_eq!(
+            vec!["1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Bc5 9.Qf3 Nxf2 10.Qxf2 Qd6 11.Bf4 Qd5"],
+            games
+        )
     }
 
     #[test]
     fn multi_game_pgn() {
-        dotenv::dotenv().ok();
-
-        let games: Vec<String> = GameStream::new(File::open(file_path("multi_game.pgn")).unwrap())
+        let games: Vec<String> = GameStream::new(File::open(file_path("multi-game.pgn")).unwrap())
             .map(|result| result.unwrap())
             .collect();
 
         assert_eq!(
             vec![
-                "1.d4 Nf6 2.c4 g6 3.Nc3 16.Bg3 fxe4 17.Rxf8+  0-1",
-                "1.d4 Nf6 2.c4 d6 91.d5 Nf6 10.Bd3 Nbd7"
+                "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d3 Bd6 5.c3 h6 9.Bc4 Bc5 10.b4 Ba7 11.Nh4 d5 12.exd5 Nxd5",
+                "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.d4 Nxd4 5.Nxd4 exd4 9.Be2 d5 10.exd6 Bxd6 11.Qxd4 Bf5 12.Nc3 O-O-O"
             ],
             games
         )

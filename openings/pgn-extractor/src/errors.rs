@@ -37,7 +37,9 @@ pub struct Error {
 }
 
 pub fn err(message: &str) -> Error {
-    Error { message: message.to_owned() }
+    Error {
+        message: message.to_owned(),
+    }
 }
 
 impl std::convert::From<String> for Error {
