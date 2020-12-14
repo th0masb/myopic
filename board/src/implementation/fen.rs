@@ -1,7 +1,5 @@
-use crate::{MutBoard, FenComponent};
-use myopic_core::castlezone::CastleZone;
-use myopic_core::pieces::Piece;
-use myopic_core::{Side, Square};
+use crate::{FenComponent, MutBoard};
+use myopic_core::*;
 
 pub(super) fn to_fen_impl<B: MutBoard>(board: &B, cmps: &[FenComponent]) -> String {
     let mut dest = String::new();
@@ -19,7 +17,6 @@ pub(super) fn to_fen_impl<B: MutBoard>(board: &B, cmps: &[FenComponent]) -> Stri
     }
     if !dest.is_empty() {
         dest.remove(dest.len() - 1);
-
     }
     dest
 }
@@ -92,13 +89,6 @@ fn castlezone_to_fen(zone: CastleZone) -> &'static str {
     }
 }
 
-fn side_to_fen(side: Side) -> &'static str {
-    match side {
-        Side::White => "w",
-        Side::Black => "b",
-    }
-}
-
 fn piece_to_fen(piece: Piece) -> &'static str {
     match piece {
         Piece::WP => "P",
@@ -119,7 +109,7 @@ fn piece_to_fen(piece: Piece) -> &'static str {
 #[cfg(test)]
 mod test {
     use super::to_fen_impl;
-    use crate::{parse, MutBoard, FenComponent, MutBoardImpl};
+    use crate::{parse, FenComponent, MutBoard, MutBoardImpl};
 
     #[test]
     fn start_position_board() {
@@ -131,42 +121,27 @@ mod test {
 
     #[test]
     fn start_position_active() {
-        assert_eq!(
-            "w",
-            to_fen_impl(&crate::start_position(), &[FenComponent::Active])
-        )
+        assert_eq!("w", to_fen_impl(&crate::start_position(), &[FenComponent::Active]))
     }
 
     #[test]
     fn start_position_castling_rights() {
-        assert_eq!(
-            "KQkq",
-            to_fen_impl(&crate::start_position(), &[FenComponent::CastlingRights])
-        )
+        assert_eq!("KQkq", to_fen_impl(&crate::start_position(), &[FenComponent::CastlingRights]))
     }
 
     #[test]
     fn start_position_enpassant() {
-        assert_eq!(
-            "-",
-            to_fen_impl(&crate::start_position(), &[FenComponent::Enpassant])
-        )
+        assert_eq!("-", to_fen_impl(&crate::start_position(), &[FenComponent::Enpassant]))
     }
 
     #[test]
     fn start_position_half_move_count() {
-        assert_eq!(
-            "0",
-            to_fen_impl(&crate::start_position(), &[FenComponent::HalfMoveCount])
-        )
+        assert_eq!("0", to_fen_impl(&crate::start_position(), &[FenComponent::HalfMoveCount]))
     }
 
     #[test]
     fn start_position_move_count() {
-        assert_eq!(
-            "1",
-            to_fen_impl(&crate::start_position(), &[FenComponent::MoveCount])
-        )
+        assert_eq!("1", to_fen_impl(&crate::start_position(), &[FenComponent::MoveCount]))
     }
 
     #[test]
@@ -202,42 +177,27 @@ mod test {
 
     #[test]
     fn position_1_active() {
-        assert_eq!(
-            "w",
-            to_fen_impl(&position_1(), &[FenComponent::Active])
-        )
+        assert_eq!("w", to_fen_impl(&position_1(), &[FenComponent::Active]))
     }
 
     #[test]
     fn position_1_castling_rights() {
-        assert_eq!(
-            "Qq",
-            to_fen_impl(&position_1(), &[FenComponent::CastlingRights])
-        )
+        assert_eq!("Qq", to_fen_impl(&position_1(), &[FenComponent::CastlingRights]))
     }
 
     #[test]
     fn position_1_enpassant() {
-        assert_eq!(
-            "d6",
-            to_fen_impl(&position_1(), &[FenComponent::Enpassant])
-        )
+        assert_eq!("d6", to_fen_impl(&position_1(), &[FenComponent::Enpassant]))
     }
 
     #[test]
     fn position_1_half_move_count() {
-        assert_eq!(
-            "0",
-            to_fen_impl(&position_1(), &[FenComponent::HalfMoveCount])
-        )
+        assert_eq!("0", to_fen_impl(&position_1(), &[FenComponent::HalfMoveCount]))
     }
 
     #[test]
     fn position_1_move_count() {
-        assert_eq!(
-            "5",
-            to_fen_impl(&position_1(), &[FenComponent::MoveCount])
-        )
+        assert_eq!("5", to_fen_impl(&position_1(), &[FenComponent::MoveCount]))
     }
 
     #[test]
@@ -261,7 +221,8 @@ mod test {
     }
 
     fn position_2() -> MutBoardImpl {
-        parse::position_from_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5 5. Ke2 Kd7 6. Rh1").unwrap()
+        parse::position_from_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5 5. Ke2 Kd7 6. Rh1")
+            .unwrap()
     }
 
     #[test]
@@ -274,42 +235,27 @@ mod test {
 
     #[test]
     fn position_2_active() {
-        assert_eq!(
-            "b",
-            to_fen_impl(&position_2(), &[FenComponent::Active])
-        )
+        assert_eq!("b", to_fen_impl(&position_2(), &[FenComponent::Active]))
     }
 
     #[test]
     fn position_2_castling_rights() {
-        assert_eq!(
-            "-",
-            to_fen_impl(&position_2(), &[FenComponent::CastlingRights])
-        )
+        assert_eq!("-", to_fen_impl(&position_2(), &[FenComponent::CastlingRights]))
     }
 
     #[test]
     fn position_2_enpassant() {
-        assert_eq!(
-            "-",
-            to_fen_impl(&position_2(), &[FenComponent::Enpassant])
-        )
+        assert_eq!("-", to_fen_impl(&position_2(), &[FenComponent::Enpassant]))
     }
 
     #[test]
     fn position_2_half_move_count() {
-        assert_eq!(
-            "3",
-            to_fen_impl(&position_2(), &[FenComponent::HalfMoveCount])
-        )
+        assert_eq!("3", to_fen_impl(&position_2(), &[FenComponent::HalfMoveCount]))
     }
 
     #[test]
     fn position_2_move_count() {
-        assert_eq!(
-            "6",
-            to_fen_impl(&position_2(), &[FenComponent::MoveCount])
-        )
+        assert_eq!("6", to_fen_impl(&position_2(), &[FenComponent::MoveCount]))
     }
 
     #[test]

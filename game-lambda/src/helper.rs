@@ -1,7 +1,4 @@
-use myopic_board::parse;
-use myopic_board::{Move, MutBoard, MutBoardImpl};
-use myopic_brain::EvalBoardImpl;
-use myopic_core::pieces::Piece;
+use myopic_brain::{parse, EvalBoardImpl, Move, MutBoard, MutBoardImpl, Piece};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub fn timestamp_millis() -> u64 {
@@ -106,9 +103,7 @@ pub fn move_to_uci(mv: &Move) -> String {
 #[cfg(test)]
 mod uci_conversion_test {
     use super::move_to_uci;
-    use myopic_board::Move;
-    use myopic_core::castlezone::CastleZone;
-    use myopic_core::{pieces::Piece, Square};
+    use myopic_brain::{CastleZone, Move, Piece, Square};
 
     #[test]
     fn test_pawn_standard_conversion() {
@@ -147,7 +142,7 @@ mod uci_conversion_test {
 
 pub fn get_game_state(moves: &String) -> Result<(EvalBoardImpl<MutBoardImpl>, u32), String> {
     let moves = parse::uci(moves)?;
-    let mut board = myopic_brain::eval::start();
+    let mut board = myopic_brain::start();
     moves.iter().for_each(|mv| {
         board.evolve(mv);
     });

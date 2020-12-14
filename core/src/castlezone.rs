@@ -1,9 +1,10 @@
 use std::iter::FromIterator;
 use std::ops;
 
-use crate::Side;
-use crate::reflectable::Reflectable;
 use crate::bitboard::BitBoard;
+use crate::pieces::Piece;
+use crate::reflectable::Reflectable;
+use crate::Side;
 use crate::Square;
 use crate::Square::A1;
 use crate::Square::A8;
@@ -19,7 +20,6 @@ use crate::Square::G1;
 use crate::Square::G8;
 use crate::Square::H1;
 use crate::Square::H8;
-use crate::pieces::Piece;
 
 /// Represents one of the four different areas on a chessboard where
 /// the special castling move can take place (two for each side).

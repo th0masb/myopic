@@ -1,8 +1,6 @@
 use crate::eval::EvalBoard;
 use crate::{eval, see};
-use myopic_board::{Move, MoveComputeType, Termination};
-use myopic_core::bitboard::BitBoard;
-use myopic_core::reflectable::Reflectable;
+use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, Termination};
 use std::cmp;
 
 const Q_DEPTH_CAP: i32 = -8;

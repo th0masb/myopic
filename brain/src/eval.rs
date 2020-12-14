@@ -2,6 +2,7 @@ use crate::eval_impl::EvalBoardImpl;
 use crate::tables::PositionTables;
 use crate::values::PieceValues;
 use myopic_board::{MutBoard, MutBoardImpl};
+use serde_derive::{Deserialize, Serialize};
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -34,40 +35,28 @@ pub trait EvalBoard: MutBoard {
 }
 
 /// Allows one to configure the parameters of the evaluation board.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq, Default)]
 pub struct EvalParameters {
     piece_values: PieceValues,
     position_tables: PositionTables,
 }
 
-impl EvalParameters {
-    /// Initialise a new instance of the default parameters
-    pub fn default() -> EvalParameters {
-        EvalParameters {
-            piece_values: PieceValues::default(),
-            position_tables: PositionTables::default(),
-        }
-    }
-}
-
 /// Construct an instance of the default EvalBoard implementation using the
 /// position encoded as a fen string and the given parameters.
-pub fn init_board(
-    position_fen: &str,
-    parameters: EvalParameters,
+pub fn position_and_params(
+    fen: &str,
+    params: EvalParameters,
 ) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
-    myopic_board::fen_position(position_fen)
-        .map(|pos| EvalBoardImpl::new(pos, parameters.position_tables, parameters.piece_values))
+    myopic_board::fen_position(fen)
+        .map(|pos| EvalBoardImpl::new(pos, params.position_tables, params.piece_values))
 }
 
 /// Construct an instance of the default EvalBoard implementation using the
 /// default Board implementation from a fen string.
-#[deprecated]
-pub fn new_board(fen_string: &str) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
-    init_board(fen_string, EvalParameters::default())
+pub fn position(fen: &str) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
+    position_and_params(fen, EvalParameters::default())
 }
 
-#[deprecated]
 pub fn start() -> EvalBoardImpl<MutBoardImpl> {
     EvalBoardImpl::new(
         myopic_board::start_position(),

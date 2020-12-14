@@ -1,5 +1,5 @@
-use myopic_core::pieces::Piece;
-use myopic_core::Side;
+use myopic_board::{Piece, Side};
+use serde_derive::{Deserialize, Serialize};
 
 /// Values copied from Stockfish: https://github.com/official-stockfish/Stockfish/blob/master/src/types.h
 const DEFAULT_MIDGAME: [i32; 6] = [128, 782, 830, 1289, 2529, 100_000];
@@ -11,11 +11,16 @@ pub struct PieceValues {
     pub endgame: [i32; 6],
 }
 
-impl PieceValues {
-    pub fn default() -> PieceValues {
-        PieceValues::new(DEFAULT_MIDGAME, DEFAULT_ENDGAME)
+impl Default for PieceValues {
+    fn default() -> Self {
+        PieceValues {
+            midgame: DEFAULT_MIDGAME,
+            endgame: DEFAULT_ENDGAME,
+        }
     }
+}
 
+impl PieceValues {
     pub fn new(midgame: [i32; 6], endgame: [i32; 6]) -> PieceValues {
         PieceValues { midgame, endgame }
     }
@@ -24,11 +29,6 @@ impl PieceValues {
     pub fn midgame(&self, piece: Piece) -> i32 {
         parity(piece) * self.midgame[(piece as usize) % 6]
     }
-
-    //    /// Retrieve the absolute value of the given piece in the midgame.
-    //    pub fn abs_midgame(&self, piece: Piece) -> i32 {
-    //        self.midgame[(piece as usize) % 6]
-    //    }
 
     /// Retrieve the endgame value of the given piece.
     pub fn endgame(&self, piece: Piece) -> i32 {

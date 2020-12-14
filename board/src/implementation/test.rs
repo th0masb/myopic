@@ -3,10 +3,7 @@ use crate::implementation::castling::Castling;
 use crate::implementation::history::History;
 use crate::implementation::positions::Positions;
 use crate::implementation::MutBoardImpl;
-use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::{CastleZone, CastleZoneSet};
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{Side, Square};
+use myopic_core::*;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {

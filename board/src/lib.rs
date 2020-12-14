@@ -1,21 +1,11 @@
 #[macro_use]
 extern crate lazy_static;
-extern crate itertools;
-extern crate myopic_core;
-extern crate regex;
+
+pub use myopic_core::*;
+pub use crate::implementation::MutBoardImpl;
 
 mod implementation;
 pub mod parse;
-
-use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::CastleZone;
-use myopic_core::castlezone::CastleZoneSet;
-use myopic_core::pieces::Piece;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::Side;
-use myopic_core::Square;
-
-pub use implementation::MutBoardImpl;
 
 /// The start position of a chess game encoded in FEN format
 pub const STARTPOS_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -95,7 +85,7 @@ pub enum FenComponent {
     CastlingRights,
     Enpassant,
     HalfMoveCount,
-    MoveCount
+    MoveCount,
 }
 
 /// Trait representing a mutable state of play of a chess game
@@ -211,8 +201,7 @@ pub fn start_position() -> MutBoardImpl {
 #[cfg(test)]
 mod uci_conversion_test {
     use super::Move;
-    use myopic_core::castlezone::CastleZone;
-    use myopic_core::{pieces::Piece, Square};
+    use myopic_core::*;
 
     #[test]
     fn test_pawn_standard_conversion() {

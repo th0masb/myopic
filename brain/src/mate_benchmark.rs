@@ -9,8 +9,7 @@ use std::fs;
 use std::io::{BufRead, BufReader};
 use std::time::Duration;
 
-const DATA_PATH: &'static str =
-    r"/Users/tba01/git/myopic/myopic-brain/data/formatted-three-puzzles";
+const DATA_PATH: &'static str = r"data/formatted-three-puzzles";
 const MAX_CASES: usize = 200;
 const DEPTH: usize = 4;
 
@@ -65,6 +64,23 @@ const DEPTH: usize = 4;
 /// ------------------------------------------------------------------------------------------------
 ///
 ///
+/// /// Run on system76 laptop
+/// ------------------------------------------------------------------------------------------------
+/// 14/12/20 | 4(8)(2) | 200   | 0      | 5,398,916          | So much slower on system76! This is a
+///          |         |       |        |                    | control run to test the addition of
+///          |         |       |        |                    | proper iterative deepening with
+///          |         |       |        |                    | principle variation
+/// ------------------------------------------------------------------------------------------------
+/// 14/12/20 | 4(8)(2) | 200   | 0      | 3,119,500          | Run with pv iterative deepening
+///          |         |       |        |                    | changes. Significant difference in
+///          |         |       |        |                    | time but perhaps not as significant as
+///          |         |       |        |                    | hoped for. Would this change if we
+///          |         |       |        |                    | used non-checkmate middlegame positions?
+///          |         |       |        |                    | Does it mean most time is spent in
+///          |         |       |        |                    | quiescent search?
+/// ------------------------------------------------------------------------------------------------
+///
+///
 #[test]
 #[ignore]
 fn mate_benchmark() {
@@ -100,7 +116,8 @@ fn load_cases() -> Vec<TestCase> {
     lazy_static! {
         static ref SEP: Regex = Regex::new(r"[$]{4}").unwrap();
     }
-    let file = fs::File::open(DATA_PATH).unwrap();
+    let data_path = format!("{}/{}", std::env::var("CARGO_MANIFEST_DIR").unwrap(), DATA_PATH);
+    let file = fs::File::open(&data_path).unwrap();
     let reader = BufReader::new(file);
     let mut dest = Vec::new();
     for line in reader.lines() {

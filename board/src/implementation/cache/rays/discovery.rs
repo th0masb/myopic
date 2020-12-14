@@ -1,9 +1,6 @@
 use crate::implementation::cache::rays::RaySet;
 use crate::{MutBoard, MutBoardImpl};
-use myopic_core::bitboard::BitBoard;
-use myopic_core::pieces::Piece;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{Side, Square};
+use myopic_core::*;
 
 impl MutBoardImpl {
     pub fn compute_discoveries(&self) -> RaySet {
@@ -35,7 +32,7 @@ impl MutBoardImpl {
 
 #[cfg(test)]
 mod test {
-    use myopic_core::bitboard::constants::*;
+    use myopic_core::constants::*;
 
     use super::*;
 

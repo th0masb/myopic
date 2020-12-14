@@ -2,12 +2,10 @@ use crate::eval;
 use crate::eval::EvalBoard;
 use crate::tables::PositionTables;
 use crate::values::PieceValues;
-use myopic_board::{Discards, Move, MoveComputeType, MutBoard, Termination, FenComponent};
-use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::{CastleZone, CastleZoneSet};
-use myopic_core::pieces::Piece;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{Side, Square};
+use myopic_board::{
+    BitBoard, CastleZone, CastleZoneSet, Discards, FenComponent, Move, MoveComputeType, MutBoard,
+    Piece, Reflectable, Side, Square, Termination,
+};
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct EvalBoardImpl<B: MutBoard> {
@@ -255,12 +253,7 @@ mod test {
     use crate::eval_impl::EvalBoardImpl;
     use crate::tables::PositionTables;
     use crate::values::PieceValues;
-    use myopic_board::Move::*;
-    use myopic_board::{Move, MutBoard};
-    use myopic_core::castlezone::CastleZone;
-    use myopic_core::pieces::Piece::*;
-    use myopic_core::reflectable::Reflectable;
-    use myopic_core::Square::*;
+    use myopic_board::{Move, MutBoard, Move::*, CastleZone, Piece::*, Reflectable, Square::*};
 
     #[derive(Clone, Eq, PartialEq)]
     struct TestCase<B: MutBoard> {

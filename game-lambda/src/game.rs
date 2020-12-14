@@ -1,10 +1,7 @@
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::helper::*;
 use crate::TimeConstraints;
-use myopic_board::MutBoard;
-use myopic_brain::EvalBoard;
-use myopic_core::Side;
-use reqwest::blocking::Client;
+use myopic_brain::{EvalBoard, MutBoard, Side};
 
 use crate::dynamodb_openings::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
 use crate::lichess::LichessService;

@@ -1,6 +1,6 @@
 use crate::game::OpeningService;
 use itertools::Itertools;
-use myopic_board::{parse, FenComponent, MutBoard};
+use myopic_brain::{parse, FenComponent, MutBoard};
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use serde::export::fmt::Debug;

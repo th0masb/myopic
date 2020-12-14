@@ -1,15 +1,27 @@
-use std::cmp;
 use std::time::{Duration, Instant};
 
+use crate::eval;
 use crate::eval::EvalBoard;
-use crate::{eval, quiescent};
-use myopic_board::{Move, MoveComputeType, Termination};
+use crate::search::negamax::{SearchContext, SearchResponse, SearchTerminator, Searcher};
+use myopic_board::Move;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
 
 pub mod interactive;
+pub mod negamax;
 
 const DEPTH_UPPER_BOUND: usize = 10;
+
+/// API function for executing search on the calling thread, we pass a root
+/// state and a terminator and compute the best move we can make from this
+/// state within the duration constraints implied by the terminator.
+pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome, String>
+    where
+        B: EvalBoard,
+        T: SearchTerminator,
+{
+    Search { root, terminator }.search()
+}
 
 /// Data class composing information/result about/of a best move search.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -18,6 +30,7 @@ pub struct SearchOutcome {
     pub eval: i32,
     pub depth: usize,
     pub time: Duration,
+    pub optimal_path: Vec<Move>,
 }
 
 impl serde::Serialize for SearchOutcome {
@@ -30,6 +43,10 @@ impl serde::Serialize for SearchOutcome {
         state.serialize_field("positionEval", &self.eval)?;
         state.serialize_field("depthSearched", &self.depth)?;
         state.serialize_field("searchDurationMillis", &self.time.as_millis())?;
+        state.serialize_field(
+            "optimalPath",
+            &self.optimal_path.iter().map(|m| m.uci_format()).collect::<Vec<_>>(),
+        )?;
         state.end()
     }
 }
@@ -37,8 +54,7 @@ impl serde::Serialize for SearchOutcome {
 #[cfg(test)]
 mod searchoutcome_serialize_test {
     use super::SearchOutcome;
-    use myopic_board::Move;
-    use myopic_core::castlezone::CastleZone;
+    use myopic_board::{Move, CastleZone, Piece, Square};
     use serde_json;
     use std::time::Duration;
 
@@ -47,51 +63,17 @@ mod searchoutcome_serialize_test {
         let search_outcome = SearchOutcome {
             best_move: Move::Castle(CastleZone::WK),
             eval: -125,
-            depth: 5,
+            depth: 2,
             time: Duration::from_millis(3000),
+            optimal_path: vec![
+                Move::Castle(CastleZone::WK),
+                Move::Standard(Piece::BP, Square::D7, Square::D5),
+            ],
         };
         assert_eq!(
-            r#"{"bestMove":"e1g1","positionEval":-125,"depthSearched":5,"searchDurationMillis":3000}"#,
+            r#"{"bestMove":"e1g1","positionEval":-125,"depthSearched":2,"searchDurationMillis":3000,"optimalPath":["e1g1","d7d5"]}"#,
             serde_json::to_string(&search_outcome).expect("Serialization failed")
         );
-    }
-}
-
-/// API function for executing search on the calling thread, we pass a root
-/// state and a terminator and compute the best move we can make from this
-/// state within the duration constraints implied by the terminator.
-pub fn search<B: EvalBoard, T: SearchTerminator>(
-    root: B,
-    terminator: T,
-) -> Result<SearchOutcome, String> {
-    Search { root, terminator }.search()
-}
-
-/// Represents some object which can determine whether a search should be
-/// terminated given certain context about the current state. Implementations
-/// are provided for Duration (caps the search based on time elapsed), for
-/// usize which represents a maximum search depth and for a pair
-/// (Duration, usize) which combines both checks.
-pub trait SearchTerminator {
-    fn should_terminate(&self, search_start: Instant, curr_depth: usize) -> bool;
-}
-
-impl SearchTerminator for Duration {
-    fn should_terminate(&self, search_start: Instant, _curr_depth: usize) -> bool {
-        search_start.elapsed() > *self
-    }
-}
-
-impl SearchTerminator for usize {
-    fn should_terminate(&self, _search_start: Instant, curr_depth: usize) -> bool {
-        curr_depth >= *self
-    }
-}
-
-impl SearchTerminator for (Duration, usize) {
-    fn should_terminate(&self, search_start: Instant, curr_depth: usize) -> bool {
-        self.0.should_terminate(search_start, curr_depth)
-            || self.1.should_terminate(search_start, curr_depth)
     }
 }
 
@@ -100,80 +82,73 @@ struct Search<B: EvalBoard, T: SearchTerminator> {
     terminator: T,
 }
 
+struct BestMoveResponse {
+    eval: i32,
+    best_move: Move,
+    path: Vec<Move>,
+    depth: usize,
+}
+
 impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
     pub fn search(&self) -> Result<SearchOutcome, String> {
         let search_start = Instant::now();
-        let mut best_move = Err(String::from("Terminated before search began"));
+        let mut break_message = format!("Terminated before search began");
+        let mut best_move_response = None;
+        let mut principle_variation = vec![];
+
         for i in 1..DEPTH_UPPER_BOUND {
-            match self.best_move(i, search_start) {
-                Err(_) => break,
-                Ok((mv, eval)) => {
-                    best_move = Ok((mv, eval, i));
+            match self.best_move(i, search_start, &principle_variation) {
+                Err(message) => {
+                    break_message = message;
+                    break;
+                }
+                Ok(response) => {
+                    principle_variation = response.path.clone();
+                    best_move_response = Some(response);
                 }
             }
         }
-        best_move.map(|(best_move, eval, depth)| SearchOutcome {
-            best_move,
-            eval,
-            depth,
+
+        best_move_response.ok_or(break_message).map(|response| SearchOutcome {
+            best_move: response.best_move,
+            eval: response.eval,
+            depth: response.depth,
             time: search_start.elapsed(),
+            optimal_path: response.path,
         })
     }
 
-    fn best_move(&self, depth: usize, search_start: Instant) -> Result<(Move, i32), ()> {
-        if depth < 1 {
-            return Err(());
-        }
-        let mut state = self.root.clone();
-        let mut best_move = None;
-        let (mut alpha, beta) = (-eval::INFTY, eval::INFTY);
-        for evolve in state.compute_moves(MoveComputeType::All) {
-            let discards = state.evolve(&evolve);
-            match self.negamax(&mut state, -beta, -alpha, depth - 1, search_start) {
-                Err(_) => return Err(()),
-                Ok(result) => {
-                    let negated_result = -result;
-                    state.devolve(&evolve, discards);
-                    if negated_result > alpha {
-                        alpha = negated_result;
-                        best_move = Some((evolve.clone(), negated_result));
-                    }
-                }
-            }
-        }
-        best_move.ok_or(())
-    }
-
-    fn negamax(
+    fn best_move(
         &self,
-        root: &mut B,
-        mut a: i32,
-        b: i32,
         depth: usize,
-        start_time: Instant,
-    ) -> Result<i32, ()> {
-        if self.terminator.should_terminate(start_time, depth) {
-            return Err(());
-        } else if depth == 0 || root.termination_status().is_some() {
-            return Ok(match root.termination_status() {
-                Some(Termination::Loss) => eval::LOSS_VALUE,
-                Some(Termination::Draw) => eval::DRAW_VALUE,
-                None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
-            });
+        search_start: Instant,
+        principle_variation: &Vec<Move>,
+    ) -> Result<BestMoveResponse, String> {
+        if depth < 1 {
+            return Err(format!("Illegal depth: {}", depth));
         }
-        let mut result = -eval::INFTY;
-        for evolve in root.compute_moves(MoveComputeType::All) {
-            //println!("Second {:?}", evolve);
-            let discards = root.evolve(&evolve);
-            let next_result = -self.negamax(root, -b, -a, depth - 1, start_time)?;
-            root.devolve(&evolve, discards);
-            result = cmp::max(result, next_result);
-            a = cmp::max(a, result);
-            if a > b {
-                return Ok(b);
-            }
+
+        let SearchResponse { eval, mut path } =
+            Searcher { terminator: &self.terminator, principle_variation }.search(
+                &mut self.root.clone(),
+                SearchContext {
+                    depth_remaining: depth,
+                    start_time: search_start,
+                    alpha: -eval::INFTY,
+                    beta: eval::INFTY,
+                    precursors: vec![],
+                },
+            )?;
+
+        // The path returned from the negamax function is ordered deepest move -> shallowest
+        // so we reverse as the shallowest move is the one we make in this position.
+        path.reverse();
+        // If the path returned is empty then there must be no legal moves in this position
+        if path.is_empty() {
+            Err(format!("No moves found for position {}", self.root.to_fen()))
+        } else {
+            Ok(BestMoveResponse { best_move: path.get(0).unwrap().clone(), eval, path, depth })
         }
-        return Ok(result);
     }
 }
 
@@ -183,17 +158,12 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
 mod test {
     use crate::eval;
     use crate::eval::EvalBoard;
-    use myopic_board::Move;
-    use myopic_board::Move::Standard;
-    use myopic_core::pieces::Piece;
-    use myopic_core::reflectable::Reflectable;
-    use myopic_core::Square;
-    use myopic_core::Square::*;
+    use myopic_board::{Move, Move::Standard, Piece, Reflectable, Square, Square::*};
 
     const DEPTH: usize = 3;
 
     fn test(fen_string: &'static str, expected_move_pool: Vec<Move>, is_won: bool) {
-        let board = crate::eval::new_board(fen_string).unwrap();
+        let board = crate::eval::position(fen_string).unwrap();
         let (ref_board, ref_move_pool) = (board.reflect(), expected_move_pool.reflect());
         test_impl(board, expected_move_pool, is_won);
         test_impl(ref_board, ref_move_pool, is_won);

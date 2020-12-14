@@ -54,7 +54,7 @@ pub fn as_map() -> FirstMoveMap {
 #[cfg(test)]
 mod test {
     use crate::helper;
-    use myopic_board::{MoveComputeType, MutBoard};
+    use myopic_brain::{MoveComputeType, MutBoard};
 
     #[test]
     fn test_get_moves() {

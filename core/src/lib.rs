@@ -2,17 +2,18 @@
 extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
-extern crate rand;
 
-pub mod bitboard;
-pub mod pieces;
-pub mod reflectable;
-pub mod castlezone;
+mod bitboard;
+mod castlezone;
 pub mod hash;
+mod pieces;
+mod reflectable;
 
-use crate::bitboard::BitBoard;
-use std::fmt::Debug;
-
+pub use bitboard::constants;
+pub use bitboard::BitBoard;
+pub use castlezone::{CastleZone, CastleZoneSet};
+pub use pieces::Piece;
+pub use reflectable::Reflectable;
 
 /// Represents the two different teams in a game of chess.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
@@ -57,7 +58,6 @@ impl Side {
         }
     }
 
-
     /// The rank a pawn on this side will end up on after promoting to
     /// another piece.
     pub fn pawn_promoting_dest_rank(self) -> BitBoard {
@@ -74,7 +74,6 @@ impl Side {
 pub enum Dir {
     N, E, S, W, NE, SE, SW, NW, NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW
 }
-
 
 /// Type representing a square on a chessboard.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -139,7 +138,7 @@ impl Square {
     /// given direction if it exists.
     pub fn next(self, dir: Dir) -> Option<Square> {
         let dr = match dir {
-            Dir::E | Dir::W  => 0,
+            Dir::E | Dir::W => 0,
             Dir::N | Dir::NE | Dir::NEE | Dir::NW | Dir::NWW => 1,
             Dir::NNE | Dir::NNW => 2,
             Dir::S | Dir::SE | Dir::SEE | Dir::SW | Dir::SWW => -1,

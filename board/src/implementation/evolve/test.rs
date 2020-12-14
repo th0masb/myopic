@@ -1,12 +1,8 @@
 use crate::implementation::test::TestBoard;
 use crate::implementation::MutBoardImpl;
 use crate::Move;
-use myopic_core::bitboard::constants::*;
-use myopic_core::bitboard::BitBoard;
-use myopic_core::castlezone::CastleZone;
-use myopic_core::castlezone::CastleZoneSet;
-use myopic_core::pieces::Piece;
-use myopic_core::{Side, Square};
+use myopic_core::*;
+use myopic_core::constants::*;
 
 #[derive(Debug, Clone)]
 struct TestCase {

@@ -2,11 +2,7 @@ use crate::implementation::MutBoardImpl;
 use crate::Discards;
 use crate::Move;
 use crate::Move::*;
-use myopic_core::castlezone::CastleZone;
-use myopic_core::castlezone::CastleZoneSet;
-use myopic_core::pieces::Piece;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{Side, Square};
+use myopic_core::*;
 
 #[cfg(test)]
 mod test;

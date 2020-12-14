@@ -1,8 +1,8 @@
 use crate::castlezone::CastleZone;
 use crate::castlezone::CastleZoneSet;
-use crate::Square;
-use crate::Side;
 use crate::pieces::Piece;
+use crate::Side;
+use crate::Square;
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 
@@ -38,7 +38,7 @@ pub fn zones(zones: CastleZoneSet) -> u64 {
 }
 
 pub fn gen_features(seed: u64) -> Vec<u64> {
-    return gen_unique(seed, N_FEATURES)
+    return gen_unique(seed, N_FEATURES);
 }
 
 /// O(n^2) complexity but hey ho.
