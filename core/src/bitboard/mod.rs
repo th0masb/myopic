@@ -2,10 +2,10 @@ use std::{fmt, ops};
 
 use itertools::Itertools;
 
-use crate::{Square, Dir};
-use crate::Square::H1;
-use crate::reflectable::Reflectable;
 use crate::bitboard::iterator::BitBoardIterator;
+use crate::reflectable::Reflectable;
+use crate::Square::H1;
+use crate::{Dir, Square};
 use std::iter::FromIterator;
 
 pub mod constants;
@@ -141,7 +141,6 @@ impl FromIterator<BitBoard> for BitBoard {
         iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
     }
 }
-
 
 /// Operator implementations for bitboards which all use the underlying u64
 /// value.

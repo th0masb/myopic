@@ -90,8 +90,8 @@ const CONTROL: [BitBoard; 64] = [
 
 #[cfg(test)]
 mod white_test {
-    use crate::Square::*;
     use crate::pieces::Piece;
+    use crate::Square::*;
 
     use super::*;
 
@@ -116,8 +116,8 @@ mod white_test {
 
 #[cfg(test)]
 mod black_test {
-    use crate::Square::*;
     use crate::pieces::Piece;
+    use crate::Square::*;
 
     use super::*;
 

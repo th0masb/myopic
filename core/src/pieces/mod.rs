@@ -1,7 +1,7 @@
 use crate::bitboard::BitBoard;
-use crate::Square;
 use crate::reflectable::Reflectable;
 use crate::Side;
+use crate::Square;
 
 mod kings;
 mod knights;
