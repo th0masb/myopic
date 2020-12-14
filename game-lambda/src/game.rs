@@ -10,9 +10,10 @@ use std::time::{Duration, Instant};
 
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
+const MAX_TABLE_MISSES: usize = 2;
 
 pub trait OpeningService {
-    fn get_recommended_move(&self, uci_sequence: &str) -> Result<Option<String>, String>;
+    fn get_move(&self, uci_sequence: &str) -> Result<Option<String>, String>;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -39,6 +40,7 @@ pub struct Game<O: OpeningService> {
     inferred_metadata: Option<InferredGameMetadata>,
     lichess_service: LichessService,
     opening_service: O,
+    opening_misses: usize,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -56,6 +58,7 @@ pub fn new_dynamodb(props: DynamoDbGameConfig) -> Game<DynamoDbOpeningService> {
         expected_half_moves: props.expected_half_moves,
         inferred_metadata: None,
         time_constraints: props.time_constraints,
+        opening_misses: 0,
     }
 }
 
@@ -156,12 +159,23 @@ impl<O: OpeningService> Game<O> {
         }
     }
 
-    fn get_opening_move(&self, current_sequence: &str) -> Option<String> {
-        match self.opening_service.get_recommended_move(current_sequence) {
-            Ok(result) => result,
-            Err(error) => {
-                log::info!("Error retrieving opening move: {}", error);
-                None
+    fn get_opening_move(&mut self, current_sequence: &str) -> Option<String> {
+        if self.opening_misses >= MAX_TABLE_MISSES {
+            log::info!("Skipping opening table check as {} checks were missed", MAX_TABLE_MISSES);
+            None
+        } else {
+            match self.opening_service.get_move(current_sequence) {
+                Ok(result) => {
+                    if result.is_none() {
+                        self.opening_misses += 1;
+                    }
+                    result
+                }
+                Err(error) => {
+                    log::info!("Error retrieving opening move: {}", error);
+                    self.opening_misses += 1;
+                    None
+                }
             }
         }
     }

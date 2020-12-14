@@ -1,6 +1,5 @@
 mod dynamodb_openings;
 mod events;
-mod first_moves;
 mod game;
 mod helper;
 mod lichess;
