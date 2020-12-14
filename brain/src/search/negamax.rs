@@ -4,34 +4,7 @@ use core::cmp;
 use myopic_board::{Move, MoveComputeType, Termination};
 use std::time::{Duration, Instant};
 
-/// Represents some object which can determine whether a search should be
-/// terminated given certain context about the current state. Implementations
-/// are provided for Duration (caps the search based on time elapsed), for
-/// usize which represents a maximum search depth and for a pair
-/// (Duration, usize) which combines both checks.
-pub trait NegamaxTerminator {
-    fn should_terminate(&self, ctx: &NegamaxContext) -> bool;
-}
-
-impl NegamaxTerminator for Duration {
-    fn should_terminate(&self, ctx: &NegamaxContext) -> bool {
-        ctx.start_time.elapsed() > *self
-    }
-}
-
-impl NegamaxTerminator for usize {
-    fn should_terminate(&self, ctx: &NegamaxContext) -> bool {
-        ctx.depth_remaining > *self
-    }
-}
-
-impl NegamaxTerminator for (Duration, usize) {
-    fn should_terminate(&self, ctx: &NegamaxContext) -> bool {
-        self.0.should_terminate(ctx) || self.1.should_terminate(ctx)
-    }
-}
-
-pub struct NegamaxContext {
+pub struct SearchContext {
     pub start_time: Instant,
     pub alpha: i32,
     pub beta: i32,
@@ -39,11 +12,11 @@ pub struct NegamaxContext {
     pub precursors: Vec<Move>,
 }
 
-impl NegamaxContext {
-    fn next_level(&self, mv: &Move) -> NegamaxContext {
+impl SearchContext {
+    fn next_level(&self, mv: &Move) -> SearchContext {
         let mut next_precursors = self.precursors.clone();
         next_precursors.push(mv.clone());
-        NegamaxContext {
+        SearchContext {
             start_time: self.start_time,
             alpha: -self.beta,
             beta: -self.alpha,
@@ -53,7 +26,34 @@ impl NegamaxContext {
     }
 }
 
-pub struct NegamaxResponse {
+/// Represents some object which can determine whether a search should be
+/// terminated given certain context about the current state. Implementations
+/// are provided for Duration (caps the search based on time elapsed), for
+/// usize which represents a maximum search depth and for a pair
+/// (Duration, usize) which combines both checks.
+pub trait SearchTerminator {
+    fn should_terminate(&self, ctx: &SearchContext) -> bool;
+}
+
+impl SearchTerminator for Duration {
+    fn should_terminate(&self, ctx: &SearchContext) -> bool {
+        ctx.start_time.elapsed() > *self
+    }
+}
+
+impl SearchTerminator for usize {
+    fn should_terminate(&self, ctx: &SearchContext) -> bool {
+        ctx.depth_remaining > *self
+    }
+}
+
+impl SearchTerminator for (Duration, usize) {
+    fn should_terminate(&self, ctx: &SearchContext) -> bool {
+        self.0.should_terminate(ctx) || self.1.should_terminate(ctx)
+    }
+}
+
+pub struct SearchResponse {
     // The evaluation of the position negamax was called for
     pub eval: i32,
     // The path of optimal play which led to the eval if the
@@ -61,7 +61,7 @@ pub struct NegamaxResponse {
     pub path: Vec<Move>,
 }
 
-pub struct Negamax<'a, T: NegamaxTerminator> {
+pub struct Searcher<'a, T: SearchTerminator> {
     /// The terminator is responsible for deciding when the
     /// search is complete.
     pub terminator: &'a T,
@@ -73,19 +73,15 @@ pub struct Negamax<'a, T: NegamaxTerminator> {
     pub principle_variation: &'a Vec<Move>,
 }
 
-impl<T: NegamaxTerminator> Negamax<'_, T> {
-    pub fn search<B>(
-        &self,
-        root: &mut B,
-        mut ctx: NegamaxContext,
-    ) -> Result<NegamaxResponse, String>
+impl<T: SearchTerminator> Searcher<'_, T> {
+    pub fn search<B>(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse, String>
     where
         B: EvalBoard,
     {
         if self.terminator.should_terminate(&ctx) {
             return Err(format!("Terminated at depth {}", ctx.depth_remaining));
         } else if ctx.depth_remaining == 0 || root.termination_status().is_some() {
-            return Ok(NegamaxResponse {
+            return Ok(SearchResponse {
                 eval: match root.termination_status() {
                     Some(Termination::Loss) => eval::LOSS_VALUE,
                     Some(Termination::Draw) => eval::DRAW_VALUE,
@@ -98,7 +94,7 @@ impl<T: NegamaxTerminator> Negamax<'_, T> {
         let mut best_path = vec![];
         for evolve in self.compute_moves(root, &ctx.precursors) {
             let discards = root.evolve(&evolve);
-            let NegamaxResponse { eval, path } = self.search(root, ctx.next_level(&evolve))?;
+            let SearchResponse { eval, path } = self.search(root, ctx.next_level(&evolve))?;
             root.devolve(&evolve, discards);
 
             let negated_eval = -eval;
@@ -110,10 +106,10 @@ impl<T: NegamaxTerminator> Negamax<'_, T> {
 
             ctx.alpha = cmp::max(ctx.alpha, result);
             if ctx.alpha > ctx.beta {
-                return Ok(NegamaxResponse { eval: ctx.beta, path: vec![] });
+                return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
             }
         }
-        return Ok(NegamaxResponse { eval: result, path: best_path });
+        return Ok(SearchResponse { eval: result, path: best_path });
     }
 
     fn compute_moves<B: EvalBoard>(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {
@@ -125,7 +121,7 @@ impl<T: NegamaxTerminator> Negamax<'_, T> {
                 None => {}
                 Some(suggested_move) => {
                     match moves.iter().position(|m| m == suggested_move) {
-                        None => {}, // Some sort of debug warning?
+                        None => {} // Some sort of debug warning?
                         Some(index) => {
                             moves.remove(index);
                             moves.insert(0, suggested_move.clone());

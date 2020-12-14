@@ -1,9 +1,9 @@
 use std::time::{Duration, Instant};
 
-use crate::eval::EvalBoard;
-use crate::search::negamax::{Negamax, NegamaxContext, NegamaxResponse, NegamaxTerminator};
 use crate::eval;
-use myopic_board::{Move, MoveComputeType, Termination};
+use crate::eval::EvalBoard;
+use crate::search::negamax::{SearchContext, SearchResponse, SearchTerminator, Searcher};
+use myopic_board::Move;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
 
@@ -11,6 +11,17 @@ pub mod interactive;
 pub mod negamax;
 
 const DEPTH_UPPER_BOUND: usize = 10;
+
+/// API function for executing search on the calling thread, we pass a root
+/// state and a terminator and compute the best move we can make from this
+/// state within the duration constraints implied by the terminator.
+pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome, String>
+    where
+        B: EvalBoard,
+        T: SearchTerminator,
+{
+    Search { root, terminator }.search()
+}
 
 /// Data class composing information/result about/of a best move search.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -43,10 +54,7 @@ impl serde::Serialize for SearchOutcome {
 #[cfg(test)]
 mod searchoutcome_serialize_test {
     use super::SearchOutcome;
-    use myopic_board::Move;
-    use myopic_core::castlezone::CastleZone;
-    use myopic_core::pieces::Piece;
-    use myopic_core::Square;
+    use myopic_board::{Move, CastleZone, Piece, Square};
     use serde_json;
     use std::time::Duration;
 
@@ -69,17 +77,7 @@ mod searchoutcome_serialize_test {
     }
 }
 
-/// API function for executing search on the calling thread, we pass a root
-/// state and a terminator and compute the best move we can make from this
-/// state within the duration constraints implied by the terminator.
-pub fn search<B: EvalBoard, T: NegamaxTerminator>(
-    root: B,
-    terminator: T,
-) -> Result<SearchOutcome, String> {
-    Search { root, terminator }.search()
-}
-
-struct Search<B: EvalBoard, T: NegamaxTerminator> {
+struct Search<B: EvalBoard, T: SearchTerminator> {
     root: B,
     terminator: T,
 }
@@ -91,7 +89,7 @@ struct BestMoveResponse {
     depth: usize,
 }
 
-impl<B: EvalBoard, T: NegamaxTerminator> Search<B, T> {
+impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
     pub fn search(&self) -> Result<SearchOutcome, String> {
         let search_start = Instant::now();
         let mut break_message = format!("Terminated before search began");
@@ -120,15 +118,20 @@ impl<B: EvalBoard, T: NegamaxTerminator> Search<B, T> {
         })
     }
 
-    fn best_move(&self, depth: usize, search_start: Instant, principle_variation: &Vec<Move>) -> Result<BestMoveResponse, String> {
+    fn best_move(
+        &self,
+        depth: usize,
+        search_start: Instant,
+        principle_variation: &Vec<Move>,
+    ) -> Result<BestMoveResponse, String> {
         if depth < 1 {
             return Err(format!("Illegal depth: {}", depth));
         }
 
-        let NegamaxResponse { eval, mut path } =
-            Negamax { terminator: &self.terminator, principle_variation  }.search(
+        let SearchResponse { eval, mut path } =
+            Searcher { terminator: &self.terminator, principle_variation }.search(
                 &mut self.root.clone(),
-                NegamaxContext {
+                SearchContext {
                     depth_remaining: depth,
                     start_time: search_start,
                     alpha: -eval::INFTY,
@@ -155,17 +158,12 @@ impl<B: EvalBoard, T: NegamaxTerminator> Search<B, T> {
 mod test {
     use crate::eval;
     use crate::eval::EvalBoard;
-    use myopic_board::Move;
-    use myopic_board::Move::Standard;
-    use myopic_core::pieces::Piece;
-    use myopic_core::reflectable::Reflectable;
-    use myopic_core::Square;
-    use myopic_core::Square::*;
+    use myopic_board::{Move, Move::Standard, Piece, Reflectable, Square, Square::*};
 
     const DEPTH: usize = 3;
 
     fn test(fen_string: &'static str, expected_move_pool: Vec<Move>, is_won: bool) {
-        let board = crate::eval::new_board(fen_string).unwrap();
+        let board = crate::eval::position(fen_string).unwrap();
         let (ref_board, ref_move_pool) = (board.reflect(), expected_move_pool.reflect());
         test_impl(board, expected_move_pool, is_won);
         test_impl(ref_board, ref_move_pool, is_won);

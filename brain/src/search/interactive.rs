@@ -1,6 +1,6 @@
-use crate::search::{search, NegamaxContext, NegamaxTerminator};
+use crate::search::{search as blocking_search, SearchContext, SearchTerminator};
 use crate::{EvalBoard, SearchOutcome};
-use myopic_core::Side;
+use myopic_board::Side;
 use std::cmp::{max, min};
 use std::rc::Rc;
 use std::sync::mpsc;
@@ -13,13 +13,13 @@ const DEFAULT_SEARCH_DURATION: Duration = Duration::from_secs(30);
 const DEFAULT_SEARCH_DEPTH: usize = 10;
 const MAX_COMPUTED_MOVE_SEARCH_DURATION: Duration = Duration::from_secs(45);
 
-pub type InteractiveSearchCommandTx<B> = Sender<InteractiveSearchCommand<B>>;
-pub type InteractiveSearchResultRx = Receiver<Result<SearchOutcome, String>>;
-type CmdRx<B> = Receiver<InteractiveSearchCommand<B>>;
+pub type SearchCommandTx<B> = Sender<SearchCommand<B>>;
+pub type SearchResultRx = Receiver<Result<SearchOutcome, String>>;
+type CmdRx<B> = Receiver<SearchCommand<B>>;
 type ResultTx = Sender<Result<SearchOutcome, String>>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum InteractiveSearchCommand<B: EvalBoard> {
+pub enum SearchCommand<B: EvalBoard> {
     Go,
     GoOnce,
     Stop,
@@ -34,9 +34,9 @@ pub enum InteractiveSearchCommand<B: EvalBoard> {
 /// Create an interactive search running on a separate thread, communication happens
 /// via an input channel which accepts a variety of commands and an output channel
 /// which transmits the search results.
-pub fn interactive_search<B: EvalBoard + 'static>(
-) -> (InteractiveSearchCommandTx<B>, InteractiveSearchResultRx) {
-    let (input_tx, input_rx) = mpsc::channel::<InteractiveSearchCommand<B>>();
+pub fn search<B: EvalBoard + 'static>(
+) -> (SearchCommandTx<B>, SearchResultRx) {
+    let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<Result<SearchOutcome, String>>();
     std::thread::spawn(move || {
         let mut search = InteractiveSearch::new(input_rx, output_tx);
@@ -44,20 +44,20 @@ pub fn interactive_search<B: EvalBoard + 'static>(
             match &search.input_rx.recv() {
                 Err(_) => continue,
                 Ok(input) => match input.to_owned() {
-                    InteractiveSearchCommand::Close => break,
-                    InteractiveSearchCommand::Stop => (),
-                    InteractiveSearchCommand::Go => search.execute_then_send(),
-                    InteractiveSearchCommand::Root(root) => search.root = Some(root),
-                    InteractiveSearchCommand::Depth(max_depth) => search.max_depth = max_depth,
-                    InteractiveSearchCommand::Time(max_time) => search.set_max_time(max_time),
-                    InteractiveSearchCommand::GameTime { w_base, w_inc, b_base, b_inc } => {
+                    SearchCommand::Close => break,
+                    SearchCommand::Stop => (),
+                    SearchCommand::Go => search.execute_then_send(),
+                    SearchCommand::Root(root) => search.root = Some(root),
+                    SearchCommand::Depth(max_depth) => search.max_depth = max_depth,
+                    SearchCommand::Time(max_time) => search.set_max_time(max_time),
+                    SearchCommand::GameTime { w_base, w_inc, b_base, b_inc } => {
                         search.set_game_time(w_base, w_inc, b_base, b_inc)
                     }
-                    InteractiveSearchCommand::Infinite => {
+                    SearchCommand::Infinite => {
                         search.max_time = INFINITE_DURATION;
                         search.max_depth = INFINITE_DEPTH;
                     }
-                    InteractiveSearchCommand::GoOnce => {
+                    SearchCommand::GoOnce => {
                         search.execute_then_send();
                         break;
                     }
@@ -124,7 +124,7 @@ impl<B: EvalBoard + 'static> InteractiveSearch<B> {
             max_time: self.max_time,
             stop_signal: self.input_rx.clone(),
         };
-        search(self.root.clone().unwrap(), tracker)
+        blocking_search(self.root.clone().unwrap(), tracker)
     }
 }
 
@@ -134,12 +134,12 @@ struct InteractiveSearchTerminator<B: EvalBoard> {
     stop_signal: Rc<CmdRx<B>>,
 }
 
-impl<B: EvalBoard> NegamaxTerminator for InteractiveSearchTerminator<B> {
-    fn should_terminate(&self, ctx: &NegamaxContext) -> bool {
+impl<B: EvalBoard> SearchTerminator for InteractiveSearchTerminator<B> {
+    fn should_terminate(&self, ctx: &SearchContext) -> bool {
         ctx.start_time.elapsed() > self.max_time
             || ctx.depth_remaining >= self.max_depth
             || match self.stop_signal.try_recv() {
-                Ok(InteractiveSearchCommand::Stop) => true,
+                Ok(SearchCommand::Stop) => true,
                 _ => false,
             }
     }

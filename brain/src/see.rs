@@ -1,8 +1,4 @@
-use myopic_board::MutBoard;
-use myopic_core::bitboard::BitBoard;
-use myopic_core::pieces::Piece;
-use myopic_core::reflectable::Reflectable;
-use myopic_core::{Side, Square};
+use myopic_board::{BitBoard, MutBoard, Piece, Reflectable, Side, Square};
 use std::cmp;
 
 /// API function for determining whether an exchange is good on the given
@@ -147,10 +143,7 @@ fn is_slider(piece: Piece) -> bool {
 mod test {
     use crate::see::See;
 
-    use myopic_board::MutBoard;
-
-    use myopic_core::reflectable::Reflectable;
-    use myopic_core::Square;
+    use myopic_board::{MutBoard, Reflectable, Square};
 
     fn dummy_values() -> [i32; 6] {
         [1, 3, 3, 5, 9, 1000]
