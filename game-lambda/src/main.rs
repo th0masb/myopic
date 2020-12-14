@@ -5,15 +5,6 @@ mod game;
 mod helper;
 mod lichess;
 
-extern crate bytes;
-extern crate rand;
-extern crate reqwest;
-extern crate serde;
-extern crate serde_json;
-extern crate tokio;
-#[macro_use]
-extern crate serde_derive;
-
 use crate::dynamodb_openings::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
 use crate::game::{DynamoDbGameConfig, GameExecutionState};
 use crate::helper::timestamp_millis;
@@ -23,6 +14,7 @@ use lambda_runtime::{error::HandlerError, lambda, Context};
 use reqwest::blocking::Response;
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
+use serde_derive::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
 use std::error::Error;
 use std::io::{BufRead, BufReader};
