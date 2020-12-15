@@ -27,8 +27,8 @@ impl MoveRecord {
 
 #[derive(Serialize)]
 pub struct DatabaseEntry {
-    position: String,
-    moves: Vec<MoveRecord>,
+    pub position: String,
+    pub moves: Vec<MoveRecord>,
 }
 
 impl PositionStore {

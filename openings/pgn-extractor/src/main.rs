@@ -20,14 +20,43 @@ struct Opt {
     /// positions from.
     #[structopt(short, long, parse(from_os_str))]
     source: PathBuf,
-    /// The depth we will search into games.
-    #[structopt(short = "d", long = "search-depth")]
-    #[serde(rename = "search-depth")]
+    /// The depth we will search into games starting
+    /// from the offset.
+    #[structopt(short = "d", long = "depth")]
+    #[serde(rename = "depth")]
     search_depth: usize,
+    /// The depth we will start the search into a game.
+    #[structopt(short = "o", long = "offset", default_value = "0")]
+    #[serde(rename = "offset")]
+    search_offset: usize,
+    /// FEN components to include and their ordering
+    #[structopt(long = "format", default_value = "bac")]
+    #[serde(rename = "format")]
+    fen_format: String,
+    /// Only the positions will be output.
+    #[structopt(long = "positions-only")]
+    #[serde(rename = "positions-only")]
+    positions_only: bool,
+}
+
+fn parse_fen_components(input: &str) -> Vec<FenComponent> {
+    input
+        .chars()
+        .flat_map(|c| match c {
+            'b' => vec![FenComponent::Board],
+            'a' => vec![FenComponent::Active],
+            'c' => vec![FenComponent::CastlingRights],
+            'e' => vec![FenComponent::Enpassant],
+            'h' => vec![FenComponent::HalfMoveCount],
+            'm' => vec![FenComponent::MoveCount],
+            _ => vec![],
+        })
+        .collect()
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let opt: Opt = Opt::from_args();
+    let fen_components = parse_fen_components(opt.fen_format.as_str());
 
     eprintln!("{}", chrono::Utc::now());
     eprintln!();
@@ -64,7 +93,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Err(_) => {
                     errors.add_read_error(file_name.clone(), i);
                 }
-                Ok(game) => match parse_entries(opt.search_depth, game.as_str()) {
+                Ok(game) => match parse_entries(
+                    &fen_components,
+                    opt.search_offset,
+                    opt.search_depth,
+                    game.as_str(),
+                ) {
                     Err(_) => {
                         errors.add_parse_error(file_name.clone(), i);
                     }
@@ -79,7 +113,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     game_progress.finish();
     eprintln!();
     for database_entry in store.entries() {
-        println!("{}", serde_json::to_string(&database_entry)?);
+        if opt.positions_only {
+            println!("{}", database_entry.position)
+        } else {
+            println!("{}", serde_json::to_string(&database_entry)?);
+        }
     }
     eprintln!("Errors:\n{}\n", serde_json::to_string_pretty(&errors)?);
     eprintln!("Stats:\n{}", serde_json::to_string_pretty(store.stats())?);
@@ -110,28 +148,30 @@ fn path_to_string(path: &PathBuf) -> String {
         .to_string()
 }
 
-fn parse_entries(depth: usize, game: &str) -> Result<Vec<CollectionEntry>, errors::Error> {
+fn parse_entries(
+    format: &Vec<FenComponent>,
+    offset: usize,
+    depth: usize,
+    game: &str,
+) -> Result<Vec<CollectionEntry>, errors::Error> {
     let moves: Vec<Move> = myopic_board::parse::pgn(game)
         .map_err(|msg| errors::err(msg.as_str()))?
         .into_iter()
-        .take(depth)
+        .take(offset + depth)
         .collect();
 
     let (mut board, mut entries) = (myopic_board::start_position(), vec![]);
-    for mv in moves {
-        match mv {
-            Move::Enpassant(_, _) => {
-                println!("ENPASSANT: Ignoring enpassant move in {}", game);
-            }
-            _ => {
-                entries.push(CollectionEntry {
-                    position: board.to_partial_fen(&[
-                        FenComponent::Board,
-                        FenComponent::Active,
-                        FenComponent::CastlingRights,
-                    ]),
-                    mv: mv.uci_format(),
-                });
+    for (i, mv) in moves.into_iter().enumerate() {
+        if i >= offset {
+            match mv {
+                // Ignore enpassant moves for now
+                Move::Enpassant(_, _) => {}
+                _ => {
+                    entries.push(CollectionEntry {
+                        position: board.to_partial_fen(format.as_slice()),
+                        mv: mv.uci_format(),
+                    });
+                }
             }
         }
         board.evolve(&mv);
