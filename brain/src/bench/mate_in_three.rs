@@ -9,13 +9,9 @@ use std::fs;
 use std::io::{BufRead, BufReader};
 use std::time::Duration;
 
-const DATA_PATH: &'static str = r"data/formatted-three-puzzles";
-const MAX_CASES: usize = 200;
-const DEPTH: usize = 4;
-
 #[rustfmt::skip]
 ///
-/// cargo test --release mate_benchmark -- --ignored --nocapture
+/// cargo test --release mate_in_three -- --ignored --nocapture
 ///
 /// Errors at case 330:
 /// -- quiescent search on "8/7k/1p6/5p1p/PP2bb2/6QP/6PK/5q2 b - - 0 3" doesn't recognize the mate
@@ -67,9 +63,9 @@ const DEPTH: usize = 4;
 /// /// Run on system76 laptop
 /// ------------------------------------------------------------------------------------------------
 /// 14/12/20 | 4(8)(2) | 200   | 0      | 5,398,916          | So much slower on system76! This is a
-///          |         |       |        |                    | control run to test the addition of
-///          |         |       |        |                    | proper iterative deepening with
-///          |         |       |        |                    | principle variation
+///          |         |       |        |                    | control run on master to test the
+///          |         |       |        |                    | addition of proper iterative deepening
+///          |         |       |        |                    | with principle variation
 /// ------------------------------------------------------------------------------------------------
 /// 14/12/20 | 4(8)(2) | 200   | 0      | 3,119,500          | Run with pv iterative deepening
 ///          |         |       |        |                    | changes. Significant difference in
@@ -80,24 +76,43 @@ const DEPTH: usize = 4;
 ///          |         |       |        |                    | quiescent search?
 /// ------------------------------------------------------------------------------------------------
 ///
+/// ------------------------------------------------------------------------------------------------
+/// 15/12/20 | 4(8)(2) | 200   | 0      | 3,324,402          | This is a control run on master to test
+///          |         |       |        |                    | the addition of first attempt at
+///          |         |       |        |                    | heuristically ordering all moves
+///          |         |       |        |                    | according to their quality during the
+///          |         |       |        |                    | negamax search.
+/// ------------------------------------------------------------------------------------------------
+/// 15/12/20 | 4(8)(2) | 200   | 0      | 3,266,659          | Run with heuristic move ordering
+///          |         |       |        |                    | changes. No significat changes at all!
+///          |         |       |        |                    | I tried running the benchmark at depth 3
+///          |         |       |        |                    | and ~90% of cases passed which explains
+///          |         |       |        |                    | the lack of increase as the principle
+///          |         |       |        |                    | variation from depth 3 was the optimal
+///          |         |       |        |                    | move in most cases.
+/// ------------------------------------------------------------------------------------------------
 ///
 #[test]
 #[ignore]
-fn mate_benchmark() {
-    let cases = load_cases();
+fn benchmark() {
+    dotenv::dotenv().ok();
+    let data = std::env::var("MATE3_INPUT_DATA").unwrap();
+    let depth = std::env::var("MATE3_DEPTH").unwrap().parse::<usize>().unwrap();
+    let max_cases = std::env::var("MATE3_MAX_CASES").unwrap().parse::<usize>().unwrap();
+    let cases = load_cases(data, max_cases);
     let mut search_duration = Duration::from_secs(0);
     let (mut err_count, mut case_count) = (0, 0);
     let print_progress = |cases: usize, errs: usize, d: Duration| {
         println!(
             "Depth: {}, Cases: {}, Errors: {}, Time: {}ms",
-            DEPTH, cases, errs, d.as_millis()
+            depth, cases, errs, d.as_millis()
         );
     };
     for (i, test_case) in cases.into_iter().enumerate() {
         if i % 5 == 0 {
             print_progress(case_count, err_count, search_duration.clone());
         }
-        match search(test_case.board, DEPTH) {
+        match search(test_case.board, depth) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 search_duration += outcome.time;
@@ -112,14 +127,14 @@ fn mate_benchmark() {
     print_progress(case_count, err_count, search_duration);
 }
 
-fn load_cases() -> Vec<TestCase> {
+fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
     lazy_static! {
         static ref SEP: Regex = Regex::new(r"[$]{4}").unwrap();
     }
     let data_path = format!(
         "{}/{}",
         std::env::var("CARGO_MANIFEST_DIR").unwrap(),
-        DATA_PATH
+        data_path
     );
     let file = fs::File::open(&data_path).unwrap();
     let reader = BufReader::new(file);
@@ -152,7 +167,7 @@ fn load_cases() -> Vec<TestCase> {
                         ),
                         expected_move,
                     });
-                    if dest.len() == MAX_CASES {
+                    if dest.len() == max_cases {
                         break;
                     }
                 }

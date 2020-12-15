@@ -1,7 +1,7 @@
 use crate::eval_impl::EvalBoardImpl;
 use crate::tables::PositionTables;
 use crate::values::PieceValues;
-use myopic_board::{MutBoard, MutBoardImpl};
+use myopic_board::{MutBoard, MutBoardImpl, Piece, Square};
 use serde_derive::{Deserialize, Serialize};
 
 /// The evaluation upper/lower bound definition
@@ -32,6 +32,10 @@ pub trait EvalBoard: MutBoard {
     /// The value each piece is considered to have in the current
     /// state of the game.
     fn piece_values(&self) -> &[i32; 6];
+
+    /// The positional (table) value of the given piece situated at the
+    /// given square in the context of this position.
+    fn positional_eval(&self, piece: Piece, location: Square) -> i32;
 }
 
 /// Allows one to configure the parameters of the evaluation board.
