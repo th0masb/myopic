@@ -6,19 +6,14 @@ use std::time::Instant;
 #[rustfmt::skip]
 /// Run on system76
 /// ------------------------------------------------------------------------------------------------
-/// 15/12/20 | 4(8)(2) | 100   | 0      | 3,324,402          | This is a control run on master to test
+/// 15/12/20 | 4(8)(2) | 100   | 0      | 737,690            | This is a control run on master to test
 ///          |         |       |        |                    | the addition of first attempt at
 ///          |         |       |        |                    | heuristically ordering all moves
 ///          |         |       |        |                    | according to their quality during the
 ///          |         |       |        |                    | negamax search.
 /// ------------------------------------------------------------------------------------------------
-/// 15/12/20 | 4(8)(2) | 100   | 0      | 3,266,659          | Run with heuristic move ordering
-///          |         |       |        |                    | changes. No significat changes at all!
-///          |         |       |        |                    | I tried running the benchmark at depth 3
-///          |         |       |        |                    | and ~90% of cases passed which explains
-///          |         |       |        |                    | the lack of increase as the principle
-///          |         |       |        |                    | variation from depth 3 was the optimal
-///          |         |       |        |                    | move in most cases.
+/// 15/12/20 | 4(8)(2) | 100   | 0      | 182,397!!          | Massive difference in adding the move
+///          |         |       |        |                    | ordering :)
 /// ------------------------------------------------------------------------------------------------
 #[test]
 #[ignore]
