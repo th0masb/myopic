@@ -1,4 +1,5 @@
 use crate::search::eval;
+use crate::search::ordering::MoveQualityEstimator;
 use crate::{quiescent, EvalBoard};
 use core::cmp;
 use myopic_board::{Move, MoveComputeType, Termination};
@@ -29,30 +30,13 @@ impl SearchContext {
 /// Represents some object which can determine whether a search should be
 /// terminated given certain context about the current state. Implementations
 /// are provided for Duration (caps the search based on time elapsed), for
-/// usize which represents a maximum search depth and for a pair
-/// (Duration, usize) which combines both checks.
+/// usize which represents a maximum search depth and for a pair (Duration, usize)
+/// which combines both checks.
 pub trait SearchTerminator {
     fn should_terminate(&self, ctx: &SearchContext) -> bool;
 }
 
-impl SearchTerminator for Duration {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        ctx.start_time.elapsed() > *self
-    }
-}
-
-impl SearchTerminator for usize {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        ctx.depth_remaining > *self
-    }
-}
-
-impl SearchTerminator for (Duration, usize) {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        self.0.should_terminate(ctx) || self.1.should_terminate(ctx)
-    }
-}
-
+///
 pub struct SearchResponse {
     // The evaluation of the position negamax was called for
     pub eval: i32,
@@ -61,23 +45,37 @@ pub struct SearchResponse {
     pub path: Vec<Move>,
 }
 
-pub struct Searcher<'a, T: SearchTerminator> {
+pub struct Searcher<'a, T, B, M>
+where
+    T: SearchTerminator,
+    B: EvalBoard,
+    M: MoveQualityEstimator<B>,
+{
     /// The terminator is responsible for deciding when the
-    /// search is complete.
+    /// search is complete
     pub terminator: &'a T,
     /// The principle variation is a search optimisation which
     /// comes from "iterative deepening". The idea is that if
     /// we do a search at a lower depth then the optimal path
     /// recovered from that is a good candidate to search first
-    /// in a deeper search.
+    /// in a deeper search
     pub principle_variation: &'a Vec<Move>,
+    /// Used for performing an initial sort on the moves
+    /// generated in each position for optimising the search
+    pub move_quality_estimator: M,
+    /// Placeholder to satisfy the compiler because of the 'unused'
+    /// type parameter for the board
+    pub board_type: std::marker::PhantomData<B>,
 }
 
-impl<T: SearchTerminator> Searcher<'_, T> {
-    pub fn search<B>(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse, String>
-    where
-        B: EvalBoard,
-    {
+impl<T, B, M> Searcher<'_, T, B, M>
+where
+    T: SearchTerminator,
+    B: EvalBoard,
+    M: MoveQualityEstimator<B>,
+{
+    ///
+    pub fn search(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse, String> {
         if self.terminator.should_terminate(&ctx) {
             return Err(format!("Terminated at depth {}", ctx.depth_remaining));
         } else if ctx.depth_remaining == 0 || root.termination_status().is_some() {
@@ -118,8 +116,11 @@ impl<T: SearchTerminator> Searcher<'_, T> {
         });
     }
 
-    fn compute_moves<B: EvalBoard>(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {
+    fn compute_moves(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {
         let mut moves = board.compute_moves(MoveComputeType::All);
+        // Make an initial heuristic sort of the moves before looking
+        // for the principle variation
+        moves.sort_by_cached_key(|m| -self.move_quality_estimator.estimate(board, m));
         // If we are searching along the principal variation then search the next
         // move on it first (if another move exists)
         if self.principle_variation.starts_with(precursors.as_slice()) {
@@ -137,5 +138,23 @@ impl<T: SearchTerminator> Searcher<'_, T> {
             }
         }
         moves
+    }
+}
+
+impl SearchTerminator for Duration {
+    fn should_terminate(&self, ctx: &SearchContext) -> bool {
+        ctx.start_time.elapsed() > *self
+    }
+}
+
+impl SearchTerminator for usize {
+    fn should_terminate(&self, ctx: &SearchContext) -> bool {
+        ctx.depth_remaining > *self
+    }
+}
+
+impl SearchTerminator for (Duration, usize) {
+    fn should_terminate(&self, ctx: &SearchContext) -> bool {
+        self.0.should_terminate(ctx) || self.1.should_terminate(ctx)
     }
 }

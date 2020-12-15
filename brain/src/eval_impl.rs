@@ -249,6 +249,11 @@ impl<B: MutBoard> EvalBoard for EvalBoardImpl<B> {
     fn piece_values(&self) -> &[i32; 6] {
         &self.piece_values.midgame
     }
+
+    // TODO For now we just use midgame values, should take into account phase
+    fn positional_eval(&self, piece: Piece, location: Square) -> i32 {
+        self.position_tables.midgame(piece, location)
+    }
 }
 
 #[cfg(test)]
