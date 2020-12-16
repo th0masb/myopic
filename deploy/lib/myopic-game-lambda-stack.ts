@@ -11,6 +11,7 @@ export interface MyopicGameLambdaStackProps extends cdk.StackProps {
   openingsTableName: string
   memorySize: number
   timeout: Duration
+  assetName: string
 }
 
 export class MyopicGameLambdaStack extends cdk.Stack {
@@ -21,7 +22,7 @@ export class MyopicGameLambdaStack extends cdk.Stack {
       runtime: lambda.Runtime.PROVIDED_AL2,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(
-        path.join(__dirname, '..', 'runtime', 'lambda.zip')
+        path.join(__dirname, '..', 'runtime', props.assetName)
       ),
       functionName: props.functionName,
       timeout: props.timeout,

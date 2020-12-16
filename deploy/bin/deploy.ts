@@ -20,10 +20,11 @@ new MyopicDatabaseStack(app, 'MyopicDatabaseStack', {
 });
 
 new MyopicGameLambdaStack(app, 'MyopicGameLambdaStack', {
-  functionName: process.env.FUNCTION_NAME!,
+  assetName: process.env.MYOPIC_ASSET_NAME!,
+  functionName: process.env.MYOPIC_FUNCTION_NAME!,
   openingsTableName: process.env.OPENINGS_TABLE_NAME!,
-  timeout: cdk.Duration.minutes(Number.parseInt(process.env.FUNCTION_TIMEOUT_MINS!)),
-  memorySize: Number.parseInt(process.env.MEMORY_SIZE!),
+  timeout: cdk.Duration.minutes(Number.parseInt(process.env.MYOPIC_FUNCTION_TIMEOUT_MINS!)),
+  memorySize: Number.parseInt(process.env.MYOPIC_MEMORY_SIZE!),
   region: process.env.REGION!,
   account: process.env.ACCOUNT!,
   env: {
