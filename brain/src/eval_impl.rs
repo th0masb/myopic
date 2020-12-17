@@ -68,8 +68,8 @@ impl<B: MutBoard> EvalBoardImpl<B> {
             end_eval: compute_endgame(&board, &tables, &values),
             phase: compute_phase(&board),
             board,
-            piece_values: PieceValues::default(),
-            position_tables: PositionTables::default(),
+            piece_values: values,
+            position_tables: tables,
         }
     }
 
