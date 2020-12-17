@@ -1,11 +1,13 @@
-mod dynamodb_openings;
+mod compute;
+mod dynamodb;
 mod events;
 mod game;
 mod helper;
 mod lichess;
 
-use crate::dynamodb_openings::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
-use crate::game::{DynamoDbGameConfig, GameExecutionState};
+use crate::compute::LambdaMoveComputeService;
+use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
+use crate::game::{GameConfig, GameExecutionState};
 use crate::helper::timestamp_millis;
 use bytes::Bytes;
 use game::Game;
@@ -144,29 +146,30 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
 fn init_game(
     e: &PlayGameEvent,
     ctx: &Context,
-) -> Result<Game<DynamoDbOpeningService>, HandlerError> {
-    Ok(game::new_dynamodb(DynamoDbGameConfig {
-        game_id: e.lichess_game_id.clone(),
-        bot_id: e.lichess_bot_id.clone(),
-        expected_half_moves: e.expected_half_moves,
-        lichess_auth_token: e.lichess_auth_token.clone(),
-
-        time_constraints: TimeConstraints {
-            start_time: Instant::now(),
-            // Reduce the actual max duration by a constant fraction
-            // to allow a buffer of time to invoke new lambda
-            max_execution_duration: (4 * Duration::from_millis(
-                ctx.deadline as u64 - timestamp_millis(),
-            )) / 5,
+) -> Result<Game<DynamoDbOpeningService, LambdaMoveComputeService>, HandlerError> {
+    Ok(Game::new(
+        GameConfig {
+            game_id: e.lichess_game_id.clone(),
+            bot_id: e.lichess_bot_id.clone(),
+            expected_half_moves: e.expected_half_moves,
+            lichess_auth_token: e.lichess_auth_token.clone(),
+            time_constraints: TimeConstraints {
+                start_time: Instant::now(),
+                // Reduce the actual max duration by a constant fraction
+                // to allow a buffer of time to invoke new lambda
+                max_execution_duration: (4 * Duration::from_millis(
+                    ctx.deadline as u64 - timestamp_millis(),
+                )) / 5,
+            },
         },
-
-        dynamodb_openings_config: DynamoDbOpeningServiceConfig {
+        DynamoDbOpeningService::new(DynamoDbOpeningServiceConfig {
             table_name: e.opening_table_name.clone(),
             position_key: e.opening_table_position_key.clone(),
             move_key: e.opening_table_move_key.clone(),
             table_region: parse_region(e.opening_table_region.as_str())?,
-        },
-    }))
+        }),
+        LambdaMoveComputeService::default(),
+    ))
 }
 
 fn parse_region(region: &str) -> Result<Region, HandlerError> {
