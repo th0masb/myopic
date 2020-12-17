@@ -1,6 +1,6 @@
-use std::io::{BufReader, BufRead};
-use std::fs::File;
 use std::error::Error;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::time::Instant;
 
 #[rustfmt::skip]
@@ -31,7 +31,7 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
         .lines()
         .take(max_positions)
         .map(|l| l.unwrap())
-        .map(|l| match crate::position(l.as_str()) {
+        .map(|l| match crate::pos::from_fen(l.as_str()) {
             Err(message) => panic!("{}", message),
             Ok(position) => position,
         })

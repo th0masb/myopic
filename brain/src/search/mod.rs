@@ -185,7 +185,7 @@ mod test {
     const DEPTH: usize = 3;
 
     fn test(fen_string: &'static str, expected_move_pool: Vec<Move>, is_won: bool) {
-        let board = crate::eval::position(fen_string).unwrap();
+        let board = crate::pos::from_fen(fen_string).unwrap();
         let (ref_board, ref_move_pool) = (board.reflect(), expected_move_pool.reflect());
         test_impl(board, expected_move_pool, is_won);
         test_impl(ref_board, ref_move_pool, is_won);
@@ -195,7 +195,10 @@ mod test {
         match super::search(board, DEPTH) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
-                assert!(expected_move_pool.contains(&outcome.best_move), serde_json::to_string(&outcome).unwrap());
+                assert!(
+                    expected_move_pool.contains(&outcome.best_move),
+                    serde_json::to_string(&outcome).unwrap()
+                );
                 if is_won {
                     assert_eq!(eval::WIN_VALUE, outcome.eval);
                 }

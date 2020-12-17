@@ -55,7 +55,7 @@ impl<B: EvalBoard> MoveQualityEstimator<B> for EstimatorImpl {
             MoveCategory::GoodExchange(n) => 30_000 + n,
             MoveCategory::Special => 20_000,
             MoveCategory::Positional(n) => 10_000 + n,
-            MoveCategory::BadExchange(n) => n
+            MoveCategory::BadExchange(n) => n,
         }
     }
 }
@@ -74,7 +74,7 @@ fn get_category<B: EvalBoard>(board: &mut B, mv: &Move) -> MoveCategory {
     match mv {
         Enpassant(..) | Castle(..) | Promotion(..) => MoveCategory::Special,
         &Standard(p, src, dst) => {
-            if  board.side(p.side().reflect()).contains(dst) {
+            if board.side(p.side().reflect()).contains(dst) {
                 let exchange_value =
                     crate::see::exchange_value(board, src, dst, board.piece_values());
                 if exchange_value > 0 {
@@ -137,4 +137,3 @@ fn parity(side: Side) -> i32 {
         Side::Black => -1,
     }
 }
-

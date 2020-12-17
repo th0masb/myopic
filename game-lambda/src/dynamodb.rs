@@ -1,4 +1,4 @@
-use crate::game::OpeningService;
+use crate::game::LookupService;
 use itertools::Itertools;
 use myopic_brain::{parse, FenComponent, MutBoard};
 use rusoto_core::Region;
@@ -48,8 +48,8 @@ impl DynamoDbOpeningService {
     }
 }
 
-impl OpeningService for DynamoDbOpeningService {
-    fn get_move(&self, uci_sequence: &str) -> Result<Option<String>, String> {
+impl LookupService for DynamoDbOpeningService {
+    fn lookup_move(&self, uci_sequence: &str) -> Result<Option<String>, String> {
         let query_position = parse::position_from_uci(uci_sequence)?.to_partial_fen(&[
             FenComponent::Board,
             FenComponent::Active,
@@ -70,27 +70,23 @@ impl OpeningService for DynamoDbOpeningService {
                     Ok(None)
                 }
                 Some(attributes) => match attributes.get(&self.recommended_move_attribute) {
-                    None => {
-                        Err(format!("Position exists but missing recommended move attribute"))
-                    }
+                    None => Err(format!(
+                        "Position exists but missing recommended move attribute"
+                    )),
                     Some(attribute) => match &attribute.ss {
-                        None => {
-                            Err(format!(
-                                "Position and recommended move attribute exist but not string set type"
-                            ))
-                        }
+                        None => Err(format!(
+                            "Position and recommended move attribute exist but not string set type"
+                        )),
                         Some(move_set) => match choose_move(move_set, rand::random) {
-                            None => {
-                                Err(format!("Position exists with no valid recommendations!"))
-                            }
+                            None => Err(format!("Position exists with no valid recommendations!")),
                             Some(mv) => {
                                 log::info!("Found matching set {:?}!", move_set);
                                 log::info!("Chose {} from set", &mv);
                                 Ok(Some(mv))
                             }
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             })
     }
 }

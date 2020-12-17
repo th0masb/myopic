@@ -1,10 +1,9 @@
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::helper::*;
-use crate::TimeConstraints;
-use myopic_brain::{EvalBoard, MutBoard, Side};
-
-use crate::dynamodb_openings::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
 use crate::lichess::LichessService;
+use crate::TimeConstraints;
+use myopic_brain::{MutBoard, Side};
+use std::error::Error;
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
@@ -12,8 +11,16 @@ const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
 const MAX_TABLE_MISSES: usize = 2;
 
-pub trait OpeningService {
-    fn get_move(&self, uci_sequence: &str) -> Result<Option<String>, String>;
+pub trait LookupService {
+    fn lookup_move(&self, uci_sequence: &str) -> Result<Option<String>, String>;
+}
+
+pub trait ComputeService {
+    fn compute_move(
+        &self,
+        uci_sequence: &str,
+        time_limit: Duration,
+    ) -> Result<String, Box<dyn Error>>;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -23,23 +30,27 @@ struct InferredGameMetadata {
 }
 
 #[derive(Debug, Clone)]
-pub struct DynamoDbGameConfig {
+pub struct GameConfig {
     pub game_id: String,
     pub bot_id: String,
     pub expected_half_moves: u32,
     pub time_constraints: TimeConstraints,
     pub lichess_auth_token: String,
-    pub dynamodb_openings_config: DynamoDbOpeningServiceConfig,
 }
 
 #[derive(Debug)]
-pub struct Game<O: OpeningService> {
+pub struct Game<O, C>
+where
+    O: LookupService,
+    C: ComputeService,
+{
     bot_id: String,
     expected_half_moves: u32,
     time_constraints: TimeConstraints,
     inferred_metadata: Option<InferredGameMetadata>,
     lichess_service: LichessService,
     opening_service: O,
+    compute_service: C,
     opening_misses: usize,
 }
 
@@ -50,19 +61,24 @@ pub enum GameExecutionState {
     Recurse,
 }
 
-pub fn new_dynamodb(props: DynamoDbGameConfig) -> Game<DynamoDbOpeningService> {
-    Game {
-        lichess_service: LichessService::new(props.lichess_auth_token, props.game_id),
-        opening_service: DynamoDbOpeningService::new(props.dynamodb_openings_config),
-        bot_id: props.bot_id,
-        expected_half_moves: props.expected_half_moves,
-        inferred_metadata: None,
-        time_constraints: props.time_constraints,
-        opening_misses: 0,
+impl<O, C> Game<O, C>
+where
+    O: LookupService,
+    C: ComputeService,
+{
+    pub fn new(config: GameConfig, openings: O, compute: C) -> Game<O, C> {
+        Game {
+            lichess_service: LichessService::new(config.lichess_auth_token, config.game_id),
+            opening_service: openings,
+            opening_misses: 0,
+            compute_service: compute,
+            bot_id: config.bot_id,
+            expected_half_moves: config.expected_half_moves,
+            time_constraints: config.time_constraints,
+            inferred_metadata: None,
+        }
     }
-}
 
-impl<O: OpeningService> Game<O> {
     pub fn time_constraints(&self) -> &TimeConstraints {
         &self.time_constraints
     }
@@ -74,18 +90,9 @@ impl<O: OpeningService> Game<O> {
                 Err(format!("{}", error))
             }
             Ok(event) => match event {
-                GameEvent::GameFull { content } => {
-                    log::info!("Parsed full game information");
-                    self.process_game_full(content)
-                }
-                GameEvent::State { content } => {
-                    log::info!("Parsed individual game state");
-                    self.process_game_state(content)
-                }
-                GameEvent::ChatLine { content } => {
-                    log::info!("Parsed chat line");
-                    self.process_chat_line(content)
-                }
+                GameEvent::GameFull { content } => self.process_game_full(content),
+                GameEvent::State { content } => self.process_game_state(content),
+                GameEvent::ChatLine { content } => self.process_chat_line(content),
             },
         }
     }
@@ -115,7 +122,6 @@ impl<O: OpeningService> Game<O> {
     fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState, String> {
         log::info!("Parsing previous game moves: {}", state.moves);
         let (board, n_moves) = get_game_state(&state.moves)?;
-
         match state.status.as_str() {
             STARTED_STATUS | CREATED_STATUS => {
                 if board.active() != self.get_latest_metadata()?.lambda_side {
@@ -124,7 +130,10 @@ impl<O: OpeningService> Game<O> {
                 } else {
                     match self.get_opening_move(&state.moves) {
                         Some(mv) => self.lichess_service.post_move(mv),
-                        None => self.compute_move(board, self.compute_thinking_time(n_moves)?),
+                        None => {
+                            let thinking_time = self.compute_thinking_time(n_moves)?;
+                            self.compute_move(&state.moves, thinking_time)
+                        }
                     }
                 }
             }
@@ -139,32 +148,27 @@ impl<O: OpeningService> Game<O> {
         }
     }
 
-    fn compute_move<B: EvalBoard>(
-        &self,
-        board: B,
-        time: Duration,
-    ) -> Result<GameExecutionState, String> {
+    fn compute_move(&self, moves: &String, time: Duration) -> Result<GameExecutionState, String> {
         let lambda_end_instant = self.time_constraints.lambda_end_instant();
         if Instant::now().add(time) >= lambda_end_instant {
             Ok(GameExecutionState::Recurse)
         } else {
-            log::info!("Spending {}ms thinking", time.as_millis());
-            let result = myopic_brain::search(board, time)?;
-            log::info!(
-                "Search output: {}",
-                serde_json::to_string(&result).expect("Unable to serialise search result")
-            );
-            self.lichess_service
-                .post_move(move_to_uci(&result.best_move))
+            self.compute_service
+                .compute_move(moves.as_str(), time)
+                .map_err(|e| format!("{}", e))
+                .and_then(|mv| self.lichess_service.post_move(mv))
         }
     }
 
     fn get_opening_move(&mut self, current_sequence: &str) -> Option<String> {
         if self.opening_misses >= MAX_TABLE_MISSES {
-            log::info!("Skipping opening table check as {} checks were missed", MAX_TABLE_MISSES);
+            log::info!(
+                "Skipping opening table check as {} checks were missed",
+                MAX_TABLE_MISSES
+            );
             None
         } else {
-            match self.opening_service.get_move(current_sequence) {
+            match self.opening_service.lookup_move(current_sequence) {
                 Ok(result) => {
                     if result.is_none() {
                         self.opening_misses += 1;

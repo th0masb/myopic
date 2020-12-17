@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
-import { MyopicGameLambdaStack } from '../lib/myopic-game-lambda-stack';
+import { MyopicLambdaStack } from '../lib/myopic-lambda-stack';
 import { MyopicDatabaseStack } from "../lib/opening-db-stack";
 
 require('dotenv').config()
@@ -19,7 +19,7 @@ new MyopicDatabaseStack(app, 'MyopicDatabaseStack', {
   }
 });
 
-new MyopicGameLambdaStack(app, 'MyopicGameLambdaStack', {
+new MyopicLambdaStack(app, 'MyopicLambdaStack', {
   openingsTableName: process.env.OPENINGS_TABLE_NAME!,
   region: process.env.REGION!,
   account: process.env.ACCOUNT!,
@@ -38,5 +38,11 @@ new MyopicGameLambdaStack(app, 'MyopicGameLambdaStack', {
     functionName: process.env.BENCHMARK_FUNCTION_NAME!,
     timeout: cdk.Duration.minutes(Number.parseInt(process.env.BENCHMARK_FUNCTION_TIMEOUT_MINS!)),
     memoryLimit: Number.parseInt(process.env.BENCHMARK_MEMORY_SIZE!),
+  },
+  moveLambdaConfig: {
+    assetName: process.env.MOVE_ASSET_NAME!,
+    functionName: process.env.MOVE_FUNCTION_NAME!,
+    timeout: cdk.Duration.minutes(Number.parseInt(process.env.MOVE_FUNCTION_TIMEOUT_MINS!)),
+    memoryLimit: Number.parseInt(process.env.MOVE_MEMORY_SIZE!),
   }
 });

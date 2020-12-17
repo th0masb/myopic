@@ -1,7 +1,6 @@
-use crate::eval_impl::EvalBoardImpl;
 use crate::tables::PositionTables;
 use crate::values::PieceValues;
-use myopic_board::{MutBoard, MutBoardImpl, Piece, Square};
+use myopic_board::{MutBoard, Piece, Square};
 use serde_derive::{Deserialize, Serialize};
 
 /// The evaluation upper/lower bound definition
@@ -41,30 +40,6 @@ pub trait EvalBoard: MutBoard {
 /// Allows one to configure the parameters of the evaluation board.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq, Default)]
 pub struct EvalParameters {
-    piece_values: PieceValues,
-    position_tables: PositionTables,
-}
-
-/// Construct an instance of the default EvalBoard implementation using the
-/// position encoded as a fen string and the given parameters.
-pub fn position_and_params(
-    fen: &str,
-    params: EvalParameters,
-) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
-    myopic_board::fen_position(fen)
-        .map(|pos| EvalBoardImpl::new(pos, params.position_tables, params.piece_values))
-}
-
-/// Construct an instance of the default EvalBoard implementation using the
-/// default Board implementation from a fen string.
-pub fn position(fen: &str) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
-    position_and_params(fen, EvalParameters::default())
-}
-
-pub fn start() -> EvalBoardImpl<MutBoardImpl> {
-    EvalBoardImpl::new(
-        myopic_board::start_position(),
-        PositionTables::default(),
-        PieceValues::default(),
-    )
+    pub piece_values: PieceValues,
+    pub position_tables: PositionTables,
 }
