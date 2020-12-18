@@ -1,5 +1,5 @@
+use anyhow::{Error, Result};
 use std::env;
-use std::error::Error;
 
 /// Keys for required environment variables
 const MYOPIC_EXPECTED_HALF_MOVES: &'static str = "MYOPIC_EXPECTED_HALF_MOVES";
@@ -44,7 +44,7 @@ pub struct ApplicationParameters {
 }
 
 impl ApplicationParameters {
-    pub fn load() -> Result<ApplicationParameters, Box<dyn Error>> {
+    pub fn load() -> Result<ApplicationParameters> {
         Ok(ApplicationParameters {
             expected_half_moves: env::var(MYOPIC_EXPECTED_HALF_MOVES)?.parse()?,
             function_region: env::var(MYOPIC_FUNCTION_REGION)?,
@@ -65,11 +65,7 @@ impl ApplicationParameters {
         })
     }
 
-    pub fn to_lambda_invocation_payload(
-        &self,
-        game_id: String,
-        depth: u8,
-    ) -> Result<String, Box<dyn Error>> {
+    pub fn to_lambda_invocation_payload(&self, game_id: String, depth: u8) -> Result<String> {
         serde_json::to_string(&PlayGameEvent {
             expected_half_moves: self.expected_half_moves,
             function_depth_remaining: depth,
@@ -83,7 +79,7 @@ impl ApplicationParameters {
             opening_table_position_key: self.opening_table_position_key.clone(),
             opening_table_move_key: self.opening_table_move_key.clone(),
         })
-        .map_err(|error| Box::new(error) as Box<dyn Error>)
+        .map_err(Error::from)
     }
 }
 
