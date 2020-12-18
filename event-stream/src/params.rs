@@ -22,6 +22,8 @@ const MYOPIC_MAX_INCREMENT_SECS: &'static str = "MYOPIC_MAX_INCREMENT_SECS";
 const MYOPIC_MAX_LAMBDA_DURATION_MINS: &'static str = "MYOPIC_MAX_LAMBDA_DURATION_MINS";
 const MYOPIC_INCREMENT_ALLOWANCE_MINS: &'static str = "MYOPIC_INCREMENT_ALLOWANCE_MINS";
 const MYOPIC_RETRY_WAIT_DURATION_SECS: &'static str = "MYOPIC_RETRY_WAIT_DURATION_SECS";
+const MYOPIC_ABORT_AFTER_SECS: &'static str = "MYOPIC_ABORT_AFTER_SECS";
+
 
 #[derive(Debug, Clone)]
 pub struct ApplicationParameters {
@@ -41,6 +43,7 @@ pub struct ApplicationParameters {
     pub max_lambda_duration_mins: u8,
     pub increment_allowance_mins: u8,
     pub retry_wait_duration_secs: u64,
+    pub abort_after_secs: usize,
 }
 
 impl ApplicationParameters {
@@ -62,6 +65,7 @@ impl ApplicationParameters {
             max_lambda_duration_mins: env::var(MYOPIC_MAX_LAMBDA_DURATION_MINS)?.parse()?,
             increment_allowance_mins: env::var(MYOPIC_INCREMENT_ALLOWANCE_MINS)?.parse()?,
             retry_wait_duration_secs: env::var(MYOPIC_RETRY_WAIT_DURATION_SECS)?.parse()?,
+            abort_after_secs: env::var(MYOPIC_ABORT_AFTER_SECS)?.parse()?,
         })
     }
 
@@ -78,6 +82,7 @@ impl ApplicationParameters {
             opening_table_region: self.opening_table_region.clone(),
             opening_table_position_key: self.opening_table_position_key.clone(),
             opening_table_move_key: self.opening_table_move_key.clone(),
+            abort_after_secs: self.abort_after_secs,
         })
         .map_err(Error::from)
     }
@@ -119,4 +124,8 @@ struct PlayGameEvent {
     /// How many half moves we expect the game to last for
     #[serde(rename = "expectedHalfMoves")]
     expected_half_moves: u32,
+    /// How many seconds to wait for the first full move to take place
+    /// before aborting the game
+    #[serde(rename = "abortAfterSecs")]
+    abort_after_secs: usize,
 }
