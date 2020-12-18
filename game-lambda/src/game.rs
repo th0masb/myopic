@@ -6,6 +6,7 @@ use myopic_brain::{MutBoard, Side};
 use std::error::Error;
 use std::ops::Add;
 use std::time::{Duration, Instant};
+use reqwest::StatusCode;
 
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
@@ -52,6 +53,7 @@ where
     opening_service: O,
     compute_service: C,
     opening_misses: usize,
+    halfmove_count: usize,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -76,11 +78,20 @@ where
             expected_half_moves: config.expected_half_moves,
             time_constraints: config.time_constraints,
             inferred_metadata: None,
+            halfmove_count: 0,
         }
     }
 
     pub fn time_constraints(&self) -> &TimeConstraints {
         &self.time_constraints
+    }
+
+    pub fn halfmove_count(&self) -> usize {
+        self.halfmove_count
+    }
+
+    pub fn abort(&self) -> Result<StatusCode, String> {
+        self.lichess_service.abort()
     }
 
     pub fn process_event(&mut self, event_json: &str) -> Result<GameExecutionState, String> {
@@ -122,6 +133,7 @@ where
     fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState, String> {
         log::info!("Parsing previous game moves: {}", state.moves);
         let (board, n_moves) = get_game_state(&state.moves)?;
+        self.halfmove_count = n_moves as usize;
         match state.status.as_str() {
             STARTED_STATUS | CREATED_STATUS => {
                 if board.active() != self.get_latest_metadata()?.lambda_side {
