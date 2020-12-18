@@ -1,5 +1,6 @@
 use crate::game::GameExecutionState;
 use reqwest::{blocking, StatusCode};
+use std::collections::HashMap;
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 
@@ -35,10 +36,28 @@ impl LichessService {
             .bearer_auth(&self.auth_token)
             .send()
             .map_err(|error| format!("Error posting move: {}", error))
-            .and_then(|response| if response.status().is_success() {
-                Ok(GameExecutionState::Running)
-            } else {
-                Err(format!("Lichess api responded with error {} during move post", response.status()))
+            .and_then(|response| {
+                if response.status().is_success() {
+                    Ok(GameExecutionState::Running)
+                } else {
+                    Err(format!(
+                        "Lichess api responded with error {} during move post",
+                        response.status()
+                    ))
+                }
             })
+    }
+
+    pub fn post_chatline(&self, text: &str) -> Result<StatusCode, String> {
+        let mut params = HashMap::new();
+        params.insert("room", "player");
+        params.insert("text", text);
+        self.client
+            .post(format!("{}/{}/chat", GAME_ENDPOINT, self.game_id).as_str())
+            .bearer_auth(&self.auth_token)
+            .form(&params)
+            .send()
+            .map_err(|error| format!("Error posting chatline: {}", error))
+            .map(|response| response.status())
     }
 }
