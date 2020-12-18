@@ -61,6 +61,10 @@ struct PlayGameEvent {
     /// How many half moves we expect the game to last for
     #[serde(rename = "expectedHalfMoves")]
     expected_half_moves: u32,
+    /// How many seconds to wait for the first full move to take place
+    /// before aborting the game
+    #[serde(rename = "abortAfterSecs")]
+    abort_after_secs: usize,
 }
 
 impl PlayGameEvent {
@@ -101,7 +105,8 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
     let mut game = init_game(&e, &ctx)?;
 
     // Enter the game loop
-    let mut invoke_next = false;
+    let (start, wait_duration) = (Instant::now(), Duration::from_secs(e.abort_after_secs as u64));
+    let mut should_recurse = false;
     for read_result in open_game_stream(&e.lichess_game_id, &e.lichess_auth_token)?.lines() {
         match read_result {
             Err(error) => {
@@ -110,8 +115,20 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
             }
             Ok(event) => {
                 if event.trim().is_empty() {
-                    if Instant::now() >= game.time_constraints().lambda_end_instant() {
-                        invoke_next = true;
+                    if game.halfmove_count() < 2 && start.elapsed() > wait_duration {
+                        match game.abort() {
+                            Err(message) => {
+                                log::warn!("Failed to abort game: {}", message)
+                            }
+                            Ok(status) => if status.is_success() {
+                                log::info!("Successfully aborted game due to inactivity!");
+                                break
+                            } else {
+                                log::warn!("Failed to abort game, lichess status: {}", status)
+                            }
+                        }
+                    } else if Instant::now() >= game.time_constraints().lambda_end_instant() {
+                        should_recurse = true;
                         break;
                     }
                 } else {
@@ -123,7 +140,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
                         GameExecutionState::Running => continue,
                         GameExecutionState::Finished => break,
                         GameExecutionState::Recurse => {
-                            invoke_next = true;
+                            should_recurse = true;
                             break;
                         }
                     }
@@ -133,7 +150,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
     }
 
     // If we got here then there isn't enough time in this lambda to complete the game
-    if invoke_next && e.function_depth_remaining > 0 {
+    if should_recurse && e.function_depth_remaining > 0 {
         // Async invoke lambda here
         recurse(&e)
     } else {
