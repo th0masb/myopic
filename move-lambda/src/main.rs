@@ -2,7 +2,6 @@ use lambda_runtime::{error::HandlerError, lambda, Context};
 use myopic_brain::negamax::SearchContext;
 use myopic_brain::{EvalBoardImpl, MutBoardImpl};
 use serde_derive::{Deserialize, Serialize};
-use simple_error::bail;
 use simple_logger::SimpleLogger;
 use std::error::Error;
 use std::time::Duration;

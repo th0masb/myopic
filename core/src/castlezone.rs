@@ -6,20 +6,6 @@ use crate::pieces::Piece;
 use crate::reflectable::Reflectable;
 use crate::Side;
 use crate::Square;
-use crate::Square::A1;
-use crate::Square::A8;
-use crate::Square::C1;
-use crate::Square::C8;
-use crate::Square::D1;
-use crate::Square::D8;
-use crate::Square::E1;
-use crate::Square::E8;
-use crate::Square::F1;
-use crate::Square::F8;
-use crate::Square::G1;
-use crate::Square::G8;
-use crate::Square::H1;
-use crate::Square::H8;
 
 /// Represents one of the four different areas on a chessboard where
 /// the special castling move can take place (two for each side).
@@ -36,7 +22,7 @@ impl CastleZone {
     pub fn kingside(side: Side) -> CastleZone {
         match side {
             Side::White => CastleZone::WK,
-            _ => CastleZone::BK,
+            Side::Black => CastleZone::BK,
         }
     }
 
@@ -44,66 +30,80 @@ impl CastleZone {
     pub fn queenside(side: Side) -> CastleZone {
         match side {
             Side::White => CastleZone::WQ,
-            _ => CastleZone::BQ,
+            Side::Black => CastleZone::BQ,
         }
     }
 
     /// Create an iterator traversing all zones in order.
     pub fn iter() -> impl Iterator<Item = CastleZone> {
-        CastleZone::ALL.iter().cloned()
+        [
+            CastleZone::WK,
+            CastleZone::WQ,
+            CastleZone::BK,
+            CastleZone::BQ,
+        ]
+        .iter()
+        .cloned()
     }
 
     /// Returns a set of exactly two squares which denote the required
     /// locations of the king and rook in order for the corresponding
     /// castle move to take place.
     pub fn source_squares(self) -> BitBoard {
-        CastleZone::KING_SOURCES[self as usize] | CastleZone::ROOK_SOURCES[self as usize]
+        match self {
+            CastleZone::WK => Square::E1 | Square::H1,
+            CastleZone::WQ => Square::E1 | Square::A1,
+            CastleZone::BK => Square::E8 | Square::H8,
+            CastleZone::BQ => Square::E8 | Square::A8,
+        }
     }
 
     /// Returns a triple containing the rook which moves in the corresponding
     /// castle move along with it's required start square followed by the
     /// square it will finish on.
     pub fn rook_data(self) -> (Piece, Square, Square) {
-        let i = self as usize;
-        let rook = match self {
-            CastleZone::WK | CastleZone::WQ => Piece::WR,
-            CastleZone::BK | CastleZone::BQ => Piece::BR,
-        };
-        (
-            rook,
-            CastleZone::ROOK_SOURCES[i],
-            CastleZone::ROOK_TARGETS[i],
-        )
+        match self {
+            CastleZone::WK => (Piece::WR, Square::H1, Square::F1),
+            CastleZone::BK => (Piece::BR, Square::H8, Square::F8),
+            CastleZone::WQ => (Piece::WR, Square::A1, Square::D1),
+            CastleZone::BQ => (Piece::BR, Square::A8, Square::D8),
+        }
     }
 
     /// Returns a triple containing the king which moves in the corresponding
     /// castle move along with it's required start square followed by the
     /// square it will finish on.
     pub fn king_data(self) -> (Piece, Square, Square) {
-        let i = self as usize;
-        let king = match self {
-            CastleZone::WK | CastleZone::WQ => Piece::WK,
-            CastleZone::BK | CastleZone::BQ => Piece::BK,
-        };
-        (
-            king,
-            CastleZone::KING_SOURCES[i],
-            CastleZone::KING_TARGETS[i],
-        )
+        match self {
+            CastleZone::WK => (Piece::WK, Square::E1, Square::G1),
+            CastleZone::BK => (Piece::BK, Square::E8, Square::G8),
+            CastleZone::WQ => (Piece::WK, Square::E1, Square::C1),
+            CastleZone::BQ => (Piece::BK, Square::E8, Square::C8),
+        }
     }
 
     /// Returns a set containing the squares which are required to be
     /// free of any other pieces in order for the corresponding castle
     /// move to be legal.
     pub fn unoccupied_requirement(self) -> BitBoard {
-        CastleZone::REQ_UNOCCUPIED[self as usize]
+        match self {
+            CastleZone::WK => Square::F1 | Square::G1,
+            CastleZone::WQ => Square::B1 | Square::C1 | Square::D1,
+            CastleZone::BK => Square::F8 | Square::G8,
+            CastleZone::BQ => Square::B8 | Square::C8 | Square::D8,
+        }
     }
 
     /// Returns a set containing the squares which are required to be
     /// free of enemy control in order for the corresponding castle move
     /// to be legal.
     pub fn uncontrolled_requirement(self) -> BitBoard {
-        CastleZone::REQ_UNCONTROLLED[self as usize]
+        match self {
+            CastleZone::WK => Square::E1 | Square::F1 | Square::G1,
+            CastleZone::WQ => Square::E1 | Square::C1 | Square::D1,
+            CastleZone::BK => Square::E8 | Square::F8 | Square::G8,
+            CastleZone::BQ => Square::E8 | Square::C8 | Square::D8,
+        }
     }
 
     /// Lifts this zone to a set of one element.
@@ -112,33 +112,6 @@ impl CastleZone {
             data: 1usize << self as usize,
         }
     }
-
-    /// All the four different castle zones ordered by their id.
-    const ALL: [CastleZone; 4] = [
-        CastleZone::WK,
-        CastleZone::WQ,
-        CastleZone::BK,
-        CastleZone::BQ,
-    ];
-
-    const KING_SOURCES: [Square; 4] = [E1, E1, E8, E8];
-    const KING_TARGETS: [Square; 4] = [G1, C1, G8, C8];
-    const ROOK_SOURCES: [Square; 4] = [H1, A1, H8, A8];
-    const ROOK_TARGETS: [Square; 4] = [F1, D1, F8, D8];
-
-    const REQ_UNCONTROLLED: [BitBoard; 4] = [
-        BitBoard(sq(1) | sq(2) | sq(3)),
-        BitBoard(sq(3) | sq(4) | sq(5) | sq(6)),
-        BitBoard(sq(57) | sq(58) | sq(59)),
-        BitBoard(sq(59) | sq(60) | sq(61) | sq(62)),
-    ];
-
-    const REQ_UNOCCUPIED: [BitBoard; 4] = [
-        BitBoard(sq(1) | sq(2)),
-        BitBoard(sq(4) | sq(5) | sq(6)),
-        BitBoard(sq(57) | sq(58)),
-        BitBoard(sq(60) | sq(61) | sq(62)),
-    ];
 }
 
 /// A castle is reflected by it's side, i.e.
@@ -146,12 +119,13 @@ impl CastleZone {
 ///  - WQ <==> BQ
 impl Reflectable for CastleZone {
     fn reflect(&self) -> Self {
-        CastleZone::ALL[(*self as usize + 2) % 4]
+        match self {
+            CastleZone::WK => CastleZone::BK,
+            CastleZone::WQ => CastleZone::BQ,
+            CastleZone::BK => CastleZone::WK,
+            CastleZone::BQ => CastleZone::WQ,
+        }
     }
-}
-
-const fn sq(i: usize) -> u64 {
-    1u64 << i as u64
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]
@@ -239,7 +213,7 @@ mod set_test {
     #[test]
     fn test_all() {
         let all = CastleZoneSet::ALL;
-        for &zone in &CastleZone::ALL {
+        for zone in CastleZone::iter() {
             assert!(all.contains(zone));
         }
     }
@@ -247,7 +221,7 @@ mod set_test {
     #[test]
     fn test_none() {
         let none = CastleZoneSet::NONE;
-        for &zone in &CastleZone::ALL {
+        for zone in CastleZone::iter() {
             assert!(!none.contains(zone));
         }
     }
