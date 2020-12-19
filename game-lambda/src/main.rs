@@ -4,6 +4,7 @@ mod events;
 mod game;
 mod helper;
 mod lichess;
+mod messages;
 
 use crate::compute::LambdaMoveComputeService;
 use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
@@ -103,9 +104,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, HandlerError> {
     log::info!("Initializing game loop");
     let mut game = init_game(&e, &ctx)?;
+    game.post_introduction();
 
     // Enter the game loop
-    let (start, wait_duration) = (Instant::now(), Duration::from_secs(e.abort_after_secs as u64));
+    let (start, wait_duration) = (
+        Instant::now(),
+        Duration::from_secs(e.abort_after_secs as u64),
+    );
     let mut should_recurse = false;
     for read_result in open_game_stream(&e.lichess_game_id, &e.lichess_auth_token)?.lines() {
         match read_result {
@@ -117,14 +122,14 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
                 if event.trim().is_empty() {
                     if game.halfmove_count() < 2 && start.elapsed() > wait_duration {
                         match game.abort() {
-                            Err(message) => {
-                                log::warn!("Failed to abort game: {}", message)
-                            }
-                            Ok(status) => if status.is_success() {
-                                log::info!("Successfully aborted game due to inactivity!");
-                                break
-                            } else {
-                                log::warn!("Failed to abort game, lichess status: {}", status)
+                            Err(message) => log::warn!("Failed to abort game: {}", message),
+                            Ok(status) => {
+                                if status.is_success() {
+                                    log::info!("Successfully aborted game due to inactivity!");
+                                    break;
+                                } else {
+                                    log::warn!("Failed to abort game, lichess status: {}", status)
+                                }
                             }
                         }
                     } else if Instant::now() >= game.time_constraints().lambda_end_instant() {

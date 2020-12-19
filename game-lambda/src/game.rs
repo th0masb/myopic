@@ -1,12 +1,13 @@
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::helper::*;
 use crate::lichess::LichessService;
+use crate::messages;
 use crate::TimeConstraints;
 use myopic_brain::{MutBoard, Side};
+use reqwest::StatusCode;
 use std::error::Error;
 use std::ops::Add;
 use std::time::{Duration, Instant};
-use reqwest::StatusCode;
 
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
@@ -92,6 +93,20 @@ where
 
     pub fn abort(&self) -> Result<StatusCode, String> {
         self.lichess_service.abort()
+    }
+
+    pub fn post_introduction(&self) {
+        for chatline in vec![
+            messages::INTRO_1,
+            messages::INTRO_2,
+            messages::INTRO_3,
+            messages::INTRO_4,
+        ] {
+            match self.lichess_service.post_chatline(chatline) {
+                Err(err) => log::warn!("Failed to post chatline {}: {}", chatline, err),
+                Ok(status) => log::info!("Response status {} for chatline {}", status, chatline),
+            }
+        }
     }
 
     pub fn process_event(&mut self, event_json: &str) -> Result<GameExecutionState, String> {
