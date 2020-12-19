@@ -80,7 +80,7 @@ mod thinking_time_test {
 
 pub fn get_game_state(moves: &String) -> Result<(EvalBoardImpl<MutBoardImpl>, u32), String> {
     let moves = parse::uci(moves)?;
-    let mut board = myopic_brain::start();
+    let mut board = myopic_brain::pos::start();
     moves.iter().for_each(|mv| {
         board.evolve(mv);
     });
