@@ -2,6 +2,7 @@ use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::helper::*;
 use crate::lichess::LichessService;
 use crate::messages;
+use crate::timing::Timing;
 use crate::TimeConstraints;
 use myopic_brain::{MutBoard, Side};
 use reqwest::StatusCode;
@@ -12,6 +13,8 @@ use std::time::{Duration, Instant};
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
 const MAX_TABLE_MISSES: usize = 2;
+const MOVE_LATENCY_MS: u64 = 200;
+const MIN_COMPUTE_TIME_MS: u64 = 200;
 
 pub trait LookupService {
     fn lookup_move(&self, uci_sequence: &str) -> Result<Option<String>, String>;
@@ -158,7 +161,7 @@ where
                     match self.get_opening_move(&state.moves) {
                         Some(mv) => self.lichess_service.post_move(mv),
                         None => {
-                            let thinking_time = self.compute_thinking_time(n_moves)?;
+                            let thinking_time = self.compute_thinking_time(n_moves, &state)?;
                             self.compute_move(&state.moves, thinking_time)
                         }
                     }
@@ -211,14 +214,28 @@ where
         }
     }
 
-    fn compute_thinking_time(&self, moves_played: u32) -> Result<Duration, String> {
+    fn compute_thinking_time(
+        &self,
+        moves_played: u32,
+        state: &GameState,
+    ) -> Result<Duration, String> {
         let metadata = self.get_latest_metadata()?;
-        Ok(compute_thinking_time(ThinkingTimeParams {
-            expected_half_move_count: self.expected_half_moves,
-            half_moves_played: moves_played,
-            initial: Duration::from_millis(metadata.clock.initial),
-            increment: Duration::from_millis(metadata.clock.increment),
-        }))
+        let (remaining, inc) = match metadata.lambda_side {
+            Side::White => (
+                Duration::from_millis(state.wtime),
+                Duration::from_millis(state.winc),
+            ),
+            Side::Black => (
+                Duration::from_millis(state.btime),
+                Duration::from_millis(state.binc),
+            ),
+        };
+        Ok(Timing::new(
+            inc,
+            Duration::from_millis(MOVE_LATENCY_MS),
+            Duration::from_millis(MIN_COMPUTE_TIME_MS),
+        )
+        .compute_thinking_time(moves_played as usize, remaining))
     }
 
     fn get_latest_metadata(&self) -> Result<&InferredGameMetadata, String> {

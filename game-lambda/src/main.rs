@@ -5,6 +5,7 @@ mod game;
 mod helper;
 mod lichess;
 mod messages;
+mod timing;
 
 use crate::compute::LambdaMoveComputeService;
 use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
