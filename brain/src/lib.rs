@@ -19,7 +19,7 @@ pub use eval_impl::EvalBoardImpl;
 pub use myopic_board::*;
 
 pub use search::interactive;
-pub use search::negamax;
-pub use search::negamax::SearchTerminator;
+pub use search::negascout;
 pub use search::search;
+pub use search::terminator::SearchTerminator;
 pub use search::SearchOutcome;

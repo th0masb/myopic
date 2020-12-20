@@ -2,18 +2,24 @@ use std::time::{Duration, Instant};
 
 use crate::eval;
 use crate::eval::EvalBoard;
-use crate::search::negamax::{SearchContext, SearchResponse, SearchTerminator, Searcher};
+use crate::search::negascout::{SearchContext, SearchResponse, Searcher};
 use crate::search::ordering::EstimatorImpl;
 use myopic_board::Move;
 use serde::export::PhantomData;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
+use suggested_moves::SuggestedMoves;
+use terminator::SearchTerminator;
 
 pub mod interactive;
-pub mod negamax;
+pub mod negascout;
 mod ordering;
+mod suggested_moves;
+pub mod terminator;
 
 const DEPTH_UPPER_BOUND: usize = 10;
+const SHALLOW_EVAL_TRIGGER_DEPTH: usize = 2;
+const SHALLOW_EVAL_DEPTH: usize = 2;
 
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
@@ -100,23 +106,28 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
     pub fn search(&self) -> Result<SearchOutcome, String> {
         let search_start = Instant::now();
         let mut break_message = format!("Terminated before search began");
-        let mut best_move_response = None;
-        let mut principle_variation = vec![];
+        let mut suggested_moves = SuggestedMoves::new(self.root.clone());
+        let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
-            match self.best_move(i, search_start, &principle_variation) {
+            match self.best_move(i, search_start, &suggested_moves) {
                 Err(message) => {
                     break_message = message;
                     break;
                 }
                 Ok(response) => {
-                    principle_variation = response.path.clone();
-                    best_move_response = Some(response);
+                    suggested_moves.add_pv(i, &response.path);
+                    best_response = Some(response);
+                    // Only fill in the shallow eval when we get deep
+                    // enough to male it worthwhile
+                    if i == SHALLOW_EVAL_TRIGGER_DEPTH {
+                        suggested_moves.populate_shallow_eval(SHALLOW_EVAL_DEPTH);
+                    }
                 }
             }
         }
 
-        best_move_response
+        best_response
             .ok_or(break_message)
             .map(|response| SearchOutcome {
                 best_move: response.best_move,
@@ -131,7 +142,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         &self,
         depth: usize,
         search_start: Instant,
-        principle_variation: &Vec<Move>,
+        suggested_moves: &SuggestedMoves<B>,
     ) -> Result<BestMoveResponse, String> {
         if depth < 1 {
             return Err(format!("Illegal depth: {}", depth));
@@ -139,7 +150,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
 
         let SearchResponse { eval, mut path } = Searcher {
             terminator: &self.terminator,
-            principle_variation,
+            suggested_moves,
             move_quality_estimator: EstimatorImpl,
             board_type: PhantomData,
         }

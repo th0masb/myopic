@@ -1,10 +1,43 @@
 use crate::search::eval;
-use crate::search::ordering::MoveQualityEstimator;
+use crate::search::ordering::{EstimatorImpl, MoveQualityEstimator};
+use crate::search::suggested_moves::SuggestedMoves;
+use crate::search::terminator::SearchTerminator;
 use crate::{quiescent, EvalBoard};
 use core::cmp;
+use itertools::Itertools;
 use myopic_board::{Move, MoveComputeType, Termination};
-use std::time::{Duration, Instant};
+use serde::export::PhantomData;
+use std::time::Instant;
 
+/// Performs a negascout search without any iterative deepening,
+/// we simply provide a depth to search to. The depth should be
+/// kept low otherwise ID is always preferable. In particular
+/// this function will support a depth 0 search which performs
+/// a quiescent search on the provided root.
+pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse, String>
+where
+    B: EvalBoard,
+{
+    Searcher {
+        terminator: &depth,
+        suggested_moves: &SuggestedMoves::new(root.clone()),
+        move_quality_estimator: EstimatorImpl,
+        board_type: PhantomData,
+    }
+    .search(
+        root,
+        SearchContext {
+            start_time: Instant::now(),
+            alpha: -eval::INFTY,
+            beta: eval::INFTY,
+            depth_remaining: depth,
+            precursors: vec![],
+        },
+    )
+}
+
+/// Provides relevant callstack information for the search to
+/// use during the traversal of the tree.
 pub struct SearchContext {
     pub start_time: Instant,
     pub alpha: i32,
@@ -27,23 +60,15 @@ impl SearchContext {
     }
 }
 
-/// Represents some object which can determine whether a search should be
-/// terminated given certain context about the current state. Implementations
-/// are provided for Duration (caps the search based on time elapsed), for
-/// usize which represents a maximum search depth and for a pair (Duration, usize)
-/// which combines both checks.
-pub trait SearchTerminator {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool;
-}
-
 ///
 pub struct SearchResponse {
-    // The evaluation of the position negamax was called for
+    /// The evaluation of the position negamax was called for
     pub eval: i32,
-    // The path of optimal play which led to the eval if the
-    // depth was greater than zero.
+    /// The path of optimal play which led to the eval if the
+    /// depth was greater than zero.
     pub path: Vec<Move>,
 }
+
 impl std::ops::Neg for SearchResponse {
     type Output = SearchResponse;
 
@@ -54,6 +79,7 @@ impl std::ops::Neg for SearchResponse {
         }
     }
 }
+
 impl Default for SearchResponse {
     fn default() -> Self {
         SearchResponse {
@@ -72,12 +98,8 @@ where
     /// The terminator is responsible for deciding when the
     /// search is complete
     pub terminator: &'a T,
-    /// The principle variation is a search optimisation which
-    /// comes from "iterative deepening". The idea is that if
-    /// we do a search at a lower depth then the optimal path
-    /// recovered from that is a good candidate to search first
-    /// in a deeper search
-    pub principle_variation: &'a Vec<Move>,
+    ///
+    pub suggested_moves: &'a SuggestedMoves<B>,
     /// Used for performing an initial sort on the moves
     /// generated in each position for optimising the search
     pub move_quality_estimator: M,
@@ -156,45 +178,29 @@ where
         }
     }
 
-    fn compute_moves(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {
+    fn compute_heuristically_ordered_moves(&self, board: &mut B) -> Vec<Move> {
         let mut moves = board.compute_moves(MoveComputeType::All);
-        // Make an initial heuristic sort of the moves before looking
-        // for the principle variation
         moves.sort_by_cached_key(|m| -self.move_quality_estimator.estimate(board, m));
-        // If we are searching along the principal variation then search the next
-        // move on it first (if another move exists)
-        if self.principle_variation.starts_with(precursors.as_slice()) {
-            match self.principle_variation.get(precursors.len()) {
-                None => {}
-                Some(suggested_move) => {
-                    match moves.iter().position(|m| m == suggested_move) {
-                        None => {} // Some sort of debug warning?
-                        Some(index) => {
-                            moves.remove(index);
-                            moves.insert(0, suggested_move.clone());
-                        }
-                    }
-                }
-            }
-        }
         moves
     }
-}
 
-impl SearchTerminator for Duration {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        ctx.start_time.elapsed() > *self
-    }
-}
-
-impl SearchTerminator for usize {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        ctx.depth_remaining > *self
-    }
-}
-
-impl SearchTerminator for (Duration, usize) {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        self.0.should_terminate(ctx) || self.1.should_terminate(ctx)
+    fn compute_moves(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {
+        let sm = self.suggested_moves;
+        match (sm.get_pvs(precursors), sm.get_evs(precursors)) {
+            (None, None) => self.compute_heuristically_ordered_moves(board),
+            (Some(pvs), None) => pvs
+                .into_iter()
+                .map(|pv| pv.mv.clone())
+                .chain(self.compute_heuristically_ordered_moves(board))
+                .dedup()
+                .collect(),
+            (None, Some(evs)) => evs.into_iter().map(|ev| ev.mv.clone()).collect(),
+            (Some(pvs), Some(evs)) => pvs
+                .into_iter()
+                .map(|pv| pv.mv.clone())
+                .chain(evs.into_iter().map(|ev| ev.mv.clone()))
+                .dedup()
+                .collect(),
+        }
     }
 }
