@@ -14,13 +14,13 @@ pub struct SearchContext {
 }
 
 impl SearchContext {
-    fn next_level(&self, mv: &Move) -> SearchContext {
+    fn next_level(&self, next_alpha: i32, next_beta: i32, mv: &Move) -> SearchContext {
         let mut next_precursors = self.precursors.clone();
         next_precursors.push(mv.clone());
         SearchContext {
             start_time: self.start_time,
-            alpha: -self.beta,
-            beta: -self.alpha,
+            alpha: next_alpha,
+            beta: next_beta,
             depth_remaining: self.depth_remaining - 1,
             precursors: next_precursors,
         }
@@ -43,6 +43,24 @@ pub struct SearchResponse {
     // The path of optimal play which led to the eval if the
     // depth was greater than zero.
     pub path: Vec<Move>,
+}
+impl std::ops::Neg for SearchResponse {
+    type Output = SearchResponse;
+
+    fn neg(self) -> Self::Output {
+        SearchResponse {
+            eval: -self.eval,
+            path: self.path,
+        }
+    }
+}
+impl Default for SearchResponse {
+    fn default() -> Self {
+        SearchResponse {
+            eval: 0,
+            path: vec![],
+        }
+    }
 }
 
 pub struct Searcher<'a, T, B, M>
@@ -77,43 +95,65 @@ where
     ///
     pub fn search(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse, String> {
         if self.terminator.should_terminate(&ctx) {
-            return Err(format!("Terminated at depth {}", ctx.depth_remaining));
+            Err(format!("Terminated at depth {}", ctx.depth_remaining))
         } else if ctx.depth_remaining == 0 || root.termination_status().is_some() {
-            return Ok(SearchResponse {
+            Ok(SearchResponse {
                 eval: match root.termination_status() {
                     Some(Termination::Loss) => eval::LOSS_VALUE,
                     Some(Termination::Draw) => eval::DRAW_VALUE,
                     None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
                 },
                 path: vec![],
-            });
-        }
-        let mut result = -eval::INFTY;
-        let mut best_path = vec![];
-        for evolve in self.compute_moves(root, &ctx.precursors) {
-            let discards = root.evolve(&evolve);
-            let SearchResponse { eval, path } = self.search(root, ctx.next_level(&evolve))?;
-            root.devolve(&evolve, discards);
+            })
+        } else {
+            let (mut result, mut best_path) = (-eval::INFTY, vec![]);
+            for (i, evolve) in self
+                .compute_moves(root, &ctx.precursors)
+                .into_iter()
+                .enumerate()
+            {
+                let discards = root.evolve(&evolve);
+                #[allow(unused_assignments)]
+                let mut response = SearchResponse::default();
+                if i == 0 {
+                    // Perform a full search immediately on the first move which
+                    // we expect to be the best
+                    response =
+                        -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &evolve))?;
+                } else {
+                    // Search with null window under the assumption that the
+                    // previous moves are better than this
+                    response =
+                        -self.search(root, ctx.next_level(-ctx.alpha - 1, -ctx.alpha, &evolve))?;
+                    // If there is some move which can raise alpha
+                    if ctx.alpha < response.eval && response.eval < ctx.beta {
+                        // Then this was actually a better move and so we must
+                        // perform a full search
+                        response = -self
+                            .search(root, ctx.next_level(-ctx.beta, -response.eval, &evolve))?;
+                    }
+                }
+                root.devolve(&evolve, discards);
 
-            let negated_eval = -eval;
-            if negated_eval > result {
-                result = negated_eval;
-                best_path = path;
-                best_path.push(evolve.clone());
-            }
+                if response.eval > result {
+                    result = response.eval;
+                    best_path = response.path;
+                    best_path.push(evolve.clone());
+                }
 
-            ctx.alpha = cmp::max(ctx.alpha, result);
-            if ctx.alpha > ctx.beta {
-                return Ok(SearchResponse {
-                    eval: ctx.beta,
-                    path: vec![],
-                });
+                ctx.alpha = cmp::max(ctx.alpha, result);
+                if ctx.alpha >= ctx.beta {
+                    return Ok(SearchResponse {
+                        eval: ctx.beta,
+                        path: vec![],
+                    });
+                }
             }
+            Ok(SearchResponse {
+                eval: result,
+                path: best_path,
+            })
         }
-        return Ok(SearchResponse {
-            eval: result,
-            path: best_path,
-        });
     }
 
     fn compute_moves(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {
