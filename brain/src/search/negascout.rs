@@ -1,6 +1,6 @@
 use crate::search::eval;
 use crate::search::ordering::{EstimatorImpl, MoveQualityEstimator};
-use crate::search::suggested_moves::SuggestedMoves;
+use crate::search::ordering_hints::OrderingHints;
 use crate::search::terminator::SearchTerminator;
 use crate::{quiescent, EvalBoard};
 use core::cmp;
@@ -18,9 +18,9 @@ pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse, String>
 where
     B: EvalBoard,
 {
-    Searcher {
+    Scout {
         terminator: &depth,
-        suggested_moves: &SuggestedMoves::new(root.clone()),
+        ordering_hints: &OrderingHints::new(root.clone()),
         move_quality_estimator: EstimatorImpl,
         board_type: PhantomData,
     }
@@ -89,7 +89,7 @@ impl Default for SearchResponse {
     }
 }
 
-pub struct Searcher<'a, T, B, M>
+pub struct Scout<'a, T, B, M>
 where
     T: SearchTerminator,
     B: EvalBoard,
@@ -98,8 +98,9 @@ where
     /// The terminator is responsible for deciding when the
     /// search is complete
     pub terminator: &'a T,
-    ///
-    pub suggested_moves: &'a SuggestedMoves<B>,
+    /// Precomputed hints for helping to order moves
+    /// generated for positions in the search tree
+    pub ordering_hints: &'a OrderingHints<B>,
     /// Used for performing an initial sort on the moves
     /// generated in each position for optimising the search
     pub move_quality_estimator: M,
@@ -108,7 +109,7 @@ where
     pub board_type: std::marker::PhantomData<B>,
 }
 
-impl<T, B, M> Searcher<'_, T, B, M>
+impl<T, B, M> Scout<'_, T, B, M>
 where
     T: SearchTerminator,
     B: EvalBoard,
@@ -185,7 +186,7 @@ where
     }
 
     fn compute_moves(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {
-        let sm = self.suggested_moves;
+        let sm = self.ordering_hints;
         match (sm.get_pvs(precursors), sm.get_evs(precursors)) {
             (None, None) => self.compute_heuristically_ordered_moves(board),
             (Some(pvs), None) => pvs

@@ -2,24 +2,24 @@ use std::time::{Duration, Instant};
 
 use crate::eval;
 use crate::eval::EvalBoard;
-use crate::search::negascout::{SearchContext, SearchResponse, Searcher};
+use crate::search::negascout::{SearchContext, SearchResponse, Scout};
 use crate::search::ordering::EstimatorImpl;
 use myopic_board::Move;
 use serde::export::PhantomData;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
-use suggested_moves::SuggestedMoves;
+use ordering_hints::OrderingHints;
 use terminator::SearchTerminator;
 
 pub mod interactive;
 pub mod negascout;
 mod ordering;
-mod suggested_moves;
+mod ordering_hints;
 pub mod terminator;
 
 const DEPTH_UPPER_BOUND: usize = 10;
 const SHALLOW_EVAL_TRIGGER_DEPTH: usize = 2;
-const SHALLOW_EVAL_DEPTH: usize = 2;
+const SHALLOW_EVAL_DEPTH: usize = 1;
 
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
@@ -106,7 +106,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
     pub fn search(&self) -> Result<SearchOutcome, String> {
         let search_start = Instant::now();
         let mut break_message = format!("Terminated before search began");
-        let mut suggested_moves = SuggestedMoves::new(self.root.clone());
+        let mut suggested_moves = OrderingHints::new(self.root.clone());
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
@@ -142,15 +142,15 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         &self,
         depth: usize,
         search_start: Instant,
-        suggested_moves: &SuggestedMoves<B>,
+        suggested_moves: &OrderingHints<B>,
     ) -> Result<BestMoveResponse, String> {
         if depth < 1 {
             return Err(format!("Illegal depth: {}", depth));
         }
 
-        let SearchResponse { eval, mut path } = Searcher {
+        let SearchResponse { eval, mut path } = Scout {
             terminator: &self.terminator,
-            suggested_moves,
+            ordering_hints: suggested_moves,
             move_quality_estimator: EstimatorImpl,
             board_type: PhantomData,
         }

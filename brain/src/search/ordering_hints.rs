@@ -9,7 +9,7 @@ const SHALLOW_EVAL_BRANCHING: usize = 5;
 
 /// Precomputed suggested moves to aid in move ordering
 /// for the search
-pub struct SuggestedMoves<B: EvalBoard> {
+pub struct OrderingHints<B: EvalBoard> {
     /// The root position from which all move sequences
     /// start from
     root: B,
@@ -23,9 +23,9 @@ pub struct SuggestedMoves<B: EvalBoard> {
     evs: HashMap<Vec<Move>, Vec<SEMove>>,
 }
 
-impl<B: EvalBoard> SuggestedMoves<B> {
-    pub fn new(root: B) -> SuggestedMoves<B> {
-        SuggestedMoves {
+impl<B: EvalBoard> OrderingHints<B> {
+    pub fn new(root: B) -> OrderingHints<B> {
+        OrderingHints {
             root,
             pvs: HashMap::default(),
             evs: HashMap::default(),
@@ -37,7 +37,7 @@ impl<B: EvalBoard> SuggestedMoves<B> {
     }
 
     fn populate_shallow_eval_impl(&mut self, board: &mut B, depth: usize, precursors: Vec<Move>) {
-        let curr_level = SuggestedMoves::compute_shallow_eval(board);
+        let curr_level = OrderingHints::compute_shallow_eval(board);
         let next_paths = curr_level
             .iter()
             .map(|m| m.mv.clone())
