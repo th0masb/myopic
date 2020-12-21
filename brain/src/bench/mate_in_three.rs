@@ -3,7 +3,7 @@ use crate::eval_impl::EvalBoardImpl;
 use crate::search::search;
 use crate::tables::PositionTables;
 use crate::values::PieceValues;
-use myopic_board::{parse, Move, MutBoardImpl};
+use myopic_board::{parse, Move, MutBoard, MutBoardImpl};
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -92,6 +92,20 @@ use std::time::Duration;
 ///          |         |       |        |                    | move in most cases.
 /// ------------------------------------------------------------------------------------------------
 ///
+/// ------------------------------------------------------------------------------------------------
+/// 21/12/20 | 4(8)(2) | 200   | 1      | 1,404,648          | This is a control run on master to test
+///          |         |       |        |                    | the switch to negascout algorithm
+///          |         |       |        |                    | and the accompanying shallow eval
+///          |         |       |        |                    | move ordering. I feel like the last
+///          |         |       |        |                    | benchmarks were not run properly. Note
+///          |         |       |        |                    | the new error, this is because a
+///          |         |       |        |                    | different, longer route to mate was
+///          |         |       |        |                    | chosen so not a serious one.
+/// ------------------------------------------------------------------------------------------------
+/// 21/12/20 | 4(8)(2) | 200   | 0      | 56,280             | Outrageous improvement in perf, the
+///          |         |       |        |                    | alternate ordering fixed the error too
+/// ------------------------------------------------------------------------------------------------
+///
 #[test]
 #[ignore]
 fn benchmark() {
@@ -112,13 +126,19 @@ fn benchmark() {
         if i % 5 == 0 {
             print_progress(case_count, err_count, search_duration.clone());
         }
-        match search(test_case.board, depth) {
+        match search(test_case.board.clone(), depth) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 search_duration += outcome.time;
                 if test_case.expected_move != outcome.best_move || WIN_VALUE != outcome.eval {
                     err_count += 1;
-                    println!("Error at index {}", i);
+                    println!(
+                        "Error at {}: Position {}, expected {}, actual {}",
+                        i,
+                        test_case.board.to_fen(),
+                        test_case.expected_move.uci_format(),
+                        outcome.best_move.uci_format()
+                    );
                 }
             }
         }
@@ -174,9 +194,11 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
             },
         }
     }
-    dest
+    vec![dest[61].clone()]
+    //dest
 }
 
+#[derive(Clone)]
 struct TestCase {
     board: EvalBoardImpl<MutBoardImpl>,
     expected_move: Move,

@@ -516,7 +516,7 @@ version = "0.1.0"
 dependencies = [
  "lambda_runtime 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "myopic-brain 1.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "myopic-brain 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.115 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.115 (registry+https://github.com/rust-lang/crates.io-index)",
  "simple-error 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -536,7 +536,7 @@ dependencies = [
 
 [[package]]
 name = "myopic-brain"
-version = "1.5.2"
+version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "itertools 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1246,7 +1246,7 @@ dependencies = [
 "checksum mio-uds 0.6.8 (registry+https://github.com/rust-lang/crates.io-index)" = "afcb699eb26d4332647cc848492bbc15eafb26f08d0304550d5aa1f612e066f0"
 "checksum miow 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8c1f2f3b1cf331de6896aabf6e9d55dca90356cc9960cca7eaaf408a355ae919"
 "checksum myopic-board 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "b66f86c31068e6ef27c41ccee088b797e818c172cf07b37e68a2967a746149ea"
-"checksum myopic-brain 1.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9523c2a025d1ff142cb40ff9bac7b2e6d6828f2c1caa64b53ba1bdd9c0146051"
+"checksum myopic-brain 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ab90f525a9fb650fcc6cc0aa3d57431147f01049ffc40d199e6e69df58f9ede5"
 "checksum myopic-core 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9198ad341a631345d49f71c5b8b7cbf0cf8abad5bf66c5448e40841a10c27b00"
 "checksum net2 0.2.35 (registry+https://github.com/rust-lang/crates.io-index)" = "3ebc3ec692ed7c9a255596c67808dee269f64655d8baf7b4f0638e51ba1d6853"
 "checksum num-integer 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)" = "8d59457e662d541ba17869cf51cf177c0b5f0cbf476c66bdc90bf1edac4f875b"

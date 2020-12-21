@@ -1,6 +1,6 @@
 [package]
 name = "myopic-brain"
-version = "1.5.2"
+version = "1.5.3"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
 edition = "2018"
 license = "MIT"
