@@ -36,6 +36,8 @@ pub struct GameFull {
     pub black: Player,
     pub clock: Clock,
     pub state: GameState,
+    #[serde(rename = "initialFen")]
+    pub initial_fen: String,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]

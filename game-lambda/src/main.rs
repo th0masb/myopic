@@ -2,7 +2,6 @@ mod compute;
 mod dynamodb;
 mod events;
 mod game;
-mod helper;
 mod lichess;
 mod messages;
 mod timing;
@@ -10,7 +9,6 @@ mod timing;
 use crate::compute::LambdaMoveComputeService;
 use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
 use crate::game::{GameConfig, GameExecutionState};
-use crate::helper::timestamp_millis;
 use bytes::Bytes;
 use game::Game;
 use lambda_runtime::{error::HandlerError, lambda, Context};
@@ -23,7 +21,7 @@ use std::error::Error;
 use std::io::{BufRead, BufReader};
 use std::ops::Add;
 use std::str::FromStr;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
 
@@ -197,6 +195,13 @@ fn init_game(
 
 fn parse_region(region: &str) -> Result<Region, HandlerError> {
     Region::from_str(region).map_err(|err| HandlerError::from(format!("{}", err).as_str()))
+}
+
+pub fn timestamp_millis() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_millis() as u64
 }
 
 fn open_game_stream(

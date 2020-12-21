@@ -1,6 +1,6 @@
-use crate::game::LookupService;
+use crate::game::{InitalPosition, LookupService};
 use itertools::Itertools;
-use myopic_brain::{parse, FenComponent, MutBoard};
+use myopic_brain::{EvalBoardImpl, FenComponent, MutBoard, MutBoardImpl};
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use serde::export::fmt::Debug;
@@ -49,8 +49,12 @@ impl DynamoDbOpeningService {
 }
 
 impl LookupService for DynamoDbOpeningService {
-    fn lookup_move(&self, uci_sequence: &str) -> Result<Option<String>, String> {
-        let query_position = parse::position_from_uci(uci_sequence)?.to_partial_fen(&[
+    fn lookup_move(
+        &self,
+        initial_position: &InitalPosition,
+        uci_sequence: &str,
+    ) -> Result<Option<String>, String> {
+        let query_position = get_position(initial_position, uci_sequence)?.to_partial_fen(&[
             FenComponent::Board,
             FenComponent::Active,
             FenComponent::CastlingRights,
@@ -89,6 +93,20 @@ impl LookupService for DynamoDbOpeningService {
                 },
             })
     }
+}
+
+fn get_position(
+    initial: &InitalPosition,
+    uci_sequence: &str,
+) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
+    let mut position = match initial {
+        InitalPosition::Start => myopic_brain::pos::start(),
+        InitalPosition::CustomFen(fen) => myopic_brain::pos::from_fen(fen.as_str())?,
+    };
+    for mv in myopic_brain::parse::partial_uci(&position, uci_sequence)? {
+        position.evolve(&mv);
+    }
+    Ok(position)
 }
 
 fn choose_move(available: &Vec<String>, f: impl Fn() -> usize) -> Option<String> {
