@@ -1,13 +1,16 @@
 mod compute;
 mod dynamodb;
+mod endgame;
 mod events;
 mod game;
 mod lichess;
 mod messages;
+pub mod position;
 mod timing;
 
 use crate::compute::LambdaMoveComputeService;
 use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
+use crate::endgame::EndgameService;
 use crate::game::{GameConfig, GameExecutionState};
 use bytes::Bytes;
 use game::Game;
@@ -24,6 +27,7 @@ use std::str::FromStr;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
+type GameImpl = Game<DynamoDbOpeningService, LambdaMoveComputeService, EndgameService>;
 
 /// The input payload of this lambda
 #[derive(Serialize, Deserialize, Clone)]
@@ -164,10 +168,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
     }
 }
 
-fn init_game(
-    e: &PlayGameEvent,
-    ctx: &Context,
-) -> Result<Game<DynamoDbOpeningService, LambdaMoveComputeService>, HandlerError> {
+fn init_game(e: &PlayGameEvent, ctx: &Context) -> Result<GameImpl, HandlerError> {
     Ok(Game::new(
         GameConfig {
             game_id: e.lichess_game_id.clone(),
@@ -190,6 +191,7 @@ fn init_game(
             table_region: parse_region(e.opening_table_region.as_str())?,
         }),
         LambdaMoveComputeService::default(),
+        EndgameService::default(),
     ))
 }
 

@@ -1,6 +1,6 @@
 use crate::game::{InitalPosition, LookupService};
 use itertools::Itertools;
-use myopic_brain::{EvalBoardImpl, FenComponent, MutBoard, MutBoardImpl};
+use myopic_brain::{FenComponent, MutBoard};
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use serde::export::fmt::Debug;
@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 const MOVE_FREQ_SEPARATOR: &'static str = ":";
+const MAX_TABLE_MISSES: usize = 2;
 
 #[derive(Debug, Clone)]
 pub struct DynamoDbOpeningServiceConfig {
@@ -22,6 +23,7 @@ pub struct DynamoDbOpeningService {
     primary_key: String,
     recommended_move_attribute: String,
     client: DynamoDbClient,
+    table_misses: usize,
 }
 
 impl DynamoDbOpeningService {
@@ -31,6 +33,7 @@ impl DynamoDbOpeningService {
             primary_key: config.position_key,
             recommended_move_attribute: config.move_key,
             client: DynamoDbClient::new(config.table_region),
+            table_misses: 0,
         }
     }
 
@@ -50,63 +53,65 @@ impl DynamoDbOpeningService {
 
 impl LookupService for DynamoDbOpeningService {
     fn lookup_move(
-        &self,
+        &mut self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
     ) -> Result<Option<String>, String> {
-        let query_position = get_position(initial_position, uci_sequence)?.to_partial_fen(&[
-            FenComponent::Board,
-            FenComponent::Active,
-            FenComponent::CastlingRights,
-        ]);
-        log::info!(
-            "Querying table {} for position {}",
-            self.table_name,
-            query_position
-        );
-        tokio::runtime::Runtime::new()
-            .unwrap()
-            .block_on(self.client.get_item(self.create_request(query_position)?))
-            .map_err(|err| format!("{}", err))
-            .and_then(|response| match response.item {
-                None => {
-                    log::info!("No match found!");
-                    Ok(None)
-                }
-                Some(attributes) => match attributes.get(&self.recommended_move_attribute) {
-                    None => Err(format!(
-                        "Position exists but missing recommended move attribute"
-                    )),
-                    Some(attribute) => match &attribute.ss {
+        if self.table_misses >= MAX_TABLE_MISSES {
+            log::info!(
+                "Skipping table check as {} checks were missed",
+                MAX_TABLE_MISSES
+            );
+            Ok(None)
+        } else {
+            let query_position = crate::position::get(initial_position, uci_sequence)?
+                .to_partial_fen(&[
+                    FenComponent::Board,
+                    FenComponent::Active,
+                    FenComponent::CastlingRights,
+                ]);
+            log::info!(
+                "Querying table {} for position {}",
+                self.table_name,
+                query_position
+            );
+            let result = tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(self.client.get_item(self.create_request(query_position)?))
+                .map_err(|err| format!("{}", err))
+                .and_then(|response| match response.item {
+                    None => {
+                        log::info!("No match found!");
+                        Ok(None)
+                    }
+                    Some(attributes) => match attributes.get(&self.recommended_move_attribute) {
                         None => Err(format!(
-                            "Position and recommended move attribute exist but not string set type"
+                            "Position exists but missing recommended move attribute"
                         )),
-                        Some(move_set) => match choose_move(move_set, rand::random) {
-                            None => Err(format!("Position exists with no valid recommendations!")),
-                            Some(mv) => {
-                                log::info!("Found matching set {:?}!", move_set);
-                                log::info!("Chose {} from set", &mv);
-                                Ok(Some(mv))
-                            }
+                        Some(attribute) => match &attribute.ss {
+                            None => Err(format!(
+                                "Position and recommended move attribute exist but not string set type"
+                            )),
+                            Some(move_set) => match choose_move(move_set, rand::random) {
+                                None => Err(format!("Position exists with no valid recommendations!")),
+                                Some(mv) => {
+                                    log::info!("Found matching set {:?}!", move_set);
+                                    log::info!("Chose {} from set", &mv);
+                                    Ok(Some(mv))
+                                }
+                            },
                         },
                     },
-                },
-            })
-    }
-}
+                });
 
-fn get_position(
-    initial: &InitalPosition,
-    uci_sequence: &str,
-) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
-    let mut position = match initial {
-        InitalPosition::Start => myopic_brain::pos::start(),
-        InitalPosition::CustomFen(fen) => myopic_brain::pos::from_fen(fen.as_str())?,
-    };
-    for mv in myopic_brain::parse::partial_uci(&position, uci_sequence)? {
-        position.evolve(&mv);
+            match result {
+                Err(_) | Ok(None) => self.table_misses += 1,
+                _ => {}
+            }
+
+            result
+        }
     }
-    Ok(position)
 }
 
 fn choose_move(available: &Vec<String>, f: impl Fn() -> usize) -> Option<String> {
