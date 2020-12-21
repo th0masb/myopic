@@ -11,13 +11,12 @@ use std::time::{Duration, Instant};
 
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
-const MAX_TABLE_MISSES: usize = 2;
 const MOVE_LATENCY_MS: u64 = 200;
 const MIN_COMPUTE_TIME_MS: u64 = 200;
 
 pub trait LookupService {
     fn lookup_move(
-        &self,
+        &mut self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
     ) -> Result<Option<String>, String>;
@@ -55,10 +54,11 @@ pub struct GameConfig {
 }
 
 #[derive(Debug)]
-pub struct Game<O, C>
+pub struct Game<O, C, E>
 where
     O: LookupService,
     C: ComputeService,
+    E: LookupService,
 {
     bot_id: String,
     expected_half_moves: u32,
@@ -67,7 +67,7 @@ where
     lichess_service: LichessService,
     opening_service: O,
     compute_service: C,
-    opening_misses: usize,
+    endgame_service: E,
     halfmove_count: usize,
 }
 
@@ -78,16 +78,17 @@ pub enum GameExecutionState {
     Recurse,
 }
 
-impl<O, C> Game<O, C>
+impl<O, C, E> Game<O, C, E>
 where
     O: LookupService,
     C: ComputeService,
+    E: LookupService,
 {
-    pub fn new(config: GameConfig, openings: O, compute: C) -> Game<O, C> {
+    pub fn new(config: GameConfig, openings: O, compute: C, endgame: E) -> Game<O, C, E> {
         Game {
             lichess_service: LichessService::new(config.lichess_auth_token, config.game_id),
             opening_service: openings,
-            opening_misses: 0,
+            endgame_service: endgame,
             compute_service: compute,
             bot_id: config.bot_id,
             expected_half_moves: config.expected_half_moves,
@@ -190,8 +191,13 @@ where
                     match self.get_opening_move(&metadata.initial_position, &state.moves) {
                         Some(mv) => self.lichess_service.post_move(mv),
                         None => {
-                            let thinking_time = self.compute_thinking_time(n_moves, &state)?;
-                            self.compute_move(&state.moves, thinking_time)
+                            match self.get_endgame_move(&metadata.initial_position, &state.moves) {
+                                Some(mv) => self.lichess_service.post_move(mv),
+                                None => self.compute_and_post_move(
+                                    &state.moves,
+                                    self.compute_thinking_time(n_moves, &state)?,
+                                ),
+                            }
                         }
                     }
                 }
@@ -207,7 +213,45 @@ where
         }
     }
 
-    fn compute_move(&self, moves: &String, time: Duration) -> Result<GameExecutionState, String> {
+    fn get_endgame_move(
+        &mut self,
+        initial_position: &InitalPosition,
+        current_sequence: &str,
+    ) -> Option<String> {
+        match self
+            .endgame_service
+            .lookup_move(initial_position, current_sequence)
+        {
+            Ok(mv) => mv,
+            Err(message) => {
+                log::info!("Error in the endgame service: {}", message);
+                None
+            }
+        }
+    }
+
+    fn get_opening_move(
+        &mut self,
+        initial_position: &InitalPosition,
+        current_sequence: &str,
+    ) -> Option<String> {
+        match self
+            .opening_service
+            .lookup_move(initial_position, current_sequence)
+        {
+            Ok(mv) => mv,
+            Err(message) => {
+                log::info!("Error in the opening service: {}", message);
+                None
+            }
+        }
+    }
+
+    fn compute_and_post_move(
+        &self,
+        moves: &String,
+        time: Duration,
+    ) -> Result<GameExecutionState, String> {
         let lambda_end_instant = self.time_constraints.lambda_end_instant();
         if Instant::now().add(time) >= lambda_end_instant {
             Ok(GameExecutionState::Recurse)
@@ -217,37 +261,6 @@ where
                 .compute_move(&metadata.initial_position, moves.as_str(), time)
                 .map_err(|e| format!("{}", e))
                 .and_then(|mv| self.lichess_service.post_move(mv))
-        }
-    }
-
-    fn get_opening_move(
-        &mut self,
-        initial_position: &InitalPosition,
-        current_sequence: &str,
-    ) -> Option<String> {
-        if self.opening_misses >= MAX_TABLE_MISSES {
-            log::info!(
-                "Skipping opening table check as {} checks were missed",
-                MAX_TABLE_MISSES
-            );
-            None
-        } else {
-            match self
-                .opening_service
-                .lookup_move(initial_position, current_sequence)
-            {
-                Ok(result) => {
-                    if result.is_none() {
-                        self.opening_misses += 1;
-                    }
-                    result
-                }
-                Err(error) => {
-                    log::info!("Error retrieving opening move: {}", error);
-                    self.opening_misses += 1;
-                    None
-                }
-            }
         }
     }
 

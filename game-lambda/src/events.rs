@@ -159,7 +159,8 @@ mod test {
                 "wdraw": false,
                 "bdraw": false,
                 "status": "started"
-            }
+            },
+            "initialFen": "startpos"
         }"#;
 
         match serde_json::from_str::<GameEvent>(json) {
