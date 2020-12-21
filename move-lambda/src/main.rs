@@ -1,6 +1,6 @@
 use lambda_runtime::{error::HandlerError, lambda, Context};
 use myopic_brain::negascout::SearchContext;
-use myopic_brain::{EvalBoardImpl, MutBoardImpl};
+use myopic_brain::{EvalBoardImpl, MutBoard, MutBoardImpl};
 use serde_derive::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
 use std::error::Error;
@@ -25,6 +25,8 @@ enum ComputeMoveEvent {
         #[serde(flatten)]
         terminator: SearchTerminator,
         sequence: String,
+        #[serde(rename = "startFen")]
+        start_fen: Option<String>,
     },
 }
 
@@ -101,9 +103,24 @@ fn extract_position(e: &ComputeMoveEvent) -> Result<EvalBoardImpl<MutBoardImpl>,
     match e {
         ComputeMoveEvent::Fen { position, .. } => myopic_brain::pos::from_fen(position.as_str())
             .map_err(|e| HandlerError::from(e.as_str())),
-        ComputeMoveEvent::UciSequence { sequence, .. } => {
-            myopic_brain::pos::from_uci(sequence.as_str())
-                .map_err(|e| HandlerError::from(e.as_str()))
+        ComputeMoveEvent::UciSequence {
+            sequence,
+            start_fen,
+            ..
+        } => {
+            let mut state = myopic_brain::pos::from_fen(
+                start_fen
+                    .as_ref()
+                    .map(|f| f.as_str())
+                    .unwrap_or(myopic_brain::STARTPOS_FEN),
+            )
+            .map_err(|msg| HandlerError::from(msg.as_str()))?;
+            let moves = myopic_brain::parse::partial_uci(&state, sequence.as_str())
+                .map_err(|msg| HandlerError::from(msg.as_str()))?;
+            for mv in moves {
+                state.evolve(&mv);
+            }
+            Ok(state)
         }
     }
 }

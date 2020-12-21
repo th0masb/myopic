@@ -1,4 +1,4 @@
-use crate::game::ComputeService;
+use crate::game::{ComputeService, InitalPosition};
 use bytes::Bytes;
 use rusoto_core::Region;
 use rusoto_lambda::{InvocationRequest, Lambda, LambdaClient};
@@ -25,12 +25,18 @@ struct RequestPayload {
     #[serde(rename = "type")]
     payload_type: String,
     sequence: String,
+    #[serde(rename = "startFen")]
+    start_fen: Option<String>,
     #[serde(rename = "timeoutMillis")]
     timeout_millis: u64,
 }
 impl RequestPayload {
-    fn new(sequence: &str, limit: Duration) -> RequestPayload {
+    fn new(initial_position: &InitalPosition, sequence: &str, limit: Duration) -> RequestPayload {
         RequestPayload {
+            start_fen: match initial_position {
+                InitalPosition::Start => None,
+                InitalPosition::CustomFen(fen) => Some(fen.clone()),
+            },
             payload_type: format!("uciSequence"),
             sequence: sequence.to_string(),
             timeout_millis: limit.as_millis() as u64,
@@ -52,10 +58,15 @@ struct ResponsePayload {
 impl ComputeService for LambdaMoveComputeService {
     fn compute_move(
         &self,
+        initial_position: &InitalPosition,
         uci_sequence: &str,
         time_limit: Duration,
     ) -> Result<String, Box<dyn Error>> {
-        let payload = serde_json::to_string(&RequestPayload::new(uci_sequence, time_limit))?;
+        let payload = serde_json::to_string(&RequestPayload::new(
+            initial_position,
+            uci_sequence,
+            time_limit,
+        ))?;
         log::info!("Request payload {}", payload);
         let timer = Instant::now();
         let invocation = tokio::runtime::Runtime::new().unwrap().block_on(

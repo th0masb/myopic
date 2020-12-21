@@ -5,6 +5,7 @@ use crate::validity::TimeValidity;
 use anyhow::Result;
 
 const STANDARD_VARIANT_KEY: &'static str = "standard";
+const FEN_VARIANT_KEY: &'static str = "fromPosition";
 
 pub struct ChallengeService {
     client: LichessClient,
@@ -52,5 +53,6 @@ impl ChallengeService {
 
     fn is_legal_challenge(&self, time_control: &ClockTimeControl, variant: &Variant) -> bool {
         self.time_validity.is_valid(time_control) && variant.key.as_str() == STANDARD_VARIANT_KEY
+            || variant.key.as_str() == FEN_VARIANT_KEY
     }
 }

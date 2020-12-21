@@ -1,10 +1,9 @@
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
-use crate::helper::*;
 use crate::lichess::LichessService;
 use crate::messages;
 use crate::timing::Timing;
 use crate::TimeConstraints;
-use myopic_brain::{MutBoard, Side};
+use myopic_brain::{EvalBoardImpl, MutBoard, MutBoardImpl, Side};
 use reqwest::StatusCode;
 use std::error::Error;
 use std::ops::Add;
@@ -17,21 +16,33 @@ const MOVE_LATENCY_MS: u64 = 200;
 const MIN_COMPUTE_TIME_MS: u64 = 200;
 
 pub trait LookupService {
-    fn lookup_move(&self, uci_sequence: &str) -> Result<Option<String>, String>;
+    fn lookup_move(
+        &self,
+        initial_position: &InitalPosition,
+        uci_sequence: &str,
+    ) -> Result<Option<String>, String>;
 }
 
 pub trait ComputeService {
     fn compute_move(
         &self,
+        initial_position: &InitalPosition,
         uci_sequence: &str,
         time_limit: Duration,
     ) -> Result<String, Box<dyn Error>>;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+pub enum InitalPosition {
+    Start,
+    CustomFen(String),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
 struct InferredGameMetadata {
     lambda_side: Side,
     clock: Clock,
+    initial_position: InitalPosition,
 }
 
 #[derive(Debug, Clone)]
@@ -144,21 +155,39 @@ where
             } else {
                 return Err(format!("Unrecognized names"));
             },
+            initial_position: if game_full.initial_fen.as_str() == "startpos" {
+                InitalPosition::Start
+            } else {
+                InitalPosition::CustomFen(game_full.initial_fen)
+            },
         });
         self.process_game_state(game_full.state)
     }
 
+    fn get_game_state(&self, moves: &str) -> Result<(EvalBoardImpl<MutBoardImpl>, u32), String> {
+        let mut state = match &self.get_latest_metadata()?.initial_position {
+            InitalPosition::Start => myopic_brain::pos::start(),
+            InitalPosition::CustomFen(fen) => myopic_brain::pos::from_fen(fen.as_str())?,
+        };
+        let moves = myopic_brain::parse::partial_uci(&state, moves)?;
+        moves.iter().for_each(|mv| {
+            state.evolve(mv);
+        });
+        Ok((state, moves.len() as u32))
+    }
+
     fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState, String> {
         log::info!("Parsing previous game moves: {}", state.moves);
-        let (board, n_moves) = get_game_state(&state.moves)?;
+        let (board, n_moves) = self.get_game_state(state.moves.as_str())?;
         self.halfmove_count = n_moves as usize;
         match state.status.as_str() {
             STARTED_STATUS | CREATED_STATUS => {
-                if board.active() != self.get_latest_metadata()?.lambda_side {
+                let metadata = self.get_latest_metadata()?.clone();
+                if board.active() != metadata.lambda_side {
                     log::info!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
-                    match self.get_opening_move(&state.moves) {
+                    match self.get_opening_move(&metadata.initial_position, &state.moves) {
                         Some(mv) => self.lichess_service.post_move(mv),
                         None => {
                             let thinking_time = self.compute_thinking_time(n_moves, &state)?;
@@ -183,14 +212,19 @@ where
         if Instant::now().add(time) >= lambda_end_instant {
             Ok(GameExecutionState::Recurse)
         } else {
+            let metadata = self.get_latest_metadata()?;
             self.compute_service
-                .compute_move(moves.as_str(), time)
+                .compute_move(&metadata.initial_position, moves.as_str(), time)
                 .map_err(|e| format!("{}", e))
                 .and_then(|mv| self.lichess_service.post_move(mv))
         }
     }
 
-    fn get_opening_move(&mut self, current_sequence: &str) -> Option<String> {
+    fn get_opening_move(
+        &mut self,
+        initial_position: &InitalPosition,
+        current_sequence: &str,
+    ) -> Option<String> {
         if self.opening_misses >= MAX_TABLE_MISSES {
             log::info!(
                 "Skipping opening table check as {} checks were missed",
@@ -198,7 +232,10 @@ where
             );
             None
         } else {
-            match self.opening_service.lookup_move(current_sequence) {
+            match self
+                .opening_service
+                .lookup_move(initial_position, current_sequence)
+            {
                 Ok(result) => {
                     if result.is_none() {
                         self.opening_misses += 1;

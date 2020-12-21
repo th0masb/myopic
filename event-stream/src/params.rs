@@ -24,7 +24,6 @@ const MYOPIC_INCREMENT_ALLOWANCE_MINS: &'static str = "MYOPIC_INCREMENT_ALLOWANC
 const MYOPIC_RETRY_WAIT_DURATION_SECS: &'static str = "MYOPIC_RETRY_WAIT_DURATION_SECS";
 const MYOPIC_ABORT_AFTER_SECS: &'static str = "MYOPIC_ABORT_AFTER_SECS";
 
-
 #[derive(Debug, Clone)]
 pub struct ApplicationParameters {
     pub expected_half_moves: u32,
