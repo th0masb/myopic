@@ -2,13 +2,13 @@ use std::time::{Duration, Instant};
 
 use crate::eval;
 use crate::eval::EvalBoard;
-use crate::search::negascout::{SearchContext, SearchResponse, Scout};
+use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::ordering::EstimatorImpl;
 use myopic_board::Move;
+use ordering_hints::OrderingHints;
 use serde::export::PhantomData;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
-use ordering_hints::OrderingHints;
 use terminator::SearchTerminator;
 
 pub mod interactive;

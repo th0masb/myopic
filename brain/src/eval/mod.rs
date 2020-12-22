@@ -1,7 +1,12 @@
-use crate::tables::PositionTables;
-use crate::values::PieceValues;
-use myopic_board::{MutBoard, Piece, Square};
+use crate::eval::tables::PositionTables;
+use crate::eval::values::PieceValues;
+use myopic_board::{Discards, Move, MutBoard, Piece, Square};
 use serde_derive::{Deserialize, Serialize};
+
+pub mod eval_impl;
+mod material;
+pub mod tables;
+pub mod values;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -35,6 +40,16 @@ pub trait EvalBoard: MutBoard {
     /// The positional (table) value of the given piece situated at the
     /// given square in the context of this position.
     fn positional_eval(&self, piece: Piece, location: Square) -> i32;
+}
+
+pub trait EvalComponent {
+    fn static_eval(&mut self) -> i32;
+
+    fn evolve(&mut self, mv: &Move);
+
+    fn devolve(&mut self, mv: &Move, discards: &Discards);
+
+    fn replicate(&self) -> Box<dyn EvalComponent>;
 }
 
 /// Allows one to configure the parameters of the evaluation board.

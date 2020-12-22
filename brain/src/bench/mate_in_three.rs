@@ -1,8 +1,8 @@
+use crate::eval::eval_impl::EvalBoardImpl;
+use crate::eval::tables::PositionTables;
+use crate::eval::values::PieceValues;
 use crate::eval::WIN_VALUE;
-use crate::eval_impl::EvalBoardImpl;
 use crate::search::search;
-use crate::tables::PositionTables;
-use crate::values::PieceValues;
 use myopic_board::{parse, Move, MutBoard, MutBoardImpl};
 use regex::Regex;
 use std::fs;
@@ -182,8 +182,8 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
                     dest.push(TestCase {
                         board: EvalBoardImpl::new(
                             board,
-                            PositionTables::default(),
                             PieceValues::default(),
+                            PositionTables::default(),
                         ),
                         expected_move,
                     });

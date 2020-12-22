@@ -181,8 +181,7 @@ const PAWN_5_8: [(i32, i32); 32] = [
 
 #[cfg(test)]
 mod test {
-    use crate::tables::PositionTables;
-
+    use crate::PositionTables;
     use myopic_board::{Piece, Reflectable, Square, Square::*};
 
     // Fully connected pawn table

@@ -3,19 +3,19 @@
 extern crate lazy_static;
 
 mod eval;
-mod eval_impl;
 pub mod pos;
+
 mod quiescent;
 mod search;
 mod see;
-pub mod tables;
-pub mod values;
 
 #[cfg(test)]
 mod bench;
 
+pub use eval::eval_impl::EvalBoardImpl;
+pub use eval::tables::PositionTables;
+pub use eval::values::PieceValues;
 pub use eval::{EvalBoard, EvalParameters};
-pub use eval_impl::EvalBoardImpl;
 pub use myopic_board::*;
 
 pub use search::interactive;
