@@ -3,8 +3,7 @@ use std::{fmt, ops};
 use itertools::Itertools;
 
 use crate::bitboard::iterator::BitBoardIterator;
-use crate::reflectable::Reflectable;
-use crate::Square::H1;
+use crate::square::Square::H1;
 use crate::{Dir, Square};
 use std::iter::FromIterator;
 
@@ -110,12 +109,6 @@ impl BitBoard {
         BitBoard(4629771061636907072),
         BitBoard(9259542123273814144),
     ];
-}
-
-impl Reflectable for BitBoard {
-    fn reflect(&self) -> Self {
-        self.into_iter().map(|sq| sq.reflect()).collect()
-    }
 }
 
 /// A bitboard is a set of squares and is therefore iterable.
@@ -280,7 +273,7 @@ fn create_ranks() -> Vec<BitBoard> {
 #[cfg(test)]
 mod test {
     use crate::bitboard::BitBoard;
-    use crate::Square::*;
+    use crate::square::Square::*;
 
     use super::*;
 
@@ -297,7 +290,7 @@ mod test {
     #[test]
     fn test_display() {
         let result = A1 | H7 | D5;
-        assert_eq!("{A1, D5, H7}".to_owned(), format!("{}", result));
+        assert_eq!("{a1, d5, h7}".to_owned(), format!("{}", result));
     }
 
     #[test]

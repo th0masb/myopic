@@ -1,4 +1,4 @@
-use crate::{Dir, Side};
+use crate::{BitBoard, CastleZone, CastleZoneSet, Dir, Piece, Side, Square};
 use std::collections::BTreeSet;
 
 /// Chess is a symmetric game and this trait represents a component of
@@ -39,6 +39,39 @@ impl Reflectable for Dir {
     }
 }
 
+impl Reflectable for BitBoard {
+    fn reflect(&self) -> Self {
+        self.into_iter().map(|sq| sq.reflect()).collect()
+    }
+}
+
+impl Reflectable for Square {
+    fn reflect(&self) -> Self {
+        let (fi, ri) = (self.file_index(), self.rank_index());
+        Square::from_index((8 * (7 - ri) + fi) as usize)
+    }
+}
+
+/// We reflect a piece to it's correspondent on the opposite side.
+impl Reflectable for Piece {
+    fn reflect(&self) -> Self {
+        match self {
+            Piece::WP => Piece::BP,
+            Piece::WN => Piece::BN,
+            Piece::WB => Piece::BB,
+            Piece::WR => Piece::BR,
+            Piece::WQ => Piece::BQ,
+            Piece::WK => Piece::BK,
+            Piece::BP => Piece::WP,
+            Piece::BN => Piece::WN,
+            Piece::BB => Piece::WB,
+            Piece::BR => Piece::WR,
+            Piece::BQ => Piece::WQ,
+            Piece::BK => Piece::WK,
+        }
+    }
+}
+
 impl Reflectable for i32 {
     fn reflect(&self) -> Self {
         -(*self)
@@ -53,10 +86,7 @@ impl<T: Reflectable> Reflectable for Vec<T> {
 
 impl<T: Reflectable> Reflectable for Option<T> {
     fn reflect(&self) -> Self {
-        match self {
-            Some(t) => Some(t.reflect()),
-            _ => None,
-        }
+        self.as_ref().map(|t| t.reflect())
     }
 }
 
@@ -109,5 +139,25 @@ mod test {
         assert_eq!(Dir::SWW, Dir::NEE.reflect());
         assert_eq!(Dir::NWW, Dir::SEE.reflect());
         assert_eq!(Dir::NNW, Dir::SSE.reflect());
+    }
+}
+
+/// A castle is reflected by it's side, i.e.
+///  - WK <==> BK
+///  - WQ <==> BQ
+impl Reflectable for CastleZone {
+    fn reflect(&self) -> Self {
+        match self {
+            CastleZone::WK => CastleZone::BK,
+            CastleZone::WQ => CastleZone::BQ,
+            CastleZone::BK => CastleZone::WK,
+            CastleZone::BQ => CastleZone::WQ,
+        }
+    }
+}
+
+impl Reflectable for CastleZoneSet {
+    fn reflect(&self) -> Self {
+        self.iter().map(|z| z.reflect()).collect()
     }
 }
