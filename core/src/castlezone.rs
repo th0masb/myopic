@@ -49,6 +49,14 @@ impl FromStr for CastleZone {
 }
 
 impl CastleZone {
+    /// Return the side which this zone belongs to.
+    pub fn side(&self) -> Side {
+        match self {
+            CastleZone::WK | CastleZone::WQ => Side::White,
+            CastleZone::BK | CastleZone::BQ => Side::Black,
+        }
+    }
+
     /// Return the kingside zone for the given side.
     pub fn kingside(side: Side) -> CastleZone {
         match side {
