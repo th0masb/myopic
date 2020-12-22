@@ -4,13 +4,15 @@ use crate::implementation::cache::CalculationCache;
 use crate::implementation::castling::Castling;
 use crate::implementation::history::History;
 use crate::implementation::positions::Positions;
+use crate::mv::{parse_op, Move};
 use crate::parse::patterns;
-use crate::Move;
+use crate::ChessBoard;
+use crate::FenComponent;
 use crate::MoveComputeType;
-use crate::MutBoard;
 use crate::Termination;
-use crate::{Discards, FenComponent};
+use anyhow::{anyhow, Error, Result};
 use myopic_core::*;
+use std::str::FromStr;
 
 mod cache;
 mod castling;
@@ -23,7 +25,7 @@ mod positions;
 mod test;
 
 #[derive(Debug, Clone)]
-pub struct MutBoardImpl {
+pub struct Board {
     history: History,
     pieces: Positions,
     castling: Castling,
@@ -33,143 +35,53 @@ pub struct MutBoardImpl {
     cache: CalculationCache,
 }
 
-impl MutBoardImpl {
-    pub(super) fn from_fen(fen: String) -> Result<MutBoardImpl, String> {
+impl FromStr for Board {
+    type Err = Error;
+
+    fn from_str(fen: &str) -> Result<Self, Self::Err> {
         if patterns::fen().is_match(&fen) {
             let space_split: Vec<_> = patterns::space()
                 .split(&fen)
-                .map(|s| s.to_owned())
+                .map(|s| s.trim().to_owned())
                 .collect();
-            let pieces = positions_from_fen(&space_split[0])?;
-            let active = side_from_fen(&space_split[1])?;
-            let castling = rights_from_fen(&space_split[2])?;
-            let enpassant = enpassant_from_fen(&space_split[3]);
-            let (clock, history) = clock_history_from_fen(&fen, active)?;
-            let hash = hash(&pieces, &castling, active, enpassant);
-            Ok(MutBoardImpl {
-                pieces,
-                active,
-                enpassant,
-                castling,
-                clock,
-                history: History::new(hash, history),
-                cache: CalculationCache::empty(),
+            let active = space_split[1].parse::<Side>()?;
+            let curr_move = space_split[5].parse::<usize>()?;
+            Ok(Board {
+                pieces: space_split[0].parse()?,
+                active: space_split[1].parse()?,
+                castling: space_split[2].parse()?,
+                enpassant: parse_op(space_split[3].as_str())?,
+                clock: space_split[4].parse::<usize>()?,
+                history: History::new(2 * (max(curr_move, 1) - 1) + (active as usize)),
+                cache: CalculationCache::default(),
             })
         } else {
-            Err(fen)
+            Err(anyhow!("Cannot parse FEN {}", fen))
         }
-    }
-
-    fn switch_side(&mut self) {
-        self.active = self.active.reflect();
-    }
-
-    /// Combines the various components of the hash together and pushes the
-    /// result onto the head of the cache.
-    fn update_hash(&mut self) {
-        self.history.push_head(hash(
-            &self.pieces,
-            &self.castling,
-            self.active,
-            self.enpassant,
-        ))
-    }
-}
-
-fn side_from_fen(fen: &String) -> Result<Side, String> {
-    match patterns::fen_side()
-        .find(fen)
-        .map(|m| m.as_str())
-        .ok_or(fen.clone())?
-    {
-        "w" => Ok(Side::White),
-        "b" => Ok(Side::Black),
-        _ => Err(fen.clone()),
-    }
-}
-
-fn enpassant_from_fen(fen: &String) -> Option<Square> {
-    patterns::fen_enpassant()
-        .find(fen)
-        .and_then(|m| Square::from_string(m.as_str()).ok())
-}
-
-fn positions_from_fen(fen: &String) -> Result<Positions, String> {
-    let positions = patterns::fen_positions()
-        .find(&fen)
-        .map(|m| m.as_str())
-        .ok_or(fen.clone())?;
-    Positions::from_fen(String::from(positions))
-}
-
-fn rights_from_fen(fen: &String) -> Result<Castling, String> {
-    let rights = patterns::fen_rights()
-        .find(&fen)
-        .map(|m| m.as_str())
-        .ok_or(fen.clone())?;
-    Castling::from_fen(String::from(rights))
-}
-
-fn clock_history_from_fen(fen: &String, active: Side) -> Result<(usize, usize), String> {
-    let ints: Vec<_> = patterns::int()
-        .find_iter(fen)
-        .map(|m| m.as_str().parse::<usize>().unwrap())
-        .collect();
-    if ints.len() < 2 {
-        Err(fen.clone())
-    } else {
-        let n = ints.len();
-        let (clock, moves_played) = (ints[n - 2], ints[n - 1]);
-        let history = 2 * (max(moves_played, 1) - 1) + (active as usize);
-        Ok((clock, history))
     }
 }
 
 fn hash(pt: &Positions, ct: &Castling, active: Side, ep: Option<Square>) -> u64 {
     pt.hash()
         ^ ct.hash()
-        ^ myopic_core::hash::side(active)
-        ^ ep.map_or(0u64, |x| myopic_core::hash::enpassant(x))
-}
-
-impl Move {
-    fn standards(moving: Piece, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
-        targets
-            .into_iter()
-            .map(move |target| Move::Standard(moving, src, target))
-    }
-
-    fn promotions(side: Side, src: Square, targets: BitBoard) -> impl Iterator<Item = Move> {
-        targets.into_iter().flat_map(move |target| {
-            Move::promotion_targets(side)
-                .iter()
-                .map(move |&piece| Move::Promotion(src, target, piece))
-        })
-    }
-
-    fn promotion_targets<'a>(side: Side) -> &'a [Piece; 4] {
-        match side {
-            Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN],
-            Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN],
-        }
-    }
+        ^ crate::hash::side(active)
+        ^ ep.map_or(0u64, |x| crate::hash::enpassant(x))
 }
 
 #[cfg(test)]
 mod fen_test {
     use crate::implementation::test::TestBoard;
-    use crate::MutBoardImpl;
+    use crate::Board;
+    use anyhow::Result;
     use myopic_core::{constants::*, CastleZone, CastleZoneSet, Side, Square};
 
-    fn test(expected: TestBoard, fen_string: String) {
-        assert_eq!(
-            MutBoardImpl::from(expected),
-            MutBoardImpl::from_fen(fen_string).unwrap()
-        )
+    fn test(expected: TestBoard, fen_string: String) -> Result<()> {
+        assert_eq!(Board::from(expected), fen_string.parse::<Board>()?);
+        Ok(())
     }
 
     #[test]
-    fn fen_to_board_case_1() {
+    fn fen_to_board_case_1() -> Result<()> {
         let fen = "r1br2k1/1pq1npb1/p2pp1pp/8/2PNP3/P1N5/1P1QBPPP/3R1RK1 w - - 3 19";
         let board = TestBoard {
             whites: vec![
@@ -196,11 +108,11 @@ mod fen_test {
             enpassant: None,
             history_count: 36,
         };
-        test(board, String::from(fen));
+        test(board, String::from(fen))
     }
 
     #[test]
-    fn fen_to_board_case_2() {
+    fn fen_to_board_case_2() -> Result<()> {
         let fen = "rnb2rk1/ppp2ppp/4pq2/8/2PP4/5N2/PP3PPP/R2QKB1R w KQ - 2 9";
         let board = TestBoard {
             whites: vec![A2 | B2 | C4 | D4 | F2 | G2 | H2, F3, F1, A1 | H1, D1, E1],
@@ -213,11 +125,11 @@ mod fen_test {
             enpassant: None,
             history_count: 16,
         };
-        test(board, String::from(fen));
+        test(board, String::from(fen))
     }
 
     #[test]
-    fn fen_to_board_case_3() {
+    fn fen_to_board_case_3() -> Result<()> {
         let fen = "r1bqkbnr/ppp1pppp/n7/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3";
         let board = TestBoard {
             whites: vec![
@@ -244,11 +156,11 @@ mod fen_test {
             enpassant: Some(Square::D6),
             history_count: 4,
         };
-        test(board, String::from(fen));
+        test(board, String::from(fen))
     }
 
     #[test]
-    fn fen_to_board_case_4() {
+    fn fen_to_board_case_4() -> Result<()> {
         let fen = "r6k/p5pp/p1b2qnN/8/3Q4/2P1B3/PP4PP/R5K1 b - - 2 21";
         let board = TestBoard {
             whites: vec![A2 | B2 | C3 | G2 | H2, H6, E3, A1, D4, G1],
@@ -261,44 +173,32 @@ mod fen_test {
             enpassant: None,
             history_count: 41,
         };
-        test(board, String::from(fen));
+        test(board, String::from(fen))
     }
 }
 
 // Trait implementations
-impl Reflectable for MutBoardImpl {
+impl Reflectable for Board {
     fn reflect(&self) -> Self {
         let pieces = self.pieces.reflect();
         let castling = self.castling.reflect();
         let active = self.active.reflect();
         let enpassant = self.enpassant.reflect();
-        let history_count = self.history_count();
         let hash = hash(&pieces, &castling, active, enpassant);
-        MutBoardImpl {
-            history: History::new(hash, history_count),
+        Board {
+            history: self.history.reflect_for(hash),
             clock: self.clock,
             pieces,
             castling,
             active,
             enpassant,
-            cache: CalculationCache::empty(),
+            cache: CalculationCache::default(),
         }
     }
 }
 
-impl Reflectable for Move {
-    fn reflect(&self) -> Self {
-        match self {
-            Move::Castle(zone) => Move::Castle(zone.reflect()),
-            Move::Enpassant(s, t) => Move::Enpassant(s.reflect(), t.reflect()),
-            Move::Standard(p, s, t) => Move::Standard(p.reflect(), s.reflect(), t.reflect()),
-            Move::Promotion(s, t, p) => Move::Promotion(s.reflect(), t.reflect(), p.reflect()),
-        }
-    }
-}
-
-impl PartialEq<MutBoardImpl> for MutBoardImpl {
-    fn eq(&self, other: &MutBoardImpl) -> bool {
+impl PartialEq<Board> for Board {
+    fn eq(&self, other: &Board) -> bool {
         self.pieces == other.pieces
             && self.castling.rights() == other.castling.rights()
             && self.enpassant == other.enpassant
@@ -307,13 +207,13 @@ impl PartialEq<MutBoardImpl> for MutBoardImpl {
     }
 }
 
-impl MutBoard for MutBoardImpl {
-    fn evolve(&mut self, action: &Move) -> Discards {
-        self.evolve(action)
+impl ChessBoard for Board {
+    fn make(&mut self, mv: Move) -> Result<()> {
+        self.evolve_impl(mv)
     }
 
-    fn devolve(&mut self, action: &Move, discards: Discards) {
-        self.devolve(action, discards)
+    fn unmake(&mut self) -> Result<Move> {
+        self.devolve_impl()
     }
 
     fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
@@ -343,7 +243,7 @@ impl MutBoard for MutBoardImpl {
     }
 
     fn hash(&self) -> u64 {
-        self.history.head()
+        hash(&self.pieces, &self.castling, self.active, self.enpassant)
     }
 
     fn active(&self) -> Side {
@@ -358,8 +258,11 @@ impl MutBoard for MutBoardImpl {
         self.castling.status(side)
     }
 
-    fn locs(&self, piece: Piece) -> BitBoard {
-        self.pieces.locs_impl(piece)
+    fn locs(&self, pieces: &[Piece]) -> BitBoard {
+        pieces
+            .into_iter()
+            .map(|&p| self.pieces.locs(p))
+            .fold(BitBoard::EMPTY, |l, r| l | r)
     }
 
     fn king(&self, side: Side) -> Square {
@@ -374,7 +277,7 @@ impl MutBoard for MutBoardImpl {
         self.clock
     }
 
-    fn history_count(&self) -> usize {
+    fn position_count(&self) -> usize {
         self.history.position_count()
     }
 

@@ -1,11 +1,11 @@
 use crate::implementation::cache::rays::RaySet;
-use crate::implementation::MutBoardImpl;
-use crate::MutBoard;
+use crate::implementation::Board;
+use crate::ChessBoard;
 use myopic_core::*;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
 
-impl MutBoardImpl {
+impl Board {
     pub fn pinned_set_impl(&mut self) -> RaySet {
         match &self.cache.pinned_set {
             Some(x) => x.clone(),
@@ -45,7 +45,7 @@ impl MutBoardImpl {
             Side::White => BLACK_SLIDERS,
             Side::Black => WHITE_SLIDERS,
         };
-        let locs = |p: Piece| self.pieces.locs_impl(p);
+        let locs = |p: Piece| self.pieces.locs(p);
         passive_sliders
             .iter()
             .flat_map(|&p| locs(p) & p.empty_control(king_loc))
@@ -60,7 +60,7 @@ mod test {
     use super::*;
 
     fn execute_test(fen: &'static str, expected_pinned: RaySet) {
-        let board = crate::fen_position(fen).unwrap();
+        let board = fen.parse::<Board>().unwrap();
         assert_eq!(expected_pinned.reflect(), board.reflect().compute_pinned());
         assert_eq!(expected_pinned, board.compute_pinned());
     }

@@ -29,13 +29,6 @@ pub fn square() -> &'static Regex {
     &RE
 }
 
-pub fn int() -> &'static Regex {
-    lazy_static! {
-        static ref RE: Regex = rgx(INT.to_owned());
-    }
-    &RE
-}
-
 pub fn fen() -> &'static Regex {
     lazy_static! {
         static ref RE: Regex = rgx(format!(
@@ -61,20 +54,6 @@ pub fn fen_positions() -> &'static Regex {
 pub fn fen_rank() -> &'static Regex {
     lazy_static! {
         static ref RE: Regex = rgx(FEN_RNK.to_owned());
-    }
-    &RE
-}
-
-pub fn fen_side() -> &'static Regex {
-    lazy_static! {
-        static ref RE: Regex = rgx(format!("{}", FEN_SIDE));
-    }
-    &RE
-}
-
-pub fn fen_enpassant() -> &'static Regex {
-    lazy_static! {
-        static ref RE: Regex = rgx(format!("{}", FEN_EP));
     }
     &RE
 }

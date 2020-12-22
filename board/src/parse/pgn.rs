@@ -1,44 +1,59 @@
 use crate::parse::patterns::*;
-use crate::Move::Castle;
-use crate::{Move, MoveComputeType, MutBoard};
+use crate::{Board, ChessBoard, Move, MoveComputeType};
+use anyhow::{anyhow, Result};
 use myopic_core::{CastleZone, Piece, Square};
 use regex::Regex;
 
 /// Extracts the moves encoded in standard pgn format contained in
 /// a single string.
-pub fn pgn(moves: &str) -> Result<Vec<Move>, String> {
-    return partial_pgn(&crate::start_position(), moves);
+pub fn pgn(moves: &str) -> Result<Vec<Move>> {
+    return partial_pgn(&crate::STARTPOS_FEN.parse::<Board>()?, moves);
 }
 
 /// Extracts the moves encoded in standard pgn format starting at
 /// a custom board position.
-pub fn partial_pgn<B: MutBoard>(start: &B, moves: &str) -> Result<Vec<Move>, String> {
+pub fn partial_pgn<B: ChessBoard>(start: &B, moves: &str) -> Result<Vec<Move>> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in pgn_move().find_iter(moves) {
         match parse_single_move(&mut mutator_board, evolve.as_str()) {
-            Ok(result) => dest.push(result.clone()),
-            Err(_) => return Err(format!("Failed at {} in: {}", evolve.as_str(), moves)),
+            Ok(result) => {
+                dest.push(result.clone());
+                mutator_board.make(result)?;
+            }
+            Err(_) => return Err(anyhow!("Failed at {} in: {}", evolve.as_str(), moves)),
         };
-        mutator_board.evolve(dest.last().unwrap());
     }
     Ok(dest)
 }
 
-fn parse_single_move<B: MutBoard>(start: &mut B, pgn_move: &str) -> Result<Move, String> {
+fn parse_single_move<B: ChessBoard>(start: &mut B, pgn_move: &str) -> Result<Move> {
+    let legal = start.compute_moves(MoveComputeType::All);
     // If a castle move we can retrieve straight away
     if pgn_move == "O-O" {
-        return Ok(Castle(CastleZone::kingside(start.active())));
+        return legal
+            .iter()
+            .find(|&m| match m {
+                Move::Castle { zone, .. } => *zone == CastleZone::kingside(start.active()),
+                _ => false,
+            })
+            .cloned()
+            .ok_or(anyhow!("Kingside castling not available!"));
     } else if pgn_move == "O-O-O" {
-        return Ok(Castle(CastleZone::queenside(start.active())));
+        return legal
+            .iter()
+            .find(|&m| match m {
+                Move::Castle { zone, .. } => *zone == CastleZone::queenside(start.active()),
+                _ => false,
+            })
+            .cloned()
+            .ok_or(anyhow!("Queenside castling not available!"));
     }
-
-    // Otherwise we need to get more involved and look through the legal moves.
-    let legal = start.compute_moves(MoveComputeType::All);
+    // Otherwise we need to get more involved.
     // The target square of the move.
     let target = square()
         .find_iter(pgn_move)
-        .map(|m| Square::from_string(m.as_str()).unwrap())
+        .map(|m| m.as_str().parse::<Square>().unwrap())
         .last()
         .map(|mv| mv.clone());
 
@@ -58,19 +73,24 @@ fn parse_single_move<B: MutBoard>(start: &mut B, pgn_move: &str) -> Result<Move,
     let matching = legal
         .into_iter()
         .filter(|mv| match mv {
-            &Move::Standard(p, s, e) => {
-                move_piece_matches(p) && target == Some(e) && matches_start(s)
+            &Move::Standard {
+                moving, from, dest, ..
+            } => move_piece_matches(moving) && target == Some(dest) && matches_start(from),
+            &Move::Enpassant { from, .. } => {
+                move_matches_pawn && target == start.enpassant() && matches_start(from)
             }
-            &Move::Enpassant(s, _) => {
-                move_matches_pawn && target == start.enpassant() && matches_start(s)
-            }
-            &Move::Promotion(s, e, p) => {
+            &Move::Promotion {
+                from,
+                dest,
+                promoted,
+                ..
+            } => {
                 move_matches_pawn
-                    && target == Some(e)
-                    && matches_start(s)
-                    && promote_piece_matches(p)
+                    && target == Some(dest)
+                    && matches_start(from)
+                    && promote_piece_matches(promoted)
             }
-            _ => false,
+            &Move::Castle { .. } => false,
         })
         .map(|mv| mv.clone())
         .collect::<Vec<_>>();
@@ -78,14 +98,14 @@ fn parse_single_move<B: MutBoard>(start: &mut B, pgn_move: &str) -> Result<Move,
     if matching.len() == 1 {
         Ok((&matching[0]).clone())
     } else {
-        Err(pgn_move.to_owned())
+        Err(anyhow!("Found no move matching {}", pgn_move))
     }
 }
 
 fn matches_square(file: Option<char>, rank: Option<char>, sq: Square) -> bool {
-    let lower = format!("{:?}", sq).to_lowercase();
-    let matches_file = |f: char| char_at(&lower, 0) == f;
-    let matches_rank = |r: char| char_at(&lower, 1) == r;
+    let sq_str = sq.to_string();
+    let matches_file = |f: char| char_at(&sq_str, 0) == f;
+    let matches_rank = |r: char| char_at(&sq_str, 1) == r;
     match (file, rank) {
         (Some(f), Some(r)) => matches_file(f) && matches_rank(r),
         (None, Some(r)) => matches_rank(r),
@@ -137,17 +157,21 @@ fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
 
 #[cfg(test)]
 mod test {
-    fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
-        let finish = crate::fen_position(expected_finish).unwrap();
-        let mut board = crate::start_position();
-        for evolve in super::partial_pgn(&board, &String::from(pgn)).unwrap() {
-            board.evolve(&evolve);
+    use crate::{Board, ChessBoard};
+    use anyhow::Result;
+
+    fn execute_success_test(expected_finish: &'static str, pgn: &'static str) -> Result<()> {
+        let finish = expected_finish.parse::<Board>()?;
+        let mut board = crate::STARTPOS_FEN.parse::<Board>()?;
+        for evolve in super::partial_pgn(&board, &String::from(pgn))? {
+            board.make(evolve)?;
         }
         assert_eq!(finish, board);
+        Ok(())
     }
 
     #[test]
-    fn case_zero() {
+    fn case_zero() -> Result<()> {
         execute_success_test(
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
             "",
@@ -155,7 +179,7 @@ mod test {
     }
 
     #[test]
-    fn case_one() {
+    fn case_one() -> Result<()> {
         execute_success_test(
             "8/1P4pk/P1N2pp1/8/P3q2P/6P1/5PK1/8 w - - 6 56",
             "1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. e3 Bf5 5. Nc3 e6 6. Nh4 Bg6
@@ -169,10 +193,10 @@ mod test {
             Qc6 42. Qc3 Re2 43. b4 Ne5 44. b5 Qe4 45. c6 Nd3 46. Qxd3 Qxd3
             47. cxb7 Re8 48. bxa6 Qb3 49. Rc5 Kh7 50. Rc8 Rg8 51. Nd4 Qb6
             52. Rxg8 Kxg8 53. Kg1 Kh7 54. Nc6 Qb1+ 55. Kg2 Qe4+ 1/2-1/2",
-        );
+        )
     }
     #[test]
-    fn case_two() {
+    fn case_two() -> Result<()> {
         execute_success_test(
             "5rk1/pp2p3/3p2pb/2pP4/2q5/3b1B1P/PPn2Q2/R1NK2R1 w - - 0 28",
             "
@@ -190,114 +214,120 @@ mod test {
             19.Nd3 Bf5 20.Nec1 Nd2 21.hxg6 hxg6 22.Bg2 Nxc4 23.Qf2 Ne3+
             24.Ke2 Qc4 25.Bf3 Rf8 26.Rg1 Nc2 27.Kd1 Bxd3 0-1
             ",
-        );
+        )
     }
 }
 
 #[cfg(test)]
 mod test_single_move {
     use super::*;
-    use myopic_core::Square::*;
+    
 
-    fn execute_success_test(expected: Move, start_fen: &'static str, pgn: &'static str) {
-        let mut board = crate::fen_position(start_fen).unwrap();
-        let pgn_parse = parse_single_move(&mut board, &String::from(pgn)).unwrap();
-        assert_eq!(expected, pgn_parse);
+    fn execute_success_test(
+        expected: &'static str,
+        start_fen: &'static str,
+        pgn: &'static str,
+    ) -> Result<()> {
+        let mut board = start_fen.parse::<Board>()?;
+        let parsed_expected = Move::from(expected, board.hash())?;
+        let pgn_parse = parse_single_move(&mut board, pgn)?;
+        assert_eq!(parsed_expected, pgn_parse);
+        Ok(())
     }
 
     #[test]
-    fn case_one() {
+    fn case_one() -> Result<()> {
         execute_success_test(
-            Move::Standard(Piece::BB, G4, F3),
+            "sbbg4f3wn",
             "rn1qkbnr/pp2pppp/2p5/3p4/4P1b1/2N2N1P/PPPP1PP1/R1BQKB1R b KQkq - 0 4",
             "Bxf3",
         )
     }
 
     #[test]
-    fn case_two() {
+    fn case_two() -> Result<()> {
         execute_success_test(
-            Move::Enpassant(E5, Square::F6),
+            "ewe5f6f5",
             "r2qkbnr/pp1np1pp/2p5/3pPp2/8/2N2Q1P/PPPP1PP1/R1B1KB1R w KQkq f6 0 7",
             "exf6",
         )
     }
 
     #[test]
-    fn case_three() {
+    fn case_three() -> Result<()> {
         execute_success_test(
-            Move::Promotion(F7, G8, Piece::WN),
+            "pf7g8wnbn",
             "r2q1bnr/pp1nkPpp/2p1p3/3p4/8/2N2Q1P/PPPP1PP1/R1B1KB1R w KQ - 1 9",
             "fxg8=N",
         )
     }
 
     #[test]
-    fn case_four() {
+    fn case_four() -> Result<()> {
         execute_success_test(
-            Move::Promotion(F7, G8, Piece::WQ),
+            "pf7g8wqbn",
             "r2q1bnr/pp1nkPpp/2p1p3/3p4/8/2N2Q1P/PPPP1PP1/R1B1KB1R w KQ - 1 9",
             "fxg8=Q",
         )
     }
 
     #[test]
-    fn case_five() {
+    fn case_five() -> Result<()> {
         execute_success_test(
-            Move::Standard(Piece::BR, A8, E8),
+            "sbra8e8-",
             "r5r1/ppqkb1pp/2p1pn2/3p2B1/3P4/2NB1Q1P/PPP2PP1/4RRK1 b - - 8 14",
             "Rae8",
         )
     }
 
     #[test]
-    fn case_six() {
+    fn case_six() -> Result<()> {
         execute_success_test(
-            Move::Standard(Piece::WR, E1, E2),
+            "swre1e2-",
             "4rr2/ppqkb1p1/2p1p2p/3p4/3Pn2B/2NBRQ1P/PPP2PP1/4R1K1 w - - 2 18",
             "R1e2",
         )
     }
 
     #[test]
-    fn case_seven() {
+    fn case_seven() -> Result<()> {
         execute_success_test(
-            Move::Standard(Piece::BR, F3, F6),
+            "sbrf3f6wb",
             "5r2/ppqkb1p1/2p1pB1p/3p4/3Pn2P/2NBRr2/PPP1RPP1/6K1 b - - 0 20",
             "R3xf6",
         )
     }
 
     #[test]
-    fn case_eight() {
+    fn case_eight() -> Result<()> {
         execute_success_test(
-            Move::Standard(Piece::BN, E4, F2),
+            "sbne4f2wp",
             "5r2/ppqkb1p1/2p1pr1p/3p4/3Pn2P/2NBR3/PPP1RPP1/7K b - - 1 21",
             "Nxf2+",
         )
     }
 
     #[test]
-    fn case_nine() {
+    fn case_nine() -> Result<()> {
         execute_success_test(
-            Move::Standard(Piece::BR, F8, F1),
+            "sbrf8f1wb",
             "5r2/ppqkb1p1/2p1p2p/3p4/P2P3P/2N1R3/1PP3P1/5B1K b - - 0 24",
             "Rf8xf1#",
         )
     }
 
     #[test]
-    fn case_ten() {
+    fn case_ten() -> Result<()> {
         execute_success_test(
-            Move::Castle(CastleZone::WK),
+            "cwk",
             "r3k2r/pp1q1ppp/n1p2n2/4p3/3pP2P/3P1QP1/PPPN1PB1/R3K2R w KQkq - 1 13",
             "O-O",
         )
     }
     #[test]
-    fn case_eleven() {
+    fn case_eleven() -> Result<()> {
         execute_success_test(
-            Move::Castle(CastleZone::BQ),
+            "cbq",
             "r3k2r/pp1q1ppp/n1p2n2/4p3/3pP2P/3P1QP1/PPPN1PB1/R4RK1 b kq - 2 13",
             "O-O-O",
         )

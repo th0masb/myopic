@@ -1,59 +1,17 @@
 #[macro_use]
 extern crate lazy_static;
 
-pub use crate::implementation::MutBoardImpl;
+pub use crate::implementation::Board;
+use anyhow::Result;
+use mv::Move;
 pub use myopic_core::*;
 
 mod implementation;
+mod mv;
 pub mod parse;
 
 /// The start position of a chess game encoded in FEN format
 pub const STARTPOS_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Discards {
-    pub rights: CastleZoneSet,
-    pub piece: Option<Piece>,
-    pub enpassant: Option<Square>,
-    pub hash: u64,
-    pub half_move_clock: usize,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub enum Move {
-    Standard(Piece, Square, Square),
-    Enpassant(Square, Square),
-    Promotion(Square, Square, Piece),
-    Castle(CastleZone),
-}
-
-impl Move {
-    /// Convert this move into a human readable uci long format string.
-    pub fn uci_format(&self) -> String {
-        match self {
-            &Move::Standard(_, src, dest) => format!("{}{}", src, dest),
-            &Move::Enpassant(src, dest) => format!("{}{}", src, dest),
-            &Move::Promotion(src, dest, piece) => format!(
-                "{}{}{}",
-                src,
-                dest,
-                match piece {
-                    Piece::WQ | Piece::BQ => "q",
-                    Piece::WR | Piece::BR => "r",
-                    Piece::WB | Piece::BB => "b",
-                    Piece::WN | Piece::BN => "n",
-                    _ => "",
-                }
-            ),
-            &Move::Castle(zone) => {
-                let (_, src, dest) = zone.king_data();
-                format!("{}{}", src, dest)
-            }
-        }
-        .to_lowercase()
-        .to_owned()
-    }
-}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum MoveComputeType {
@@ -92,20 +50,17 @@ pub enum FenComponent {
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
 /// properties.
-pub trait MutBoard: Clone + Send + Reflectable {
-    /// Evolves this board in place according to the given move reference.
-    /// The move must be one that is legal in this position otherwise the
-    /// results are undefined. The data which is lost during this evolution
-    /// is returned at the end of the procedure allowing for devolution to
-    /// take place.
-    fn evolve(&mut self, action: &Move) -> Discards;
+pub trait ChessBoard: Clone + Send + Reflectable {
+    /// Evolves the position by making the given move. If the source hash
+    /// of the move does not match the hash of this position (prior to making
+    /// the move) then an error will be returned. If the hash matches but
+    /// the move is illegal in this position (e.g if you manually start
+    /// creating moves) then the results are undefined.
+    fn make(&mut self, action: Move) -> Result<()>;
 
-    /// Reverses the given move, i.e. it devolves the board. It can only be
-    /// called after the same move has been used to evolve the board. The
-    /// discarded information produced by the evolve call must be provided
-    /// here. If any of these conditions are not met the results of this
-    /// procedure are undefined.
-    fn devolve(&mut self, action: &Move, discards: Discards);
+    /// Reverses and returns the move which was made last. If no move has
+    /// been made yet then an error is returned.
+    fn unmake(&mut self) -> Result<Move>;
 
     /// Compute a vector of all the legal moves in this position for the
     /// given computation type. Note there is no particular ordering to the
@@ -141,8 +96,8 @@ pub trait MutBoard: Clone + Send + Reflectable {
     /// Return the castling status of the given side.
     fn castle_status(&self, side: Side) -> Option<CastleZone>;
 
-    /// Return the locations of the given piece.
-    fn locs(&self, piece: Piece) -> BitBoard;
+    /// Return the locations of the given pieces.
+    fn locs(&self, pieces: &[Piece]) -> BitBoard;
 
     /// Return the location of the king for the given side.
     fn king(&self, side: Side) -> Square;
@@ -153,8 +108,8 @@ pub trait MutBoard: Clone + Send + Reflectable {
     /// Return the half move clock value at this position.
     fn half_move_clock(&self) -> usize;
 
-    /// Return the total number of half moves played to reach this position.
-    fn history_count(&self) -> usize;
+    /// Return the number of previous positions for this board.
+    fn position_count(&self) -> usize;
 
     /// Return the remaining castling rights from this position.
     fn remaining_rights(&self) -> CastleZoneSet;
@@ -175,11 +130,6 @@ pub trait MutBoard: Clone + Send + Reflectable {
         ])
     }
 
-    /// Returns the locations of a set of pieces as a single bitboard.
-    fn multi_locs(&self, pieces: &[Piece]) -> BitBoard {
-        pieces.into_iter().map(|&p| self.locs(p)).collect()
-    }
-
     /// Returns the locations of all pieces on the board.
     fn all_pieces(&self) -> BitBoard {
         let (w, b) = self.sides();
@@ -187,27 +137,23 @@ pub trait MutBoard: Clone + Send + Reflectable {
     }
 }
 
-/// Create a mutable board state from a fen string if it is valid.
-pub fn fen_position(fen: &str) -> Result<MutBoardImpl, String> {
-    MutBoardImpl::from_fen(String::from(fen))
-}
-
-/// Create a mutable board state representing the start of a standard
-/// chess game.
-pub fn start_position() -> MutBoardImpl {
-    fen_position(STARTPOS_FEN).unwrap()
-}
-
 #[cfg(test)]
 mod uci_conversion_test {
-    use super::Move;
+    use crate::mv::Move;
     use myopic_core::*;
 
     #[test]
     fn test_pawn_standard_conversion() {
         assert_eq!(
             "e2e4",
-            Move::Standard(Piece::WP, Square::E2, Square::E4).uci_format()
+            Move::Standard {
+                source: 0u64,
+                moving: Piece::WP,
+                from: Square::E2,
+                dest: Square::E4,
+                capture: None,
+            }
+            .uci_format()
         );
     }
 
@@ -215,28 +161,80 @@ mod uci_conversion_test {
     fn test_rook_standard_conversion() {
         assert_eq!(
             "h1h7",
-            Move::Standard(Piece::BR, Square::H1, Square::H7).uci_format()
+            Move::Standard {
+                source: 0u64,
+                moving: Piece::BR,
+                from: Square::H1,
+                dest: Square::H7,
+                capture: Some(Piece::WQ),
+            }
+            .uci_format()
         );
     }
 
     #[test]
     fn test_castling_conversion() {
-        assert_eq!("e1g1", Move::Castle(CastleZone::WK).uci_format());
-        assert_eq!("e1c1", Move::Castle(CastleZone::WQ).uci_format());
-        assert_eq!("e8g8", Move::Castle(CastleZone::BK).uci_format());
-        assert_eq!("e8c8", Move::Castle(CastleZone::BQ).uci_format());
+        assert_eq!(
+            "e1g1",
+            Move::Castle {
+                source: 1u64,
+                zone: CastleZone::WK
+            }
+            .uci_format()
+        );
+        assert_eq!(
+            "e1c1",
+            Move::Castle {
+                source: 1u64,
+                zone: CastleZone::WQ
+            }
+            .uci_format()
+        );
+        assert_eq!(
+            "e8g8",
+            Move::Castle {
+                source: 8u64,
+                zone: CastleZone::BK
+            }
+            .uci_format()
+        );
+        assert_eq!(
+            "e8c8",
+            Move::Castle {
+                source: 8u64,
+                zone: CastleZone::BQ
+            }
+            .uci_format()
+        );
     }
 
     #[test]
     fn test_promotion_conversion() {
         assert_eq!(
             "e7d8q",
-            Move::Promotion(Square::E7, Square::D8, Piece::WQ).uci_format()
+            Move::Promotion {
+                source: 9u64,
+                from: Square::E7,
+                dest: Square::D8,
+                promoted: Piece::WQ,
+                capture: Some(Piece::BB),
+            }
+            .uci_format()
         )
     }
 
     #[test]
     fn test_enpassant_conversion() {
-        assert_eq!("e5d6", Move::Enpassant(Square::E5, Square::D6).uci_format())
+        assert_eq!(
+            "e5d6",
+            Move::Enpassant {
+                source: 0u64,
+                side: Side::White,
+                from: Square::E5,
+                dest: Square::D6,
+                capture: Square::D5,
+            }
+            .uci_format()
+        )
     }
 }

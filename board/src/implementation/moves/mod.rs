@@ -1,8 +1,8 @@
 use crate::implementation::cache::MoveConstraints;
-use crate::implementation::MutBoardImpl;
-use crate::Move;
+use crate::implementation::Board;
+use crate::mv::Move;
+use crate::ChessBoard;
 use crate::MoveComputeType;
-use crate::MutBoard;
 use myopic_core::*;
 
 #[cfg(test)]
@@ -10,7 +10,7 @@ mod test;
 
 mod enpassant_source;
 
-impl MutBoardImpl {
+impl Board {
     pub fn compute_moves_impl(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
         let constraints = self.constraints_impl(computation_type);
         let pawn_moves = self.compute_pawn_moves(&constraints);
@@ -31,17 +31,56 @@ impl MutBoardImpl {
         let (whites, blacks) = self.sides();
         let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
         // Add standard moves for pieces which aren't pawns or king
-        for piece in Piece::on_side(self.active).skip(1) {
-            for location in self.pieces.locs_impl(piece) {
+        for piece in Piece::of(self.active).skip(1) {
+            for location in self.pieces.locs(piece) {
                 let moves = unchecked_moves(piece, location) & constraints.get(location);
-                dest.extend(Move::standards(piece, location, moves));
+                dest.extend(self.standards(piece, location, moves));
             }
         }
         dest
     }
 
+    fn standards(&self, moving: Piece, from: Square, dests: BitBoard) -> Vec<Move> {
+        let source = self.hash();
+        dests
+            .iter()
+            .map(|dest| Move::Standard {
+                source,
+                moving,
+                from,
+                dest,
+                capture: self.piece(dest),
+            })
+            .collect()
+    }
+
+    fn promotions(&self, side: Side, from: Square, dests: BitBoard) -> Vec<Move> {
+        let source = self.hash();
+        dests
+            .iter()
+            .flat_map(|dest| {
+                Board::promotion_targets(side)
+                    .iter()
+                    .map(move |&promoted| Move::Promotion {
+                        source,
+                        from,
+                        dest,
+                        promoted,
+                        capture: self.piece(dest),
+                    })
+            })
+            .collect()
+    }
+
+    fn promotion_targets<'a>(side: Side) -> &'a [Piece; 4] {
+        match side {
+            Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN],
+            Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN],
+        }
+    }
+
     fn compute_pawn_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
-        let mut dest: Vec<Move> = Vec::with_capacity(20);
+        let mut moves: Vec<Move> = Vec::with_capacity(20);
         let (standard, enpassant, promotion) = self.separate_pawn_locs();
         let (active_pawn, (whites, blacks)) = (Piece::pawn(self.active), self.sides());
         let compute_moves = |loc: Square| active_pawn.moves(loc, whites, blacks);
@@ -49,20 +88,30 @@ impl MutBoardImpl {
         // Add moves for pawns which can only produce standard moves.
         for location in standard | enpassant {
             let targets = compute_moves(location) & constraints.get(location);
-            dest.extend(Move::standards(active_pawn, location, targets));
+            moves.extend(self.standards(active_pawn, location, targets));
         }
-        for loc in enpassant {
-            let ep = self.enpassant.unwrap();
-            if constraints.get(loc).contains(ep) && self.enpassant_doesnt_discover_attack(loc) {
-                dest.push(Move::Enpassant(loc, ep));
+        let (source, active) = (self.hash(), self.active);
+        for from in enpassant {
+            let dest = self.enpassant.unwrap();
+            let capture = dest.next(active.pawn_dir().reflect()).unwrap();
+            if constraints.get(from).contains(capture)
+                && self.enpassant_doesnt_discover_attack(from)
+            {
+                moves.push(Move::Enpassant {
+                    source,
+                    side: active,
+                    from,
+                    dest,
+                    capture,
+                });
             }
         }
         for location in promotion {
             let targets = compute_moves(location) & constraints.get(location);
-            dest.extend(Move::promotions(self.active, location, targets));
+            moves.extend(self.promotions(self.active, location, targets));
         }
 
-        dest
+        moves
     }
 
     fn enpassant_doesnt_discover_attack(&self, enpassant_source: Square) -> bool {
@@ -73,13 +122,13 @@ impl MutBoardImpl {
             return true;
         }
         let (r, q) = (Piece::rook(passive), Piece::queen(passive));
-        let potential_attackers = self.multi_locs(&[r, q]) & third_rank;
+        let potential_attackers = self.locs(&[r, q]) & third_rank;
         let all_pieces = self.all_pieces();
         for loc in potential_attackers {
             let cord = BitBoard::cord(loc, active_king) & all_pieces;
             if cord.size() == 4
                 && cord.contains(enpassant_source)
-                && cord.intersects(self.locs(Piece::pawn(passive)))
+                && cord.intersects(self.locs(&[Piece::pawn(passive)]))
             {
                 return false;
             }
@@ -91,8 +140,8 @@ impl MutBoardImpl {
         let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
             enpassant_source::squares(self.active, sq)
         });
-        let promotion_rank = self.active.pawn_promoting_src_rank();
-        let pawn_locs = self.locs(Piece::pawn(self.active));
+        let promotion_rank = self.active.pawn_promoting_from_rank();
+        let pawn_locs = self.locs(&[Piece::pawn(self.active)]);
         (
             pawn_locs - enpassant_source - promotion_rank,
             pawn_locs & enpassant_source,
@@ -105,11 +154,12 @@ impl MutBoardImpl {
         let (whites, blacks) = self.sides();
         let p1 = |z: CastleZone| king_constraint.subsumes(z.uncontrolled_requirement());
         let p2 = |z: CastleZone| !(whites | blacks).intersects(z.unoccupied_requirement());
+        let source = self.hash();
         self.castling
             .rights()
             .iter()
             .filter(|&z| p1(z) && p2(z))
-            .map(Move::Castle)
+            .map(|zone| Move::Castle { source, zone })
             .collect()
     }
 }

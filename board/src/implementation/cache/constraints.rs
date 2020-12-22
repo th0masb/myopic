@@ -1,7 +1,7 @@
 use crate::implementation::cache::rays::RaySet;
-use crate::implementation::MutBoardImpl;
+use crate::implementation::Board;
+use crate::ChessBoard;
 use crate::MoveComputeType;
-use crate::MutBoard;
 use myopic_core::*;
 use std::fmt::Debug;
 use std::fmt::Error;
@@ -66,7 +66,7 @@ impl MoveConstraints {
     }
 }
 
-impl MutBoardImpl {
+impl Board {
     pub fn constraints_impl(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
         match computation_type {
             MoveComputeType::Attacks => self.compute_constraints(computation_type),
@@ -114,13 +114,13 @@ impl MutBoardImpl {
         let enpassant_set = self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift());
         let passive_locs = self.side(passive);
         if !checks {
-            for piece in Piece::on_side(active) {
+            for piece in Piece::of(active) {
                 let enpassant = if piece.is_pawn() {
                     enpassant_set
                 } else {
                     BitBoard::EMPTY
                 };
-                for loc in self.locs(piece) {
+                for loc in self.locs(&[piece]) {
                     constraints.intersect(loc, passive_locs | enpassant);
                 }
             }
@@ -131,7 +131,7 @@ impl MutBoardImpl {
             let promotion_jumps = Piece::WN.empty_control(passive_king);
             let promotion_checks =
                 (promotion_rays | promotion_jumps) & active.pawn_promoting_dest_rank();
-            for piece in Piece::on_side(active) {
+            for piece in Piece::of(active) {
                 let is_pawn = piece.is_pawn();
                 let enpassant = if is_pawn {
                     enpassant_set
@@ -144,7 +144,7 @@ impl MutBoardImpl {
                 } else {
                     BitBoard::EMPTY
                 };
-                for loc in self.locs(piece) {
+                for loc in self.locs(&[piece]) {
                     let discov = discoveries.ray(loc).map(|r| !r).unwrap_or(BitBoard::EMPTY);
                     constraints.intersect(
                         loc,
@@ -187,7 +187,7 @@ impl MutBoardImpl {
         let king_loc = self.king(self.active);
         pnbrq(self.active.reflect())
             .iter()
-            .flat_map(|&p| self.pieces.locs_impl(p).into_iter().map(move |s| (p, s)))
+            .flat_map(|&p| self.pieces.locs(p).into_iter().map(move |s| (p, s)))
             .filter(|(p, s)| p.control(*s, whites, blacks).contains(king_loc))
             .collect()
     }

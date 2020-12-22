@@ -1,245 +1,285 @@
 use super::*;
-use myopic_core::{constants::*, CastleZone};
+
 
 #[test]
-fn black_move_eight() {
+fn black_move_eight() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2pp1np1/4p3/2PPP3/1QN1BP2/PP2N1PP/R3KB1R b KQ - 3 10",
+        #[rustfmt::skip]
         expected_all: vec![
-            s(Piece::BP, A7, A6 | A5),
-            s(Piece::BP, B7, B6 | B5),
-            s(Piece::BN, B8, A6 | D7),
-            s(Piece::BP, C6, C5),
-            s(Piece::BB, C8, D7 | E6 | F5 | G4 | H3),
-            s(Piece::BP, D6, D5),
-            s(Piece::BQ, D8, C7 | B6 | A5 | D7 | E8 | E7),
-            s(Piece::BP, E5, D4),
-            s(Piece::BN, F6, D5 | D7 | E8 | H5 | G4 | E4),
-            s(Piece::BR, F8, E8),
-            s(Piece::BK, G8, H8),
-            s(Piece::BB, G7, H6 | H8),
-            s(Piece::BP, G6, G5),
-            s(Piece::BP, H7, H6 | H5),
+            "sbpa7a6-", "sbpa7a5-",
+            "sbpb7b6-", "sbpb7b5-",
+            "sbnb8a6-", "sbnb8d7-",
+            "sbpc6c5-",
+            "sbbc8d7-", "sbbc8e6-", "sbbc8f5-", "sbbc8g4-", "sbbc8h3-",
+            "sbpd6d5-",
+            "sbqd8c7-", "sbqd8b6-", "sbqd8a5-", "sbqd8d7-", "sbqd8e8-", "sbqd8e7-",
+            "sbpe5d4wp",
+            "sbnf6d5-", "sbnf6d7-", "sbnf6e8-", "sbnf6h5-", "sbnf6g4-", "sbnf6e4wp",
+            "sbrf8e8-",
+            "sbkg8h8-",
+            "sbbg7h6-", "sbbg7h8-",
+            "sbpg6g5-",
+            "sbph7h6-", "sbph7h5-"
         ],
-        expected_attacks: vec![s(Piece::BP, E5, D4), s(Piece::BN, F6, E4)],
-        expected_attacks_checks: vec![s(Piece::BP, E5, D4), s(Piece::BN, F6, E4)],
-    });
+        #[rustfmt::skip]
+        expected_attacks: vec![
+            "sbpe5d4wp",
+            "sbnf6e4wp"
+        ],
+        #[rustfmt::skip]
+        expected_attacks_checks: vec![
+            "sbpe5d4wp",
+            "sbnf6e4wp"
+        ],
+    })
 }
 
 #[test]
-fn white_move_nine() {
+fn white_move_nine() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2pp1np1/8/2PpP3/1QN1BP2/PP2N1PP/R3KB1R w KQ - 0 2",
+        #[rustfmt::skip]
         expected_all: vec![
-            c(CastleZone::WQ.lift()),
-            s(Piece::WR, A1, B1 | C1 | D1),
-            s(Piece::WP, A2, A3 | A4),
-            s(Piece::WQ, B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7),
-            s(Piece::WN, C3, B1 | D1 | D5 | A4 | B5),
-            s(Piece::WP, C4, C5),
-            s(Piece::WK, E1, D1 | D2 | F2),
-            s(Piece::WN, E2, C1 | D4 | F4 | G3 | G1),
-            s(Piece::WB, E3, D4 | D2 | C1 | F4 | G5 | H6 | F2 | G1),
-            s(Piece::WP, E4, E5),
-            s(Piece::WP, F3, F4),
-            s(Piece::WP, G2, G3 | G4),
-            s(Piece::WR, H1, G1),
-            s(Piece::WP, H2, H3 | H4),
+            "cwq",
+            "swra1b1-", "swra1c1-", "swra1c1-", "swra1d1-",
+            "swpa2a3-", "swpa2a4-",
+            "swqb3c2-", "swqb3d1-", "swqb3a3-", "swqb3a4-", "swqb3b4-", "swqb3b5-", "swqb3b6-", "swqb3b7bp",
+            "swnc3b1-", "swnc3d1-", "swnc3d5-", "swnc3d5-", "swnc3a4-", "swnc3b5-",
+            "swpc4c5-",
+            "swke1d1-", "swke1d2-", "swke1f2-",
+            "swne2c1-", "swne2d4bp", "swne2f4-", "swne2g3-", "swne2g1-",
+            "swbe3d4bp", "swbe3d2-", "swbe3c1-", "swbe3f4-", "swbe3g5-", "swbe3h6-", "swbe3f2-", "swbe3g1-",
+            "swpe4e5-",
+            "swpf3f4-",
+            "swpg2g3-", "swpg2g4-",
+            "swrh1g1-",
+            "swph2h3-", "swph2h4-",
         ],
+        #[rustfmt::skip]
         expected_attacks: vec![
-            s(Piece::WQ, B3, B7),
-            s(Piece::WB, E3, D4),
-            s(Piece::WN, E2, D4),
+            "swqb3b7bp",
+            "swbe3d4bp",
+            "swne2d4bp",
         ],
+        #[rustfmt::skip]
         expected_attacks_checks: vec![
-            s(Piece::WQ, B3, B7),
-            s(Piece::WB, E3, D4),
-            s(Piece::WN, E2, D4),
+            "swqb3b7bp",
+            "swbe3d4bp",
+            "swne2d4bp",
         ],
-    });
+    })
 }
 
 #[test]
-fn black_move_nine() {
+fn black_move_nine() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2pp1np1/8/2PNP3/1QN1BP2/PP4PP/R3KB1R b KQ - 0 2",
+        #[rustfmt::skip]
         expected_all: vec![
-            s(Piece::BP, A7, A6 | A5),
-            s(Piece::BP, B7, B6 | B5),
-            s(Piece::BN, B8, A6 | D7),
-            s(Piece::BP, C6, C5),
-            s(Piece::BB, C8, D7 | E6 | F5 | G4 | H3),
-            s(Piece::BP, D6, D5),
-            s(Piece::BQ, D8, C7 | B6 | A5 | D7 | E8 | E7),
-            s(Piece::BN, F6, D5 | D7 | E8 | H5 | G4 | E4),
-            s(Piece::BR, F8, E8),
-            s(Piece::BK, G8, H8),
-            s(Piece::BB, G7, H6 | H8),
-            s(Piece::BP, G6, G5),
-            s(Piece::BP, H7, H6 | H5),
+            "sbpa7a6-", "sbpa7a5-",
+            "sbpb7b6-", "sbpb7b5-",
+            "sbnb8a6-", "sbnb8d7-",
+            "sbpc6c5-",
+            "sbbc8d7-", "sbbc8e6-", "sbbc8f5-", "sbbc8g4-", "sbbc8h3-",
+            "sbpd6d5-",
+            "sbqd8c7-", "sbqd8b6-", "sbqd8a5-", "sbqd8d7-", "sbqd8e8-", "sbqd8e7-",
+            "sbnf6d5-", "sbnf6d7-", "sbnf6e8-", "sbnf6h5-", "sbnf6g4-", "sbnf6e4wp",
+            "sbrf8e8-",
+            "sbkg8h8-",
+            "sbbg7h6-", "sbbg7h8-",
+            "sbpg6g5-",
+            "sbph7h6-", "sbph7h5-"
         ],
-        expected_attacks: vec![s(Piece::BN, F6, E4)],
-        expected_attacks_checks: vec![s(Piece::BN, F6, E4)],
-    });
+        #[rustfmt::skip]
+        expected_attacks: vec![
+            "sbnf6e4wp"
+        ],
+        #[rustfmt::skip]
+        expected_attacks_checks: vec![
+            "sbnf6e4wp"
+        ],
+    })
 }
 
 #[test]
-fn white_move_ten() {
+fn white_move_ten() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2p2np1/3p4/2PNP3/1QN1BP2/PP4PP/R3KB1R w KQ - 0 3",
+        #[rustfmt::skip]
         expected_all: vec![
-            c(CastleZone::WQ.lift()),
-            s(Piece::WR, A1, B1 | C1 | D1),
-            s(Piece::WP, A2, A3 | A4),
-            s(Piece::WQ, B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7),
-            s(Piece::WN, C3, B1 | D1 | D5 | A4 | B5 | E2),
-            s(Piece::WP, C4, D5 | C5),
-            s(Piece::WK, E1, D1 | D2 | F2 | E2),
-            s(Piece::WN, D4, C2 | B5 | E6 | F5 | E2 | C6),
-            s(Piece::WB, E3, D2 | C1 | F4 | G5 | H6 | F2 | G1),
-            s(Piece::WB, F1, E2 | D3),
-            s(Piece::WP, E4, D5 | E5),
-            s(Piece::WP, F3, F4),
-            s(Piece::WP, G2, G3 | G4),
-            s(Piece::WR, H1, G1),
-            s(Piece::WP, H2, H3 | H4),
+            "cwq",
+            "swra1b1-", "swra1c1-", "swra1c1-", "swra1d1-",
+            "swpa2a3-", "swpa2a4-",
+            "swqb3c2-", "swqb3d1-", "swqb3a3-", "swqb3a4-", "swqb3b4-", "swqb3b5-", "swqb3b6-", "swqb3b7bp",
+            "swnc3b1-", "swnc3d1-", "swnc3e2-", "swnc3d5bp", "swnc3a4-", "swnc3b5-",
+            "swpc4c5-", "swpc4d5bp",
+            "swke1d1-", "swke1d2-", "swke1f2-", "swke1e2-",
+            "swnd4c2-", "swnd4e2-", "swnd4f5-", "swnd4e6-", "swnd4c6bp", "swnd4b5-",
+            "swbf1e2-", "swbf1d3-",
+            "swbe3d2-", "swbe3c1-", "swbe3f4-", "swbe3g5-", "swbe3h6-", "swbe3f2-", "swbe3g1-",
+            "swpe4e5-", "swpe4d5bp",
+            "swpf3f4-",
+            "swpg2g3-", "swpg2g4-",
+            "swrh1g1-",
+            "swph2h3-", "swph2h4-",
         ],
+        #[rustfmt::skip]
         expected_attacks: vec![
-            s(Piece::WQ, B3, B7),
-            s(Piece::WP, E4, D5),
-            s(Piece::WP, C4, D5),
-            s(Piece::WN, C3, D5),
-            s(Piece::WN, D4, C6),
+            "swqb3b7bp",
+            "swnc3d5bp",
+            "swpc4d5bp",
+            "swnd4c6bp",
+            "swpe4d5bp"
         ],
+        #[rustfmt::skip]
         expected_attacks_checks: vec![
-            s(Piece::WQ, B3, B7),
-            s(Piece::WP, E4, D5),
-            s(Piece::WP, C4, D5),
-            s(Piece::WN, C3, D5),
-            s(Piece::WN, D4, C6),
+            "swqb3b7bp",
+            "swnc3d5bp",
+            "swpc4d5bp",
+            "swnd4c6bp",
+            "swpe4d5bp"
         ],
-    });
+    })
 }
 
 #[test]
-fn black_move_ten() {
+fn black_move_ten() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2p2np1/3P4/3NP3/1QN1BP2/PP4PP/R3KB1R b KQ - 0 3",
+        #[rustfmt::skip]
         expected_all: vec![
-            s(Piece::BP, A7, A6 | A5),
-            s(Piece::BP, B7, B6 | B5),
-            s(Piece::BN, B8, A6 | D7),
-            s(Piece::BP, C6, C5 | D5),
-            s(Piece::BB, C8, D7 | E6 | F5 | G4 | H3),
-            s(Piece::BQ, D8, C7 | B6 | A5 | D7 | D6 | D5 | E8 | E7),
-            s(Piece::BN, F6, D5 | D7 | E8 | H5 | G4 | E4),
-            s(Piece::BR, F8, E8),
-            s(Piece::BK, G8, H8),
-            s(Piece::BB, G7, H6 | H8),
-            s(Piece::BP, G6, G5),
-            s(Piece::BP, H7, H6 | H5),
+            "sbpa7a6-", "sbpa7a5-",
+            "sbpb7b6-", "sbpb7b5-",
+            "sbnb8a6-", "sbnb8d7-",
+            "sbpc6c5-", "sbpc6d5wp",
+            "sbbc8d7-", "sbbc8e6-", "sbbc8f5-", "sbbc8g4-", "sbbc8h3-",
+            "sbqd8c7-", "sbqd8b6-", "sbqd8a5-", "sbqd8d7-", "sbqd8e8-", "sbqd8e7-", "sbqd8d6-", "sbqd8d5wp",
+            "sbnf6d5wp", "sbnf6d7-", "sbnf6e8-", "sbnf6h5-", "sbnf6g4-", "sbnf6e4wp",
+            "sbrf8e8-",
+            "sbkg8h8-",
+            "sbbg7h6-", "sbbg7h8-",
+            "sbpg6g5-",
+            "sbph7h6-", "sbph7h5-"
         ],
+        #[rustfmt::skip]
         expected_attacks: vec![
-            s(Piece::BN, F6, E4 | D5),
-            s(Piece::BP, C6, D5),
-            s(Piece::BQ, D8, D5),
+            "sbpc6d5wp",
+            "sbqd8d5wp",
+            "sbnf6d5wp",
+            "sbnf6e4wp",
         ],
+        #[rustfmt::skip]
         expected_attacks_checks: vec![
-            s(Piece::BN, F6, E4 | D5),
-            s(Piece::BP, C6, D5),
-            s(Piece::BQ, D8, D5),
+            "sbpc6d5wp",
+            "sbqd8d5wp",
+            "sbnf6d5wp",
+            "sbnf6e4wp",
         ],
-    });
+    })
 }
 
 #[test]
-fn white_move_eleven() {
+fn white_move_eleven() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/5np1/3p4/3NP3/1QN1BP2/PP4PP/R3KB1R w KQ - 0 4",
+        #[rustfmt::skip]
         expected_all: vec![
-            c(CastleZone::WQ.lift()),
-            s(Piece::WR, A1, B1 | C1 | D1),
-            s(Piece::WP, A2, A3 | A4),
-            s(
-                Piece::WQ,
-                B3,
-                C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4 | D5,
-            ),
-            s(Piece::WN, C3, B1 | D1 | D5 | A4 | B5 | E2),
-            s(Piece::WK, E1, D1 | D2 | F2 | E2),
-            s(Piece::WN, D4, C2 | B5 | E6 | F5 | E2 | C6),
-            s(Piece::WB, E3, D2 | C1 | F4 | G5 | H6 | F2 | G1),
-            s(Piece::WB, F1, E2 | D3 | C4 | B5 | A6),
-            s(Piece::WP, E4, D5 | E5),
-            s(Piece::WP, F3, F4),
-            s(Piece::WP, G2, G3 | G4),
-            s(Piece::WR, H1, G1),
-            s(Piece::WP, H2, H3 | H4),
+            "cwq",
+            "swra1b1-", "swra1c1-", "swra1c1-", "swra1d1-",
+            "swpa2a3-", "swpa2a4-",
+            "swqb3c2-", "swqb3d1-", "swqb3a3-", "swqb3a4-", "swqb3b4-", "swqb3b5-", "swqb3b6-", "swqb3b7bp", "swqb3c4-", "swqb3d5bp",
+            "swnc3b1-", "swnc3d1-", "swnc3e2-", "swnc3d5bp", "swnc3a4-", "swnc3b5-",
+            "swke1d1-", "swke1d2-", "swke1f2-", "swke1e2-",
+            "swnd4c2-", "swnd4e2-", "swnd4f5-", "swnd4e6-", "swnd4c6-", "swnd4b5-",
+            "swbf1e2-", "swbf1d3-", "swbf1c4-", "swbf1b5-", "swbf1a6-",
+            "swbe3d2-", "swbe3c1-", "swbe3f4-", "swbe3g5-", "swbe3h6-", "swbe3f2-", "swbe3g1-",
+            "swpe4e5-", "swpe4d5bp",
+            "swpf3f4-",
+            "swpg2g3-", "swpg2g4-",
+            "swrh1g1-",
+            "swph2h3-", "swph2h4-",
         ],
+        #[rustfmt::skip]
         expected_attacks: vec![
-            s(Piece::WQ, B3, B7 | D5),
-            s(Piece::WP, E4, D5),
-            s(Piece::WN, C3, D5),
+            "swqb3b7bp",
+            "swqb3d5bp",
+            "swnc3d5bp",
+            "swpe4d5bp",
         ],
+        #[rustfmt::skip]
         expected_attacks_checks: vec![
-            s(Piece::WQ, B3, B7 | D5),
-            s(Piece::WP, E4, D5),
-            s(Piece::WN, C3, D5),
+            "swqb3b7bp",
+            "swqb3d5bp",
+            "swnc3d5bp",
+            "swpe4d5bp",
         ],
-    });
+    })
 }
 
 #[test]
-fn black_move_eleven() {
+fn black_move_eleven() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/5np1/3P4/3N4/1QN1BP2/PP4PP/R3KB1R b KQ - 0 4",
+        #[rustfmt::skip]
         expected_all: vec![
-            s(Piece::BP, A7, A6 | A5),
-            s(Piece::BP, B7, B6 | B5),
-            s(Piece::BN, B8, A6 | D7 | C6),
-            s(Piece::BB, C8, D7 | E6 | F5 | G4 | H3),
-            s(Piece::BQ, D8, C7 | B6 | A5 | D7 | D6 | D5 | E8 | E7),
-            s(Piece::BN, F6, D5 | D7 | E8 | H5 | G4 | E4),
-            s(Piece::BR, F8, E8),
-            s(Piece::BK, G8, H8),
-            s(Piece::BB, G7, H6 | H8),
-            s(Piece::BP, G6, G5),
-            s(Piece::BP, H7, H6 | H5),
+            "sbpa7a6-", "sbpa7a5-",
+            "sbpb7b6-", "sbpb7b5-",
+            "sbnb8a6-", "sbnb8d7-", "sbnb8c6-",
+            "sbbc8d7-", "sbbc8e6-", "sbbc8f5-", "sbbc8g4-", "sbbc8h3-",
+            "sbqd8c7-", "sbqd8b6-", "sbqd8a5-", "sbqd8d7-", "sbqd8e8-", "sbqd8e7-", "sbqd8d6-", "sbqd8d5wp",
+            "sbnf6d5wp", "sbnf6d7-", "sbnf6e8-", "sbnf6h5-", "sbnf6g4-", "sbnf6e4-",
+            "sbrf8e8-",
+            "sbkg8h8-",
+            "sbbg7h6-", "sbbg7h8-",
+            "sbpg6g5-",
+            "sbph7h6-", "sbph7h5-"
         ],
-        expected_attacks: vec![s(Piece::BN, F6, D5), s(Piece::BQ, D8, D5)],
-        expected_attacks_checks: vec![s(Piece::BN, F6, D5), s(Piece::BQ, D8, D5)],
-    });
+        #[rustfmt::skip]
+        expected_attacks: vec![
+            "sbqd8d5wp",
+            "sbnf6d5wp",
+        ],
+        #[rustfmt::skip]
+        expected_attacks_checks: vec![
+            "sbqd8d5wp",
+            "sbnf6d5wp",
+        ],
+    })
 }
 
 #[test]
-fn white_move_twelve() {
+fn white_move_twelve() -> Result<()> {
     execute_test(TestCase {
         board: "r1bq1rk1/pp3pbp/2n2np1/3P4/3N4/1QN1BP2/PP4PP/R3KB1R w KQ - 1 5",
+        #[rustfmt::skip]
         expected_all: vec![
-            c(CastleZone::WQ.lift()),
-            s(Piece::WR, A1, B1 | C1 | D1),
-            s(Piece::WP, A2, A3 | A4),
-            s(Piece::WQ, B3, C2 | D1 | A3 | A4 | B4 | B5 | B6 | B7 | C4),
-            s(Piece::WN, C3, B1 | D1 | A4 | B5 | E2 | E4),
-            s(Piece::WK, E1, D1 | D2 | F2 | E2),
-            s(Piece::WN, D4, C2 | B5 | E6 | F5 | E2 | C6),
-            s(Piece::WB, E3, D2 | C1 | F4 | G5 | H6 | F2 | G1),
-            s(Piece::WB, F1, E2 | D3 | C4 | B5 | A6),
-            s(Piece::WP, D5, D6 | C6),
-            s(Piece::WP, F3, F4),
-            s(Piece::WP, G2, G3 | G4),
-            s(Piece::WR, H1, G1),
-            s(Piece::WP, H2, H3 | H4),
+            "cwq",
+            "swra1b1-", "swra1c1-", "swra1c1-", "swra1d1-",
+            "swpa2a3-", "swpa2a4-",
+            "swqb3c2-", "swqb3d1-", "swqb3a3-", "swqb3a4-", "swqb3b4-", "swqb3b5-", "swqb3b6-", "swqb3b7bp", "swqb3c4-",
+            "swnc3b1-", "swnc3d1-", "swnc3e2-", "swnc3e4-", "swnc3a4-", "swnc3b5-",
+            "swke1d1-", "swke1d2-", "swke1f2-", "swke1e2-",
+            "swnd4c2-", "swnd4e2-", "swnd4f5-", "swnd4e6-", "swnd4c6bn", "swnd4b5-",
+            "swbf1e2-", "swbf1d3-", "swbf1c4-", "swbf1b5-", "swbf1a6-",
+            "swbe3d2-", "swbe3c1-", "swbe3f4-", "swbe3g5-", "swbe3h6-", "swbe3f2-", "swbe3g1-",
+            "swpd5d6-", "swpd5c6bn",
+            "swpf3f4-",
+            "swpg2g3-", "swpg2g4-",
+            "swrh1g1-",
+            "swph2h3-", "swph2h4-",
         ],
+        #[rustfmt::skip]
         expected_attacks: vec![
-            s(Piece::WQ, B3, B7),
-            s(Piece::WN, D4, C6),
-            s(Piece::WP, D5, C6),
+            "swqb3b7bp",
+            "swnd4c6bn",
+            "swpd5c6bn",
         ],
+        #[rustfmt::skip]
         expected_attacks_checks: vec![
-            s(Piece::WQ, B3, B7),
-            s(Piece::WN, D4, C6),
-            s(Piece::WP, D5, C6),
+            "swqb3b7bp",
+            "swnd4c6bn",
+            "swpd5c6bn",
         ],
-    });
+    })
 }

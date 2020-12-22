@@ -2,34 +2,34 @@ pub(crate) mod patterns;
 mod pgn;
 mod uci;
 
-use crate::MutBoardImpl;
+use crate::{Board, ChessBoard};
+use anyhow::Result;
 pub use pgn::{partial_pgn, pgn};
 pub use uci::{partial_uci, uci};
 
 /// Return the position generated from applying the moves encoded in the
 /// given string sequentially to the standard start position.
-pub fn position_from_pgn(pgn_moves: &str) -> Result<MutBoardImpl, String> {
-    let mut board = crate::start_position();
+pub fn position_from_pgn(pgn_moves: &str) -> Result<Board> {
+    let mut board = crate::STARTPOS_FEN.parse::<Board>()?;
     for mv in pgn(pgn_moves)? {
-        board.evolve(&mv);
+        board.make(mv)?;
     }
     Ok(board)
 }
 
 /// Return the position generated from applying the moves encoded in the
 /// given string sequentially to the standard start position.
-pub fn position_from_uci(uci_moves: &str) -> Result<MutBoardImpl, String> {
-    let mut board = crate::start_position();
+pub fn position_from_uci(uci_moves: &str) -> Result<Board> {
+    let mut board = crate::STARTPOS_FEN.parse::<Board>()?;
     for mv in uci(uci_moves)? {
-        board.evolve(&mv);
+        board.make(mv)?;
     }
     Ok(board)
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{MutBoard};
-    
+    use crate::ChessBoard;
 
     #[test]
     fn uci_position_1() {
@@ -40,5 +40,4 @@ mod test {
             super::position_from_uci(seq).unwrap().to_fen().as_str()
         )
     }
-
 }
