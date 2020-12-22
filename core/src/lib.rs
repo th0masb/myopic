@@ -21,7 +21,7 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 /// Represents the two different teams in a game of chess.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Side {
     White,
     Black,

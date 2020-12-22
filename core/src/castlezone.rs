@@ -178,7 +178,7 @@ mod test {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq, Hash)]
 pub struct CastleZoneSet {
     data: usize,
 }
