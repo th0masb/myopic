@@ -285,18 +285,22 @@ impl ChessBoard for Board {
         self.castling.rights()
     }
 
-    fn play_pgn(&mut self, moves: &str) -> Result<(), Error> {
+    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let mut dest = vec![];
         for mv in crate::parse::pgn::moves(self, moves)? {
+            dest.push(mv.clone());
             self.make(mv)?;
         }
-        Ok(())
+        Ok(dest)
     }
 
-    fn play_uci(&mut self, moves: &str) -> Result<(), Error> {
+    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let mut dest = vec![];
         for mv in crate::parse::uci::moves(self, moves)? {
+            dest.push(mv.clone());
             self.make(mv)?;
         }
-        Ok(())
+        Ok(dest)
     }
 
     fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {

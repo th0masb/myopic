@@ -131,6 +131,7 @@ mod test {
 #[cfg(test)]
 mod test_single_move {
     use super::*;
+    use crate::Board;
 
     fn execute_success_test(
         expected: &'static str,
