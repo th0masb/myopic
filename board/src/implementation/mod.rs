@@ -285,6 +285,20 @@ impl ChessBoard for Board {
         self.castling.rights()
     }
 
+    fn play_pgn(&mut self, moves: &str) -> Result<(), Error> {
+        for mv in crate::parse::pgn::moves(self, moves)? {
+            self.make(mv)?;
+        }
+        Ok(())
+    }
+
+    fn play_uci(&mut self, moves: &str) -> Result<(), Error> {
+        for mv in crate::parse::uci::moves(self, moves)? {
+            self.make(mv)?;
+        }
+        Ok(())
+    }
+
     fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {
         fen::to_fen_impl(self, cmps)
     }

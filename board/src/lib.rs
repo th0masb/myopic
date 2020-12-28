@@ -3,15 +3,20 @@ extern crate lazy_static;
 
 pub use crate::implementation::Board;
 use anyhow::Result;
-use mv::Move;
+pub use mv::Move;
 pub use myopic_core::*;
 
 mod implementation;
 mod mv;
-pub mod parse;
+mod parse;
 
 /// The start position of a chess game encoded in FEN format
 pub const STARTPOS_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+/// Return the start position of a standard game
+pub fn start() -> Board {
+    STARTPOS_FEN.parse().unwrap()
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum MoveComputeType {
@@ -113,6 +118,16 @@ pub trait ChessBoard: Clone + Send + Reflectable {
 
     /// Return the remaining castling rights from this position.
     fn remaining_rights(&self) -> CastleZoneSet;
+
+    /// Parse the given string as a sequence of pgn encoded moves
+    /// starting from the current position. The moves are then
+    /// made one by one.
+    fn play_pgn(&mut self, moves: &str) -> Result<()>;
+
+    /// Parse the given string as a sequence of uci encoded moves
+    /// starting from the current position. The moves are then
+    /// made one by one.
+    fn play_uci(&mut self, moves: &str) -> Result<()>;
 
     /// Return the specified components of the FEN encoding of this position
     /// in the given order with components separated by a space.

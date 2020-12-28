@@ -1,6 +1,5 @@
 use super::*;
 
-
 #[test]
 fn case_01() -> Result<()> {
     execute_test(TestCase {

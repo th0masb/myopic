@@ -113,7 +113,7 @@ fn piece_to_fen(piece: Piece) -> &'static str {
 #[cfg(test)]
 mod test {
     use super::to_fen_impl;
-    use crate::{parse, Board, ChessBoard, FenComponent};
+    use crate::{Board, ChessBoard, FenComponent};
     use anyhow::Result;
 
     #[test]
@@ -206,7 +206,11 @@ mod test {
     }
 
     fn position_1() -> Board {
-        parse::position_from_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5").unwrap()
+        let mut board = crate::start();
+        board
+            .play_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5")
+            .unwrap();
+        board
     }
 
     #[test]
@@ -269,8 +273,11 @@ mod test {
     }
 
     fn position_2() -> Board {
-        parse::position_from_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5 5. Ke2 Kd7 6. Rh1")
-            .unwrap()
+        let mut board = crate::start();
+        board
+            .play_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5 5. Ke2 Kd7 6. Rh1")
+            .unwrap();
+        board
     }
 
     #[test]

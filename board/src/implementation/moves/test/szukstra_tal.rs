@@ -1,6 +1,5 @@
 use super::*;
 
-
 #[test]
 fn black_move_eight() -> Result<()> {
     execute_test(TestCase {

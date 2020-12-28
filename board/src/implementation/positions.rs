@@ -122,10 +122,7 @@ impl Positions {
     }
 
     pub fn king_location(&self, side: Side) -> Square {
-        self.locs(Piece::king(side))
-            .into_iter()
-            .next()
-            .unwrap()
+        self.locs(Piece::king(side)).into_iter().next().unwrap()
     }
 
     pub fn whites(&self) -> BitBoard {

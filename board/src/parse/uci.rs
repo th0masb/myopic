@@ -1,25 +1,19 @@
 use crate::parse::patterns::uci_move;
-use crate::{Board, ChessBoard, Move, MoveComputeType};
+use crate::{ChessBoard, Move, MoveComputeType};
 use anyhow::{anyhow, Result};
 use myopic_core::{Piece, Square};
 
-/// Extracts the moves encoded in standard pgn format contained in
-/// a single string.
-pub fn uci(moves: &str) -> Result<Vec<Move>> {
-    return partial_uci(&crate::STARTPOS_FEN.parse::<Board>()?, moves);
-}
-
 /// Extracts the moves encoded in standard pgn format starting at
 /// a custom board position.
-pub fn partial_uci<B: ChessBoard>(start: &B, moves: &str) -> Result<Vec<Move>> {
+pub fn moves<B: ChessBoard>(start: &B, encoded: &str) -> Result<Vec<Move>> {
     let (mut mutator_board, mut dest) = (start.clone(), vec![]);
-    for evolve in uci_move().find_iter(moves) {
+    for evolve in uci_move().find_iter(encoded) {
         match parse_single_move(&mut mutator_board, evolve.as_str()) {
             Ok(result) => {
                 dest.push(result.clone());
                 mutator_board.make(result)?
             }
-            Err(_) => return Err(anyhow!("Failed at {} in: {}", evolve.as_str(), moves)),
+            Err(_) => return Err(anyhow!("Failed at {} in: {}", evolve.as_str(), encoded)),
         };
     }
     Ok(dest)
@@ -87,7 +81,7 @@ mod test {
     fn execute_success_test(expected_finish: &'static str, uci: &'static str) -> Result<()> {
         let finish = expected_finish.parse::<Board>()?;
         let mut board = crate::STARTPOS_FEN.parse::<Board>()?;
-        for evolve in super::partial_uci(&board, uci)? {
+        for evolve in super::moves(&board, uci)? {
             board.make(evolve)?;
         }
         assert_eq!(finish, board);
@@ -137,7 +131,6 @@ mod test {
 #[cfg(test)]
 mod test_single_move {
     use super::*;
-    
 
     fn execute_success_test(
         expected: &'static str,
