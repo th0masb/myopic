@@ -1,7 +1,7 @@
-use crate::implementation::MutBoardImpl;
+use crate::implementation::Board;
 use myopic_core::*;
 
-impl MutBoardImpl {
+impl Board {
     pub fn passive_control_impl(&mut self) -> BitBoard {
         match &self.cache.passive_control {
             Some(x) => *x,
@@ -30,9 +30,9 @@ impl MutBoardImpl {
                 pieces.blacks(),
             ),
         };
-        let locs = |piece: Piece| pieces.locs_impl(piece);
+        let locs = |piece: Piece| pieces.locs(piece);
         let control = |piece: Piece, square: Square| piece.control(square, whites, blacks);
-        Piece::on_side(side)
+        Piece::of(side)
             .flat_map(|p| locs(p).into_iter().map(move |sq| control(p, sq)))
             .collect()
     }
@@ -41,7 +41,7 @@ impl MutBoardImpl {
 #[cfg(test)]
 mod test {
     use crate::implementation::test::TestBoard;
-    use crate::implementation::MutBoardImpl;
+    use crate::implementation::Board;
     use myopic_core::{constants::*, BitBoard, CastleZoneSet, Side};
 
     struct TestCase {
@@ -53,7 +53,7 @@ mod test {
     fn execute_test(case: TestCase) {
         assert_eq!(
             case.expected_control,
-            MutBoardImpl::from(case.board).compute_control(case.side)
+            Board::from(case.board).compute_control(case.side)
         );
     }
 

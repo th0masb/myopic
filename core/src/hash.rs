@@ -1,8 +1,8 @@
 use crate::castlezone::CastleZone;
 use crate::castlezone::CastleZoneSet;
 use crate::pieces::Piece;
+use crate::square::Square;
 use crate::Side;
-use crate::Square;
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 
@@ -57,13 +57,13 @@ fn gen_unique(seed: u64, count: usize) -> Vec<u64> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::Square;
+    use crate::square::Square;
 
     #[test]
     fn test_uniqueness() {
         let mut dest: Vec<u64> = Vec::new();
         // add piece-square features
-        for p in Piece::iter() {
+        for p in Piece::all() {
             for square in Square::iter() {
                 unique_add(&mut dest, piece(p, square));
             }

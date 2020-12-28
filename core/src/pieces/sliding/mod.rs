@@ -1,8 +1,8 @@
 use std::num::Wrapping;
 
 use crate::bitboard::BitBoard;
+use crate::square::Square;
 use crate::Dir;
-use crate::Square;
 
 pub mod bishops;
 pub mod queens;
@@ -74,7 +74,7 @@ fn search_remove_last(loc: Square, dir: Dir) -> BitBoard {
 
 #[cfg(test)]
 mod mask_tests {
-    use crate::Square::*;
+    use crate::square::Square::*;
 
     use super::*;
 
@@ -120,7 +120,7 @@ fn compute_powerset(squares: &Vec<Square>) -> Vec<BitBoard> {
 mod powerset_test {
     use std::collections::HashSet;
 
-    use crate::Square::*;
+    use crate::square::Square::*;
 
     use super::*;
 
@@ -161,7 +161,7 @@ fn compute_control(loc: Square, occ: BitBoard, dirs: &Vec<Dir>) -> BitBoard {
 
 #[cfg(test)]
 mod control_tests {
-    use crate::Square::*;
+    use crate::square::Square::*;
 
     use super::*;
 

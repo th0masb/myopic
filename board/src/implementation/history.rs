@@ -1,79 +1,54 @@
-use std::collections::BTreeMap;
+use crate::{CastleZoneSet, Move};
+use anyhow::{anyhow, Result};
+use itertools::Itertools;
+use myopic_core::{Reflectable, Square};
 
-const CACHE_SIZE: usize = 20;
+const REPETITION_WINDOW: usize = 15;
 
-/// The hashcache is a circular fixed sized array which tracks a sequence
-/// of board hashings. When a new hash is added to the head of the sequence
-/// the tail hash is lost. When a hash is popped from the head of the
-/// sequence a replacement tail hash must be provided. The cache can check
-/// for three repetitions of the same hash value which would imply a drawn
-///  (by repetition) game.
-#[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Discards {
+    pub rights: CastleZoneSet,
+    pub enpassant: Option<Square>,
+    pub half_move_clock: usize,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct History {
-    /// Records how many pop operations required to return to initial state.
-    pop_dist: usize,
-    /// Fixed size array which maintains the hash values.
-    cache: [u64; CACHE_SIZE],
+    /// Number of previous positions before we started
+    /// making moves on this board
+    prev_position_count: usize,
+    /// The stack which tracks the moves and positional
+    /// information which gets lost when you make/unmake
+    /// moves
+    inner: Vec<(Move, Discards)>,
 }
 
 impl History {
-    /// Create a new cache at a given point in the game with a supplied
-    /// position hash.
-    pub fn new(position_hash: u64, n_previous_positions: usize) -> History {
-        let pop_dist = n_previous_positions;
-        let cache = [0u64; CACHE_SIZE];
-        let mut cache_map = BTreeMap::new();
-        cache_map.insert(0u64, CACHE_SIZE);
-        let mut dest = History { pop_dist: 0, cache }; //, cache_map };
-        for i in 0..pop_dist {
-            dest.push_head(i as u64);
+    pub fn new(prev_position_count: usize) -> History {
+        History {
+            prev_position_count,
+            inner: Vec::new(),
         }
-        //dest.decrement_count(dest.cache[pop_dist % CACHE_SIZE]);
-        dest.cache[pop_dist % CACHE_SIZE] = position_hash;
-        //dest.increment_count(position_hash);
-        dest
-    }
-
-    fn head_index(&self) -> usize {
-        self.pop_dist % CACHE_SIZE
-    }
-
-    fn tail_index(&self) -> usize {
-        (self.pop_dist + 1) % CACHE_SIZE
-    }
-
-    pub fn head(&self) -> u64 {
-        self.cache[self.head_index()]
-    }
-
-    pub fn tail(&self) -> u64 {
-        self.cache[self.tail_index()]
     }
 
     pub fn position_count(&self) -> usize {
-        self.pop_dist + 1
+        self.prev_position_count + self.inner.len()
     }
 
-    pub fn push_head(&mut self, new_head: u64) {
-        self.pop_dist += 1;
-        self.cache[self.head_index()] = new_head;
-    }
-
-    pub fn pop_head(&mut self, new_tail: u64) {
-        debug_assert!(self.pop_dist > 0);
-        self.cache[self.head_index()] = new_tail;
-        self.pop_dist -= 1;
+    pub fn push(&mut self, mv: Move, discards: Discards) {
+        self.inner.push((mv, discards));
     }
 
     pub fn has_three_repetitions(&self) -> bool {
-        if self.pop_dist < CACHE_SIZE {
-            false
-        } else {
-            let mut cache = self.cache.clone();
-            cache.sort();
-            let mut count = 1;
-            let mut last = cache[0];
-            for &hash in cache.iter().skip(1) {
+        self.inner.len() >= REPETITION_WINDOW && {
+            let hashes = self
+                .inner
+                .iter()
+                .map(|(m, _)| m.source())
+                .sorted()
+                .collect_vec();
+            let (mut last, mut count) = (hashes[0], 1);
+            for &hash in hashes.iter().skip(1) {
                 if hash == last {
                     count += 1;
                     if count == 3 {
@@ -87,67 +62,30 @@ impl History {
             count == 3
         }
     }
-}
 
-#[cfg(test)]
-mod test {
-    use super::*;
+    pub fn attempt_pop(&mut self) -> Result<(Move, Discards)> {
+        self.inner
+            .pop()
+            .ok_or(anyhow!("Empty history, could not pop last move!"))
+    }
 
-    fn n_consecutive(n: usize) -> History {
-        let mut cache = History::new(0u64, 0);
-        for n in 1..n {
-            cache.push_head(n as u64);
+    pub(crate) fn reflect_for(&self, new_hash: u64) -> History {
+        History {
+            prev_position_count: self.prev_position_count,
+            inner: self
+                .inner
+                .iter()
+                .map(|(m, d)| {
+                    (
+                        m.reflect_for(new_hash),
+                        Discards {
+                            rights: d.rights.reflect(),
+                            enpassant: d.enpassant.reflect(),
+                            half_move_clock: d.half_move_clock,
+                        },
+                    )
+                })
+                .collect(),
         }
-        cache
-    }
-
-    #[test]
-    fn test_push_pop_head() {
-        let (cs, n) = (CACHE_SIZE as u64, (2 * CACHE_SIZE) as u64);
-        let init_cache = n_consecutive(n as usize);
-        let mut cache = init_cache.clone();
-
-        assert_eq!(n - cs, cache.tail(), "{:?}", cache);
-        cache.push_head(n);
-        assert_eq!(n - cs + 1, cache.tail(), "{:?}", cache);
-        cache.push_head(n);
-        assert_eq!(n - cs + 2, cache.tail(), "{:?}", cache);
-        cache.push_head(n);
-        assert_eq!(n - cs + 3, cache.tail(), "{:?}", cache);
-        cache.push_head(n);
-
-        // Put the results back
-        cache.pop_head(n - cs + 3);
-        cache.pop_head(n - cs + 2);
-        cache.pop_head(n - cs + 1);
-        cache.pop_head(n - cs);
-        assert_eq!(init_cache, cache);
-    }
-
-    #[test]
-    fn test_three_repetitions() {
-        let cs = CACHE_SIZE;
-        // Change test values if cache size changes
-        assert_eq!(20, cs);
-        // Test return false if not enough elements
-        let mut cache1 = n_consecutive(cs - 5);
-        cache1.push_head(2u64);
-        cache1.push_head(5u64);
-        cache1.push_head(2u64);
-        assert!(!cache1.has_three_repetitions());
-
-        // Test return false if enough elements but not three reps
-        let mut cache2 = n_consecutive(cs);
-        cache2.push_head(18u64);
-        cache2.push_head(5u64);
-        cache2.push_head(17u64);
-        assert!(!cache2.has_three_repetitions());
-
-        // Test return true if enough elements and three reps
-        let mut cache3 = n_consecutive(cs);
-        cache3.push_head(15u64);
-        cache3.push_head(12u64);
-        cache3.push_head(15u64);
-        assert!(cache3.has_three_repetitions());
     }
 }

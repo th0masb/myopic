@@ -1,5 +1,5 @@
 use crate::bitboard::BitBoard;
-use crate::Square;
+use crate::square::Square;
 
 pub const H1: BitBoard = Square::H1.lift();
 pub const G1: BitBoard = Square::G1.lift();

@@ -1,8 +1,8 @@
 use crate::implementation::cache::rays::RaySet;
-use crate::{MutBoard, MutBoardImpl};
+use crate::{Board, ChessBoard};
 use myopic_core::*;
 
-impl MutBoardImpl {
+impl Board {
     pub fn compute_discoveries(&self) -> RaySet {
         let locs = |side: Side| self.side(side);
         let (active, passive) = (locs(self.active), locs(self.active.reflect()));
@@ -28,7 +28,7 @@ impl MutBoardImpl {
             Side::White => super::WHITE_SLIDERS,
             Side::Black => super::BLACK_SLIDERS,
         };
-        let locs = |p: Piece| self.locs(p);
+        let locs = |p: Piece| self.locs(&[p]);
         active_sliders
             .iter()
             .flat_map(|&p| locs(p) & p.empty_control(king_loc))
@@ -43,7 +43,7 @@ mod test {
     use super::*;
 
     fn execute_test(fen: &'static str, expected_discoveries: RaySet) {
-        let board = crate::fen_position(fen).unwrap();
+        let board = fen.parse::<Board>().unwrap();
         assert_eq!(
             expected_discoveries.reflect(),
             board.reflect().compute_discoveries()

@@ -1,7 +1,7 @@
 pub use constraints::MoveConstraints;
 
 use crate::implementation::cache::rays::RaySet;
-use crate::MutBoardImpl;
+use crate::Board;
 use crate::Termination;
 use myopic_core::BitBoard;
 
@@ -11,7 +11,7 @@ mod rays;
 mod termination;
 
 // TODO Can we switch to returning references from the cache?
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CalculationCache {
     termination_status: Option<Option<Termination>>,
     passive_control: Option<BitBoard>,
@@ -19,18 +19,7 @@ pub struct CalculationCache {
     move_constraints: Option<MoveConstraints>,
 }
 
-impl CalculationCache {
-    pub fn empty() -> CalculationCache {
-        CalculationCache {
-            termination_status: None,
-            passive_control: None,
-            pinned_set: None,
-            move_constraints: None,
-        }
-    }
-}
-
-impl MutBoardImpl {
+impl Board {
     pub fn clear_cache(&mut self) {
         self.cache.termination_status = None;
         self.cache.passive_control = None;

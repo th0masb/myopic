@@ -1,10 +1,10 @@
+use crate::Board;
+use crate::ChessBoard;
 use crate::MoveComputeType;
-use crate::MutBoard;
-use crate::MutBoardImpl;
 use crate::Termination;
 use myopic_core::*;
 
-impl MutBoardImpl {
+impl Board {
     pub fn termination_status_impl(&mut self) -> Option<Termination> {
         match &self.cache.termination_status {
             Some(x) => *x,
@@ -41,7 +41,7 @@ impl MutBoardImpl {
         let (whites, blacks) = self.sides();
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
         for &piece in qrbnp(self.active) {
-            let locations = self.locs(piece);
+            let locations = self.locs(&[piece]);
             if locations.iter().any(|loc| moves(piece, loc).is_populated()) {
                 return None;
             }
@@ -58,7 +58,7 @@ impl MutBoardImpl {
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
         // These pieces have no constraints since not in check and not on pin rays
         for &piece in qrbnp(self.active) {
-            let locations = self.locs(piece) - pin_rays;
+            let locations = self.locs(&[piece]) - pin_rays;
             if locations.iter().any(|loc| moves(piece, loc).is_populated()) {
                 return None;
             }
@@ -67,7 +67,7 @@ impl MutBoardImpl {
         let constraints = self.constraints_impl(MoveComputeType::All);
         let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
         for &piece in qrbnp(self.active) {
-            let locations = self.locs(piece) & pin_rays;
+            let locations = self.locs(&[piece]) & pin_rays;
             if locations
                 .iter()
                 .any(|loc| moves2(piece, loc).is_populated())
@@ -94,12 +94,12 @@ mod test {
 
     #[derive(Clone, Debug)]
     struct TestCase {
-        board: MutBoardImpl,
+        board: Board,
         expected: Option<Termination>,
     }
 
     fn test(expected: Option<Termination>, fen: &str) {
-        let mut board = crate::fen_position(fen).unwrap();
+        let mut board = fen.parse::<Board>().unwrap();
         assert_eq!(expected, board.termination_status_impl());
         assert_eq!(expected, board.reflect().termination_status_impl());
     }

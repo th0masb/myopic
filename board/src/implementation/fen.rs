@@ -1,7 +1,7 @@
-use crate::{FenComponent, MutBoard};
+use crate::{ChessBoard, FenComponent};
 use myopic_core::*;
 
-pub(super) fn to_fen_impl<B: MutBoard>(board: &B, cmps: &[FenComponent]) -> String {
+pub(super) fn to_fen_impl<B: ChessBoard>(board: &B, cmps: &[FenComponent]) -> String {
     let mut dest = String::new();
     for cmp in cmps {
         let encoded_cmp = match *cmp {
@@ -21,7 +21,7 @@ pub(super) fn to_fen_impl<B: MutBoard>(board: &B, cmps: &[FenComponent]) -> Stri
     dest
 }
 
-fn to_fen_board<B: MutBoard>(board: &B) -> String {
+fn to_fen_board<B: ChessBoard>(board: &B) -> String {
     let mut dest = String::new();
     let mut empty_count = 0;
     for i in 0..64 {
@@ -49,14 +49,14 @@ fn to_fen_board<B: MutBoard>(board: &B) -> String {
     dest
 }
 
-fn to_fen_side<B: MutBoard>(board: &B) -> String {
+fn to_fen_side<B: ChessBoard>(board: &B) -> String {
     match board.active() {
         Side::White => "w".to_string(),
         Side::Black => "b".to_string(),
     }
 }
 
-fn to_fen_castling_rights<B: MutBoard>(board: &B) -> String {
+fn to_fen_castling_rights<B: ChessBoard>(board: &B) -> String {
     let rights = board
         .remaining_rights()
         .iter()
@@ -69,19 +69,19 @@ fn to_fen_castling_rights<B: MutBoard>(board: &B) -> String {
     }
 }
 
-fn to_fen_enpassant<B: MutBoard>(board: &B) -> String {
+fn to_fen_enpassant<B: ChessBoard>(board: &B) -> String {
     match board.enpassant() {
         None => format!("-"),
         Some(s) => format!("{}", s).to_lowercase(),
     }
 }
 
-fn to_fen_half_move_count<B: MutBoard>(board: &B) -> String {
+fn to_fen_half_move_count<B: ChessBoard>(board: &B) -> String {
     board.half_move_clock().to_string()
 }
 
-fn to_fen_move_count<B: MutBoard>(board: &B) -> String {
-    ((board.history_count() + 1) / 2).to_string()
+fn to_fen_move_count<B: ChessBoard>(board: &B) -> String {
+    (board.position_count() / 2 + 1).to_string()
 }
 
 fn castlezone_to_fen(zone: CastleZone) -> &'static str {
@@ -113,13 +113,17 @@ fn piece_to_fen(piece: Piece) -> &'static str {
 #[cfg(test)]
 mod test {
     use super::to_fen_impl;
-    use crate::{parse, FenComponent, MutBoard, MutBoardImpl};
+    use crate::{Board, ChessBoard, FenComponent};
+    use anyhow::Result;
 
     #[test]
     fn start_position_board() {
         assert_eq!(
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
-            to_fen_impl(&crate::start_position(), &[FenComponent::Board])
+            to_fen_impl(
+                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::Board]
+            )
         )
     }
 
@@ -127,7 +131,10 @@ mod test {
     fn start_position_active() {
         assert_eq!(
             "w",
-            to_fen_impl(&crate::start_position(), &[FenComponent::Active])
+            to_fen_impl(
+                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::Active]
+            )
         )
     }
 
@@ -135,7 +142,10 @@ mod test {
     fn start_position_castling_rights() {
         assert_eq!(
             "KQkq",
-            to_fen_impl(&crate::start_position(), &[FenComponent::CastlingRights])
+            to_fen_impl(
+                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::CastlingRights]
+            )
         )
     }
 
@@ -143,7 +153,10 @@ mod test {
     fn start_position_enpassant() {
         assert_eq!(
             "-",
-            to_fen_impl(&crate::start_position(), &[FenComponent::Enpassant])
+            to_fen_impl(
+                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::Enpassant]
+            )
         )
     }
 
@@ -151,7 +164,10 @@ mod test {
     fn start_position_half_move_count() {
         assert_eq!(
             "0",
-            to_fen_impl(&crate::start_position(), &[FenComponent::HalfMoveCount])
+            to_fen_impl(
+                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::HalfMoveCount]
+            )
         )
     }
 
@@ -159,16 +175,19 @@ mod test {
     fn start_position_move_count() {
         assert_eq!(
             "1",
-            to_fen_impl(&crate::start_position(), &[FenComponent::MoveCount])
+            to_fen_impl(
+                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::MoveCount]
+            )
         )
     }
 
     #[test]
-    fn start_position_all() {
+    fn start_position_all() -> Result<()> {
         assert_eq!(
             crate::STARTPOS_FEN,
             to_fen_impl(
-                &crate::start_position(),
+                &crate::STARTPOS_FEN.parse::<Board>()?,
                 &[
                     FenComponent::Board,
                     FenComponent::Active,
@@ -179,11 +198,19 @@ mod test {
                 ]
             )
         );
-        assert_eq!(crate::STARTPOS_FEN, crate::start_position().to_fen());
+        assert_eq!(
+            crate::STARTPOS_FEN,
+            crate::STARTPOS_FEN.parse::<Board>()?.to_fen()
+        );
+        Ok(())
     }
 
-    fn position_1() -> MutBoardImpl {
-        parse::position_from_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5").unwrap()
+    fn position_1() -> Board {
+        let mut board = crate::start();
+        board
+            .play_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5")
+            .unwrap();
+        board
     }
 
     #[test]
@@ -245,9 +272,12 @@ mod test {
         assert_eq!(expected, position_1().to_fen());
     }
 
-    fn position_2() -> MutBoardImpl {
-        parse::position_from_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5 5. Ke2 Kd7 6. Rh1")
-            .unwrap()
+    fn position_2() -> Board {
+        let mut board = crate::start();
+        board
+            .play_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5 5. Ke2 Kd7 6. Rh1")
+            .unwrap();
+        board
     }
 
     #[test]

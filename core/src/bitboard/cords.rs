@@ -3,7 +3,7 @@ use std::cmp;
 use crate::bitboard::BitBoard;
 use crate::Dir;
 
-use crate::Square;
+use crate::square::Square;
 
 pub fn get_cord(source: Square, target: Square) -> BitBoard {
     let (min, max) = (cmp::min(source, target), cmp::max(source, target));
@@ -66,7 +66,7 @@ fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {
 
 #[cfg(test)]
 mod test {
-    use crate::Square::*;
+    use crate::square::Square::*;
 
     use super::*;
 

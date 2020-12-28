@@ -3,9 +3,11 @@ use std::ops;
 
 use crate::bitboard::BitBoard;
 use crate::pieces::Piece;
-use crate::reflectable::Reflectable;
+use crate::square::Square;
 use crate::Side;
-use crate::Square;
+use anyhow::anyhow;
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
 
 /// Represents one of the four different areas on a chessboard where
 /// the special castling move can take place (two for each side).
@@ -17,7 +19,44 @@ pub enum CastleZone {
     BQ,
 }
 
+impl Display for CastleZone {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                CastleZone::WK => "wk",
+                CastleZone::WQ => "wq",
+                CastleZone::BK => "bk",
+                CastleZone::BQ => "bq",
+            }
+        )
+    }
+}
+
+impl FromStr for CastleZone {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "wk" | "WK" => Ok(CastleZone::WK),
+            "wq" | "WQ" => Ok(CastleZone::WQ),
+            "bk" | "BK" => Ok(CastleZone::BK),
+            "bq" | "BQ" => Ok(CastleZone::BQ),
+            _ => Err(anyhow!("Cannot parse {} as CastleZone", s)),
+        }
+    }
+}
+
 impl CastleZone {
+    /// Return the side which this zone belongs to.
+    pub fn side(&self) -> Side {
+        match self {
+            CastleZone::WK | CastleZone::WQ => Side::White,
+            CastleZone::BK | CastleZone::BQ => Side::Black,
+        }
+    }
+
     /// Return the kingside zone for the given side.
     pub fn kingside(side: Side) -> CastleZone {
         match side {
@@ -114,21 +153,32 @@ impl CastleZone {
     }
 }
 
-/// A castle is reflected by it's side, i.e.
-///  - WK <==> BK
-///  - WQ <==> BQ
-impl Reflectable for CastleZone {
-    fn reflect(&self) -> Self {
-        match self {
-            CastleZone::WK => CastleZone::BK,
-            CastleZone::WQ => CastleZone::BQ,
-            CastleZone::BK => CastleZone::WK,
-            CastleZone::BQ => CastleZone::WQ,
-        }
+#[cfg(test)]
+mod test {
+    use crate::CastleZone;
+
+    #[test]
+    fn display() {
+        assert_eq!("wk", CastleZone::WK.to_string().as_str());
+        assert_eq!("wq", CastleZone::WQ.to_string().as_str());
+        assert_eq!("bk", CastleZone::BK.to_string().as_str());
+        assert_eq!("bq", CastleZone::BQ.to_string().as_str());
+    }
+
+    #[test]
+    fn from_str() {
+        assert_eq!(CastleZone::WK, "wk".parse().unwrap());
+        assert_eq!(CastleZone::WK, "WK".parse().unwrap());
+        assert_eq!(CastleZone::WQ, "wq".parse().unwrap());
+        assert_eq!(CastleZone::WQ, "WQ".parse().unwrap());
+        assert_eq!(CastleZone::BK, "bk".parse().unwrap());
+        assert_eq!(CastleZone::BK, "BK".parse().unwrap());
+        assert_eq!(CastleZone::BQ, "bq".parse().unwrap());
+        assert_eq!(CastleZone::BQ, "BQ".parse().unwrap());
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq, Hash)]
 pub struct CastleZoneSet {
     data: usize,
 }
@@ -197,12 +247,6 @@ impl ops::BitAnd<CastleZoneSet> for CastleZoneSet {
         CastleZoneSet {
             data: self.data & rhs.data,
         }
-    }
-}
-
-impl Reflectable for CastleZoneSet {
-    fn reflect(&self) -> Self {
-        self.iter().map(|z| z.reflect()).collect()
     }
 }
 
