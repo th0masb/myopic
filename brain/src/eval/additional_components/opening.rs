@@ -211,11 +211,15 @@ impl EvalComponent for OpeningComponent {
                 }
                 Piece::WN | Piece::BN => {
                     let side = moving.side();
-                    let t = self.tracker(side);
-                    if t.b_knight.loc == dest && t.b_knight.move_backward(from) == 0 {
-                        self.score -= parity(side) * self.rewards.b_knight;
-                    } else if t.g_knight.loc == dest && t.g_knight.move_backward(from) == 0 {
-                        self.score -= parity(side) * self.rewards.g_knight;
+                    let tracker = self.tracker(side);
+                    if tracker.b_knight.loc == dest {
+                        if tracker.b_knight.move_backward(from) == 0 {
+                            self.score -= parity(side) * self.rewards.b_knight;
+                        }
+                    } else if tracker.g_knight.loc == dest {
+                        if tracker.g_knight.move_backward(from) == 0 {
+                            self.score -= parity(side) * self.rewards.g_knight;
+                        }
                     }
                 }
                 Piece::WB | Piece::BB => {
@@ -263,6 +267,25 @@ mod test {
             k_castle: 1000000,
             q_castle: 10000000,
         }
+    }
+
+    #[test]
+    fn case_3() -> Result<()> {
+        execute_case(TestCase {
+            moves_evals: vec![
+                (UciMove::new("e2e4")?, 10),
+                (UciMove::new("g7g6")?, 10),
+                (UciMove::new("d2d4")?, 11),
+                (UciMove::new("f8g7")?, -9989),
+                (UciMove::new("c2c4")?, -9989),
+                (UciMove::new("d7d6")?, -9990),
+                (UciMove::new("b1c3")?, -8990),
+                (UciMove::new("g8f6")?, -9090),
+                (UciMove::new("g1f3")?, -8990),
+                (UciMove::new("e8g8")?, -1008990),
+                (UciMove::new("f1d3")?, -998990),
+            ],
+        })
     }
 
     #[test]

@@ -1,6 +1,7 @@
 use crate::EvalBoard;
 use anyhow::Result;
 use myopic_board::ChessBoard;
+use itertools::Itertools;
 
 #[test]
 fn case_1() -> Result<()> {
@@ -10,5 +11,17 @@ fn case_1() -> Result<()> {
     state.play_uci(uci_sequence)?;
     let search_outcome = crate::search(state, 4)?;
     assert_eq!("c8d7", search_outcome.best_move.uci_format().as_str());
+    Ok(())
+}
+
+#[test]
+fn check_pv_length_is_depth() -> Result<()> {
+    let uci_sequence = "e2e4 g7g6 d2d4 f8g7 c2c4 d7d6 b1c3 g8f6 g1f3 e8g8 f1d3";
+    let mut state = EvalBoard::start();
+    state.play_uci(uci_sequence)?;
+    let depth = 4;
+    let search_outcome = crate::search(state, depth)?;
+    let path = search_outcome.optimal_path.iter().map(|m| m.uci_format()).collect_vec();
+    assert_eq!(depth, path.len(), "{:?}", path);
     Ok(())
 }

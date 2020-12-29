@@ -152,7 +152,7 @@ where
                         // Then this was actually a better move and so we must
                         // perform a full search
                         response = -self
-                            .search(root, ctx.next_level(-ctx.beta, -response.eval, &evolve))?;
+                            .search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &evolve))?;
                     }
                 }
                 root.unmake()?;
