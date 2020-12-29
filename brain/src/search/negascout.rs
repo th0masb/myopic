@@ -121,12 +121,12 @@ where
         if self.terminator.should_terminate(&ctx) {
             Err(anyhow!("Terminated at depth {}", ctx.depth_remaining))
         } else if ctx.depth_remaining == 0 || root.termination_status().is_some() {
-            Ok(SearchResponse {
-                eval: match root.termination_status() {
-                    Some(Termination::Loss) => eval::LOSS_VALUE,
-                    Some(Termination::Draw) => eval::DRAW_VALUE,
-                    None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
-                },
+            match root.termination_status() {
+                Some(Termination::Loss) => Ok(eval::LOSS_VALUE),
+                Some(Termination::Draw) => Ok(eval::DRAW_VALUE),
+                None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
+            }.map(|eval| SearchResponse {
+                eval,
                 path: vec![],
             })
         } else {
@@ -136,7 +136,7 @@ where
                 .into_iter()
                 .enumerate()
             {
-                root.make(evolve)?;
+                root.make(evolve.clone())?;
                 #[allow(unused_assignments)]
                 let mut response = SearchResponse::default();
                 if i == 0 {
@@ -162,7 +162,7 @@ where
                 if response.eval > result {
                     result = response.eval;
                     best_path = response.path;
-                    best_path.push(evolve.clone());
+                    best_path.push(evolve);
                 }
 
                 ctx.alpha = cmp::max(ctx.alpha, result);

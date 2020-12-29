@@ -1,5 +1,6 @@
 use crate::search::{search as blocking_search, SearchContext, SearchTerminator};
 use crate::{EvalBoard, SearchOutcome};
+use anyhow::Result;
 use myopic_board::Side;
 use std::cmp::{max, min};
 use std::rc::Rc;
@@ -14,9 +15,9 @@ const DEFAULT_SEARCH_DEPTH: usize = 10;
 const MAX_COMPUTED_MOVE_SEARCH_DURATION: Duration = Duration::from_secs(45);
 
 pub type SearchCommandTx<B> = Sender<SearchCommand<B>>;
-pub type SearchResultRx = Receiver<Result<SearchOutcome, String>>;
+pub type SearchResultRx = Receiver<Result<SearchOutcome>>;
 type CmdRx<B> = Receiver<SearchCommand<B>>;
-type ResultTx = Sender<Result<SearchOutcome, String>>;
+type ResultTx = Sender<Result<SearchOutcome>>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SearchCommand<B: EvalBoard> {
@@ -41,7 +42,7 @@ pub enum SearchCommand<B: EvalBoard> {
 /// which transmits the search results.
 pub fn search<B: EvalBoard + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
-    let (output_tx, output_rx) = mpsc::channel::<Result<SearchOutcome, String>>();
+    let (output_tx, output_rx) = mpsc::channel::<Result<SearchOutcome>>();
     std::thread::spawn(move || {
         let mut search = InteractiveSearch::new(input_rx, output_tx);
         loop {
@@ -128,7 +129,7 @@ impl<B: EvalBoard + 'static> InteractiveSearch<B> {
         }
     }
 
-    pub fn execute(&self) -> Result<SearchOutcome, String> {
+    pub fn execute(&self) -> Result<SearchOutcome> {
         let tracker = InteractiveSearchTerminator {
             max_depth: self.max_depth,
             max_time: self.max_time,

@@ -62,9 +62,9 @@ impl<B: EvalBoard> OrderingHints<B> {
         for mv in root.compute_moves(MoveComputeType::All) {
             root.make(mv).unwrap();
             let SearchResponse { eval, .. } = -super::negascout::search(root, 0).unwrap();
-            root.unmake().unwrap();
+            let mv_made = root.unmake().unwrap();
             dest.push(SEMove {
-                mv: mv.clone(),
+                mv: mv_made,
                 eval,
             });
         }

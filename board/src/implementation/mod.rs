@@ -296,11 +296,15 @@ impl ChessBoard for Board {
 
     fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
         let mut dest = vec![];
-        for mv in crate::parse::uci::moves(self, moves)? {
+        for mv in crate::parse::uci::move_sequence(self, moves)? {
             dest.push(mv.clone());
             self.make(mv)?;
         }
         Ok(dest)
+    }
+
+    fn parse_uci(&mut self, uci_move: &str) -> Result<Move, Error> {
+        crate::parse::uci::single_move(self, uci_move)
     }
 
     fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {

@@ -1,14 +1,96 @@
 use crate::parse::patterns::uci_move;
-use crate::{ChessBoard, Move, MoveComputeType};
+use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
 use anyhow::{anyhow, Result};
 use myopic_core::{Piece, Square};
+use std::fmt::{Display, Formatter};
 
-/// Extracts the moves encoded in standard pgn format starting at
+/// String wrapper representing a chess move formatted
+/// using the uci standard. We can use this to reflect
+/// moves outside the context of a board.
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub struct UciMove {
+    inner: String,
+}
+
+impl UciMove {
+    pub fn new(s: &str) -> Result<UciMove> {
+        if uci_move().is_match(s) {
+            Ok(UciMove {
+                inner: s.to_string(),
+            })
+        } else {
+            Err(anyhow!("Not uci format: {}", s))
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.inner.as_str()
+    }
+}
+
+impl Display for UciMove {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
+impl Reflectable for UciMove {
+    fn reflect(&self) -> Self {
+        let mut dest = String::new();
+        dest.push_str(
+            self.inner
+                .chars()
+                .take(2)
+                .collect::<String>()
+                .parse::<Square>()
+                .unwrap()
+                .reflect()
+                .to_string()
+                .as_str(),
+        );
+        dest.push_str(
+            self.inner
+                .chars()
+                .skip(2)
+                .take(2)
+                .collect::<String>()
+                .parse::<Square>()
+                .unwrap()
+                .reflect()
+                .to_string()
+                .as_str(),
+        );
+        self.inner.chars().skip(4).next().map(|c| dest.push(c));
+        UciMove::new(dest.as_str()).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod uci_struct_test {
+    use super::UciMove;
+    use crate::Reflectable;
+
+    #[test]
+    fn construct() {
+        assert!(UciMove::new("a1c4").is_ok());
+        assert!(UciMove::new("a1c4q").is_ok());
+        assert!(UciMove::new("a1c").is_err());
+        assert!(UciMove::new("a1c9").is_err());
+    }
+
+    #[test]
+    fn reflect() {
+        assert_eq!(UciMove::new("a8c5").unwrap(), UciMove::new("a1c4").unwrap().reflect());
+        assert_eq!(UciMove::new("a8c5n").unwrap(), UciMove::new("a1c4n").unwrap().reflect());
+    }
+}
+
+/// Extracts the moves encoded in standard uci format starting at
 /// a custom board position.
-pub fn moves<B: ChessBoard>(start: &B, encoded: &str) -> Result<Vec<Move>> {
+pub fn move_sequence<B: ChessBoard>(start: &B, encoded: &str) -> Result<Vec<Move>> {
     let (mut mutator_board, mut dest) = (start.clone(), vec![]);
     for evolve in uci_move().find_iter(encoded) {
-        match parse_single_move(&mut mutator_board, evolve.as_str()) {
+        match single_move(&mut mutator_board, evolve.as_str()) {
             Ok(result) => {
                 dest.push(result.clone());
                 mutator_board.make(result)?
@@ -19,7 +101,7 @@ pub fn moves<B: ChessBoard>(start: &B, encoded: &str) -> Result<Vec<Move>> {
     Ok(dest)
 }
 
-fn parse_single_move<B: ChessBoard>(start: &mut B, uci_move: &str) -> Result<Move> {
+pub fn single_move<B: ChessBoard>(start: &mut B, uci_move: &str) -> Result<Move> {
     let (f, d, promoting) = extract_uci_component(uci_move)?;
     start
         .compute_moves(MoveComputeType::All)
@@ -81,7 +163,7 @@ mod test {
     fn execute_success_test(expected_finish: &'static str, uci: &'static str) -> Result<()> {
         let finish = expected_finish.parse::<Board>()?;
         let mut board = crate::STARTPOS_FEN.parse::<Board>()?;
-        for evolve in super::moves(&board, uci)? {
+        for evolve in super::move_sequence(&board, uci)? {
             board.make(evolve)?;
         }
         assert_eq!(finish, board);
@@ -140,7 +222,7 @@ mod test_single_move {
     ) -> Result<()> {
         let mut board = start_fen.parse::<Board>()?;
         let parsed_expected = Move::from(expected, board.hash())?;
-        let uci_parse = parse_single_move(&mut board, uci)?;
+        let uci_parse = single_move(&mut board, uci)?;
         assert_eq!(parsed_expected, uci_parse);
         Ok(())
     }

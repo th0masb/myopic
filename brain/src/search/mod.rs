@@ -10,7 +10,7 @@ use serde::export::PhantomData;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
 use terminator::SearchTerminator;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 pub mod interactive;
 pub mod negascout;
@@ -106,14 +106,14 @@ struct BestMoveResponse {
 impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
     pub fn search(&self) -> Result<SearchOutcome> {
         let search_start = Instant::now();
-        let mut break_message = format!("Terminated before search began");
+        let mut break_err = anyhow!("Terminated before search began");
         let mut suggested_moves = OrderingHints::new(self.root.clone());
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
             match self.best_move(i, search_start, &suggested_moves) {
                 Err(message) => {
-                    break_message = message;
+                    break_err = anyhow!("{}", message);
                     break;
                 }
                 Ok(response) => {
@@ -129,7 +129,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         }
 
         best_response
-            .ok_or(break_message)
+            .ok_or(break_err)
             .map(|response| SearchOutcome {
                 best_move: response.best_move,
                 eval: response.eval,
@@ -146,7 +146,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         suggested_moves: &OrderingHints<B>,
     ) -> Result<BestMoveResponse> {
         if depth < 1 {
-            return Err(format!("Illegal depth: {}", depth));
+            return Err(anyhow!("Cannot iteratively deepen with depth 0"));
         }
 
         let SearchResponse { eval, mut path } = Scout {
@@ -171,7 +171,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         path.reverse();
         // If the path returned is empty then there must be no legal moves in this position
         if path.is_empty() {
-            Err(format!(
+            Err(anyhow!(
                 "No moves found for position {}",
                 self.root.to_fen()
             ))
