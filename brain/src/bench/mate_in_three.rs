@@ -3,7 +3,7 @@ use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
 use crate::eval::WIN_VALUE;
 use crate::search::search;
-use myopic_board::{parse, Move, MutBoard, MutBoardImpl};
+use crate::{Board, ChessBoard, Move};
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -167,12 +167,12 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
             continue;
         }
         let (fen, pgn) = (split.first().unwrap(), split.last().unwrap());
-        match myopic_board::fen_position(fen) {
+        match fen.parse::<Board>() {
             Err(_) => {
                 println!("Error with position parsing: {}", line_clone);
                 continue;
             }
-            Ok(board) => match parse::partial_pgn(&board, pgn) {
+            Ok(board) => match board.clone().play_pgn(pgn) {
                 Err(_) => {
                     println!("Error with move parsing: {}", line_clone);
                     continue;
@@ -194,12 +194,11 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
             },
         }
     }
-    vec![dest[61].clone()]
-    //dest
+    dest
 }
 
 #[derive(Clone)]
 struct TestCase {
-    board: EvalBoardImpl<MutBoardImpl>,
+    board: EvalBoardImpl<Board>,
     expected_move: Move,
 }

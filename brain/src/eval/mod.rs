@@ -1,6 +1,6 @@
 use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
-use myopic_board::{Move, ChessBoard, Piece, Square};
+use myopic_board::{ChessBoard, Move, Piece, Square};
 use serde_derive::{Deserialize, Serialize};
 
 pub mod eval_impl;

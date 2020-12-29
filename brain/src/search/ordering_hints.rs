@@ -63,10 +63,7 @@ impl<B: EvalBoard> OrderingHints<B> {
             root.make(mv).unwrap();
             let SearchResponse { eval, .. } = -super::negascout::search(root, 0).unwrap();
             let mv_made = root.unmake().unwrap();
-            dest.push(SEMove {
-                mv: mv_made,
-                eval,
-            });
+            dest.push(SEMove { mv: mv_made, eval });
         }
         dest.sort();
         dest.reverse();

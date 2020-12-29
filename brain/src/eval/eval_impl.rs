@@ -3,8 +3,8 @@ use crate::eval::{EvalBoard, EvalComponent};
 use crate::{eval, PieceValues, PositionTables};
 use anyhow::Result;
 use myopic_board::{
-    BitBoard, CastleZone, CastleZoneSet, FenComponent, Move, MoveComputeType, ChessBoard,
-    Piece, Reflectable, Side, Square, Termination,
+    BitBoard, CastleZone, CastleZoneSet, ChessBoard, FenComponent, Move, MoveComputeType, Piece,
+    Reflectable, Side, Square, Termination,
 };
 
 pub struct EvalBoardImpl2<B: ChessBoard> {
@@ -51,7 +51,6 @@ impl<B: ChessBoard> ChessBoard for EvalBoardImpl<B> {
     fn make(&mut self, action: Move) -> Result<()> {
         self.material.make(&action);
         self.board.make(action)
-
     }
 
     fn unmake(&mut self) -> Result<Move> {
@@ -136,6 +135,10 @@ impl<B: ChessBoard> ChessBoard for EvalBoardImpl<B> {
         Ok(parsed_moves)
     }
 
+    fn parse_uci(&mut self, uci_move: &str) -> Result<Move> {
+        self.board.parse_uci(uci_move)
+    }
+
     fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {
         self.board.to_partial_fen(cmps)
     }
@@ -170,14 +173,16 @@ impl<B: ChessBoard> EvalBoard for EvalBoardImpl<B> {
 #[cfg(test)]
 mod test {
     use crate::eval::eval_impl::EvalBoardImpl;
-    use crate::{PieceValues, PositionTables};
-    use myopic_board::{CastleZone, Move, Move::*, ChessBoard, Piece::*, Reflectable, Square::*};
     use crate::eval::material;
+    use crate::{Board, PieceValues, PositionTables};
+    use myopic_board::{
+        CastleZone, ChessBoard, Move, Move::*, Piece::*, Reflectable, Square::*, UciMove,
+    };
 
     #[derive(Clone, Eq, PartialEq)]
     struct TestCase<B: ChessBoard> {
         start_position: B,
-        moves: Vec<Move>,
+        moves: Vec<UciMove>,
     }
 
     impl<B: ChessBoard> Reflectable for TestCase<B> {
@@ -199,8 +204,9 @@ mod test {
         let mut start =
             EvalBoardImpl::new(test_case.start_position, values.clone(), tables.clone());
 
-        for evolution in test_case.moves {
-            let discards = start.evolve(&evolution);
+        for uci_move in test_case.moves {
+            let move_to_make = start.parse_uci(uci_move.as_str()).unwrap();
+            start.make(move_to_make).unwrap();
             assert_eq!(
                 material::compute_midgame(&start, &values, &tables),
                 start.material.mid_eval()
@@ -209,7 +215,7 @@ mod test {
                 material::compute_endgame(&start, &values, &tables),
                 start.material.end_eval()
             );
-            start.devolve(&evolution, discards);
+            let move_made = start.unmake().unwrap();
             assert_eq!(
                 material::compute_midgame(&start, &values, &tables),
                 start.material.mid_eval()
@@ -218,13 +224,13 @@ mod test {
                 material::compute_endgame(&start, &values, &tables),
                 start.material.end_eval()
             );
-            start.evolve(&evolution);
+            start.make(move_made).unwrap();
         }
     }
 
-    fn test(start_fen: &'static str, moves: Vec<Move>) {
+    fn test(start_fen: &'static str, moves: Vec<UciMove>) {
         execute_test(TestCase {
-            start_position: myopic_board::fen_position(start_fen).unwrap(),
+            start_position: start_fen.parse::<Board>().unwrap(),
             moves,
         })
     }
@@ -234,25 +240,25 @@ mod test {
         test(
             "rnbqk1nr/pp1pppbp/6p1/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
             vec![
-                Standard(WP, C2, C3),
-                Standard(BN, G8, F6),
-                Castle(CastleZone::WK),
-                Standard(BP, B7, B6),
-                Standard(WP, D2, D3),
-                Standard(BB, C8, B7),
-                Standard(WB, C1, G5),
-                Standard(BN, B8, C6),
-                Standard(WN, B1, D2),
-                Standard(BQ, D8, C7),
-                Standard(WQ, D1, C2),
-                Castle(CastleZone::BQ),
-                Standard(WP, E4, E5),
-                Standard(BP, D7, D5),
-                Enpassant(E5, D6),
-                Standard(BK, C8, B8),
-                Standard(WP, D6, E7),
-                Standard(BR, H8, H7),
-                Promotion(E7, D8, WQ),
+                UciMove::new("c2c3").unwrap(),
+                UciMove::new("g8f6").unwrap(),
+                UciMove::new("e1g1").unwrap(),
+                UciMove::new("b7b6").unwrap(),
+                UciMove::new("d2d3").unwrap(),
+                UciMove::new("c8b7").unwrap(),
+                UciMove::new("c1g5").unwrap(),
+                UciMove::new("b8c6").unwrap(),
+                UciMove::new("b1d2").unwrap(),
+                UciMove::new("d8c7").unwrap(),
+                UciMove::new("d1c2").unwrap(),
+                UciMove::new("e8c8").unwrap(),
+                UciMove::new("e4e5").unwrap(),
+                UciMove::new("d7d5").unwrap(),
+                UciMove::new("e5d6").unwrap(),
+                UciMove::new("c8b8").unwrap(),
+                UciMove::new("d6e7").unwrap(),
+                UciMove::new("h8g8").unwrap(),
+                UciMove::new("e7d8q").unwrap(),
             ],
         );
     }

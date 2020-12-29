@@ -125,10 +125,8 @@ where
                 Some(Termination::Loss) => Ok(eval::LOSS_VALUE),
                 Some(Termination::Draw) => Ok(eval::DRAW_VALUE),
                 None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
-            }.map(|eval| SearchResponse {
-                eval,
-                path: vec![],
-            })
+            }
+            .map(|eval| SearchResponse { eval, path: vec![] })
         } else {
             let (mut result, mut best_path) = (-eval::INFTY, vec![]);
             for (i, evolve) in self

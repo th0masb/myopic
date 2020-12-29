@@ -1,6 +1,6 @@
-use crate::{PieceValues, PositionTables, Reflectable};
-use myopic_board::{Move, Piece, Square, ChessBoard};
 use crate::eval::EvalComponent;
+use crate::{PieceValues, PositionTables, Reflectable};
+use myopic_board::{ChessBoard, Move, Piece, Square};
 
 const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
 const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
@@ -37,20 +37,38 @@ impl EvalComponent for Material {
 
     fn make(&mut self, mv: &Move) {
         match mv {
-            &Move::Standard{moving, from, dest, capture, ..} => {
+            &Move::Standard {
+                moving,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
                 self.remove(moving, from);
                 self.add(moving, dest);
                 capture.map(|taken| self.remove(taken, dest));
             }
 
-            &Move::Promotion { from, dest, promoted, capture, .. } => {
+            &Move::Promotion {
+                from,
+                dest,
+                promoted,
+                capture,
+                ..
+            } => {
                 let pawn = Piece::pawn(promoted.side());
                 self.remove(pawn, from);
                 self.add(promoted, dest);
                 capture.map(|taken| self.remove(taken, dest));
             }
 
-            &Move::Enpassant { side, from, dest, capture, .. } => {
+            &Move::Enpassant {
+                side,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
                 let active_pawn = Piece::pawn(side);
                 self.remove(active_pawn, from);
                 self.add(active_pawn, dest);
@@ -70,20 +88,38 @@ impl EvalComponent for Material {
 
     fn unmake(&mut self, mv: &Move) {
         match mv {
-            &Move::Standard { moving, from, dest, capture, .. } => {
+            &Move::Standard {
+                moving,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
                 self.remove(moving, dest);
                 self.add(moving, from);
                 capture.map(|taken| self.add(taken, dest));
             }
 
-            &Move::Promotion { from, dest, promoted, capture, .. } => {
+            &Move::Promotion {
+                from,
+                dest,
+                promoted,
+                capture,
+                ..
+            } => {
                 let pawn = Piece::pawn(promoted.side());
                 self.add(pawn, from);
                 self.remove(promoted, dest);
                 capture.map(|taken| self.add(taken, dest));
             }
 
-            &Move::Enpassant { side, from, dest, capture, .. } => {
+            &Move::Enpassant {
+                side,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
                 let active_pawn = Piece::pawn(side);
                 let passive_pawn = active_pawn.reflect();
                 self.remove(active_pawn, dest);
@@ -160,14 +196,22 @@ pub fn compute_phase<B: ChessBoard>(board: &B) -> i32 {
     TOTAL_PHASE - phase_sub
 }
 
-pub fn compute_midgame<B: ChessBoard>(board: &B, values: &PieceValues, tables: &PositionTables) -> i32 {
+pub fn compute_midgame<B: ChessBoard>(
+    board: &B,
+    values: &PieceValues,
+    tables: &PositionTables,
+) -> i32 {
     Piece::all()
         .flat_map(|p| board.locs(&[p]).iter().map(move |loc| (p, loc)))
         .map(|(p, loc)| tables.midgame(p, loc) + values.midgame(p))
         .sum()
 }
 
-pub fn compute_endgame<B: ChessBoard>(board: &B, values: &PieceValues, tables: &PositionTables) -> i32 {
+pub fn compute_endgame<B: ChessBoard>(
+    board: &B,
+    values: &PieceValues,
+    tables: &PositionTables,
+) -> i32 {
     Piece::all()
         .flat_map(|p| board.locs(&[p]).iter().map(move |loc| (p, loc)))
         .map(|(p, loc)| tables.endgame(p, loc) + values.endgame(p))

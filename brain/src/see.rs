@@ -89,8 +89,7 @@ impl<B: ChessBoard> See<'_, B> {
         let (whites, blacks) = board.sides();
         let zero = BitBoard::EMPTY;
         let (mut attadef, mut xray) = (zero, zero);
-        for (p, loc) in
-            Piece::all().flat_map(|p| self.locs(p).into_iter().map(move |loc| (p, loc)))
+        for (p, loc) in Piece::all().flat_map(|p| self.locs(p).into_iter().map(move |loc| (p, loc)))
         {
             if p.control(loc, whites, blacks).contains(target) {
                 attadef ^= loc;
@@ -156,6 +155,7 @@ fn is_slider(piece: Piece) -> bool {
 mod test {
     use crate::see::See;
 
+    use crate::Board;
     use myopic_board::{ChessBoard, Reflectable, Square};
 
     fn dummy_values() -> [i32; 6] {
@@ -207,18 +207,20 @@ mod test {
 
     #[test]
     fn see_case_1() {
-        let position = "1b5k/5n2/3p2q1/2P5/8/3R4/1K1Q4/8 w KQkq - 5 20";
         execute_case(TestCase {
-            board: myopic_board::fen_position(position).unwrap(),
+            board: "1b5k/5n2/3p2q1/2P5/8/3R4/1K1Q4/8 w KQkq - 5 20"
+                .parse::<Board>()
+                .unwrap(),
             expected: vec![(Square::C5, Square::D6, 0), (Square::D3, Square::D6, -2)],
         })
     }
 
     #[test]
     fn see_case_2() {
-        let position = "k7/6n1/2q1b2R/1P3P2/5N2/4Q3/8/K7 w KQkq - 10 30";
         execute_case(TestCase {
-            board: myopic_board::fen_position(position).unwrap(),
+            board: "k7/6n1/2q1b2R/1P3P2/5N2/4Q3/8/K7 w KQkq - 10 30"
+                .parse::<Board>()
+                .unwrap(),
             expected: vec![
                 (Square::B5, Square::C6, 9),
                 (Square::C6, Square::B5, 1),
@@ -233,9 +235,10 @@ mod test {
 
     #[test]
     fn see_case_3() {
-        let position = "r1n2qk1/pp5p/2ppr1pQ/4p3/8/2N4R/PPP3PP/6K1 w - - 0 3";
         execute_case(TestCase {
-            board: myopic_board::fen_position(position).unwrap(),
+            board: "r1n2qk1/pp5p/2ppr1pQ/4p3/8/2N4R/PPP3PP/6K1 w - - 0 3"
+                .parse::<Board>()
+                .unwrap(),
             expected: vec![(Square::H6, Square::H7, 1)],
         })
     }

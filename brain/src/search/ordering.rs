@@ -72,12 +72,9 @@ enum MoveCategory {
 
 fn get_category<B: EvalBoard>(board: &mut B, mv: &Move) -> MoveCategory {
     match mv {
-        Enpassant{..} | Castle{..} | Promotion{..} => MoveCategory::Special,
+        Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
         &Standard {
-            moving,
-            from,
-            dest,
-            ..
+            moving, from, dest, ..
         } => {
             if board.side(moving.side().reflect()).contains(dest) {
                 let exchange_value =
@@ -93,7 +90,8 @@ fn get_category<B: EvalBoard>(board: &mut B, mv: &Move) -> MoveCategory {
                     .unwrap_or_else(|| {
                         MoveCategory::Positional(
                             parity(moving.side())
-                                * (board.positional_eval(moving, dest) - board.positional_eval(moving, from)),
+                                * (board.positional_eval(moving, dest)
+                                    - board.positional_eval(moving, from)),
                         )
                     })
             }

@@ -1,8 +1,8 @@
 use crate::eval::EvalBoard;
 use crate::{eval, see};
+use anyhow::{anyhow, Result};
 use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, Termination};
 use std::cmp;
-use anyhow::{anyhow, Result};
 
 const Q_DEPTH_CAP: i32 = -8;
 const Q_CHECK_CAP: i32 = -2;
@@ -83,13 +83,9 @@ fn compute_quiescent_moves<B: EvalBoard>(state: &mut B, depth: i32) -> Vec<Move>
 
 fn score_attack<B: EvalBoard>(state: &mut B, attack: &Move) -> i32 {
     match attack {
-        &Move::Enpassant {..} => 10000,
-        &Move::Promotion {..} => 20000,
-        &Move::Standard {
-            from,
-            dest,
-            ..
-        } => {
+        &Move::Enpassant { .. } => 10000,
+        &Move::Promotion { .. } => 20000,
+        &Move::Standard { from, dest, .. } => {
             see::exchange_value(state, from, dest, state.piece_values())
         }
         // Should never get here
@@ -99,8 +95,8 @@ fn score_attack<B: EvalBoard>(state: &mut B, attack: &Move) -> i32 {
 
 fn is_attack(query: &Move, enemies: BitBoard) -> bool {
     match query {
-        &Move::Enpassant {..} => true,
-        &Move::Castle {..} => false,
+        &Move::Enpassant { .. } => true,
+        &Move::Castle { .. } => false,
         &Move::Promotion { dest, .. } => enemies.contains(dest),
         &Move::Standard { dest, .. } => enemies.contains(dest),
     }
