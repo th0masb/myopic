@@ -10,6 +10,7 @@ use serde::export::PhantomData;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
 use terminator::SearchTerminator;
+use anyhow::Result;
 
 pub mod interactive;
 pub mod negascout;
@@ -24,7 +25,7 @@ const SHALLOW_EVAL_DEPTH: usize = 1;
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
-pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome, String>
+pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome>
 where
     B: EvalBoard,
     T: SearchTerminator,
@@ -103,7 +104,7 @@ struct BestMoveResponse {
 }
 
 impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
-    pub fn search(&self) -> Result<SearchOutcome, String> {
+    pub fn search(&self) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_message = format!("Terminated before search began");
         let mut suggested_moves = OrderingHints::new(self.root.clone());
@@ -143,7 +144,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         depth: usize,
         search_start: Instant,
         suggested_moves: &OrderingHints<B>,
-    ) -> Result<BestMoveResponse, String> {
+    ) -> Result<BestMoveResponse> {
         if depth < 1 {
             return Err(format!("Illegal depth: {}", depth));
         }

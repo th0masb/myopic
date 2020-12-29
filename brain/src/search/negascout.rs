@@ -3,6 +3,7 @@ use crate::search::ordering::{EstimatorImpl, MoveQualityEstimator};
 use crate::search::ordering_hints::OrderingHints;
 use crate::search::terminator::SearchTerminator;
 use crate::{quiescent, EvalBoard};
+use anyhow::{anyhow, Result};
 use core::cmp;
 use itertools::Itertools;
 use myopic_board::{Move, MoveComputeType, Termination};
@@ -14,7 +15,7 @@ use std::time::Instant;
 /// kept low otherwise ID is always preferable. In particular
 /// this function will support a depth 0 search which performs
 /// a quiescent search on the provided root.
-pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse, String>
+pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse>
 where
     B: EvalBoard,
 {
@@ -116,9 +117,9 @@ where
     M: MoveQualityEstimator<B>,
 {
     ///
-    pub fn search(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse, String> {
+    pub fn search(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse> {
         if self.terminator.should_terminate(&ctx) {
-            Err(format!("Terminated at depth {}", ctx.depth_remaining))
+            Err(anyhow!("Terminated at depth {}", ctx.depth_remaining))
         } else if ctx.depth_remaining == 0 || root.termination_status().is_some() {
             Ok(SearchResponse {
                 eval: match root.termination_status() {
@@ -135,7 +136,7 @@ where
                 .into_iter()
                 .enumerate()
             {
-                let discards = root.evolve(&evolve);
+                root.make(evolve)?;
                 #[allow(unused_assignments)]
                 let mut response = SearchResponse::default();
                 if i == 0 {
@@ -156,7 +157,7 @@ where
                             .search(root, ctx.next_level(-ctx.beta, -response.eval, &evolve))?;
                     }
                 }
-                root.devolve(&evolve, discards);
+                root.unmake()?;
 
                 if response.eval > result {
                     result = response.eval;

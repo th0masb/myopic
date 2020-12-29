@@ -50,9 +50,9 @@ impl<B: EvalBoard> OrderingHints<B> {
             for mv in next_paths {
                 let mut next_precursors = precursors.clone();
                 next_precursors.push(mv.clone());
-                let discards = board.evolve(&mv);
+                board.make(mv).unwrap();
                 self.populate_shallow_eval_impl(board, depth - 1, next_precursors);
-                board.devolve(&mv, discards);
+                board.unmake().unwrap();
             }
         }
     }
@@ -60,9 +60,9 @@ impl<B: EvalBoard> OrderingHints<B> {
     fn compute_shallow_eval(root: &mut B) -> Vec<SEMove> {
         let mut dest = vec![];
         for mv in root.compute_moves(MoveComputeType::All) {
-            let discards = root.evolve(&mv);
+            root.make(mv).unwrap();
             let SearchResponse { eval, .. } = -super::negascout::search(root, 0).unwrap();
-            root.devolve(&mv, discards);
+            root.unmake().unwrap();
             dest.push(SEMove {
                 mv: mv.clone(),
                 eval,

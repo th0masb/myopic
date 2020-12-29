@@ -2,6 +2,7 @@ use crate::eval::EvalBoard;
 use crate::{eval, see};
 use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, Termination};
 use std::cmp;
+use anyhow::{anyhow, Result};
 
 const Q_DEPTH_CAP: i32 = -8;
 const Q_CHECK_CAP: i32 = -2;
@@ -10,13 +11,13 @@ const Q_CHECK_CAP: i32 = -2;
 
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
-pub(super) fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> i32 {
+pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
     if depth == Q_DEPTH_CAP || state.termination_status().is_some() {
-        return match state.termination_status() {
+        return Ok(match state.termination_status() {
             Some(Termination::Loss) => eval::LOSS_VALUE,
             Some(Termination::Draw) => eval::DRAW_VALUE,
             None => state.static_eval(),
-        };
+        });
     }
     // If we aren't in check then we can use the static eval as the initial
     // result under the sound assumption that there exists a move
@@ -32,23 +33,23 @@ pub(super) fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, dep
 
     // Break immediately if the stand pat is greater than beta.
     if result >= beta {
-        return beta;
+        return Ok(beta);
     }
     if alpha < result {
         alpha = result;
     }
 
     for evolve in compute_quiescent_moves(state, depth) {
-        let discards = state.evolve(&evolve);
-        let next_result = -search(state, -beta, -alpha, depth - 1);
-        state.devolve(&evolve, discards);
+        state.make(evolve)?;
+        let next_result = -search(state, -beta, -alpha, depth - 1)?;
+        state.unmake()?;
         result = cmp::max(result, next_result);
         alpha = cmp::max(alpha, result);
         if alpha > beta {
-            return beta;
+            return Ok(beta);
         }
     }
-    return result;
+    return Ok(result);
 }
 
 fn compute_quiescent_moves<B: EvalBoard>(state: &mut B, depth: i32) -> Vec<Move> {
@@ -82,20 +83,25 @@ fn compute_quiescent_moves<B: EvalBoard>(state: &mut B, depth: i32) -> Vec<Move>
 
 fn score_attack<B: EvalBoard>(state: &mut B, attack: &Move) -> i32 {
     match attack {
-        &Move::Enpassant(_, _) => 10000,
-        &Move::Promotion(_, _, _) => 20000,
-        &Move::Standard(_, source, target) => {
-            see::exchange_value(state, source, target, state.piece_values())
+        &Move::Enpassant {..} => 10000,
+        &Move::Promotion {..} => 20000,
+        &Move::Standard {
+            from,
+            dest,
+            ..
+        } => {
+            see::exchange_value(state, from, dest, state.piece_values())
         }
-        _ => panic!(),
+        // Should never get here
+        _ => 0,
     }
 }
 
 fn is_attack(query: &Move, enemies: BitBoard) -> bool {
     match query {
-        &Move::Enpassant(_, _) => true,
-        &Move::Castle(_) => false,
-        &Move::Promotion(_, target, _) => enemies.contains(target),
-        &Move::Standard(_, _, target) => enemies.contains(target),
+        &Move::Enpassant {..} => true,
+        &Move::Castle {..} => false,
+        &Move::Promotion { dest, .. } => enemies.contains(dest),
+        &Move::Standard { dest, .. } => enemies.contains(dest),
     }
 }

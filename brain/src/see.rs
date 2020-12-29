@@ -1,4 +1,4 @@
-use myopic_board::{BitBoard, MutBoard, Piece, Reflectable, Side, Square};
+use myopic_board::{BitBoard, ChessBoard, Piece, Reflectable, Side, Square};
 use std::cmp;
 
 /// API function for determining whether an exchange is good on the given
@@ -8,7 +8,7 @@ use std::cmp;
 /// the attacker, higher is good for the attacker. Positive means a good
 /// exchange, negative mean a bad one. If the pieces are on the same side the
 /// result is undefined.
-pub fn exchange_value<B: MutBoard>(
+pub fn exchange_value<B: ChessBoard>(
     board: &B,
     source: Square,
     target: Square,
@@ -26,14 +26,14 @@ pub fn exchange_value<B: MutBoard>(
 type BitBoardPair = (BitBoard, BitBoard);
 
 /// Static exchange evaluator
-struct See<'a, B: MutBoard> {
+struct See<'a, B: ChessBoard> {
     board: &'a B,
     source: Square,
     target: Square,
     values: &'a [i32; 6],
 }
 
-impl<B: MutBoard> See<'_, B> {
+impl<B: ChessBoard> See<'_, B> {
     fn value(&self, piece: Piece) -> i32 {
         self.values[(piece as usize) % 6]
     }
@@ -80,7 +80,7 @@ impl<B: MutBoard> See<'_, B> {
     }
 
     fn locs(&self, piece: Piece) -> BitBoard {
-        self.board.locs(piece)
+        self.board.locs(&[piece])
     }
 
     /// Get (direct attadef, xray attadef) involved.
@@ -90,7 +90,7 @@ impl<B: MutBoard> See<'_, B> {
         let zero = BitBoard::EMPTY;
         let (mut attadef, mut xray) = (zero, zero);
         for (p, loc) in
-            Piece::iter().flat_map(|p| self.locs(p).into_iter().map(move |loc| (p, loc)))
+            Piece::all().flat_map(|p| self.locs(p).into_iter().map(move |loc| (p, loc)))
         {
             if p.control(loc, whites, blacks).contains(target) {
                 attadef ^= loc;
@@ -123,11 +123,11 @@ impl<B: MutBoard> See<'_, B> {
     }
 
     fn is_knight_position(&self, square: BitBoard) -> bool {
-        (self.board.locs(Piece::WN) | self.board.locs(Piece::BN)).intersects(square)
+        (self.board.locs(&[Piece::WN]) | self.board.locs(&[Piece::BN])).intersects(square)
     }
 
     fn least_valuable_piece(&self, options: BitBoard, side: Side) -> BitBoard {
-        Piece::on_side(side)
+        Piece::of(side)
             .map(|p| self.locs(p))
             .find(|locs| locs.intersects(options))
             .map_or(BitBoard::EMPTY, |locs| (locs & options).least_set_bit())
@@ -156,19 +156,19 @@ fn is_slider(piece: Piece) -> bool {
 mod test {
     use crate::see::See;
 
-    use myopic_board::{MutBoard, Reflectable, Square};
+    use myopic_board::{ChessBoard, Reflectable, Square};
 
     fn dummy_values() -> [i32; 6] {
         [1, 3, 3, 5, 9, 1000]
     }
 
     #[derive(Clone, Debug)]
-    struct TestCase<B: MutBoard> {
+    struct TestCase<B: ChessBoard> {
         board: B,
         expected: Vec<(Square, Square, i32)>,
     }
 
-    impl<B: MutBoard> Reflectable for TestCase<B> {
+    impl<B: ChessBoard> Reflectable for TestCase<B> {
         fn reflect(&self) -> Self {
             let mut reflected_expected = Vec::new();
             for (src, targ, result) in self.expected.iter() {
@@ -181,12 +181,12 @@ mod test {
         }
     }
 
-    fn execute_case<B: MutBoard>(test_case: TestCase<B>) {
+    fn execute_case<B: ChessBoard>(test_case: TestCase<B>) {
         execute_case_impl(test_case.clone());
         execute_case_impl(test_case.reflect())
     }
 
-    fn execute_case_impl<B: MutBoard>(test_case: TestCase<B>) {
+    fn execute_case_impl<B: ChessBoard>(test_case: TestCase<B>) {
         let board = test_case.board;
         for (source, target, expected_value) in test_case.expected.into_iter() {
             let see = See {

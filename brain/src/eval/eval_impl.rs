@@ -1,18 +1,19 @@
 use crate::eval::material::Material;
 use crate::eval::{EvalBoard, EvalComponent};
 use crate::{eval, PieceValues, PositionTables};
+use anyhow::Result;
 use myopic_board::{
-    BitBoard, CastleZone, CastleZoneSet, Discards, FenComponent, Move, MoveComputeType, MutBoard,
+    BitBoard, CastleZone, CastleZoneSet, FenComponent, Move, MoveComputeType, ChessBoard,
     Piece, Reflectable, Side, Square, Termination,
 };
 
-pub struct EvalBoardImpl2<B: MutBoard> {
+pub struct EvalBoardImpl2<B: ChessBoard> {
     board: B,
     material: Material,
     cmps: Vec<Box<dyn EvalComponent>>,
 }
 
-impl<B: MutBoard> Clone for EvalBoardImpl2<B> {
+impl<B: ChessBoard> Clone for EvalBoardImpl2<B> {
     fn clone(&self) -> Self {
         EvalBoardImpl2 {
             board: self.board.clone(),
@@ -23,12 +24,12 @@ impl<B: MutBoard> Clone for EvalBoardImpl2<B> {
 }
 
 #[derive(Clone)]
-pub struct EvalBoardImpl<B: MutBoard> {
+pub struct EvalBoardImpl<B: ChessBoard> {
     board: B,
     material: Material,
 }
 
-impl<B: MutBoard> Reflectable for EvalBoardImpl<B> {
+impl<B: ChessBoard> Reflectable for EvalBoardImpl<B> {
     fn reflect(&self) -> Self {
         EvalBoardImpl {
             board: self.board.reflect(),
@@ -37,7 +38,7 @@ impl<B: MutBoard> Reflectable for EvalBoardImpl<B> {
     }
 }
 
-impl<B: MutBoard> EvalBoardImpl<B> {
+impl<B: ChessBoard> EvalBoardImpl<B> {
     pub fn new(board: B, values: PieceValues, tables: PositionTables) -> EvalBoardImpl<B> {
         EvalBoardImpl {
             material: Material::new(&board, values, tables),
@@ -46,15 +47,17 @@ impl<B: MutBoard> EvalBoardImpl<B> {
     }
 }
 
-impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
-    fn evolve(&mut self, action: &Move) -> Discards {
-        self.material.evolve(&self.board, action);
-        self.board.evolve(action)
+impl<B: ChessBoard> ChessBoard for EvalBoardImpl<B> {
+    fn make(&mut self, action: Move) -> Result<()> {
+        self.material.make(&action);
+        self.board.make(action)
+
     }
 
-    fn devolve(&mut self, action: &Move, discards: Discards) {
-        self.material.devolve(&self.board, action, &discards);
-        self.board.devolve(action, discards)
+    fn unmake(&mut self) -> Result<Move> {
+        let action = self.board.unmake()?;
+        self.material.unmake(&action);
+        Ok(action)
     }
 
     fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
@@ -93,8 +96,8 @@ impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
         self.board.castle_status(side)
     }
 
-    fn locs(&self, piece: Piece) -> BitBoard {
-        self.board.locs(piece)
+    fn locs(&self, pieces: &[Piece]) -> BitBoard {
+        self.board.locs(pieces)
     }
 
     fn king(&self, side: Side) -> Square {
@@ -109,12 +112,28 @@ impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
         self.board.half_move_clock()
     }
 
-    fn history_count(&self) -> usize {
-        self.board.history_count()
+    fn position_count(&self) -> usize {
+        self.board.position_count()
     }
 
     fn remaining_rights(&self) -> CastleZoneSet {
         self.board.remaining_rights()
+    }
+
+    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let parsed_moves = self.board.play_pgn(moves)?;
+        for mv in parsed_moves.iter() {
+            self.material.make(mv);
+        }
+        Ok(parsed_moves)
+    }
+
+    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let parsed_moves = self.board.play_uci(moves)?;
+        for mv in parsed_moves.iter() {
+            self.material.make(mv);
+        }
+        Ok(parsed_moves)
     }
 
     fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {
@@ -122,7 +141,7 @@ impl<B: MutBoard> MutBoard for EvalBoardImpl<B> {
     }
 }
 
-impl<B: MutBoard> EvalBoard for EvalBoardImpl<B> {
+impl<B: ChessBoard> EvalBoard for EvalBoardImpl<B> {
     fn static_eval(&mut self) -> i32 {
         match self.termination_status() {
             Some(Termination::Draw) => eval::DRAW_VALUE,
@@ -152,16 +171,16 @@ impl<B: MutBoard> EvalBoard for EvalBoardImpl<B> {
 mod test {
     use crate::eval::eval_impl::EvalBoardImpl;
     use crate::{PieceValues, PositionTables};
-    use myopic_board::{CastleZone, Move, Move::*, MutBoard, Piece::*, Reflectable, Square::*};
+    use myopic_board::{CastleZone, Move, Move::*, ChessBoard, Piece::*, Reflectable, Square::*};
     use crate::eval::material;
 
     #[derive(Clone, Eq, PartialEq)]
-    struct TestCase<B: MutBoard> {
+    struct TestCase<B: ChessBoard> {
         start_position: B,
         moves: Vec<Move>,
     }
 
-    impl<B: MutBoard> Reflectable for TestCase<B> {
+    impl<B: ChessBoard> Reflectable for TestCase<B> {
         fn reflect(&self) -> Self {
             TestCase {
                 start_position: self.start_position.reflect(),
@@ -170,12 +189,12 @@ mod test {
         }
     }
 
-    fn execute_test<B: MutBoard>(test_case: TestCase<B>) {
+    fn execute_test<B: ChessBoard>(test_case: TestCase<B>) {
         execute_test_impl(test_case.clone());
         execute_test_impl(test_case.reflect());
     }
 
-    fn execute_test_impl<B: MutBoard>(test_case: TestCase<B>) {
+    fn execute_test_impl<B: ChessBoard>(test_case: TestCase<B>) {
         let (tables, values) = (PositionTables::default(), PieceValues::default());
         let mut start =
             EvalBoardImpl::new(test_case.start_position, values.clone(), tables.clone());

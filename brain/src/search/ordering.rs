@@ -72,23 +72,28 @@ enum MoveCategory {
 
 fn get_category<B: EvalBoard>(board: &mut B, mv: &Move) -> MoveCategory {
     match mv {
-        Enpassant(..) | Castle(..) | Promotion(..) => MoveCategory::Special,
-        &Standard(p, src, dst) => {
-            if board.side(p.side().reflect()).contains(dst) {
+        Enpassant{..} | Castle{..} | Promotion{..} => MoveCategory::Special,
+        &Standard {
+            moving,
+            from,
+            dest,
+            ..
+        } => {
+            if board.side(moving.side().reflect()).contains(dest) {
                 let exchange_value =
-                    crate::see::exchange_value(board, src, dst, board.piece_values());
+                    crate::see::exchange_value(board, from, dest, board.piece_values());
                 if exchange_value > 0 {
                     MoveCategory::GoodExchange(exchange_value)
                 } else {
                     MoveCategory::BadExchange(exchange_value)
                 }
             } else {
-                get_lower_value_delta(board, p, dst)
+                get_lower_value_delta(board, moving, dest)
                     .map(|n| MoveCategory::BadExchange(n))
                     .unwrap_or_else(|| {
                         MoveCategory::Positional(
-                            parity(p.side())
-                                * (board.positional_eval(p, dst) - board.positional_eval(p, src)),
+                            parity(moving.side())
+                                * (board.positional_eval(moving, dest) - board.positional_eval(moving, from)),
                         )
                     })
             }
@@ -125,7 +130,7 @@ fn get_lower_value_pieces<'a>(piece: Piece) -> &'a [Piece] {
 fn compute_control<B: EvalBoard>(board: &mut B, piece: Piece) -> BitBoard {
     let (white, black) = board.sides();
     board
-        .locs(piece)
+        .locs(&[piece])
         .iter()
         .map(|s| piece.control(s, white, black))
         .fold(BitBoard::EMPTY, |l, r| l | r)
