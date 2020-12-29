@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 use crate::eval;
-use crate::eval::EvalBoard;
+use crate::eval::EvalChessBoard;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::ordering::EstimatorImpl;
 use anyhow::{anyhow, Result};
@@ -27,7 +27,7 @@ const SHALLOW_EVAL_DEPTH: usize = 1;
 /// state within the duration constraints implied by the terminator.
 pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome>
 where
-    B: EvalBoard,
+    B: EvalChessBoard,
     T: SearchTerminator,
 {
     Search { root, terminator }.search()
@@ -103,7 +103,7 @@ mod searchoutcome_serialize_test {
     }
 }
 
-struct Search<B: EvalBoard, T: SearchTerminator> {
+struct Search<B: EvalChessBoard, T: SearchTerminator> {
     root: B,
     terminator: T,
 }
@@ -115,7 +115,7 @@ struct BestMoveResponse {
     depth: usize,
 }
 
-impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
+impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
     pub fn search(&self) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
@@ -202,20 +202,20 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
 /// checkmating or escaping checkmate etc.
 #[cfg(test)]
 mod test {
-    use crate::eval::EvalBoard;
-    use crate::{eval, Board, UciMove};
+    use crate::eval::EvalChessBoard;
+    use crate::{eval, Board, EvalBoard, UciMove};
     use myopic_board::{Move, Move::Standard, Piece, Reflectable, Square, Square::*};
 
     const DEPTH: usize = 3;
 
     fn test(fen_string: &'static str, expected_move_pool: Vec<UciMove>, is_won: bool) {
-        let board = crate::pos::from_fen(fen_string).unwrap();
+        let board = EvalBoard::builder_fen(fen_string).unwrap().build();
         let (ref_board, ref_move_pool) = (board.reflect(), expected_move_pool.reflect());
         test_impl(board, expected_move_pool, is_won);
         test_impl(ref_board, ref_move_pool, is_won);
     }
 
-    fn test_impl<B: EvalBoard>(board: B, expected_move_pool: Vec<UciMove>, is_won: bool) {
+    fn test_impl<B: EvalChessBoard>(board: B, expected_move_pool: Vec<UciMove>, is_won: bool) {
         match super::search(board, DEPTH) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {

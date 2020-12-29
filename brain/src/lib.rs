@@ -12,10 +12,10 @@ mod see;
 #[cfg(test)]
 mod bench;
 
-pub use eval::eval_impl::EvalBoardImpl;
+pub use eval::eval_impl::EvalBoard;
 pub use eval::tables::PositionTables;
 pub use eval::values::PieceValues;
-pub use eval::{EvalBoard, EvalParameters};
+pub use eval::{EvalChessBoard, MaterialParameters};
 pub use myopic_board::*;
 
 pub use search::interactive;

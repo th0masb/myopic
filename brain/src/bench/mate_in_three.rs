@@ -1,4 +1,4 @@
-use crate::eval::eval_impl::EvalBoardImpl;
+use crate::eval::eval_impl::EvalBoard;
 use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
 use crate::eval::WIN_VALUE;
@@ -180,11 +180,7 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
                 Ok(moves) => {
                     let expected_move = moves.first().unwrap().to_owned();
                     dest.push(TestCase {
-                        board: EvalBoardImpl::new(
-                            board,
-                            PieceValues::default(),
-                            PositionTables::default(),
-                        ),
+                        board: EvalBoard::builder(board).build(),
                         expected_move,
                     });
                     if dest.len() == max_cases {
@@ -199,6 +195,6 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
 
 #[derive(Clone)]
 struct TestCase {
-    board: EvalBoardImpl<Board>,
+    board: EvalBoard<Board>,
     expected_move: Move,
 }

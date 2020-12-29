@@ -1,11 +1,11 @@
-use crate::{BitBoard, EvalBoard, Piece, Piece::*};
+use crate::{BitBoard, EvalChessBoard, Piece, Piece::*};
 use myopic_board::{Move, Move::*, Reflectable, Side, Square};
 
 /// A function which approximately evaluates the quality
 /// of a move within the context of the given position.
 /// It can be used to decide the search order of legal
 /// moves for a position.
-pub trait MoveQualityEstimator<B: EvalBoard> {
+pub trait MoveQualityEstimator<B: EvalChessBoard> {
     /// Assign a heuristic score to the given move in the
     /// context of the given position. The score is agnostic
     /// of the side to move, i.e. high magnitude positive
@@ -17,7 +17,7 @@ pub trait MoveQualityEstimator<B: EvalBoard> {
 /// Simplest estimator which simply evaluates all moves
 /// as equal.
 pub struct ConstantEstimator;
-impl<B: EvalBoard> MoveQualityEstimator<B> for ConstantEstimator {
+impl<B: EvalChessBoard> MoveQualityEstimator<B> for ConstantEstimator {
     fn estimate(&self, _board: &mut B, _mv: &Move) -> i32 {
         0
     }
@@ -49,7 +49,7 @@ pub struct EstimatorImpl;
 // computed by the SEE. Moving to an area of control for a lower value piece
 // is scored according to the delta between the piece values. For now ignore
 // potential pins.
-impl<B: EvalBoard> MoveQualityEstimator<B> for EstimatorImpl {
+impl<B: EvalChessBoard> MoveQualityEstimator<B> for EstimatorImpl {
     fn estimate(&self, board: &mut B, mv: &Move) -> i32 {
         match get_category(board, mv) {
             MoveCategory::GoodExchange(n) => 30_000 + n,
@@ -70,7 +70,7 @@ enum MoveCategory {
     BadExchange(i32),
 }
 
-fn get_category<B: EvalBoard>(board: &mut B, mv: &Move) -> MoveCategory {
+fn get_category<B: EvalChessBoard>(board: &mut B, mv: &Move) -> MoveCategory {
     match mv {
         Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
         &Standard {
@@ -99,7 +99,11 @@ fn get_category<B: EvalBoard>(board: &mut B, mv: &Move) -> MoveCategory {
     }
 }
 
-fn get_lower_value_delta<B: EvalBoard>(board: &mut B, piece: Piece, dst: Square) -> Option<i32> {
+fn get_lower_value_delta<B: EvalChessBoard>(
+    board: &mut B,
+    piece: Piece,
+    dst: Square,
+) -> Option<i32> {
     let piece_values = board.piece_values().clone();
     let moving_value = piece_values[piece as usize % 6];
     get_lower_value_pieces(piece)
@@ -125,7 +129,7 @@ fn get_lower_value_pieces<'a>(piece: Piece) -> &'a [Piece] {
     }
 }
 
-fn compute_control<B: EvalBoard>(board: &mut B, piece: Piece) -> BitBoard {
+fn compute_control<B: EvalChessBoard>(board: &mut B, piece: Piece) -> BitBoard {
     let (white, black) = board.sides();
     board
         .locs(&[piece])

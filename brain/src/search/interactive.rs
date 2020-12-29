@@ -1,5 +1,5 @@
 use crate::search::{search as blocking_search, SearchContext, SearchTerminator};
-use crate::{EvalBoard, SearchOutcome};
+use crate::{EvalChessBoard, SearchOutcome};
 use anyhow::Result;
 use myopic_board::Side;
 use std::cmp::{max, min};
@@ -20,7 +20,7 @@ type CmdRx<B> = Receiver<SearchCommand<B>>;
 type ResultTx = Sender<Result<SearchOutcome>>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum SearchCommand<B: EvalBoard> {
+pub enum SearchCommand<B: EvalChessBoard> {
     Go,
     GoOnce,
     Stop,
@@ -40,7 +40,7 @@ pub enum SearchCommand<B: EvalBoard> {
 /// Create an interactive search running on a separate thread, communication happens
 /// via an input channel which accepts a variety of commands and an output channel
 /// which transmits the search results.
-pub fn search<B: EvalBoard + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
+pub fn search<B: EvalChessBoard + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<Result<SearchOutcome>>();
     std::thread::spawn(move || {
@@ -76,7 +76,7 @@ pub fn search<B: EvalBoard + 'static>() -> (SearchCommandTx<B>, SearchResultRx) 
     (input_tx, output_rx)
 }
 
-struct InteractiveSearch<B: EvalBoard> {
+struct InteractiveSearch<B: EvalChessBoard> {
     input_rx: Rc<CmdRx<B>>,
     output_tx: ResultTx,
     root: Option<B>,
@@ -84,7 +84,7 @@ struct InteractiveSearch<B: EvalBoard> {
     max_time: Duration,
 }
 
-impl<B: EvalBoard + 'static> InteractiveSearch<B> {
+impl<B: EvalChessBoard + 'static> InteractiveSearch<B> {
     pub fn new(input_rx: CmdRx<B>, output_tx: ResultTx) -> InteractiveSearch<B> {
         InteractiveSearch {
             input_rx: Rc::new(input_rx),
@@ -139,13 +139,13 @@ impl<B: EvalBoard + 'static> InteractiveSearch<B> {
     }
 }
 
-struct InteractiveSearchTerminator<B: EvalBoard> {
+struct InteractiveSearchTerminator<B: EvalChessBoard> {
     max_time: Duration,
     max_depth: usize,
     stop_signal: Rc<CmdRx<B>>,
 }
 
-impl<B: EvalBoard> SearchTerminator for InteractiveSearchTerminator<B> {
+impl<B: EvalChessBoard> SearchTerminator for InteractiveSearchTerminator<B> {
     fn should_terminate(&self, ctx: &SearchContext) -> bool {
         ctx.start_time.elapsed() > self.max_time
             || ctx.depth_remaining >= self.max_depth

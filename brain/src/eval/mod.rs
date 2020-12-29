@@ -1,8 +1,10 @@
 use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
+use crate::Reflectable;
 use myopic_board::{ChessBoard, Move, Piece, Square};
 use serde_derive::{Deserialize, Serialize};
 
+pub mod additional_components;
 pub mod eval_impl;
 mod material;
 pub mod tables;
@@ -21,7 +23,7 @@ pub const LOSS_VALUE: i32 = -WIN_VALUE;
 pub const DRAW_VALUE: i32 = 0;
 
 /// Extension of the Board trait which adds a static evaluation function.
-pub trait EvalBoard: ChessBoard {
+pub trait EvalChessBoard: ChessBoard {
     /// The static evaluation function assigns a score to this exact
     /// position at the point of time it is called. It does not take
     /// into account potential captures/recaptures etc. It must follow
@@ -42,19 +44,17 @@ pub trait EvalBoard: ChessBoard {
     fn positional_eval(&self, piece: Piece, location: Square) -> i32;
 }
 
-pub trait EvalComponent {
+pub trait EvalComponent: Clone + Send + Reflectable {
     fn static_eval(&mut self) -> i32;
 
     fn make(&mut self, mv: &Move);
 
     fn unmake(&mut self, mv: &Move);
-
-    fn replicate(&self) -> Box<dyn EvalComponent>;
 }
 
 /// Allows one to configure the parameters of the evaluation board.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq, Default)]
-pub struct EvalParameters {
+pub struct MaterialParameters {
     pub piece_values: PieceValues,
     pub position_tables: PositionTables,
 }

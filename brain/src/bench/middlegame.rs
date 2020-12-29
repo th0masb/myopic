@@ -1,3 +1,4 @@
+use crate::EvalBoard;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -41,7 +42,7 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
         .lines()
         .take(max_positions)
         .map(|l| l.unwrap())
-        .map(|l| match crate::pos::from_fen(l.as_str()) {
+        .map(|l| match EvalBoard::builder_fen(l.as_str()).map(|b| b.build()) {
             Err(message) => panic!("{}", message),
             Ok(position) => position,
         })

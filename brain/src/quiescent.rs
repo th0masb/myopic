@@ -1,4 +1,4 @@
-use crate::eval::EvalBoard;
+use crate::eval::EvalChessBoard;
 use crate::{eval, see};
 use anyhow::{anyhow, Result};
 use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, Termination};
@@ -11,7 +11,12 @@ const Q_CHECK_CAP: i32 = -2;
 
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
-pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
+pub fn search<B: EvalChessBoard>(
+    state: &mut B,
+    mut alpha: i32,
+    beta: i32,
+    depth: i32,
+) -> Result<i32> {
     if depth == Q_DEPTH_CAP || state.termination_status().is_some() {
         return Ok(match state.termination_status() {
             Some(Termination::Loss) => eval::LOSS_VALUE,
@@ -52,7 +57,7 @@ pub fn search<B: EvalBoard>(state: &mut B, mut alpha: i32, beta: i32, depth: i32
     return Ok(result);
 }
 
-fn compute_quiescent_moves<B: EvalBoard>(state: &mut B, depth: i32) -> Vec<Move> {
+fn compute_quiescent_moves<B: EvalChessBoard>(state: &mut B, depth: i32) -> Vec<Move> {
     let mut moves = if depth < Q_CHECK_CAP {
         state.compute_moves(MoveComputeType::Attacks)
     } else {
@@ -81,7 +86,7 @@ fn compute_quiescent_moves<B: EvalBoard>(state: &mut B, depth: i32) -> Vec<Move>
         .collect()
 }
 
-fn score_attack<B: EvalBoard>(state: &mut B, attack: &Move) -> i32 {
+fn score_attack<B: EvalChessBoard>(state: &mut B, attack: &Move) -> i32 {
     match attack {
         &Move::Enpassant { .. } => 10000,
         &Move::Promotion { .. } => 20000,

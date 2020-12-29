@@ -136,10 +136,6 @@ impl EvalComponent for Material {
             }
         };
     }
-
-    fn replicate(&self) -> Box<dyn EvalComponent> {
-        Box::new(self.clone())
-    }
 }
 
 impl Material {

@@ -1,5 +1,5 @@
 use crate::search::negascout::SearchResponse;
-use crate::EvalBoard;
+use crate::EvalChessBoard;
 use itertools::Itertools;
 use myopic_board::{Move, MoveComputeType};
 use std::cmp::Ordering;
@@ -9,7 +9,7 @@ const SHALLOW_EVAL_BRANCHING: usize = 5;
 
 /// Precomputed suggested moves to aid in move ordering
 /// for the search
-pub struct OrderingHints<B: EvalBoard> {
+pub struct OrderingHints<B: EvalChessBoard> {
     /// The root position from which all move sequences
     /// start from
     root: B,
@@ -23,7 +23,7 @@ pub struct OrderingHints<B: EvalBoard> {
     evs: HashMap<Vec<Move>, Vec<SEMove>>,
 }
 
-impl<B: EvalBoard> OrderingHints<B> {
+impl<B: EvalChessBoard> OrderingHints<B> {
     pub fn new(root: B) -> OrderingHints<B> {
         OrderingHints {
             root,

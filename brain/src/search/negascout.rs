@@ -2,7 +2,7 @@ use crate::search::eval;
 use crate::search::ordering::{EstimatorImpl, MoveQualityEstimator};
 use crate::search::ordering_hints::OrderingHints;
 use crate::search::terminator::SearchTerminator;
-use crate::{quiescent, EvalBoard};
+use crate::{quiescent, EvalChessBoard};
 use anyhow::{anyhow, Result};
 use core::cmp;
 use itertools::Itertools;
@@ -17,7 +17,7 @@ use std::time::Instant;
 /// a quiescent search on the provided root.
 pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse>
 where
-    B: EvalBoard,
+    B: EvalChessBoard,
 {
     Scout {
         terminator: &depth,
@@ -93,7 +93,7 @@ impl Default for SearchResponse {
 pub struct Scout<'a, T, B, M>
 where
     T: SearchTerminator,
-    B: EvalBoard,
+    B: EvalChessBoard,
     M: MoveQualityEstimator<B>,
 {
     /// The terminator is responsible for deciding when the
@@ -113,7 +113,7 @@ where
 impl<T, B, M> Scout<'_, T, B, M>
 where
     T: SearchTerminator,
-    B: EvalBoard,
+    B: EvalChessBoard,
     M: MoveQualityEstimator<B>,
 {
     ///
