@@ -131,7 +131,7 @@ pub fn parity(side: Side) -> i32 {
 }
 
 impl EvalComponent for OpeningComponent {
-    fn static_eval(&mut self) -> i32 {
+    fn static_eval(&self) -> i32 {
         self.score
     }
 

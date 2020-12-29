@@ -201,7 +201,8 @@ impl<B: ChessBoard> EvalChessBoard for EvalBoard<B> {
             Some(Termination::Draw) => eval::DRAW_VALUE,
             Some(Termination::Loss) => eval::LOSS_VALUE,
             None => {
-                let eval = self.material.static_eval();
+                let eval = self.material.static_eval()
+                    + self.cmps.iter().map(|cmp| cmp.static_eval()).sum::<i32>();
                 match self.active() {
                     Side::White => eval,
                     Side::Black => -eval,

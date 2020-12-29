@@ -29,7 +29,7 @@ impl Reflectable for Material {
 }
 
 impl EvalComponent for Material {
-    fn static_eval(&mut self) -> i32 {
+    fn static_eval(&self) -> i32 {
         let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
         let (mid, end) = (self.mid_eval, self.end_eval);
         ((mid * (256 - phase)) + end * phase) / 256

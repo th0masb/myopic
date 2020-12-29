@@ -5,6 +5,8 @@ use myopic_board::{ChessBoard, Move, Piece, Square};
 use serde_derive::{Deserialize, Serialize};
 
 pub mod additional_components;
+#[cfg(test)]
+mod clearcut_tests;
 pub mod eval_impl;
 mod material;
 pub mod tables;
@@ -45,7 +47,7 @@ pub trait EvalChessBoard: ChessBoard {
 }
 
 pub trait EvalComponent: Clone + Send + Reflectable {
-    fn static_eval(&mut self) -> i32;
+    fn static_eval(&self) -> i32;
 
     fn make(&mut self, mv: &Move);
 

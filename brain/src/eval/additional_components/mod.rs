@@ -20,7 +20,7 @@ impl Reflectable for AdditionalEvalComponent {
 }
 
 impl EvalComponent for AdditionalEvalComponent {
-    fn static_eval(&mut self) -> i32 {
+    fn static_eval(&self) -> i32 {
         match self {
             AdditionalEvalComponent::Opening(cmp) => cmp.static_eval(),
         }
