@@ -141,8 +141,7 @@ impl EvalComponent for OpeningComponent {
                 moving, from, dest, ..
             } => match moving {
                 Piece::WP | Piece::BP => {
-                    let side = moving.side();
-                    let tracker = self.tracker(side);
+                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
                     if tracker.d_pawn.loc == from {
                         if tracker.d_pawn.move_forward(dest) == 1 {
                             self.score += parity(side) * self.rewards.d_pawn;
@@ -154,8 +153,7 @@ impl EvalComponent for OpeningComponent {
                     }
                 }
                 Piece::WN | Piece::BN => {
-                    let side = moving.side();
-                    let tracker = self.tracker(side);
+                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
                     if tracker.b_knight.loc == from {
                         if tracker.b_knight.move_forward(dest) == 1 {
                             self.score += parity(side) * self.rewards.b_knight;
@@ -167,8 +165,7 @@ impl EvalComponent for OpeningComponent {
                     }
                 }
                 Piece::WB | Piece::BB => {
-                    let side = moving.side();
-                    let tracker = self.tracker(side);
+                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
                     if tracker.c_bishop.loc == from {
                         if tracker.c_bishop.move_forward(dest) == 1 {
                             self.score += parity(side) * self.rewards.c_bishop;
@@ -197,8 +194,7 @@ impl EvalComponent for OpeningComponent {
                 moving, from, dest, ..
             } => match moving {
                 Piece::WP | Piece::BP => {
-                    let side = moving.side();
-                    let tracker = self.tracker(side);
+                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
                     if tracker.d_pawn.loc == dest {
                         if tracker.d_pawn.move_backward(from) == 0 {
                             self.score -= parity(side) * self.rewards.d_pawn;
@@ -210,8 +206,7 @@ impl EvalComponent for OpeningComponent {
                     }
                 }
                 Piece::WN | Piece::BN => {
-                    let side = moving.side();
-                    let tracker = self.tracker(side);
+                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
                     if tracker.b_knight.loc == dest {
                         if tracker.b_knight.move_backward(from) == 0 {
                             self.score -= parity(side) * self.rewards.b_knight;
@@ -223,8 +218,7 @@ impl EvalComponent for OpeningComponent {
                     }
                 }
                 Piece::WB | Piece::BB => {
-                    let side = moving.side();
-                    let tracker = self.tracker(side);
+                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
                     if tracker.c_bishop.loc == dest {
                         if tracker.c_bishop.move_backward(from) == 0 {
                             self.score -= parity(side) * self.rewards.c_bishop;
@@ -252,7 +246,7 @@ impl EvalComponent for OpeningComponent {
 mod test {
     use crate::eval::additional_components::opening::{OpeningComponent, OpeningRewards};
     use crate::eval::EvalComponent;
-    use crate::{EvalBoard, UciMove};
+    use crate::{Board, EvalBoard, Reflectable, UciMove};
     use anyhow::Result;
     use myopic_board::{ChessBoard, Move};
 
@@ -272,6 +266,7 @@ mod test {
     #[test]
     fn case_3() -> Result<()> {
         execute_case(TestCase {
+            board: EvalBoard::start(),
             moves_evals: vec![
                 (UciMove::new("e2e4")?, 10),
                 (UciMove::new("g7g6")?, 10),
@@ -291,6 +286,7 @@ mod test {
     #[test]
     fn case_1() -> Result<()> {
         execute_case(TestCase {
+            board: EvalBoard::start(),
             moves_evals: vec![
                 (UciMove::new("d2d4")?, 1),
                 (UciMove::new("d7d5")?, 0),
@@ -317,6 +313,7 @@ mod test {
     #[test]
     fn case_2() -> Result<()> {
         execute_case(TestCase {
+            board: EvalBoard::start(),
             moves_evals: vec![
                 (UciMove::new("d2d4")?, 1),
                 (UciMove::new("d7d5")?, 0),
@@ -341,7 +338,13 @@ mod test {
     }
 
     fn execute_case(case: TestCase) -> Result<()> {
-        let mut board = EvalBoard::start();
+        execute_case_impl(case.reflect())?;
+        execute_case_impl(case)?;
+        Ok(())
+    }
+
+    fn execute_case_impl(case: TestCase) -> Result<()> {
+        let mut board = case.board;
         let mut component = OpeningComponent::new(dummy_rewards());
         for (uci_mv, expected_eval) in case.moves_evals {
             let curr_eval = component.static_eval();
@@ -367,6 +370,16 @@ mod test {
     }
 
     struct TestCase {
+        board: EvalBoard<Board>,
         moves_evals: Vec<(UciMove, i32)>,
+    }
+
+    impl Reflectable for TestCase {
+        fn reflect(&self) -> Self {
+            TestCase {
+                board: self.board.reflect(),
+                moves_evals: self.moves_evals.reflect(),
+            }
+        }
     }
 }

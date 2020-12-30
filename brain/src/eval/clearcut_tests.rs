@@ -1,7 +1,7 @@
 use crate::EvalBoard;
 use anyhow::Result;
-use myopic_board::ChessBoard;
 use itertools::Itertools;
+use myopic_board::ChessBoard;
 
 #[test]
 fn case_1() -> Result<()> {
@@ -21,7 +21,11 @@ fn check_pv_length_is_depth() -> Result<()> {
     state.play_uci(uci_sequence)?;
     let depth = 4;
     let search_outcome = crate::search(state, depth)?;
-    let path = search_outcome.optimal_path.iter().map(|m| m.uci_format()).collect_vec();
+    let path = search_outcome
+        .optimal_path
+        .iter()
+        .map(|m| m.uci_format())
+        .collect_vec();
     assert_eq!(depth, path.len(), "{:?}", path);
     Ok(())
 }
