@@ -1,3 +1,4 @@
+use crate::search::SearchParameters;
 use crate::EvalBoard;
 use std::error::Error;
 use std::fs::File;
@@ -37,6 +38,7 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
     );
     let max_positions = std::env::var("MIDDLEGAME_MAX_CASES")?.parse::<usize>()?;
     let depth = std::env::var("MIDDLEGAME_DEPTH")?.parse::<usize>()?;
+    let table_size = std::env::var("MIDDLEGAME_TABLE_SIZE")?.parse::<usize>()?;
 
     let positions = BufReader::new(File::open(&data_path)?)
         .lines()
@@ -54,7 +56,10 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
         if i % 5 == 0 {
             println!("[Position {}, Duration {}ms]", i, start.elapsed().as_millis());
         }
-        best_moves.push(crate::search(position, depth))
+        best_moves.push(crate::search(position, SearchParameters {
+            terminator: depth,
+            table_size: table_size,
+        })?)
     }
     println!("Successfully computed {} moves at depth {} in {}ms", best_moves.len(), depth, start.elapsed().as_millis());
     Ok(())

@@ -157,10 +157,12 @@ impl Material {
         &self.piece_values
     }
 
+    #[cfg(test)]
     pub fn mid_eval(&self) -> i32 {
         self.mid_eval
     }
 
+    #[cfg(test)]
     pub fn end_eval(&self) -> i32 {
         self.end_eval
     }

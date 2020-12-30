@@ -4,6 +4,7 @@ use crate::eval;
 use crate::eval::EvalChessBoard;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::ordering::EstimatorImpl;
+use crate::search::transpositions::TranspositionTable;
 use anyhow::{anyhow, Result};
 use myopic_board::Move;
 use ordering_hints::OrderingHints;
@@ -17,6 +18,7 @@ pub mod negascout;
 mod ordering;
 mod ordering_hints;
 pub mod terminator;
+mod transpositions;
 
 const DEPTH_UPPER_BOUND: usize = 10;
 const SHALLOW_EVAL_TRIGGER_DEPTH: usize = 2;
@@ -25,12 +27,21 @@ const SHALLOW_EVAL_DEPTH: usize = 1;
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
-pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome>
+pub fn search<B, T>(root: B, parameters: SearchParameters<T>) -> Result<SearchOutcome>
 where
     B: EvalChessBoard,
     T: SearchTerminator,
 {
-    Search { root, terminator }.search()
+    Search {
+        root,
+        terminator: parameters.terminator,
+    }
+    .search(parameters.table_size)
+}
+
+pub struct SearchParameters<T: SearchTerminator> {
+    pub terminator: T,
+    pub table_size: usize,
 }
 
 /// Data class composing information/result about/of a best move search.
@@ -116,25 +127,27 @@ struct BestMoveResponse {
 }
 
 impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
-    pub fn search(&self) -> Result<SearchOutcome> {
+    pub fn search(&self, transposition_table_size: usize) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
-        let mut suggested_moves = OrderingHints::new(self.root.clone());
+        let mut ordering_hints = OrderingHints::new(self.root.clone());
+        // TODO inject desired size
+        let mut transposition_table = TranspositionTable::new(transposition_table_size)?;
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
-            match self.best_move(i, search_start, &suggested_moves) {
+            match self.best_move(i, search_start, &ordering_hints, &mut transposition_table) {
                 Err(message) => {
                     break_err = anyhow!("{}", message);
                     break;
                 }
                 Ok(response) => {
-                    suggested_moves.add_pv(i, &response.path);
+                    ordering_hints.add_pv(i, &response.path);
                     best_response = Some(response);
                     // Only fill in the shallow eval when we get deep
                     // enough to male it worthwhile
                     if i == SHALLOW_EVAL_TRIGGER_DEPTH {
-                        suggested_moves.populate_shallow_eval(SHALLOW_EVAL_DEPTH);
+                        ordering_hints.populate_shallow_eval(SHALLOW_EVAL_DEPTH);
                     }
                 }
             }
@@ -155,7 +168,8 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
         &self,
         depth: usize,
         search_start: Instant,
-        suggested_moves: &OrderingHints<B>,
+        ordering_hints: &OrderingHints<B>,
+        transposition_table: &mut TranspositionTable,
     ) -> Result<BestMoveResponse> {
         if depth < 1 {
             return Err(anyhow!("Cannot iteratively deepen with depth 0"));
@@ -163,8 +177,9 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
 
         let SearchResponse { eval, mut path } = Scout {
             terminator: &self.terminator,
-            ordering_hints: suggested_moves,
+            ordering_hints,
             move_quality_estimator: EstimatorImpl,
+            transposition_table,
             board_type: PhantomData,
         }
         .search(
@@ -203,10 +218,12 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
 #[cfg(test)]
 mod test {
     use crate::eval::EvalChessBoard;
-    use crate::{eval, Board, EvalBoard, UciMove};
-    use myopic_board::{Move, Move::Standard, Piece, Reflectable, Square, Square::*};
+    use crate::search::SearchParameters;
+    use crate::{eval, EvalBoard, UciMove};
+    use myopic_board::{Reflectable, Board};
 
     const DEPTH: usize = 3;
+    const TABLE_SIZE: usize = 10_000;
 
     fn test(fen_string: &'static str, expected_move_pool: Vec<UciMove>, is_won: bool) {
         let base_board = fen_string.parse::<Board>().unwrap();
@@ -218,7 +235,13 @@ mod test {
     }
 
     fn test_impl<B: EvalChessBoard>(board: B, expected_move_pool: Vec<UciMove>, is_won: bool) {
-        match super::search(board, DEPTH) {
+        match super::search(
+            board,
+            SearchParameters {
+                terminator: DEPTH,
+                table_size: TABLE_SIZE,
+            },
+        ) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 assert!(

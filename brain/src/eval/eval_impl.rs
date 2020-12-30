@@ -217,7 +217,7 @@ mod test {
     use crate::eval::material;
     use crate::{Board, PieceValues, PositionTables};
     use myopic_board::{
-        CastleZone, ChessBoard, Move, Move::*, Piece::*, Reflectable, Square::*, UciMove,
+        ChessBoard, Reflectable, UciMove,
     };
 
     #[derive(Clone, Eq, PartialEq)]

@@ -2,6 +2,7 @@ use crate::search::eval;
 use crate::search::ordering::{EstimatorImpl, MoveQualityEstimator};
 use crate::search::ordering_hints::OrderingHints;
 use crate::search::terminator::SearchTerminator;
+use crate::search::transpositions::{TranspositionTable, TreeNode};
 use crate::{quiescent, EvalChessBoard};
 use anyhow::{anyhow, Result};
 use core::cmp;
@@ -22,6 +23,7 @@ where
     Scout {
         terminator: &depth,
         ordering_hints: &OrderingHints::new(root.clone()),
+        transposition_table: &mut TranspositionTable::new(1)?,
         move_quality_estimator: EstimatorImpl,
         board_type: PhantomData,
     }
@@ -100,14 +102,40 @@ where
     /// search is complete
     pub terminator: &'a T,
     /// Precomputed hints for helping to order moves
-    /// generated for positions in the search tree
+    /// generated for positions in the search tree.
+    /// These can be thought of as 'pure' hints which
+    /// aren't changed during the search.
     pub ordering_hints: &'a OrderingHints<B>,
+    /// Cache of search information for all nodes in
+    /// the tree which is shared across searches
+    /// during an iterative deepening run. It can be
+    /// thought of as transient information to give
+    /// further hints for ordering and to skip searches
+    /// if we already have sufficient information for
+    /// that part of the tree.
+    pub transposition_table: &'a mut TranspositionTable,
     /// Used for performing an initial sort on the moves
     /// generated in each position for optimising the search
     pub move_quality_estimator: M,
     /// Placeholder to satisfy the compiler because of the 'unused'
     /// type parameter for the board
     pub board_type: std::marker::PhantomData<B>,
+}
+
+enum TableSuggestion {
+    Pv(u8, Move),
+    Cut(Move),
+    All(Move),
+}
+
+impl TableSuggestion {
+    pub fn mv(self) -> Move {
+        match self {
+            TableSuggestion::Pv(_, mv) => mv,
+            TableSuggestion::Cut(mv) => mv,
+            TableSuggestion::All(mv) => mv,
+        }
+    }
 }
 
 impl<T, B, M> Scout<'_, T, B, M>
@@ -117,7 +145,7 @@ where
     M: MoveQualityEstimator<B>,
 {
     ///
-    pub fn search(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse> {
+    pub fn search(&mut self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse> {
         if self.terminator.should_terminate(&ctx) {
             Err(anyhow!("Terminated at depth {}", ctx.depth_remaining))
         } else if ctx.depth_remaining == 0 || root.termination_status().is_some() {
@@ -128,9 +156,61 @@ where
             }
             .map(|eval| SearchResponse { eval, path: vec![] })
         } else {
-            let (mut result, mut best_path) = (-eval::INFTY, vec![]);
+            let (hash, mut table_suggestion) = (root.hash(), None);
+            match self.transposition_table.get(hash) {
+                None => {}
+                Some(TreeNode::Pv {
+                    depth,
+                    eval,
+                    optimal_path,
+                }) => {
+                    if (*depth as usize) >= ctx.depth_remaining {
+                        // We already searched this position fully at a sufficient depth
+                        return Ok(SearchResponse {
+                            eval: *eval,
+                            path: optimal_path.clone(),
+                        });
+                    } else {
+                        // The depth wasn't sufficient and so we only have a suggestion
+                        // for the best move
+                        table_suggestion = optimal_path
+                            .last()
+                            .map(|m| TableSuggestion::Pv(*depth, m.clone()))
+                    }
+                }
+                Some(TreeNode::Cut {
+                    depth,
+                    beta,
+                    cutoff_move,
+                }) => {
+                    if (*depth as usize) >= ctx.depth_remaining && ctx.beta <= *beta {
+                        return Ok(SearchResponse {
+                            eval: ctx.beta,
+                            path: vec![],
+                        });
+                    } else {
+                        table_suggestion = Some(TableSuggestion::Cut(cutoff_move.clone()));
+                    }
+                }
+                Some(TreeNode::All {
+                    depth,
+                    eval,
+                    best_move,
+                }) => {
+                    if (*depth as usize) >= ctx.depth_remaining && *eval <= ctx.alpha {
+                        return Ok(SearchResponse {
+                            eval: *eval,
+                            path: vec![],
+                        });
+                    } else {
+                        table_suggestion = Some(TableSuggestion::All(best_move.clone()));
+                    }
+                }
+            };
+
+            let (start_alpha, mut result, mut best_path) = (ctx.alpha, -eval::INFTY, vec![]);
             for (i, evolve) in self
-                .compute_moves(root, &ctx.precursors)
+                .compute_moves(root, &ctx.precursors, table_suggestion)
                 .into_iter()
                 .enumerate()
             {
@@ -160,17 +240,55 @@ where
                 if response.eval > result {
                     result = response.eval;
                     best_path = response.path;
-                    best_path.push(evolve);
+                    best_path.push(evolve.clone());
                 }
 
                 ctx.alpha = cmp::max(ctx.alpha, result);
                 if ctx.alpha >= ctx.beta {
+                    // We are a cut node
+                    self.transposition_table.insert(
+                        hash,
+                        TreeNode::Cut {
+                            depth: ctx.depth_remaining as u8,
+                            beta: ctx.beta,
+                            cutoff_move: evolve,
+                        },
+                    );
                     return Ok(SearchResponse {
                         eval: ctx.beta,
                         path: vec![],
                     });
                 }
             }
+
+            // Populate the table with the information from this node.
+            if ctx.alpha == start_alpha {
+                // We are an all node
+                match best_path.last() {
+                    // Should never get here but don't unwrap as panic could be
+                    // disastrous
+                    None => {}
+                    Some(mv) => self.transposition_table.insert(
+                        hash,
+                        TreeNode::All {
+                            depth: ctx.depth_remaining as u8,
+                            eval: result,
+                            best_move: mv.clone(),
+                        },
+                    ),
+                }
+            } else {
+                // We are a pv node
+                self.transposition_table.insert(
+                    hash,
+                    TreeNode::Pv {
+                        depth: ctx.depth_remaining as u8,
+                        eval: result,
+                        optimal_path: best_path.clone(),
+                    },
+                )
+            }
+
             Ok(SearchResponse {
                 eval: result,
                 path: best_path,
@@ -184,23 +302,52 @@ where
         moves
     }
 
-    fn compute_moves(&self, board: &mut B, precursors: &Vec<Move>) -> Vec<Move> {
+    fn compute_moves(
+        &self,
+        board: &mut B,
+        precursors: &Vec<Move>,
+        table_suggestion: Option<TableSuggestion>,
+    ) -> Vec<Move> {
         let sm = self.ordering_hints;
         match (sm.get_pvs(precursors), sm.get_evs(precursors)) {
-            (None, None) => self.compute_heuristically_ordered_moves(board),
-            (Some(pvs), None) => pvs
-                .into_iter()
-                .map(|pv| pv.mv.clone())
-                .chain(self.compute_heuristically_ordered_moves(board))
-                .dedup()
-                .collect(),
-            (None, Some(evs)) => evs.into_iter().map(|ev| ev.mv.clone()).collect(),
-            (Some(pvs), Some(evs)) => pvs
-                .into_iter()
-                .map(|pv| pv.mv.clone())
-                .chain(evs.into_iter().map(|ev| ev.mv.clone()))
-                .dedup()
-                .collect(),
+            (None, None) => {
+                let mut mvs = self.compute_heuristically_ordered_moves(board);
+                check_and_reposition_first(&mut mvs, table_suggestion);
+                mvs
+            }
+
+            (Some(pvs_ref), None) => {
+                let pvs = pvs_ref.iter().map(|m| m.mv.clone()).collect_vec();
+                let mut all_mvs = self.compute_heuristically_ordered_moves(board);
+                check_and_reposition_first(&mut all_mvs, table_suggestion);
+                pvs.into_iter().chain(all_mvs.into_iter()).dedup().collect()
+            }
+
+            (None, Some(evs)) => {
+                let mut mvs = evs.into_iter().map(|sm| sm.mv.clone()).collect_vec();
+                check_and_reposition_first(&mut mvs, table_suggestion);
+                mvs
+            }
+
+            (Some(pvs_ref), Some(evs_ref)) => {
+                let pvs = pvs_ref.iter().map(|m| m.mv.clone()).collect_vec();
+                let mut evs = evs_ref.iter().map(|m| m.mv.clone()).collect_vec();
+                check_and_reposition_first(&mut evs, table_suggestion);
+                pvs.into_iter().chain(evs.into_iter()).dedup().collect()
+            }
         }
+    }
+}
+
+fn check_and_reposition_first(dest: &mut Vec<Move>, to_insert: Option<TableSuggestion>) {
+    match to_insert.map(|ts| ts.mv()) {
+        None => {}
+        Some(mv) => match dest.iter().position(|m| m == &mv) {
+            None => {}
+            Some(index) => {
+                dest.remove(index);
+                dest.insert(0, mv);
+            }
+        },
     }
 }
