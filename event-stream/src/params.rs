@@ -24,6 +24,7 @@ const MYOPIC_INCREMENT_ALLOWANCE_MINS: &'static str = "MYOPIC_INCREMENT_ALLOWANC
 const MYOPIC_RETRY_WAIT_DURATION_SECS: &'static str = "MYOPIC_RETRY_WAIT_DURATION_SECS";
 const MYOPIC_ABORT_AFTER_SECS: &'static str = "MYOPIC_ABORT_AFTER_SECS";
 const MYOPIC_STATUS_POLL_GAP_SECS: &'static str = "MYOPIC_STATUS_POLL_GAP_SECS";
+const MYOPIC_MAX_STREAM_LIFE_MINS: &'static str = "MYOPIC_MAX_STREAM_LIFE_MINS";
 
 #[derive(Debug, Clone)]
 pub struct ApplicationParameters {
@@ -43,8 +44,9 @@ pub struct ApplicationParameters {
     pub max_lambda_duration_mins: u8,
     pub increment_allowance_mins: u8,
     pub retry_wait_duration_secs: u64,
-    pub abort_after_secs: usize,
-    pub status_poll_gap_secs: usize,
+    pub abort_after_secs: u64,
+    pub status_poll_gap_secs: u64,
+    pub max_stream_life_mins: u64,
 }
 
 impl ApplicationParameters {
@@ -68,6 +70,7 @@ impl ApplicationParameters {
             retry_wait_duration_secs: env::var(MYOPIC_RETRY_WAIT_DURATION_SECS)?.parse()?,
             abort_after_secs: env::var(MYOPIC_ABORT_AFTER_SECS)?.parse()?,
             status_poll_gap_secs: env::var(MYOPIC_STATUS_POLL_GAP_SECS)?.parse()?,
+            max_stream_life_mins: env::var(MYOPIC_MAX_STREAM_LIFE_MINS)?.parse()?,
         })
     }
 
@@ -129,5 +132,5 @@ struct PlayGameEvent {
     /// How many seconds to wait for the first full move to take place
     /// before aborting the game
     #[serde(rename = "abortAfterSecs")]
-    abort_after_secs: usize,
+    abort_after_secs: u64,
 }

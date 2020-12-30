@@ -46,7 +46,14 @@ fn main() -> Result<()> {
         };
 
         log::info!("Opening event stream");
+        let start = Instant::now();
         for read_result in open_event_stream(&parameters.lichess_auth_token)?.lines() {
+            let elapsed = start.elapsed();
+            let max_stream_duration = Duration::from_secs(parameters.max_stream_life_mins * 60);
+            if start.elapsed() > max_stream_duration {
+                log::info!("Refreshing event stream which has been alive for {} mins", elapsed.as_secs() / 60);
+                break;
+            }
             match event_processor.handle_stream_read(read_result) {
                 LoopAction::Continue => continue,
                 LoopAction::Break => break,
