@@ -2,7 +2,8 @@ use crate::search::eval;
 use crate::search::ordering::{EstimatorImpl, MoveQualityEstimator};
 use crate::search::ordering_hints::OrderingHints;
 use crate::search::terminator::SearchTerminator;
-use crate::{quiescent, EvalBoard};
+use crate::{quiescent, EvalChessBoard};
+use anyhow::{anyhow, Result};
 use core::cmp;
 use itertools::Itertools;
 use myopic_board::{Move, MoveComputeType, Termination};
@@ -14,9 +15,9 @@ use std::time::Instant;
 /// kept low otherwise ID is always preferable. In particular
 /// this function will support a depth 0 search which performs
 /// a quiescent search on the provided root.
-pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse, String>
+pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse>
 where
-    B: EvalBoard,
+    B: EvalChessBoard,
 {
     Scout {
         terminator: &depth,
@@ -92,7 +93,7 @@ impl Default for SearchResponse {
 pub struct Scout<'a, T, B, M>
 where
     T: SearchTerminator,
-    B: EvalBoard,
+    B: EvalChessBoard,
     M: MoveQualityEstimator<B>,
 {
     /// The terminator is responsible for deciding when the
@@ -112,22 +113,20 @@ where
 impl<T, B, M> Scout<'_, T, B, M>
 where
     T: SearchTerminator,
-    B: EvalBoard,
+    B: EvalChessBoard,
     M: MoveQualityEstimator<B>,
 {
     ///
-    pub fn search(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse, String> {
+    pub fn search(&self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse> {
         if self.terminator.should_terminate(&ctx) {
-            Err(format!("Terminated at depth {}", ctx.depth_remaining))
+            Err(anyhow!("Terminated at depth {}", ctx.depth_remaining))
         } else if ctx.depth_remaining == 0 || root.termination_status().is_some() {
-            Ok(SearchResponse {
-                eval: match root.termination_status() {
-                    Some(Termination::Loss) => eval::LOSS_VALUE,
-                    Some(Termination::Draw) => eval::DRAW_VALUE,
-                    None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
-                },
-                path: vec![],
-            })
+            match root.termination_status() {
+                Some(Termination::Loss) => Ok(eval::LOSS_VALUE),
+                Some(Termination::Draw) => Ok(eval::DRAW_VALUE),
+                None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
+            }
+            .map(|eval| SearchResponse { eval, path: vec![] })
         } else {
             let (mut result, mut best_path) = (-eval::INFTY, vec![]);
             for (i, evolve) in self
@@ -135,7 +134,7 @@ where
                 .into_iter()
                 .enumerate()
             {
-                let discards = root.evolve(&evolve);
+                root.make(evolve.clone())?;
                 #[allow(unused_assignments)]
                 let mut response = SearchResponse::default();
                 if i == 0 {
@@ -152,16 +151,16 @@ where
                     if ctx.alpha < response.eval && response.eval < ctx.beta {
                         // Then this was actually a better move and so we must
                         // perform a full search
-                        response = -self
-                            .search(root, ctx.next_level(-ctx.beta, -response.eval, &evolve))?;
+                        response =
+                            -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &evolve))?;
                     }
                 }
-                root.devolve(&evolve, discards);
+                root.unmake()?;
 
                 if response.eval > result {
                     result = response.eval;
                     best_path = response.path;
-                    best_path.push(evolve.clone());
+                    best_path.push(evolve);
                 }
 
                 ctx.alpha = cmp::max(ctx.alpha, result);

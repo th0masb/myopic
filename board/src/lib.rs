@@ -4,6 +4,7 @@ extern crate lazy_static;
 pub use crate::implementation::Board;
 use anyhow::Result;
 pub use mv::Move;
+pub use parse::uci::UciMove;
 pub use myopic_core::*;
 
 mod implementation;
@@ -121,13 +122,21 @@ pub trait ChessBoard: Clone + Send + Reflectable {
 
     /// Parse the given string as a sequence of pgn encoded moves
     /// starting from the current position. The moves are then
-    /// made one by one.
-    fn play_pgn(&mut self, moves: &str) -> Result<()>;
+    /// made one by one. The sequence of moves which were made
+    /// are returned in a Vec.
+    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>>;
 
     /// Parse the given string as a sequence of uci encoded moves
     /// starting from the current position. The moves are then
-    /// made one by one.
-    fn play_uci(&mut self, moves: &str) -> Result<()>;
+    /// made one by one.The sequence of moves which were made
+    /// are returned in a Vec.
+    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>>;
+
+    /// Given a uci encoded move this method will attempt to match
+    /// it to the unique matching legal move in this position if it
+    /// exist. An error is returned if no matching move exists in
+    /// this position.
+    fn parse_uci(&mut self, uci_move: &str) -> Result<Move>;
 
     /// Return the specified components of the FEN encoding of this position
     /// in the given order with components separated by a space.

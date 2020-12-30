@@ -1,6 +1,6 @@
 use lambda_runtime::{error::HandlerError, lambda, Context};
 use myopic_brain::negascout::SearchContext;
-use myopic_brain::{EvalBoardImpl, MutBoard, MutBoardImpl};
+use myopic_brain::{Board, ChessBoard, EvalBoard};
 use serde_derive::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
 use std::error::Error;
@@ -10,7 +10,7 @@ const DEFAULT_TIMEOUT_MILLIS: u64 = 1000;
 const DEFAULT_MAX_DEPTH: usize = 10;
 
 /// Input payload
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 enum ComputeMoveEvent {
     #[serde(rename = "fen")]
@@ -30,7 +30,7 @@ enum ComputeMoveEvent {
     },
 }
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 struct SearchTerminator {
     #[serde(rename = "maxDepth", default)]
     max_depth: MaxDepth,
@@ -47,7 +47,7 @@ impl myopic_brain::SearchTerminator for SearchTerminator {
     }
 }
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 struct MaxDepth(usize);
 impl Default for MaxDepth {
     fn default() -> Self {
@@ -55,7 +55,7 @@ impl Default for MaxDepth {
     }
 }
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 struct TimeoutMillis(u64);
 impl Default for TimeoutMillis {
     fn default() -> Self {
@@ -87,39 +87,44 @@ fn move_compute_handler(
     e: ComputeMoveEvent,
     _ctx: Context,
 ) -> Result<ComputeMoveOutput, HandlerError> {
+    log::info!("Received input payload {}", serde_json::to_string(&e)?);
     let terminator = extract_terminator(&e);
-    let position = extract_position(&e)?;
-    myopic_brain::search(position, terminator)
+    let position =
+        extract_position(&e).map_err(|err| HandlerError::from(err.to_string().as_str()))?;
+    let output_payload = myopic_brain::search(position, terminator)
         .map(|outcome| ComputeMoveOutput {
             best_move: outcome.best_move.uci_format(),
             depth_searched: outcome.depth,
             eval: outcome.eval,
             search_duration_millis: outcome.time.as_millis() as u64,
         })
-        .map_err(|message| HandlerError::from(message.as_str()))
+        .map_err(|err| HandlerError::from(err.to_string().as_str()))?;
+    log::info!("Computed output payload {}", serde_json::to_string(&output_payload)?);
+    Ok(output_payload)
 }
 
-fn extract_position(e: &ComputeMoveEvent) -> Result<EvalBoardImpl<MutBoardImpl>, HandlerError> {
+fn extract_position(e: &ComputeMoveEvent) -> Result<EvalBoard<Board>, anyhow::Error> {
     match e {
-        ComputeMoveEvent::Fen { position, .. } => myopic_brain::pos::from_fen(position.as_str())
-            .map_err(|e| HandlerError::from(e.as_str())),
+        ComputeMoveEvent::Fen { position, .. } => {
+            EvalBoard::builder_fen(position).map(|b| b.build())
+        }
         ComputeMoveEvent::UciSequence {
             sequence,
             start_fen,
             ..
         } => {
-            let mut state = myopic_brain::pos::from_fen(
-                start_fen
-                    .as_ref()
-                    .map(|f| f.as_str())
-                    .unwrap_or(myopic_brain::STARTPOS_FEN),
-            )
-            .map_err(|msg| HandlerError::from(msg.as_str()))?;
-            let moves = myopic_brain::parse::partial_uci(&state, sequence.as_str())
-                .map_err(|msg| HandlerError::from(msg.as_str()))?;
-            for mv in moves {
-                state.evolve(&mv);
-            }
+            let fen = start_fen
+                .as_ref()
+                .cloned()
+                .unwrap_or(myopic_brain::STARTPOS_FEN.to_string());
+            let mut state = if fen.as_str() == myopic_brain::STARTPOS_FEN {
+                log::info!("Constructed state from standard start position");
+                EvalBoard::start()
+            } else {
+                log::info!("Constructed state from custom position {}", fen.as_str());
+                EvalBoard::builder_fen(fen.as_str())?.build()
+            };
+            state.play_uci(sequence.as_str())?;
             Ok(state)
         }
     }

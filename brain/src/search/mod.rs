@@ -1,14 +1,15 @@
 use std::time::{Duration, Instant};
 
 use crate::eval;
-use crate::eval::EvalBoard;
-use crate::search::negascout::{SearchContext, SearchResponse, Scout};
+use crate::eval::EvalChessBoard;
+use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::ordering::EstimatorImpl;
+use anyhow::{anyhow, Result};
 use myopic_board::Move;
+use ordering_hints::OrderingHints;
 use serde::export::PhantomData;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
-use ordering_hints::OrderingHints;
 use terminator::SearchTerminator;
 
 pub mod interactive;
@@ -24,9 +25,9 @@ const SHALLOW_EVAL_DEPTH: usize = 1;
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
-pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome, String>
+pub fn search<B, T>(root: B, terminator: T) -> Result<SearchOutcome>
 where
-    B: EvalBoard,
+    B: EvalChessBoard,
     T: SearchTerminator,
 {
     Search { root, terminator }.search()
@@ -74,13 +75,25 @@ mod searchoutcome_serialize_test {
     #[test]
     fn test_json_serialize() {
         let search_outcome = SearchOutcome {
-            best_move: Move::Castle(CastleZone::WK),
+            best_move: Move::Castle {
+                source: 0,
+                zone: CastleZone::WK,
+            },
             eval: -125,
             depth: 2,
             time: Duration::from_millis(3000),
             optimal_path: vec![
-                Move::Castle(CastleZone::WK),
-                Move::Standard(Piece::BP, Square::D7, Square::D5),
+                Move::Castle {
+                    source: 0,
+                    zone: CastleZone::WK,
+                },
+                Move::Standard {
+                    source: 1,
+                    moving: Piece::BP,
+                    from: Square::D7,
+                    dest: Square::D5,
+                    capture: None,
+                },
             ],
         };
         assert_eq!(
@@ -90,7 +103,7 @@ mod searchoutcome_serialize_test {
     }
 }
 
-struct Search<B: EvalBoard, T: SearchTerminator> {
+struct Search<B: EvalChessBoard, T: SearchTerminator> {
     root: B,
     terminator: T,
 }
@@ -102,17 +115,17 @@ struct BestMoveResponse {
     depth: usize,
 }
 
-impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
-    pub fn search(&self) -> Result<SearchOutcome, String> {
+impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
+    pub fn search(&self) -> Result<SearchOutcome> {
         let search_start = Instant::now();
-        let mut break_message = format!("Terminated before search began");
+        let mut break_err = anyhow!("Terminated before search began");
         let mut suggested_moves = OrderingHints::new(self.root.clone());
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
             match self.best_move(i, search_start, &suggested_moves) {
                 Err(message) => {
-                    break_message = message;
+                    break_err = anyhow!("{}", message);
                     break;
                 }
                 Ok(response) => {
@@ -128,7 +141,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         }
 
         best_response
-            .ok_or(break_message)
+            .ok_or(break_err)
             .map(|response| SearchOutcome {
                 best_move: response.best_move,
                 eval: response.eval,
@@ -143,9 +156,9 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         depth: usize,
         search_start: Instant,
         suggested_moves: &OrderingHints<B>,
-    ) -> Result<BestMoveResponse, String> {
+    ) -> Result<BestMoveResponse> {
         if depth < 1 {
-            return Err(format!("Illegal depth: {}", depth));
+            return Err(anyhow!("Cannot iteratively deepen with depth 0"));
         }
 
         let SearchResponse { eval, mut path } = Scout {
@@ -170,7 +183,7 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
         path.reverse();
         // If the path returned is empty then there must be no legal moves in this position
         if path.is_empty() {
-            Err(format!(
+            Err(anyhow!(
                 "No moves found for position {}",
                 self.root.to_fen()
             ))
@@ -189,25 +202,26 @@ impl<B: EvalBoard, T: SearchTerminator> Search<B, T> {
 /// checkmating or escaping checkmate etc.
 #[cfg(test)]
 mod test {
-    use crate::eval;
-    use crate::eval::EvalBoard;
+    use crate::eval::EvalChessBoard;
+    use crate::{eval, Board, EvalBoard, UciMove};
     use myopic_board::{Move, Move::Standard, Piece, Reflectable, Square, Square::*};
 
     const DEPTH: usize = 3;
 
-    fn test(fen_string: &'static str, expected_move_pool: Vec<Move>, is_won: bool) {
-        let board = crate::pos::from_fen(fen_string).unwrap();
+    fn test(fen_string: &'static str, expected_move_pool: Vec<UciMove>, is_won: bool) {
+        let board = EvalBoard::builder_fen(fen_string).unwrap().build();
         let (ref_board, ref_move_pool) = (board.reflect(), expected_move_pool.reflect());
         test_impl(board, expected_move_pool, is_won);
         test_impl(ref_board, ref_move_pool, is_won);
     }
 
-    fn test_impl<B: EvalBoard>(board: B, expected_move_pool: Vec<Move>, is_won: bool) {
+    fn test_impl<B: EvalChessBoard>(board: B, expected_move_pool: Vec<UciMove>, is_won: bool) {
         match super::search(board, DEPTH) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 assert!(
-                    expected_move_pool.contains(&outcome.best_move),
+                    expected_move_pool
+                        .contains(&UciMove::new(outcome.best_move.uci_format().as_str()).unwrap()),
                     serde_json::to_string(&outcome).unwrap()
                 );
                 if is_won {
@@ -219,10 +233,16 @@ mod test {
 
     #[test]
     fn queen_escape_attack() {
-        let mv = |target: Square| Standard(Piece::WQ, A4, target);
         test(
             "r4rk1/5ppp/8/1Bn1p3/Q7/8/5PPP/1R3RK1 w Qq - 5 27",
-            vec![mv(B4), mv(C4), mv(G4), mv(H4), mv(C2), mv(D1)],
+            vec![
+                UciMove::new("a4b4").unwrap(),
+                UciMove::new("a4c4").unwrap(),
+                UciMove::new("a4g4").unwrap(),
+                UciMove::new("a4h4").unwrap(),
+                UciMove::new("a4c2").unwrap(),
+                UciMove::new("a4d1").unwrap(),
+            ],
             false,
         )
     }
@@ -231,7 +251,7 @@ mod test {
     fn mate_0() {
         test(
             "r2r2k1/5ppp/1N2p3/1n6/3Q4/2B5/5PPP/1R3RK1 w Qq - 4 21",
-            vec![Standard(Piece::WQ, D4, G7)],
+            vec![UciMove::new("d4g7").unwrap()],
             true,
         )
     }
@@ -240,7 +260,7 @@ mod test {
     fn mate_1() {
         test(
             "8/8/8/4Q3/8/6R1/2n1pkBK/8 w - - 0 1",
-            vec![Standard(Piece::WR, G3, D3)],
+            vec![UciMove::new("g3d3").unwrap()],
             true,
         )
     }
@@ -249,7 +269,7 @@ mod test {
     fn mate_2() {
         test(
             "8/7B/5Q2/6p1/6k1/8/5K2/8 w - - 0 1",
-            vec![Standard(Piece::WQ, F6, H8), Standard(Piece::WQ, F6, F3)],
+            vec![UciMove::new("f6h8").unwrap(), UciMove::new("f6f3").unwrap()],
             true,
         )
     }
@@ -258,7 +278,7 @@ mod test {
     fn mate_3() {
         test(
             "3qr2k/1b1p2pp/7N/3Q2b1/4P3/8/5PP1/6K1 w - - 0 1",
-            vec![Standard(Piece::WQ, D5, G8)],
+            vec![UciMove::new("d5g8").unwrap()],
             true,
         )
     }
@@ -269,7 +289,7 @@ mod test {
     fn mate_4() {
         test(
             "r1k2b1r/pp4pp/2p1n3/3NQ1B1/6q1/8/PPP2P1P/2KR4 w - - 4 20",
-            vec![Standard(Piece::WQ, E5, C7)],
+            vec![UciMove::new("e5c7").unwrap()],
             true,
         )
     }
@@ -278,7 +298,7 @@ mod test {
     fn mate_5() {
         test(
             "r1b1k1nr/p2p1ppp/n2B4/1p1NPN1P/6P1/3P1Q2/P1P1K3/q5b1 w - - 0 30",
-            vec![Standard(Piece::WN, F5, G7)],
+            vec![UciMove::new("f5g7").unwrap()],
             true,
         )
     }
@@ -290,7 +310,7 @@ mod test {
     fn tactic_1() {
         test(
             "1r3k2/2R5/1p2p2p/1Q1pPp1q/1P1P2p1/2P1P1P1/6KP/8 b - - 2 31",
-            vec![Standard(Piece::BR, B8, A8)],
+            vec![UciMove::new("b8a8").unwrap()],
             false,
         )
     }
@@ -302,7 +322,7 @@ mod test {
     fn tactic_2() {
         test(
             "r5k1/pb4pp/1pn1pq2/5B2/2Pr4/B7/PP3RPP/R4QK1 b - - 0 23",
-            vec![Standard(Piece::BP, E6, F5)],
+            vec![UciMove::new("e6f5").unwrap()],
             false,
         )
     }

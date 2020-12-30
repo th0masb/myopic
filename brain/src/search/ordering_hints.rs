@@ -1,5 +1,5 @@
 use crate::search::negascout::SearchResponse;
-use crate::EvalBoard;
+use crate::EvalChessBoard;
 use itertools::Itertools;
 use myopic_board::{Move, MoveComputeType};
 use std::cmp::Ordering;
@@ -9,7 +9,7 @@ const SHALLOW_EVAL_BRANCHING: usize = 5;
 
 /// Precomputed suggested moves to aid in move ordering
 /// for the search
-pub struct OrderingHints<B: EvalBoard> {
+pub struct OrderingHints<B: EvalChessBoard> {
     /// The root position from which all move sequences
     /// start from
     root: B,
@@ -23,7 +23,7 @@ pub struct OrderingHints<B: EvalBoard> {
     evs: HashMap<Vec<Move>, Vec<SEMove>>,
 }
 
-impl<B: EvalBoard> OrderingHints<B> {
+impl<B: EvalChessBoard> OrderingHints<B> {
     pub fn new(root: B) -> OrderingHints<B> {
         OrderingHints {
             root,
@@ -50,9 +50,9 @@ impl<B: EvalBoard> OrderingHints<B> {
             for mv in next_paths {
                 let mut next_precursors = precursors.clone();
                 next_precursors.push(mv.clone());
-                let discards = board.evolve(&mv);
+                board.make(mv).unwrap();
                 self.populate_shallow_eval_impl(board, depth - 1, next_precursors);
-                board.devolve(&mv, discards);
+                board.unmake().unwrap();
             }
         }
     }
@@ -60,13 +60,10 @@ impl<B: EvalBoard> OrderingHints<B> {
     fn compute_shallow_eval(root: &mut B) -> Vec<SEMove> {
         let mut dest = vec![];
         for mv in root.compute_moves(MoveComputeType::All) {
-            let discards = root.evolve(&mv);
+            root.make(mv).unwrap();
             let SearchResponse { eval, .. } = -super::negascout::search(root, 0).unwrap();
-            root.devolve(&mv, discards);
-            dest.push(SEMove {
-                mv: mv.clone(),
-                eval,
-            });
+            let mv_made = root.unmake().unwrap();
+            dest.push(SEMove { mv: mv_made, eval });
         }
         dest.sort();
         dest.reverse();
