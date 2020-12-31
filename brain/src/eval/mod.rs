@@ -1,6 +1,6 @@
 use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
-use crate::Reflectable;
+
 use myopic_board::{ChessBoard, Move, Piece, Square};
 use serde_derive::{Deserialize, Serialize};
 
@@ -46,7 +46,7 @@ pub trait EvalChessBoard: ChessBoard {
     fn positional_eval(&self, piece: Piece, location: Square) -> i32;
 }
 
-pub trait EvalComponent: Clone + Send + Reflectable {
+pub trait EvalComponent: Clone + Send {
     fn static_eval(&self) -> i32;
 
     fn make(&mut self, mv: &Move);

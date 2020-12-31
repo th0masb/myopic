@@ -1,6 +1,6 @@
 use crate::eval::EvalComponent;
-use crate::{CastleZone, Move, Piece, Reflectable};
-use myopic_board::{Side, Square};
+use crate::{CastleZone, Move, Piece};
+use myopic_board::Square;
 
 #[derive(Clone)]
 pub struct OpeningRewards {
@@ -33,8 +33,8 @@ impl Default for OpeningRewards {
 pub struct OpeningComponent {
     rewards: OpeningRewards,
     score: i32,
-    white: DevTracker,
-    black: DevTracker,
+    pieces: DevTracker,
+    move_dist: usize,
 }
 
 impl Default for OpeningComponent {
@@ -46,56 +46,81 @@ impl Default for OpeningComponent {
 impl OpeningComponent {
     pub fn new(rewards: OpeningRewards) -> OpeningComponent {
         OpeningComponent {
-            rewards,
             score: 0,
-            white: DevTracker {
-                e_pawn: PieceTracker::new(Square::E2),
-                d_pawn: PieceTracker::new(Square::D2),
-                b_knight: PieceTracker::new(Square::B1),
-                g_knight: PieceTracker::new(Square::G1),
-                c_bishop: PieceTracker::new(Square::C1),
-                f_bishop: PieceTracker::new(Square::F1),
-            },
-            black: DevTracker {
-                e_pawn: PieceTracker::new(Square::E7),
-                d_pawn: PieceTracker::new(Square::D7),
-                b_knight: PieceTracker::new(Square::B8),
-                g_knight: PieceTracker::new(Square::G8),
-                c_bishop: PieceTracker::new(Square::C8),
-                f_bishop: PieceTracker::new(Square::F8),
-            },
-        }
-    }
+            move_dist: 0,
+            pieces: DevTracker {
+                w_e_pawn: PieceTracker::new(Square::E2, rewards.e_pawn),
+                w_d_pawn: PieceTracker::new(Square::D2, rewards.d_pawn),
+                w_b_knight: PieceTracker::new(Square::B1, rewards.b_knight),
+                w_g_knight: PieceTracker::new(Square::G1, rewards.g_knight),
+                w_c_bishop: PieceTracker::new(Square::C1, rewards.c_bishop),
+                w_f_bishop: PieceTracker::new(Square::F1, rewards.f_bishop),
 
-    fn tracker(&mut self, side: Side) -> &mut DevTracker {
-        match side {
-            Side::White => &mut self.white,
-            Side::Black => &mut self.black,
+                b_e_pawn: PieceTracker::new(Square::E7, -rewards.e_pawn),
+                b_d_pawn: PieceTracker::new(Square::D7, -rewards.d_pawn),
+                b_b_knight: PieceTracker::new(Square::B8, -rewards.b_knight),
+                b_g_knight: PieceTracker::new(Square::G8, -rewards.g_knight),
+                b_c_bishop: PieceTracker::new(Square::C8, -rewards.c_bishop),
+                b_f_bishop: PieceTracker::new(Square::F8, -rewards.f_bishop),
+            },
+            rewards,
         }
     }
 }
 
 #[derive(Clone)]
 struct DevTracker {
-    e_pawn: PieceTracker,
-    d_pawn: PieceTracker,
-    b_knight: PieceTracker,
-    g_knight: PieceTracker,
-    c_bishop: PieceTracker,
-    f_bishop: PieceTracker,
+    // whites
+    w_e_pawn: PieceTracker,
+    w_d_pawn: PieceTracker,
+    w_b_knight: PieceTracker,
+    w_g_knight: PieceTracker,
+    w_c_bishop: PieceTracker,
+    w_f_bishop: PieceTracker,
+    // blacks
+    b_e_pawn: PieceTracker,
+    b_d_pawn: PieceTracker,
+    b_b_knight: PieceTracker,
+    b_g_knight: PieceTracker,
+    b_c_bishop: PieceTracker,
+    b_f_bishop: PieceTracker,
+}
+
+impl DevTracker {
+    fn get_piece_trackers(&mut self, p: Piece) -> Vec<&mut PieceTracker> {
+        match p {
+            Piece::WP => vec![&mut self.w_d_pawn, &mut self.w_e_pawn],
+            Piece::WN => vec![&mut self.w_b_knight, &mut self.w_g_knight],
+            Piece::WB => vec![&mut self.w_c_bishop, &mut self.w_f_bishop],
+            Piece::BP => vec![&mut self.b_d_pawn, &mut self.b_e_pawn],
+            Piece::BN => vec![&mut self.b_b_knight, &mut self.b_g_knight],
+            Piece::BB => vec![&mut self.b_c_bishop, &mut self.b_f_bishop],
+            _ => vec![],
+        }
+    }
 }
 
 #[derive(Clone)]
 struct PieceTracker {
+    /// The most recent location of the piece on the board
     loc: Square,
+    /// How many moves this piece has made from it's start
+    /// position
     count: usize,
+    /// What reward this tracker is associated with
+    reward: i32,
+    /// The move dist at which this piece was removed
+    /// from the board. None if still on board.
+    capture_dist: Option<usize>,
 }
 
 impl PieceTracker {
-    fn new(start: Square) -> PieceTracker {
+    fn new(start: Square, reward: i32) -> PieceTracker {
         PieceTracker {
             loc: start,
             count: 0,
+            capture_dist: None,
+            reward,
         }
     }
 
@@ -110,23 +135,24 @@ impl PieceTracker {
         self.count -= 1;
         self.count
     }
-}
 
-impl Reflectable for OpeningComponent {
-    fn reflect(&self) -> Self {
-        OpeningComponent {
-            rewards: self.rewards.clone(),
-            white: self.black.clone(),
-            black: self.white.clone(),
-            score: -self.score,
-        }
+    fn remove_piece(&mut self, capture_dist: usize) {
+        self.capture_dist = Some(capture_dist);
     }
-}
 
-pub fn parity(side: Side) -> i32 {
-    match side {
-        Side::White => 1,
-        Side::Black => -1,
+    fn add_piece(&mut self) {
+        self.capture_dist = None;
+    }
+
+    fn matches_on(&self, loc: Square) -> bool {
+        self.capture_dist.is_none() && loc == self.loc
+    }
+
+    fn matches_off(&self, move_dist: usize) -> bool {
+        match self.capture_dist {
+            None => false,
+            Some(cd) => cd == move_dist,
+        }
     }
 }
 
@@ -136,48 +162,30 @@ impl EvalComponent for OpeningComponent {
     }
 
     fn make(&mut self, mv: &Move) {
+        self.move_dist += 1;
         match mv {
             &Move::Standard {
-                moving, from, dest, ..
-            } => match moving {
-                Piece::WP | Piece::BP => {
-                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
-                    if tracker.d_pawn.loc == from {
-                        if tracker.d_pawn.move_forward(dest) == 1 {
-                            self.score += parity(side) * self.rewards.d_pawn;
-                        }
-                    } else if tracker.e_pawn.loc == from {
-                        if tracker.e_pawn.move_forward(dest) == 1 {
-                            self.score += parity(side) * self.rewards.e_pawn;
+                moving,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
+                // Update location of moving piece
+                for pt in self.pieces.get_piece_trackers(moving) {
+                    if pt.matches_on(from) && pt.move_forward(dest) == 1 {
+                        self.score += pt.reward
+                    }
+                }
+                // Remove any captured piece
+                if capture.is_some() {
+                    for pt in self.pieces.get_piece_trackers(capture.unwrap()) {
+                        if pt.matches_on(dest) {
+                            pt.remove_piece(self.move_dist);
                         }
                     }
                 }
-                Piece::WN | Piece::BN => {
-                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
-                    if tracker.b_knight.loc == from {
-                        if tracker.b_knight.move_forward(dest) == 1 {
-                            self.score += parity(side) * self.rewards.b_knight;
-                        }
-                    } else if tracker.g_knight.loc == from {
-                        if tracker.g_knight.move_forward(dest) == 1 {
-                            self.score += parity(side) * self.rewards.g_knight;
-                        }
-                    }
-                }
-                Piece::WB | Piece::BB => {
-                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
-                    if tracker.c_bishop.loc == from {
-                        if tracker.c_bishop.move_forward(dest) == 1 {
-                            self.score += parity(side) * self.rewards.c_bishop;
-                        }
-                    } else if tracker.f_bishop.loc == from {
-                        if tracker.f_bishop.move_forward(dest) == 1 {
-                            self.score += parity(side) * self.rewards.f_bishop;
-                        }
-                    }
-                }
-                _ => {}
-            },
+            }
             &Move::Castle { zone, .. } => match zone {
                 CastleZone::WK => self.score += self.rewards.k_castle,
                 CastleZone::WQ => self.score += self.rewards.q_castle,
@@ -191,46 +199,27 @@ impl EvalComponent for OpeningComponent {
     fn unmake(&mut self, mv: &Move) {
         match mv {
             &Move::Standard {
-                moving, from, dest, ..
-            } => match moving {
-                Piece::WP | Piece::BP => {
-                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
-                    if tracker.d_pawn.loc == dest {
-                        if tracker.d_pawn.move_backward(from) == 0 {
-                            self.score -= parity(side) * self.rewards.d_pawn;
-                        }
-                    } else if tracker.e_pawn.loc == dest {
-                        if tracker.e_pawn.move_backward(from) == 0 {
-                            self.score -= parity(side) * self.rewards.e_pawn;
+                moving,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
+                // Update location of moving piece
+                for pt in self.pieces.get_piece_trackers(moving) {
+                    if pt.matches_on(dest) && pt.move_backward(from) == 0 {
+                        self.score -= pt.reward
+                    }
+                }
+                // Replace any captured piece
+                if capture.is_some() {
+                    for pt in self.pieces.get_piece_trackers(capture.unwrap()) {
+                        if pt.matches_off(self.move_dist) {
+                            pt.add_piece();
                         }
                     }
                 }
-                Piece::WN | Piece::BN => {
-                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
-                    if tracker.b_knight.loc == dest {
-                        if tracker.b_knight.move_backward(from) == 0 {
-                            self.score -= parity(side) * self.rewards.b_knight;
-                        }
-                    } else if tracker.g_knight.loc == dest {
-                        if tracker.g_knight.move_backward(from) == 0 {
-                            self.score -= parity(side) * self.rewards.g_knight;
-                        }
-                    }
-                }
-                Piece::WB | Piece::BB => {
-                    let (side, tracker) = (moving.side(), self.tracker(moving.side()));
-                    if tracker.c_bishop.loc == dest {
-                        if tracker.c_bishop.move_backward(from) == 0 {
-                            self.score -= parity(side) * self.rewards.c_bishop;
-                        }
-                    } else if tracker.f_bishop.loc == dest {
-                        if tracker.f_bishop.move_backward(from) == 0 {
-                            self.score -= parity(side) * self.rewards.f_bishop;
-                        }
-                    }
-                }
-                _ => {}
-            },
+            }
             &Move::Castle { zone, .. } => match zone {
                 CastleZone::WK => self.score -= self.rewards.k_castle,
                 CastleZone::WQ => self.score -= self.rewards.q_castle,
@@ -238,7 +227,8 @@ impl EvalComponent for OpeningComponent {
                 CastleZone::BQ => self.score += self.rewards.q_castle,
             },
             _ => {}
-        }
+        };
+        self.move_dist -= 1;
     }
 }
 
@@ -248,7 +238,21 @@ mod test {
     use crate::eval::EvalComponent;
     use crate::{Board, EvalBoard, Reflectable, UciMove};
     use anyhow::Result;
-    use myopic_board::{ChessBoard, Move};
+    use myopic_board::ChessBoard;
+
+    #[test]
+    fn issue_97() -> Result<()> {
+        let mut state = EvalBoard::start();
+        state.play_uci(
+            "e2e4 g7g6 d2d4 f8g7 c2c4 d7d6 b1c3 g8f6 g1f3 e8g8 f1d3 e7e5 f3d2 e5d4 d2b1 d4c3 b2c3",
+        )?;
+        state.unmake()?;
+        state.play_uci("b1c3")?;
+        state.unmake()?;
+        state.unmake()?;
+        state.unmake()?;
+        Ok(())
+    }
 
     fn dummy_rewards() -> OpeningRewards {
         OpeningRewards {
@@ -266,7 +270,7 @@ mod test {
     #[test]
     fn case_3() -> Result<()> {
         execute_case(TestCase {
-            board: EvalBoard::start(),
+            board: crate::start(),
             moves_evals: vec![
                 (UciMove::new("e2e4")?, 10),
                 (UciMove::new("g7g6")?, 10),
@@ -286,7 +290,7 @@ mod test {
     #[test]
     fn case_1() -> Result<()> {
         execute_case(TestCase {
-            board: EvalBoard::start(),
+            board: crate::start(),
             moves_evals: vec![
                 (UciMove::new("d2d4")?, 1),
                 (UciMove::new("d7d5")?, 0),
@@ -313,7 +317,7 @@ mod test {
     #[test]
     fn case_2() -> Result<()> {
         execute_case(TestCase {
-            board: EvalBoard::start(),
+            board: crate::start(),
             moves_evals: vec![
                 (UciMove::new("d2d4")?, 1),
                 (UciMove::new("d7d5")?, 0),
@@ -370,7 +374,7 @@ mod test {
     }
 
     struct TestCase {
-        board: EvalBoard<Board>,
+        board: Board,
         moves_evals: Vec<(UciMove, i32)>,
     }
 

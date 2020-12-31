@@ -209,8 +209,10 @@ mod test {
     const DEPTH: usize = 3;
 
     fn test(fen_string: &'static str, expected_move_pool: Vec<UciMove>, is_won: bool) {
-        let board = EvalBoard::builder_fen(fen_string).unwrap().build();
-        let (ref_board, ref_move_pool) = (board.reflect(), expected_move_pool.reflect());
+        let base_board = fen_string.parse::<Board>().unwrap();
+        let ref_board = EvalBoard::builder(base_board.reflect()).build();
+        let board = EvalBoard::builder(base_board).build();
+        let ref_move_pool = expected_move_pool.reflect();
         test_impl(board, expected_move_pool, is_won);
         test_impl(ref_board, ref_move_pool, is_won);
     }

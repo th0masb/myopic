@@ -1,6 +1,5 @@
 use crate::eval::eval_impl::EvalBoard;
-use crate::eval::tables::PositionTables;
-use crate::eval::values::PieceValues;
+
 use crate::eval::WIN_VALUE;
 use crate::search::search;
 use crate::{Board, ChessBoard, Move};

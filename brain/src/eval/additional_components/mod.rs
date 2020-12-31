@@ -2,21 +2,13 @@ pub mod opening;
 
 use crate::eval::additional_components::opening::OpeningComponent;
 use crate::eval::EvalComponent;
-use crate::{Move, Reflectable};
+use crate::Move;
 
 #[derive(Clone)]
 pub enum AdditionalEvalComponent {
+    /// This component must only be used from a standard
+    /// starting position.
     Opening(OpeningComponent),
-}
-
-impl Reflectable for AdditionalEvalComponent {
-    fn reflect(&self) -> Self {
-        match self {
-            AdditionalEvalComponent::Opening(cmp) => {
-                AdditionalEvalComponent::Opening(cmp.reflect())
-            }
-        }
-    }
 }
 
 impl EvalComponent for AdditionalEvalComponent {
