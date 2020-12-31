@@ -23,3 +23,4 @@ pub use search::negascout;
 pub use search::search;
 pub use search::terminator::SearchTerminator;
 pub use search::SearchOutcome;
+pub use search::SearchParameters;

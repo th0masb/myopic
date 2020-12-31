@@ -1,7 +1,6 @@
 use crate::eval::eval_impl::EvalBoard;
-
 use crate::eval::WIN_VALUE;
-use crate::search::search;
+use crate::search::{search, SearchParameters};
 use crate::{Board, ChessBoard, Move};
 use regex::Regex;
 use std::fs;
@@ -105,6 +104,18 @@ use std::time::Duration;
 ///          |         |       |        |                    | alternate ordering fixed the error too
 /// ------------------------------------------------------------------------------------------------
 ///
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 200   | 0      | 67,797             | This is a control run on master to test
+///          |         |       |        |                    | the addition of transposition tables.
+///          |         |       |        |                    | Slower likely to board API changes,
+///          |         |       |        |                    | beefing up of Move enum and addition
+///          |         |       |        |                    | of opening eval component.
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 200   | 0      | 60,981             | With 100,000 table entries
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 200   | 0      | 60,749             | With 1,000,000 table entries
+/// ------------------------------------------------------------------------------------------------
+///
 #[test]
 #[ignore]
 fn benchmark() {
@@ -112,6 +123,7 @@ fn benchmark() {
     let data = std::env::var("MATE3_INPUT_DATA").unwrap();
     let depth = std::env::var("MATE3_DEPTH").unwrap().parse::<usize>().unwrap();
     let max_cases = std::env::var("MATE3_MAX_CASES").unwrap().parse::<usize>().unwrap();
+    let table_size = std::env::var("MATE3_TABLE_SIZE").unwrap().parse::<usize>().unwrap();
     let cases = load_cases(data, max_cases);
     let mut search_duration = Duration::from_secs(0);
     let (mut err_count, mut case_count) = (0, 0);
@@ -125,7 +137,7 @@ fn benchmark() {
         if i % 5 == 0 {
             print_progress(case_count, err_count, search_duration.clone());
         }
-        match search(test_case.board.clone(), depth) {
+        match search(test_case.board.clone(), SearchParameters { terminator: depth, table_size }) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 search_duration += outcome.time;

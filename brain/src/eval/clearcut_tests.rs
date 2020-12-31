@@ -1,3 +1,4 @@
+use crate::search::SearchParameters;
 use crate::EvalBoard;
 use anyhow::Result;
 use itertools::Itertools;
@@ -9,18 +10,31 @@ fn case_1() -> Result<()> {
      f8c5 d4f3 b8c6 e1g1 d7e5 f3e5 c6e5 d3b5";
     let mut state = EvalBoard::start();
     state.play_uci(uci_sequence)?;
-    let search_outcome = crate::search(state, 4)?;
+    let (depth, table_size) = (4, 10000);
+    let search_outcome = crate::search(
+        state,
+        SearchParameters {
+            terminator: depth,
+            table_size,
+        },
+    )?;
     assert_eq!("c8d7", search_outcome.best_move.uci_format().as_str());
     Ok(())
 }
 
 #[test]
 fn check_pv_length_is_depth() -> Result<()> {
-    let uci_sequence = "e2e4 g7g6 d2d4 f8g7 c2c4 d7d6 b1c3 g8f6 g1f3 e8g8 f1d3";
+    let uci_sequence = "e2e4 g7g6 d2d4 f8g7 c2c4 d7d6 b1c3 g8f6 g1f3 e8g8 f1d3"; // e7e5 f3d2 e5d4 d2b1 d4c3
     let mut state = EvalBoard::start();
     state.play_uci(uci_sequence)?;
-    let depth = 4;
-    let search_outcome = crate::search(state, depth)?;
+    let (depth, table_size) = (4, 10000);
+    let search_outcome = crate::search(
+        state,
+        SearchParameters {
+            terminator: depth,
+            table_size,
+        },
+    )?;
     let path = search_outcome
         .optimal_path
         .iter()

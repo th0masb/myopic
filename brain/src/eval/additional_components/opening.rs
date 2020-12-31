@@ -68,7 +68,7 @@ impl OpeningComponent {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct DevTracker {
     // whites
     w_e_pawn: PieceTracker,
@@ -100,7 +100,7 @@ impl DevTracker {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct PieceTracker {
     /// The most recent location of the piece on the board
     loc: Square,

@@ -1,3 +1,4 @@
+use crate::search::SearchParameters;
 use crate::EvalBoard;
 use std::error::Error;
 use std::fs::File;
@@ -26,6 +27,24 @@ use std::time::Instant;
 /// ------------------------------------------------------------------------------------------------
 /// 21/12/20 | 4(8)(2) | 100   | 0      | 17,769             | Order of magnitude quicker!
 /// ------------------------------------------------------------------------------------------------
+///
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 100   | 0      | 19,806             | This is a control run on master to test
+///          |         |       |        |                    | the addition of transposition tables.
+///          |         |       |        |                    | Slower likely to board API changes,
+///          |         |       |        |                    | beefing up of Move enum and addition
+///          |         |       |        |                    | of opening eval component.
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 100   | 0      | 15,544             | With 100,000 table entries
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 100   | 0      | 15,444             | With 1,000,000 table entries
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 500   | 0      | 80,161             | With 50,000 table entries
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 500   | 0      | 80,834             | With 200,000 table entries
+/// ------------------------------------------------------------------------------------------------
+/// 31/12/20 | 4(8)(2) | 500   | 0      | 80,410             | With 10,000 table entries
+/// ------------------------------------------------------------------------------------------------
 #[test]
 #[ignore]
 fn benchmark() -> Result<(), Box<dyn Error>> {
@@ -37,6 +56,7 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
     );
     let max_positions = std::env::var("MIDDLEGAME_MAX_CASES")?.parse::<usize>()?;
     let depth = std::env::var("MIDDLEGAME_DEPTH")?.parse::<usize>()?;
+    let table_size = std::env::var("MIDDLEGAME_TABLE_SIZE")?.parse::<usize>()?;
 
     let positions = BufReader::new(File::open(&data_path)?)
         .lines()
@@ -54,7 +74,10 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
         if i % 5 == 0 {
             println!("[Position {}, Duration {}ms]", i, start.elapsed().as_millis());
         }
-        best_moves.push(crate::search(position, depth))
+        best_moves.push(crate::search(position, SearchParameters {
+            terminator: depth,
+            table_size: table_size,
+        })?)
     }
     println!("Successfully computed {} moves at depth {} in {}ms", best_moves.len(), depth, start.elapsed().as_millis());
     Ok(())

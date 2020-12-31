@@ -1,4 +1,4 @@
-use crate::search::{search as blocking_search, SearchContext, SearchTerminator};
+use crate::search::{search as blocking_search, SearchContext, SearchParameters, SearchTerminator};
 use crate::{EvalChessBoard, SearchOutcome};
 use anyhow::Result;
 use myopic_board::Side;
@@ -12,6 +12,7 @@ const INFINITE_DURATION: Duration = Duration::from_secs(1_000_000);
 const INFINITE_DEPTH: usize = 1_000;
 const DEFAULT_SEARCH_DURATION: Duration = Duration::from_secs(30);
 const DEFAULT_SEARCH_DEPTH: usize = 10;
+const DEFAULT_TABLE_SIZE: usize = 100_000;
 const MAX_COMPUTED_MOVE_SEARCH_DURATION: Duration = Duration::from_secs(45);
 
 pub type SearchCommandTx<B> = Sender<SearchCommand<B>>;
@@ -82,6 +83,7 @@ struct InteractiveSearch<B: EvalChessBoard> {
     root: Option<B>,
     max_depth: usize,
     max_time: Duration,
+    transposition_table_size: usize,
 }
 
 impl<B: EvalChessBoard + 'static> InteractiveSearch<B> {
@@ -92,6 +94,7 @@ impl<B: EvalChessBoard + 'static> InteractiveSearch<B> {
             output_tx,
             max_depth: DEFAULT_SEARCH_DEPTH,
             max_time: DEFAULT_SEARCH_DURATION,
+            transposition_table_size: DEFAULT_TABLE_SIZE,
         }
     }
 
@@ -135,7 +138,13 @@ impl<B: EvalChessBoard + 'static> InteractiveSearch<B> {
             max_time: self.max_time,
             stop_signal: self.input_rx.clone(),
         };
-        blocking_search(self.root.clone().unwrap(), tracker)
+        blocking_search(
+            self.root.clone().unwrap(),
+            SearchParameters {
+                terminator: tracker,
+                table_size: self.transposition_table_size,
+            },
+        )
     }
 }
 

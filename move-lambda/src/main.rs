@@ -1,6 +1,6 @@
 use lambda_runtime::{error::HandlerError, lambda, Context};
 use myopic_brain::negascout::SearchContext;
-use myopic_brain::{Board, ChessBoard, EvalBoard};
+use myopic_brain::{Board, ChessBoard, EvalBoard, SearchParameters};
 use serde_derive::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
 use std::error::Error;
@@ -8,9 +8,14 @@ use std::time::Duration;
 
 const DEFAULT_TIMEOUT_MILLIS: u64 = 1000;
 const DEFAULT_MAX_DEPTH: usize = 10;
+const DEFAULT_TABLE_SIZE: usize = 50000;
+
+fn default_tablesize() -> usize {
+    DEFAULT_TABLE_SIZE
+}
 
 /// Input payload
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 #[serde(tag = "type")]
 enum ComputeMoveEvent {
     #[serde(rename = "fen")]
@@ -18,6 +23,8 @@ enum ComputeMoveEvent {
         #[serde(flatten)]
         terminator: SearchTerminator,
         position: String,
+        #[serde(rename = "tableSize", default = "default_tablesize")]
+        table_size: usize,
     },
 
     #[serde(rename = "uciSequence")]
@@ -27,10 +34,12 @@ enum ComputeMoveEvent {
         sequence: String,
         #[serde(rename = "startFen")]
         start_fen: Option<String>,
+        #[serde(rename = "tableSize", default = "default_tablesize")]
+        table_size: usize,
     },
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 struct SearchTerminator {
     #[serde(rename = "maxDepth", default)]
     max_depth: MaxDepth,
@@ -47,7 +56,7 @@ impl myopic_brain::SearchTerminator for SearchTerminator {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 struct MaxDepth(usize);
 impl Default for MaxDepth {
     fn default() -> Self {
@@ -55,7 +64,7 @@ impl Default for MaxDepth {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq)]
 struct TimeoutMillis(u64);
 impl Default for TimeoutMillis {
     fn default() -> Self {
@@ -88,7 +97,7 @@ fn move_compute_handler(
     _ctx: Context,
 ) -> Result<ComputeMoveOutput, HandlerError> {
     log::info!("Received input payload {}", serde_json::to_string(&e)?);
-    let terminator = extract_terminator(&e);
+    let terminator = extract_params(&e);
     let position =
         extract_position(&e).map_err(|err| HandlerError::from(err.to_string().as_str()))?;
     let output_payload = myopic_brain::search(position, terminator)
@@ -99,7 +108,10 @@ fn move_compute_handler(
             search_duration_millis: outcome.time.as_millis() as u64,
         })
         .map_err(|err| HandlerError::from(err.to_string().as_str()))?;
-    log::info!("Computed output payload {}", serde_json::to_string(&output_payload)?);
+    log::info!(
+        "Computed output payload {}",
+        serde_json::to_string(&output_payload)?
+    );
     Ok(output_payload)
 }
 
@@ -130,9 +142,45 @@ fn extract_position(e: &ComputeMoveEvent) -> Result<EvalBoard<Board>, anyhow::Er
     }
 }
 
-fn extract_terminator(e: &ComputeMoveEvent) -> SearchTerminator {
+fn extract_params(e: &ComputeMoveEvent) -> SearchParameters<SearchTerminator> {
     match e {
-        ComputeMoveEvent::Fen { terminator, .. } => *terminator,
-        ComputeMoveEvent::UciSequence { terminator, .. } => *terminator,
+        &ComputeMoveEvent::Fen {
+            terminator,
+            table_size,
+            ..
+        } => SearchParameters {
+            terminator,
+            table_size,
+        },
+        &ComputeMoveEvent::UciSequence {
+            terminator,
+            table_size,
+            ..
+        } => SearchParameters {
+            terminator,
+            table_size,
+        },
     }
+}
+
+#[cfg(test)]
+mod test {
+    use anyhow::Result;
+    use crate::{ComputeMoveEvent, SearchTerminator, MaxDepth, TimeoutMillis};
+
+    fn deserialize_default_tablesize() -> Result<()> {
+        assert_eq!(
+            ComputeMoveEvent::Fen {
+                position: "pos".to_string(),
+                table_size: super::DEFAULT_TABLE_SIZE,
+                terminator: SearchTerminator {
+                    max_depth: MaxDepth(super::DEFAULT_MAX_DEPTH),
+                    timeout_millis: TimeoutMillis(super::DEFAULT_TIMEOUT_MILLIS),
+                }
+            },
+            serde_json::from_str(r#"{"type":"fen","position":"pos"}"#)?
+        );
+        Ok(())
+    }
+
 }
