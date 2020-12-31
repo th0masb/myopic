@@ -6,9 +6,8 @@ use crate::{eval, Board, PieceValues, PositionTables};
 use anyhow::Result;
 use myopic_board::{
     BitBoard, CastleZone, CastleZoneSet, ChessBoard, FenComponent, Move, MoveComputeType, Piece,
-    Reflectable, Side, Square, Termination,
+    Side, Square, Termination,
 };
-use std::str::FromStr;
 
 #[derive(Clone)]
 pub struct EvalBoard<B: ChessBoard> {
@@ -45,16 +44,6 @@ impl<B: ChessBoard> Builder<B> {
             material: Material::new(&self.board, self.piece_values, self.position_tables),
             board: self.board,
             cmps: self.eval_cmps,
-        }
-    }
-}
-
-impl<B: ChessBoard> Reflectable for EvalBoard<B> {
-    fn reflect(&self) -> Self {
-        EvalBoard {
-            board: self.board.reflect(),
-            material: self.material.reflect(),
-            cmps: self.cmps.reflect(),
         }
     }
 }
@@ -237,7 +226,7 @@ mod test {
         moves: Vec<UciMove>,
     }
 
-    impl<B: ChessBoard> Reflectable for TestCase<B> {
+    impl<B: ChessBoard + Reflectable> Reflectable for TestCase<B> {
         fn reflect(&self) -> Self {
             TestCase {
                 start_position: self.start_position.reflect(),
@@ -246,7 +235,7 @@ mod test {
         }
     }
 
-    fn execute_test<B: ChessBoard>(test_case: TestCase<B>) {
+    fn execute_test<B: ChessBoard + Reflectable>(test_case: TestCase<B>) {
         execute_test_impl(test_case.clone());
         execute_test_impl(test_case.reflect());
     }

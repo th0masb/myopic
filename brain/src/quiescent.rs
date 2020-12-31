@@ -1,6 +1,6 @@
 use crate::eval::EvalChessBoard;
 use crate::{eval, see};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, Termination};
 use std::cmp;
 
