@@ -1,20 +1,24 @@
 mod data;
 mod errors;
 mod game_stream;
+mod position;
 
+use anyhow::{anyhow, Error, Result};
 use errors::Errors;
 use game_stream::GameStream;
-use myopic_board::{FenComponent, Move, MutBoard};
-use std::{collections::HashMap, error::Error, fs, fs::File, path::PathBuf};
+use itertools::Itertools;
+use myopic_board::{ChessBoard, FenComponent, Move};
+use serde_derive::{Serialize, Deserialize};
+use std::str::FromStr;
+use std::{collections::HashMap, fs, fs::File, path::PathBuf};
 use structopt::StructOpt;
+use position::PositionFormat;
 
 #[macro_use]
 extern crate lazy_static;
-#[macro_use]
-extern crate serde_derive;
 
-#[derive(Debug, StructOpt, Serialize)]
-#[structopt(name = "openings-generator")]
+#[derive(Debug, StructOpt)]
+#[structopt(name = "position-extractor")]
 struct Opt {
     /// The source directory containing the pgn files to extract
     /// positions from.
@@ -23,45 +27,24 @@ struct Opt {
     /// The depth we will search into games starting
     /// from the offset.
     #[structopt(short = "d", long = "depth")]
-    #[serde(rename = "depth")]
     search_depth: usize,
     /// The depth we will start the search into a game.
     #[structopt(short = "o", long = "offset", default_value = "0")]
-    #[serde(rename = "offset")]
     search_offset: usize,
     /// FEN components to include and their ordering
-    #[structopt(long = "format", default_value = "bac")]
-    #[serde(rename = "format")]
-    fen_format: String,
+    #[structopt(long = "format")]
+    position_format: PositionFormat,
     /// Only the positions will be output.
     #[structopt(long = "positions-only")]
-    #[serde(rename = "positions-only")]
     positions_only: bool,
 }
 
-fn parse_fen_components(input: &str) -> Vec<FenComponent> {
-    input
-        .chars()
-        .flat_map(|c| match c {
-            'b' => vec![FenComponent::Board],
-            'a' => vec![FenComponent::Active],
-            'c' => vec![FenComponent::CastlingRights],
-            'e' => vec![FenComponent::Enpassant],
-            'h' => vec![FenComponent::HalfMoveCount],
-            'm' => vec![FenComponent::MoveCount],
-            _ => vec![],
-        })
-        .collect()
-}
-
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let opt: Opt = Opt::from_args();
-    let fen_components = parse_fen_components(opt.fen_format.as_str());
 
     eprintln!("{}", chrono::Utc::now());
     eprintln!();
-    eprintln!("Starting DynamoDB data generator with parameters:");
-    eprintln!("{}", serde_json::to_string_pretty(&opt)?);
+    eprintln!("Starting position extractor");
     eprintln!();
 
     let file_paths = get_pgn_file_paths(&opt)?;
@@ -94,7 +77,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     errors.add_read_error(file_name.clone(), i);
                 }
                 Ok(game) => match parse_entries(
-                    &fen_components,
+                    &opt.position_format,
                     opt.search_offset,
                     opt.search_depth,
                     game.as_str(),
@@ -125,7 +108,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn get_pgn_file_paths(opt: &Opt) -> Result<Vec<PathBuf>, Box<dyn Error>> {
+fn get_pgn_file_paths(opt: &Opt) -> Result<Vec<PathBuf>> {
     let mut dest = Vec::new();
     for entry in fs::read_dir(&opt.source)? {
         dest.push(entry?.path())
@@ -133,7 +116,7 @@ fn get_pgn_file_paths(opt: &Opt) -> Result<Vec<PathBuf>, Box<dyn Error>> {
     Ok(dest)
 }
 
-fn count_games(file_paths: &Vec<PathBuf>) -> Result<HashMap<String, usize>, Box<dyn Error>> {
+fn count_games(file_paths: &Vec<PathBuf>) -> Result<HashMap<String, usize>> {
     let mut dest = HashMap::new();
     for path in file_paths {
         let path_str = path_to_string(path);
@@ -148,35 +131,47 @@ fn path_to_string(path: &PathBuf) -> String {
         .to_string()
 }
 
+fn gen_moves(offset: usize, depth: usize, game: &str) -> Result<Vec<Move>> {
+    let mut board = myopic_board::start();
+    Ok(board
+        .play_pgn(game)?
+        .into_iter()
+        .take(offset + depth)
+        .collect())
+}
+
 fn parse_entries(
-    format: &Vec<FenComponent>,
+    format: &PositionFormat,
     offset: usize,
     depth: usize,
     game: &str,
-) -> Result<Vec<CollectionEntry>, errors::Error> {
-    let moves: Vec<Move> = myopic_board::parse::pgn(game)
-        .map_err(|msg| errors::err(msg.as_str()))?
-        .into_iter()
-        .take(offset + depth)
-        .collect();
-
-    let (mut board, mut entries) = (myopic_board::start_position(), vec![]);
+) -> Result<Vec<CollectionEntry>> {
+    let moves = gen_moves(offset, depth, game)?;
+    let (mut board, mut entries) = (myopic_board::start(), vec![]);
     for (i, mv) in moves.into_iter().enumerate() {
         if i >= offset {
             match mv {
                 // Ignore enpassant moves for now
-                Move::Enpassant(_, _) => {}
+                Move::Enpassant { .. } => {}
                 _ => {
                     entries.push(CollectionEntry {
-                        position: board.to_partial_fen(format.as_slice()),
                         mv: mv.uci_format(),
+                        position: match format {
+                            PositionFormat::UciSequence => board
+                                .previous_moves()
+                                .into_iter()
+                                .map(|m| m.uci_format())
+                                .join(" "),
+                            PositionFormat::Fen { format } => {
+                                board.to_partial_fen(format.0.as_slice())
+                            }
+                        },
                     });
                 }
             }
         }
-        board.evolve(&mv);
+        board.make(mv)?;
     }
-
     Ok(entries)
 }
 

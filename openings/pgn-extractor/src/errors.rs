@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde_derive::Serialize;
 
 #[derive(Serialize, Default)]
 pub struct Errors {
@@ -30,28 +31,3 @@ impl Errors {
         }
     }
 }
-
-#[derive(Debug)]
-pub struct Error {
-    message: String,
-}
-
-pub fn err(message: &str) -> Error {
-    Error {
-        message: message.to_owned(),
-    }
-}
-
-impl std::convert::From<String> for Error {
-    fn from(message: String) -> Self {
-        Error { message }
-    }
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for Error {}

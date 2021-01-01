@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde_derive::Serialize;
 
 #[derive(Default)]
 pub struct PositionStore {
