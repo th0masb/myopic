@@ -7,3 +7,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+myopic-brain = { path = "../brain" }
+structopt = "0.3.21"
+indicatif = "0.15.0"
+serde_derive = "1.0.115"
+serde = "1.0.115"
+serde_json = "1.0.59"
+anyhow = "1.0.37"
+itertools = "0.10.0"
+rand = "0.8.0"
