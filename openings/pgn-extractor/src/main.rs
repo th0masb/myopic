@@ -3,13 +3,13 @@ mod errors;
 mod game_stream;
 mod position;
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Result};
 use errors::Errors;
 use game_stream::GameStream;
 use itertools::Itertools;
-use myopic_board::{ChessBoard, FenComponent, Move};
-use serde_derive::{Serialize, Deserialize};
-use std::str::FromStr;
+use myopic_board::{ChessBoard, Move};
+use serde_derive::{Serialize};
+
 use std::{collections::HashMap, fs, fs::File, path::PathBuf};
 use structopt::StructOpt;
 use position::PositionFormat;
