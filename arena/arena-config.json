@@ -1,0 +1,21 @@
+[
+    {
+        "type": "TablesMultiplier",
+        "values": [0.75, 1, 1.25]
+    },
+    {
+        "type": "ValuesMultiplier",
+        "values": [0.75, 1, 1.25]
+    },
+    {
+        "type": "Openings",
+        "e_pawn": {"min": 75, "max": 100, "step": 25},
+        "d_pawn": {"min": 75, "max": 100, "step": 25},
+        "b_knight": {"min": 75, "max": 100, "step": 25},
+        "g_knight": {"min": 75, "max": 100, "step": 25},
+        "c_bishop": {"min": 75, "max": 100, "step": 25},
+        "f_bishop": {"min": 75, "max": 100, "step": 25},
+        "k_castle": {"min": 100, "max": 125, "step": 25},
+        "q_castle": {"min": 100, "max": 125, "step": 25}
+    }
+]

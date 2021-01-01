@@ -43,7 +43,6 @@ fn main() -> Result<()> {
     let opt: Opt = Opt::from_args();
 
     eprintln!("{}", chrono::Utc::now());
-    eprintln!();
     eprintln!("Starting position extractor");
     eprintln!();
 

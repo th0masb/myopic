@@ -30,7 +30,7 @@ struct Opt {
     /// process all the games.
     #[structopt(long, default_value = "1")]
     threads: usize,
-    #[structopt(long = "table-size")]
+    #[structopt(long = "table-size", default_value = "200")]
     table_size: usize,
     #[structopt(long, default_value = "2")]
     depth: usize,
