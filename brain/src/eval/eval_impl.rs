@@ -1,7 +1,7 @@
-use crate::eval::additional_components::opening::OpeningComponent;
+use crate::eval::additional_components::opening::{OpeningComponent, OpeningRewards};
 use crate::eval::additional_components::AdditionalEvalComponent;
 use crate::eval::material::Material;
-use crate::eval::{EvalChessBoard, EvalComponent};
+use crate::eval::{EvalChessBoard, EvalComponent, EvalConfig};
 use crate::{eval, Board, PieceValues, PositionTables};
 use anyhow::Result;
 use myopic_board::{
@@ -24,19 +24,22 @@ pub struct Builder<B: ChessBoard> {
 }
 
 impl<B: ChessBoard> Builder<B> {
-    pub fn set_piece_values(mut self, piece_values: PieceValues) -> Builder<B> {
-        self.piece_values = piece_values;
+    pub fn configure(mut self, config: EvalConfig) -> Builder<B> {
+        match config {
+            EvalConfig::Values(piece_values) => self.piece_values = piece_values,
+            EvalConfig::Tables(pos_tables) => self.position_tables = pos_tables,
+            EvalConfig::Openings(rewards) => {
+                self.eval_cmps
+                    .push(AdditionalEvalComponent::Opening(OpeningComponent::new(
+                        rewards,
+                    )))
+            }
+        }
         self
     }
 
-    pub fn set_position_tables(mut self, position_tables: PositionTables) -> Builder<B> {
-        self.position_tables = position_tables;
-        self
-    }
-
-    pub fn add_eval_component(mut self, cmp: AdditionalEvalComponent) -> Builder<B> {
-        self.eval_cmps.push(cmp);
-        self
+    pub fn configure_all(self, config: Vec<EvalConfig>) -> Builder<B> {
+        config.into_iter().fold(self, |l, r| l.configure(r))
     }
 
     pub fn build(self) -> EvalBoard<B> {
@@ -52,7 +55,7 @@ impl EvalBoard<Board> {
     pub fn start() -> EvalBoard<Board> {
         EvalBoard::builder_fen(crate::STARTPOS_FEN)
             .unwrap()
-            .add_eval_component(AdditionalEvalComponent::Opening(OpeningComponent::default()))
+            .configure(EvalConfig::Openings(OpeningRewards::default()))
             .build()
     }
 
@@ -214,11 +217,9 @@ impl<B: ChessBoard> EvalChessBoard for EvalBoard<B> {
 #[cfg(test)]
 mod test {
     use crate::eval::eval_impl::EvalBoard;
-    use crate::eval::material;
+    use crate::eval::{material, EvalConfig};
     use crate::{Board, PieceValues, PositionTables};
-    use myopic_board::{
-        ChessBoard, Reflectable, UciMove,
-    };
+    use myopic_board::{ChessBoard, Reflectable, UciMove};
 
     #[derive(Clone, Eq, PartialEq)]
     struct TestCase<B: ChessBoard> {
@@ -243,8 +244,8 @@ mod test {
     fn execute_test_impl<B: ChessBoard>(test_case: TestCase<B>) {
         let (tables, values) = (PositionTables::default(), PieceValues::default());
         let mut start = EvalBoard::builder(test_case.start_position)
-            .set_piece_values(values.clone())
-            .set_position_tables(tables.clone())
+            .configure(EvalConfig::Values(values.clone()))
+            .configure(EvalConfig::Tables(tables.clone()))
             .build();
 
         for uci_move in test_case.moves {

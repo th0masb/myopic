@@ -15,7 +15,8 @@ mod bench;
 pub use eval::eval_impl::EvalBoard;
 pub use eval::tables::PositionTables;
 pub use eval::values::PieceValues;
-pub use eval::{EvalChessBoard, MaterialParameters};
+pub use eval::additional_components::opening::OpeningRewards;
+pub use eval::{EvalChessBoard, EvalConfig};
 pub use myopic_board::*;
 
 pub use search::interactive;

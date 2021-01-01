@@ -1,8 +1,9 @@
 use crate::eval::EvalComponent;
 use crate::{CastleZone, Move, Piece};
 use myopic_board::Square;
+use serde_derive::{Serialize, Deserialize};
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct OpeningRewards {
     pub e_pawn: i32,
     pub d_pawn: i32,

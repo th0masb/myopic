@@ -1,6 +1,7 @@
 use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
 
+use crate::eval::additional_components::opening::OpeningRewards;
 use myopic_board::{ChessBoard, Move, Piece, Square};
 use serde_derive::{Deserialize, Serialize};
 
@@ -46,7 +47,7 @@ pub trait EvalChessBoard: ChessBoard {
     fn positional_eval(&self, piece: Piece, location: Square) -> i32;
 }
 
-pub trait EvalComponent: Clone + Send {
+trait EvalComponent: Clone + Send {
     fn static_eval(&self) -> i32;
 
     fn make(&mut self, mv: &Move);
@@ -54,9 +55,10 @@ pub trait EvalComponent: Clone + Send {
     fn unmake(&mut self, mv: &Move);
 }
 
-/// Allows one to configure the parameters of the evaluation board.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq, Default)]
-pub struct MaterialParameters {
-    pub piece_values: PieceValues,
-    pub position_tables: PositionTables,
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum EvalConfig {
+    Tables(PositionTables),
+    Values(PieceValues),
+    Openings(OpeningRewards),
 }

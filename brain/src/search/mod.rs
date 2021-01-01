@@ -220,7 +220,7 @@ mod test {
     use crate::eval::EvalChessBoard;
     use crate::search::SearchParameters;
     use crate::{eval, EvalBoard, UciMove};
-    use myopic_board::{Reflectable, Board};
+    use myopic_board::{Board, Reflectable};
 
     const DEPTH: usize = 3;
     const TABLE_SIZE: usize = 10_000;
