@@ -2,7 +2,7 @@ mod tuning;
 mod cartesian;
 
 use crate::tuning::Tuner;
-use anyhow::{anyhow, Result};
+use anyhow::{Result};
 use itertools::Itertools;
 use myopic_brain::{
     Board, ChessBoard, EvalBoard, EvalConfig, Reflectable, SearchOutcome, SearchParameters, Side,
@@ -10,7 +10,7 @@ use myopic_brain::{
 };
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use serde_derive::{Deserialize, Serialize};
+use serde_derive::{Serialize};
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use structopt::StructOpt;
