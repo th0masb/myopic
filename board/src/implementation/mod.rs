@@ -281,6 +281,10 @@ impl ChessBoard for Board {
         self.history.position_count()
     }
 
+    fn previous_moves(&self) -> Vec<Move> {
+        self.history.previous_moves()
+    }
+
     fn remaining_rights(&self) -> CastleZoneSet {
         self.castling.rights()
     }

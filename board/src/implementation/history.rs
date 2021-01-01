@@ -88,4 +88,8 @@ impl History {
                 .collect(),
         }
     }
+
+    pub fn previous_moves(&self) -> Vec<Move> {
+        self.inner.iter().map(|(m, _)| m.clone()).collect()
+    }
 }

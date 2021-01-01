@@ -5,7 +5,7 @@ use crate::Termination;
 use myopic_core::*;
 
 impl Board {
-    pub fn termination_status_impl(&mut self) -> Option<Termination> {
+    pub(crate) fn termination_status_impl(&mut self) -> Option<Termination> {
         match &self.cache.termination_status {
             Some(x) => *x,
             None => {

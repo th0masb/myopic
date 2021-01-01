@@ -117,6 +117,10 @@ pub trait ChessBoard: Clone + Send {
     /// Return the number of previous positions for this board.
     fn position_count(&self) -> usize;
 
+    /// Return the previous moves played to reach this current
+    /// position.
+    fn previous_moves(&self) -> Vec<Move>;
+
     /// Return the remaining castling rights from this position.
     fn remaining_rights(&self) -> CastleZoneSet;
 
