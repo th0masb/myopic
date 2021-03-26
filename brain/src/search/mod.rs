@@ -219,8 +219,8 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
 mod test {
     use crate::eval::EvalChessBoard;
     use crate::search::SearchParameters;
-    use crate::{eval, EvalBoard, UciMove};
-    use myopic_board::{Reflectable, Board};
+    use crate::{eval, EvalBoard, UciMove, SearchOutcome};
+    use myopic_board::{Reflectable, Board, ChessBoard};
 
     const DEPTH: usize = 3;
     const TABLE_SIZE: usize = 10_000;
@@ -234,7 +234,7 @@ mod test {
         test_impl(ref_board, ref_move_pool, is_won);
     }
 
-    fn test_impl<B: EvalChessBoard>(board: B, expected_move_pool: Vec<UciMove>, is_won: bool) {
+    fn search<B: EvalChessBoard>(board: B) -> SearchOutcome {
         match super::search(
             board,
             SearchParameters {
@@ -243,17 +243,32 @@ mod test {
             },
         ) {
             Err(message) => panic!("{}", message),
-            Ok(outcome) => {
-                assert!(
-                    expected_move_pool
-                        .contains(&UciMove::new(outcome.best_move.uci_format().as_str()).unwrap()),
-                    serde_json::to_string(&outcome).unwrap()
-                );
-                if is_won {
-                    assert_eq!(eval::WIN_VALUE, outcome.eval);
-                }
-            }
+            Ok(outcome) => outcome,
         }
+    }
+
+    fn test_impl<B: EvalChessBoard>(board: B, expected_move_pool: Vec<UciMove>, is_won: bool) {
+        let outcome = search(board);
+        assert!(
+            expected_move_pool
+                .contains(&UciMove::new(outcome.best_move.uci_format().as_str()).unwrap()),
+            serde_json::to_string(&outcome).unwrap()
+        );
+        if is_won {
+            assert_eq!(eval::WIN_VALUE, outcome.eval);
+        }
+    }
+
+    #[test]
+    fn stalemate_not_chosen() {
+        let pgn = "1. e4 c5 2. c3 e6 3. d4 cxd4 4. cxd4 d5 5. e5 Nc6 6. Nf3 Bb4+ 7. Nc3 Nge7 8. Bd3 Qb6 9. Bg5 Bd7 10. Bxe7 Bxe7 11. O-O Nxd4 12. Nxd4 Qxd4 13. Re1 Bc5 14. Qc2 Rc8 15. Rad1 Qf4 16. g3 Qf3 17. Re2 Bd4 18. Bxh7 Bxc3 19. Rd3 Qh5 20. Rxc3 Rxc3 21. bxc3 Rxh7 22. f3 Qxf3 23. c4 dxc4 24. Rf2 Qd3 25. Qb2 Bc6 26. Qc2 Qxc2 27. Rxc2 Bd5 28. a4 Rh5 29. Re2 c3 30. Rc2 Rxe5 31. Kf1 Re3 32. Rc1 Bb3 33. Kf2 Rd3 34. a5 c2 35. a6 b6 36. h3 Rd1 37. Rxc2 Bxc2 38. Ke3 Rh1 39. h4 Rh3 40. Kf3 g5 41. hxg5 Bf5 42. Kf4 Ke7 43. Kf3 Kd6 44. Kf4 Kd5 45. Kf3 Kd4 46. g6 f6 47. g7 Bh7 48. Kg2 Rh5 49. Kf2 Rg5 50. g8=Q Rxg8 51. g4 Rg5 52. Kg3 Bf5 53. Kf3 Bxg4+ 54. Kf4 Bf5 55. Kf3 Bd3 56. Kf2 Bxa6 57. Kf3 b5 58. Kf4";
+        let mut board = crate::EvalBoard::start();
+        board.play_pgn(pgn).unwrap();
+        let outcome = crate::search(board, SearchParameters {
+            terminator: 6,
+            table_size: 10000,
+        }).unwrap();
+        assert!(false, serde_json::to_string(&outcome).unwrap())
     }
 
     #[test]
