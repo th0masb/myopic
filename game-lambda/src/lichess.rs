@@ -4,6 +4,12 @@ use std::collections::HashMap;
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum LichessChatRoom {
+    Player,
+    Spectator,
+}
+
 #[derive(Debug)]
 pub struct LichessService {
     client: blocking::Client,
@@ -48,9 +54,12 @@ impl LichessService {
             })
     }
 
-    pub fn post_chatline(&self, text: &str) -> Result<StatusCode, String> {
+    pub fn post_chatline(&self, text: &str, room: LichessChatRoom) -> Result<StatusCode, String> {
         let mut params = HashMap::new();
-        params.insert("room", "player");
+        params.insert("room", match room {
+            LichessChatRoom::Player => "player",
+            LichessChatRoom::Spectator => "spectator"
+        });
         params.insert("text", text);
         self.client
             .post(format!("{}/{}/chat", GAME_ENDPOINT, self.game_id).as_str())

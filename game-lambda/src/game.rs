@@ -1,5 +1,5 @@
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
-use crate::lichess::LichessService;
+use crate::lichess::{LichessService, LichessChatRoom};
 use crate::messages;
 use crate::timing::Timing;
 use crate::TimeConstraints;
@@ -117,10 +117,19 @@ where
             messages::INTRO_3,
             messages::INTRO_4,
         ] {
-            match self.lichess_service.post_chatline(chatline) {
-                Err(err) => log::warn!("Failed to post chatline {}: {}", chatline, err),
-                Ok(status) => log::info!("Response status {} for chatline {}", status, chatline),
-            }
+            self.post_chatline(chatline, LichessChatRoom::Player);
+            self.post_chatline(chatline, LichessChatRoom::Spectator);
+        }
+    }
+
+    fn post_chatline(&self, text: &str, room: LichessChatRoom) {
+        match self.lichess_service.post_chatline(text, room) {
+            Err(err) => {
+                log::warn!("Failed to post chatline {} in {:?}: {}", text, room, err)
+            },
+            Ok(status) => {
+                log::info!("Response status {} for chatline {} in room {:?}", status, text, room)
+            },
         }
     }
 
