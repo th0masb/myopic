@@ -1,14 +1,20 @@
-# Welcome to your CDK TypeScript project!
+# Myopic AWS infrastructure
 
-This is a blank project for TypeScript development with CDK.
+This subproject is a cdk app which provisions the aws infrastructure required
+to run the engine. Currently there are two stacks, one for the three lambdas 
+and one for the openings table.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Lambda stack deployment
 
-## Useful commands
+ * Create a 'runtime' subdirectory in the same dir as this readme
+ * Ensure the three lambda projects - bench, game, move - have been compiled
+   for the target architecture x86_64-unknown-linux-gnu
+ * Source the deploy/zip-runtime.sh script which provides the function "zip_runtime"
+ * For each lambda project run `zip_runtime <path to binary> <path to deploy>/runtime`
+ * Deploy the 'MyopicLambdaStack' as usual using cdk supplying account and region
+   via env variables, e.g. `ACCOUNT=<account id> REGION=<region> cdk synth MyopicLambdaStack`
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+## Table deployment
+
+This is just a standard cdk deployment for the 'MyopicDatabaseStack' stack. Make
+sure to supply the account and region like in the lambda deployment.
