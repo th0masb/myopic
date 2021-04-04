@@ -10,6 +10,5 @@ cdk.out
 # Parcel default cache directory
 .parcel-cache
 
-.env
 runtime
 response.json
