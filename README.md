@@ -2,13 +2,6 @@
 
 ---
 
-### game example
-
-An example of the engine in action, the game can be viewed here: [lichess.org/kbX41mee](https://lichess.org/kbX41mee)
-![Example game](https://th0masb-public-assets.s3.eu-west-2.amazonaws.com/myopic-example-game.gif)
-
----
-
 ### introduction
 
 This repository contains a mixture of libraries and applications which combine
@@ -21,6 +14,26 @@ programmatically using the typescript flavour of their [cloud development kit](h
 Documentation for the specifics of each component are separate and linked below
 whereas the rest of this document provides more general information such as how
 to actually challenge the bot!
+
+The engine deployment is mostly serverless and uses a couple of lambda functions
+for computation alongside a dynamodb table for opening moves. However the Lichess
+API model is pull based and requires a process polling an event stream constantly
+to detect and respond to challenges. For this I use a dedicated raspberry pi zero
+which strikes a good balance between low cost and low downtime. Deployment this way
+means the bot will scale to an extremely large number of concurrent users without
+degradation of performance, it also allows me to take advantage of the generous
+free lambda allowance provided by AWS to run the bot practically cost free.
+
+---
+
+### game example
+
+An example of the engine in action is shown below, it is a 1m bullet game
+played against another bot (myopic playing as black) on Lichess.
+
+![Example game](https://th0masb-public-assets.s3.eu-west-2.amazonaws.com/myopic-display-game.gif)
+
+The history of all games played is [here](https://lichess.org/@/myopic-bot/all)
 
 ---
 
