@@ -48,15 +48,15 @@ Below is a list of links to the readmes for the notable subprojects.
 
 | subproject | description |
 | ---------- | ----------- |
-| [core](https://github.com/th0masb/myopic/tree/ISSUE-59/core) | Core chess utility library |
-| [board](https://github.com/th0masb/myopic/tree/ISSUE-59/board) | Chessboard library |
-| [brain](https://github.com/th0masb/myopic/tree/ISSUE-59/brain) | Search and evaluation library |
-| [move-lambda](https://github.com/th0masb/myopic/tree/ISSUE-59/move-lambda) | AWS Lambda application for computing the best move in a position |
-| [game-lambda](https://github.com/th0masb/myopic/tree/ISSUE-59/game-lambda) | AWS Lambda application for playing a full game chess via the Lichess frontend | 
-| [deploy](https://github.com/th0masb/myopic/tree/ISSUE-59/deploy) | AWS CDK application which provisions the necessary infrastructure |
-| [pgn-extractor](https://github.com/th0masb/myopic/tree/ISSUE-59/openings/pgn-extractor) | Terminal application for extracting unique positions from .pgn files |
-| [dynamodb-uploader](https://github.com/th0masb/myopic/tree/ISSUE-59/openings/dynamodb-uploader) | Terminal application which populates a DynamoDB table with chess openings |
-| [event-stream](https://github.com/th0masb/myopic/tree/ISSUE-59/event-stream) | Terminal application which polls the Lichess api for challenges and triggers lambda functions |
+| [core](https://github.com/th0masb/myopic/tree/master/core) | Core chess utility library |
+| [board](https://github.com/th0masb/myopic/tree/master/board) | Chessboard library |
+| [brain](https://github.com/th0masb/myopic/tree/master/brain) | Search and evaluation library |
+| [move-lambda](https://github.com/th0masb/myopic/tree/master/move-lambda) | AWS Lambda application for computing the best move in a position |
+| [game-lambda](https://github.com/th0masb/myopic/tree/master/game-lambda) | AWS Lambda application for playing a full game chess via the Lichess frontend | 
+| [deploy](https://github.com/th0masb/myopic/tree/master/deploy) | AWS CDK application which provisions the necessary infrastructure |
+| [pgn-extractor](https://github.com/th0masb/myopic/tree/master/openings/pgn-extractor) | Terminal application for extracting unique positions from .pgn files |
+| [dynamodb-uploader](https://github.com/th0masb/myopic/tree/master/openings/dynamodb-uploader) | Terminal application which populates a DynamoDB table with chess openings |
+| [event-stream](https://github.com/th0masb/myopic/tree/master/event-stream) | Terminal application which polls the Lichess api for challenges and triggers lambda functions |
 
 
 
