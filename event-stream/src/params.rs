@@ -1,5 +1,6 @@
-use anyhow::{Error, Result};
 use std::env;
+
+use anyhow::{Error, Result};
 
 /// Keys for required environment variables
 const MYOPIC_EXPECTED_HALF_MOVES: &'static str = "MYOPIC_EXPECTED_HALF_MOVES";

@@ -1,51 +1,58 @@
-use crate::events::{Challenge, ClockTimeControl};
 use anyhow::{anyhow, Error, Result};
-use reqwest::{blocking, StatusCode};
-use std::io::{BufRead, BufReader};
+use futures_util::StreamExt;
+use reqwest::StatusCode;
+
+use crate::events::{Challenge, ClockTimeControl};
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
 
 pub struct LichessClient {
     auth_token: String,
-    client: blocking::Client,
+    client: reqwest::Client,
 }
+
 impl LichessClient {
     pub fn new(auth_token: String) -> LichessClient {
         LichessClient {
             auth_token,
-            client: blocking::Client::new(),
+            client: reqwest::Client::new(),
         }
     }
 
-    pub fn get_clock(&self, game_id: &str) -> Result<ClockTimeControl> {
-        self.client
+    pub async fn get_clock(&self, game_id: &str) -> Result<ClockTimeControl> {
+        let mut gamestream = self
+            .client
             .get(format!("{}/stream/{}", GAME_ENDPOINT, game_id).as_str())
             .bearer_auth(self.auth_token.as_str())
             .send()
-            .map_err(Error::from)
-            .map(|response| BufReader::new(response))
-            .map(|reader| reader.lines().filter_map(|x| x.ok()))
-            .map(|lines| lines.take(10).skip_while(|l| l.is_empty()).next())
-            .and_then(|line| line.ok_or(anyhow!("No line could be read from the stream")))
-            .and_then(|line| {
-                serde_json::from_str::<GameFull>(line.as_str())
+            .await
+            .map_err(Error::from)?
+            .bytes_stream()
+            .take(5);
+
+        while let Some(Ok(chunk)) = gamestream.next().await {
+            let line = String::from_utf8(chunk.to_vec()).map_err(Error::from)?;
+            if !line.trim().is_empty() {
+                return serde_json::from_str::<GameFull>(line.trim())
                     .map(|game| game.clock.convert())
-                    .map_err(|e| anyhow!("Couldn't parse {}: {}", line, e))
-            })
-            .map_err(|e| anyhow!("Unable to get clock for game: {}", e))
+                    .map_err(Error::from);
+            }
+        }
+        Err(anyhow!("No game description found for game: {}", game_id))
     }
 
-    pub fn abort_game(&self, game_id: &str) -> Result<StatusCode> {
+    pub async fn abort_game(&self, game_id: &str) -> Result<StatusCode> {
         self.client
             .post(format!("{}/{}/abort", GAME_ENDPOINT, game_id).as_str())
             .bearer_auth(&self.auth_token)
             .send()
+            .await
             .map(|response| response.status())
             .map_err(Error::from)
     }
 
-    pub fn post_challenge_decision(
+    pub async fn post_challenge_decision(
         &self,
         challenge: &Challenge,
         decision: &str,
@@ -54,6 +61,7 @@ impl LichessClient {
             .post(format!("{}/{}/{}", CHALLENGE_ENDPOINT, challenge.id, decision).as_str())
             .bearer_auth(&self.auth_token)
             .send()
+            .await
             .map(|response| response.status())
             .map_err(Error::from)
     }
@@ -71,6 +79,7 @@ struct Clock {
     #[serde(rename = "increment")]
     increment_millis: u32,
 }
+
 impl Clock {
     fn convert(self) -> ClockTimeControl {
         ClockTimeControl {
