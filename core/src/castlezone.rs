@@ -1,6 +1,3 @@
-use std::iter::FromIterator;
-use std::ops;
-
 use crate::bitboard::BitBoard;
 use crate::pieces::Piece;
 use crate::square::Square;
@@ -8,29 +5,17 @@ use crate::Side;
 use anyhow::anyhow;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use enumset::*;
 
 /// Represents one of the four different areas on a chessboard where
 /// the special castling move can take place (two for each side).
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
-pub enum CastleZone {
-    WK,
-    WQ,
-    BK,
-    BQ,
-}
+#[derive(Debug, EnumSetType, PartialOrd, Ord, Hash)]
+#[rustfmt::skip]
+pub enum CastleZone { WK, WQ, BK, BQ }
 
 impl Display for CastleZone {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                CastleZone::WK => "wk",
-                CastleZone::WQ => "wq",
-                CastleZone::BK => "bk",
-                CastleZone::BQ => "bq",
-            }
-        )
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
     }
 }
 
@@ -146,10 +131,8 @@ impl CastleZone {
     }
 
     /// Lifts this zone to a set of one element.
-    pub fn lift(self) -> CastleZoneSet {
-        CastleZoneSet {
-            data: 1usize << self as usize,
-        }
+    pub fn lift(self) -> EnumSet<CastleZone> {
+        enum_set!(self)
     }
 }
 
@@ -167,118 +150,13 @@ mod test {
 
     #[test]
     fn from_str() {
-        assert_eq!(CastleZone::WK, "wk".parse().unwrap());
-        assert_eq!(CastleZone::WK, "WK".parse().unwrap());
-        assert_eq!(CastleZone::WQ, "wq".parse().unwrap());
-        assert_eq!(CastleZone::WQ, "WQ".parse().unwrap());
-        assert_eq!(CastleZone::BK, "bk".parse().unwrap());
-        assert_eq!(CastleZone::BK, "BK".parse().unwrap());
-        assert_eq!(CastleZone::BQ, "bq".parse().unwrap());
-        assert_eq!(CastleZone::BQ, "BQ".parse().unwrap());
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq, Hash)]
-pub struct CastleZoneSet {
-    data: usize,
-}
-
-impl CastleZoneSet {
-    pub fn contains(self, zone: CastleZone) -> bool {
-        (1usize << zone as usize) & self.data != 0
-    }
-
-    pub fn intersects(self, other: CastleZoneSet) -> bool {
-        other.iter().any(|z| self.contains(z))
-    }
-
-    pub fn iter(self) -> impl Iterator<Item = CastleZone> {
-        CastleZone::iter().filter(move |&z| self.contains(z))
-    }
-
-    pub const ALL: CastleZoneSet = CastleZoneSet { data: 0b1111 };
-    pub const NONE: CastleZoneSet = CastleZoneSet { data: 0 };
-    pub const WHITE: CastleZoneSet = CastleZoneSet { data: 0b11 };
-    pub const BLACK: CastleZoneSet = CastleZoneSet { data: 0b1100 };
-    pub const WK: CastleZoneSet = CastleZoneSet { data: 0b1 };
-    pub const WQ: CastleZoneSet = CastleZoneSet { data: 0b10 };
-    pub const BK: CastleZoneSet = CastleZoneSet { data: 0b100 };
-    pub const BQ: CastleZoneSet = CastleZoneSet { data: 0b1000 };
-}
-
-impl FromIterator<CastleZone> for CastleZoneSet {
-    fn from_iter<T: IntoIterator<Item = CastleZone>>(iter: T) -> Self {
-        CastleZoneSet {
-            data: iter
-                .into_iter()
-                .map(|cz| 1usize << cz as usize)
-                .fold(0, |a, b| a | b),
-        }
-    }
-}
-
-impl ops::Sub<CastleZoneSet> for CastleZoneSet {
-    type Output = CastleZoneSet;
-    fn sub(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet {
-            data: self.data & !rhs.data,
-        }
-    }
-}
-
-impl ops::SubAssign<CastleZoneSet> for CastleZoneSet {
-    fn sub_assign(&mut self, rhs: CastleZoneSet) {
-        self.data &= !rhs.data
-    }
-}
-
-impl ops::BitOr<CastleZoneSet> for CastleZoneSet {
-    type Output = CastleZoneSet;
-    fn bitor(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet {
-            data: self.data | rhs.data,
-        }
-    }
-}
-
-impl ops::BitAnd<CastleZoneSet> for CastleZoneSet {
-    type Output = CastleZoneSet;
-    fn bitand(self, rhs: CastleZoneSet) -> Self::Output {
-        CastleZoneSet {
-            data: self.data & rhs.data,
-        }
-    }
-}
-
-#[cfg(test)]
-mod set_test {
-    use super::*;
-
-    #[test]
-    fn test_all() {
-        let all = CastleZoneSet::ALL;
-        for zone in CastleZone::iter() {
-            assert!(all.contains(zone));
-        }
-    }
-
-    #[test]
-    fn test_none() {
-        let none = CastleZoneSet::NONE;
-        for zone in CastleZone::iter() {
-            assert!(!none.contains(zone));
-        }
-    }
-
-    #[test]
-    fn test_collect() {
-        let source = vec![
-            CastleZone::BK,
-            CastleZone::WK,
-            CastleZone::WQ,
-            CastleZone::BQ,
-        ];
-        let collected: CastleZoneSet = source.into_iter().collect();
-        assert_eq!(CastleZoneSet::ALL, collected);
+        assert_eq!(CastleZone::WK, "wk".parse::<CastleZone>().unwrap());
+        assert_eq!(CastleZone::WK, "WK".parse::<CastleZone>().unwrap());
+        assert_eq!(CastleZone::WQ, "wq".parse::<CastleZone>().unwrap());
+        assert_eq!(CastleZone::WQ, "WQ".parse::<CastleZone>().unwrap());
+        assert_eq!(CastleZone::BK, "bk".parse::<CastleZone>().unwrap());
+        assert_eq!(CastleZone::BK, "BK".parse::<CastleZone>().unwrap());
+        assert_eq!(CastleZone::BQ, "bq".parse::<CastleZone>().unwrap());
+        assert_eq!(CastleZone::BQ, "BQ".parse::<CastleZone>().unwrap());
     }
 }

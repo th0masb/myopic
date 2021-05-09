@@ -1,10 +1,10 @@
 use crate::castlezone::CastleZone;
-use crate::castlezone::CastleZoneSet;
 use crate::pieces::Piece;
 use crate::square::Square;
 use crate::Side;
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
+use enumset::EnumSet;
 
 // Total number of hashing features
 const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
@@ -33,7 +33,7 @@ pub fn zone(zone: CastleZone) -> u64 {
 }
 
 /// Get the combined hash of the given set of castling zones
-pub fn zones(zones: CastleZoneSet) -> u64 {
+pub fn zones(zones: EnumSet<CastleZone>) -> u64 {
     zones.iter().fold(0u64, |l, r| l ^ zone(r))
 }
 

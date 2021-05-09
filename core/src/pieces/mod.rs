@@ -2,6 +2,7 @@ use crate::{BitBoard, Side, Square};
 use anyhow::{anyhow, Error, Result};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use enumset::EnumSetType;
 
 mod kings;
 mod knights;
@@ -10,7 +11,7 @@ mod sliding;
 
 /// Value type wrapping a single integer representing one of the 12
 /// different pieces in a game of chess.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, EnumSetType, Ord, PartialOrd, Hash)]
 #[rustfmt::skip]
 pub enum Piece {
     WP, WN, WB, WR, WQ, WK,
