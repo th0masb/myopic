@@ -1,7 +1,9 @@
-use crate::params::ApplicationParameters;
-use anyhow::{anyhow, Error, Result};
 use std::time::Instant;
+
+use anyhow::{anyhow, Error, Result};
 use tokio::time::Duration;
+
+use crate::params::ApplicationParameters;
 
 const STATUS_ENDPOINT: &'static str = "https://lichess.org/api/users/status";
 
@@ -22,11 +24,12 @@ impl StatusService {
         }
     }
 
-    pub fn user_status(&mut self) -> Result<Option<UserStatus>> {
+    pub async fn user_status(&mut self) -> Result<Option<UserStatus>> {
         if self.status_checkpoint.elapsed() > self.status_poll_gap {
             self.status_checkpoint = Instant::now();
             self.client
                 .user_status(self.user_id.as_str())
+                .await
                 .map(|status| Some(status))
         } else {
             Ok(None)
@@ -36,22 +39,23 @@ impl StatusService {
 
 #[derive(Default)]
 struct StatusClient {
-    inner: reqwest::blocking::Client,
+    inner: reqwest::Client,
 }
 
 impl StatusClient {
-    pub fn user_status(&self, users: &str) -> Result<UserStatus> {
+    pub async fn user_status(&self, users: &str) -> Result<UserStatus> {
         self.inner
             .get(STATUS_ENDPOINT)
             .query(&[("ids", users)])
             .send()
-            .and_then(|r| r.json::<Vec<UserStatus>>())
-            .map_err(Error::from)
-            .and_then(|xs| {
-                xs.first()
-                    .cloned()
-                    .ok_or(anyhow!("No statuses for {}", users))
-            })
+            .await
+            .map_err(Error::from)?
+            .json::<Vec<UserStatus>>()
+            .await
+            .map_err(Error::from)?
+            .first()
+            .cloned()
+            .ok_or(anyhow!("No statuses for {}", users))
     }
 }
 
@@ -64,15 +68,16 @@ pub struct UserStatus {
 
 #[cfg(test)]
 mod test {
-    use crate::user_status::UserStatus;
     use anyhow::Result;
+
+    use crate::userstatus::UserStatus;
 
     #[test]
     fn deserialize_with_flag_absent() -> Result<()> {
         assert_eq!(
             vec![UserStatus {
                 id: "id".to_string(),
-                online: false
+                online: false,
             }],
             serde_json::from_str::<Vec<UserStatus>>(r#"[{"id": "id"}]"#)?
         );
@@ -88,7 +93,7 @@ mod test {
         assert_eq!(
             vec![UserStatus {
                 id: "id".to_string(),
-                online: true
+                online: true,
             }],
             serde_json::from_str::<Vec<UserStatus>>(json)?
         );

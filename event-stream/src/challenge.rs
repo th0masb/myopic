@@ -1,8 +1,9 @@
+use anyhow::Result;
+
 use crate::events::{Challenge, ClockTimeControl, TimeControl, Variant};
 use crate::lichess::LichessClient;
 use crate::params::ApplicationParameters;
 use crate::validity::TimeValidity;
-use anyhow::Result;
 
 const STANDARD_VARIANT_KEY: &'static str = "standard";
 const FEN_VARIANT_KEY: &'static str = "fromPosition";
@@ -11,6 +12,7 @@ pub struct ChallengeService {
     client: LichessClient,
     time_validity: TimeValidity,
 }
+
 impl ChallengeService {
     pub fn new(parameters: &ApplicationParameters) -> ChallengeService {
         ChallengeService {
@@ -28,23 +30,26 @@ impl ChallengeService {
         }
     }
 
-    pub fn process_challenge(&self, challenge: Challenge) -> Result<String> {
+    pub async fn process_challenge(&self, challenge: Challenge) -> Result<String> {
         match challenge.time_control {
             TimeControl::Unlimited | TimeControl::Correspondence { .. } => {
                 log::info!("Cannot play game without real time clock...");
                 self.client
                     .post_challenge_decision(&challenge, "decline")
+                    .await
                     .map(|status| format!("{} from challenge decline", status))
             }
             TimeControl::Clock { ref clock } => {
                 if self.is_legal_challenge(clock, &challenge.variant) {
                     self.client
                         .post_challenge_decision(&challenge, "accept")
+                        .await
                         .map(|status| format!("{} from challenge accept", status))
                 } else {
                     log::info!("Illegal challenge: {:?} {:?}", challenge.variant, clock);
                     self.client
                         .post_challenge_decision(&challenge, "decline")
+                        .await
                         .map(|status| format!("{} from challenge decline", status))
                 }
             }
