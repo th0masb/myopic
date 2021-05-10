@@ -6,8 +6,8 @@ use serde_derive::{Deserialize, Serialize};
 
 pub mod additional_components;
 #[cfg(test)]
-mod clearcut_tests;
-pub mod eval_impl;
+mod clearcut;
+pub mod imp;
 mod material;
 pub mod tables;
 pub mod values;

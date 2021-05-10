@@ -12,7 +12,7 @@ mod see;
 #[cfg(test)]
 mod bench;
 
-pub use eval::eval_impl::EvalBoard;
+pub use eval::imp::EvalBoard;
 pub use eval::tables::PositionTables;
 pub use eval::values::PieceValues;
 pub use eval::{EvalChessBoard, MaterialParameters};

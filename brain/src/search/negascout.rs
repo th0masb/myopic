@@ -1,6 +1,6 @@
 use crate::search::eval;
 use crate::search::ordering::{EstimatorImpl, MoveQualityEstimator};
-use crate::search::ordering_hints::OrderingHints;
+use crate::search::orderinghints::OrderingHints;
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{TranspositionTable, TreeNode};
 use crate::{quiescent, EvalChessBoard};
@@ -8,8 +8,8 @@ use anyhow::{anyhow, Result};
 use core::cmp;
 use itertools::Itertools;
 use myopic_board::{Move, MoveComputeType, Termination};
-use serde::export::PhantomData;
 use std::time::Instant;
+use std::marker::PhantomData;
 
 /// Performs a negascout search without any iterative deepening,
 /// we simply provide a depth to search to. The depth should be
