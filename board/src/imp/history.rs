@@ -1,13 +1,16 @@
-use crate::{CastleZoneSet, Move};
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
+
 use myopic_core::{Reflectable, Square};
+
+use crate::Move;
+use crate::imp::rights::Rights;
 
 const REPETITION_WINDOW: usize = 15;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Discards {
-    pub rights: CastleZoneSet,
+    pub rights: Rights,
     pub enpassant: Option<Square>,
     pub half_move_clock: usize,
 }

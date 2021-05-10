@@ -1,8 +1,9 @@
+use myopic_core::*;
+
 use crate::Board;
 use crate::ChessBoard;
 use crate::MoveComputeType;
 use crate::Termination;
-use myopic_core::*;
 
 impl Board {
     pub fn termination_status_impl(&mut self) -> Option<Termination> {
@@ -89,8 +90,9 @@ fn qrbnp<'a>(side: Side) -> &'a [Piece] {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use myopic_core::Reflectable;
+
+    use super::*;
 
     #[derive(Clone, Debug)]
     struct TestCase {

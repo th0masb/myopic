@@ -7,16 +7,16 @@ use crate::search::ordering::EstimatorImpl;
 use crate::search::transpositions::TranspositionTable;
 use anyhow::{anyhow, Result};
 use myopic_board::Move;
-use ordering_hints::OrderingHints;
-use serde::export::PhantomData;
+use orderinghints::OrderingHints;
 use serde::ser::SerializeStruct;
 use serde::Serializer;
 use terminator::SearchTerminator;
+use std::marker::PhantomData;
 
 pub mod interactive;
 pub mod negascout;
 mod ordering;
-mod ordering_hints;
+mod orderinghints;
 pub mod terminator;
 mod transpositions;
 
@@ -247,7 +247,7 @@ mod test {
                 assert!(
                     expected_move_pool
                         .contains(&UciMove::new(outcome.best_move.uci_format().as_str()).unwrap()),
-                    serde_json::to_string(&outcome).unwrap()
+                    "{}", serde_json::to_string(&outcome).unwrap()
                 );
                 if is_won {
                     assert_eq!(eval::WIN_VALUE, outcome.eval);

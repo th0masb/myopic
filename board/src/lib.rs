@@ -1,13 +1,16 @@
 #[macro_use]
 extern crate lazy_static;
 
-pub use crate::implementation::Board;
 use anyhow::Result;
-pub use mv::Move;
-pub use parse::uci::UciMove;
-pub use myopic_core::*;
 
-mod implementation;
+pub use mv::Move;
+pub use myopic_core::*;
+pub use parse::uci::UciMove;
+
+use crate::enumset::EnumSet;
+pub use crate::imp::Board;
+
+mod imp;
 mod mv;
 mod parse;
 
@@ -99,9 +102,6 @@ pub trait ChessBoard: Clone + Send {
     /// Return the enpassant target square in this position.
     fn enpassant(&self) -> Option<Square>;
 
-    /// Return the castling status of the given side.
-    fn castle_status(&self, side: Side) -> Option<CastleZone>;
-
     /// Return the locations of the given pieces.
     fn locs(&self, pieces: &[Piece]) -> BitBoard;
 
@@ -118,7 +118,7 @@ pub trait ChessBoard: Clone + Send {
     fn position_count(&self) -> usize;
 
     /// Return the remaining castling rights from this position.
-    fn remaining_rights(&self) -> CastleZoneSet;
+    fn remaining_rights(&self) -> EnumSet<CastleZone>;
 
     /// Parse the given string as a sequence of pgn encoded moves
     /// starting from the current position. The moves are then
@@ -163,8 +163,9 @@ pub trait ChessBoard: Clone + Send {
 
 #[cfg(test)]
 mod uci_conversion_test {
-    use crate::mv::Move;
     use myopic_core::*;
+
+    use crate::mv::Move;
 
     #[test]
     fn test_pawn_standard_conversion() {

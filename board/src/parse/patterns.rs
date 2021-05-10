@@ -1,5 +1,6 @@
-use regex::Regex;
 use std::str::FromStr;
+
+use regex::Regex;
 
 pub fn space() -> &'static Regex {
     lazy_static! {

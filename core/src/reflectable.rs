@@ -1,5 +1,6 @@
-use crate::{BitBoard, CastleZone, CastleZoneSet, Dir, Piece, Side, Square};
+use crate::{BitBoard, CastleZone, Dir, Piece, Side, Square};
 use std::collections::BTreeSet;
+use enumset::EnumSet;
 
 /// Chess is a symmetric game and this trait represents a component of
 /// the game which can be reflected to it's symmetric opposite component.
@@ -72,6 +73,20 @@ impl Reflectable for Piece {
     }
 }
 
+/// A castle is reflected by it's side, i.e.
+///  - WK <==> BK
+///  - WQ <==> BQ
+impl Reflectable for CastleZone {
+    fn reflect(&self) -> Self {
+        match self {
+            CastleZone::WK => CastleZone::BK,
+            CastleZone::WQ => CastleZone::BQ,
+            CastleZone::BK => CastleZone::WK,
+            CastleZone::BQ => CastleZone::WQ,
+        }
+    }
+}
+
 impl Reflectable for i32 {
     fn reflect(&self) -> Self {
         -(*self)
@@ -117,6 +132,12 @@ impl<T: Reflectable + Ord> Reflectable for BTreeSet<T> {
     }
 }
 
+impl<T : Reflectable + enumset::EnumSetType> Reflectable for EnumSet<T> {
+    fn reflect(&self) -> Self {
+        self.iter().map(|z| z.reflect()).collect()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -139,25 +160,5 @@ mod test {
         assert_eq!(Dir::SWW, Dir::NEE.reflect());
         assert_eq!(Dir::NWW, Dir::SEE.reflect());
         assert_eq!(Dir::NNW, Dir::SSE.reflect());
-    }
-}
-
-/// A castle is reflected by it's side, i.e.
-///  - WK <==> BK
-///  - WQ <==> BQ
-impl Reflectable for CastleZone {
-    fn reflect(&self) -> Self {
-        match self {
-            CastleZone::WK => CastleZone::BK,
-            CastleZone::WQ => CastleZone::BQ,
-            CastleZone::BK => CastleZone::WK,
-            CastleZone::BQ => CastleZone::WQ,
-        }
-    }
-}
-
-impl Reflectable for CastleZoneSet {
-    fn reflect(&self) -> Self {
-        self.iter().map(|z| z.reflect()).collect()
     }
 }

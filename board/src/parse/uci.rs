@@ -1,8 +1,11 @@
-use crate::parse::patterns::uci_move;
-use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
-use anyhow::{anyhow, Result};
-use myopic_core::{Piece, Square};
 use std::fmt::{Display, Formatter};
+
+use anyhow::{anyhow, Result};
+
+use myopic_core::{Piece, Square};
+
+use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
+use crate::parse::patterns::uci_move;
 
 /// String wrapper representing a chess move formatted
 /// using the uci standard. We can use this to reflect
@@ -67,8 +70,9 @@ impl Reflectable for UciMove {
 
 #[cfg(test)]
 mod uci_struct_test {
-    use super::UciMove;
     use crate::Reflectable;
+
+    use super::UciMove;
 
     #[test]
     fn construct() {
@@ -80,8 +84,14 @@ mod uci_struct_test {
 
     #[test]
     fn reflect() {
-        assert_eq!(UciMove::new("a8c5").unwrap(), UciMove::new("a1c4").unwrap().reflect());
-        assert_eq!(UciMove::new("a8c5n").unwrap(), UciMove::new("a1c4n").unwrap().reflect());
+        assert_eq!(
+            UciMove::new("a8c5").unwrap(),
+            UciMove::new("a1c4").unwrap().reflect()
+        );
+        assert_eq!(
+            UciMove::new("a8c5n").unwrap(),
+            UciMove::new("a1c4n").unwrap().reflect()
+        );
     }
 }
 
@@ -157,8 +167,9 @@ fn piece_char(piece: Piece) -> char {
 }
 #[cfg(test)]
 mod test {
-    use crate::{Board, ChessBoard};
     use anyhow::Result;
+
+    use crate::{Board, ChessBoard};
 
     fn execute_success_test(expected_finish: &'static str, uci: &'static str) -> Result<()> {
         let finish = expected_finish.parse::<Board>()?;
@@ -212,8 +223,9 @@ mod test {
 
 #[cfg(test)]
 mod test_single_move {
-    use super::*;
     use crate::Board;
+
+    use super::*;
 
     fn execute_success_test(
         expected: &'static str,

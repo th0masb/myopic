@@ -1,14 +1,15 @@
-use crate::implementation::cache::MoveConstraints;
-use crate::implementation::Board;
-use crate::mv::Move;
-use crate::ChessBoard;
-use crate::MoveComputeType;
 use myopic_core::*;
+
+use crate::ChessBoard;
+use crate::imp::Board;
+use crate::imp::cache::MoveConstraints;
+use crate::MoveComputeType;
+use crate::mv::Move;
 
 #[cfg(test)]
 mod test;
 
-mod enpassant_source;
+mod enpassantsrc;
 
 impl Board {
     pub fn compute_moves_impl(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
@@ -138,7 +139,7 @@ impl Board {
 
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
         let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
-            enpassant_source::squares(self.active, sq)
+            enpassantsrc::squares(self.active, sq)
         });
         let promotion_rank = self.active.pawn_promoting_from_rank();
         let pawn_locs = self.locs(&[Piece::pawn(self.active)]);
@@ -155,8 +156,8 @@ impl Board {
         let p1 = |z: CastleZone| king_constraint.subsumes(z.uncontrolled_requirement());
         let p2 = |z: CastleZone| !(whites | blacks).intersects(z.unoccupied_requirement());
         let source = self.hash();
-        self.castling
-            .rights()
+        self.rights
+            .0
             .iter()
             .filter(|&z| p1(z) && p2(z))
             .map(|zone| Move::Castle { source, zone })

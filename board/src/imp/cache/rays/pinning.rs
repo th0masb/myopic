@@ -1,7 +1,8 @@
-use crate::implementation::cache::rays::RaySet;
-use crate::implementation::Board;
-use crate::ChessBoard;
 use myopic_core::*;
+
+use crate::ChessBoard;
+use crate::imp::Board;
+use crate::imp::cache::rays::RaySet;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
 

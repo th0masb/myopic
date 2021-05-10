@@ -2,6 +2,8 @@
 extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+pub extern crate enumset;
 
 mod bitboard;
 mod castlezone;
@@ -13,7 +15,7 @@ mod square;
 use anyhow::anyhow;
 pub use bitboard::constants;
 pub use bitboard::BitBoard;
-pub use castlezone::{CastleZone, CastleZoneSet};
+pub use castlezone::CastleZone;
 pub use pieces::Piece;
 pub use reflectable::Reflectable;
 pub use square::Square;
@@ -95,7 +97,7 @@ impl Side {
 }
 
 /// Type representing a square on a chessboard.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, EnumSetType, Hash, PartialOrd, Ord)]
 #[rustfmt::skip]
 pub enum Dir {
     N, E, S, W, NE, SE, SW, NW, NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW

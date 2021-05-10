@@ -1,21 +1,24 @@
 use std::cmp::max;
-
-use crate::implementation::cache::CalculationCache;
-use crate::implementation::castling::Castling;
-use crate::implementation::history::History;
-use crate::implementation::positions::Positions;
-use crate::mv::{parse_op, Move};
-use crate::parse::patterns;
-use crate::ChessBoard;
-use crate::FenComponent;
-use crate::MoveComputeType;
-use crate::Termination;
-use anyhow::{anyhow, Error, Result};
-use myopic_core::*;
 use std::str::FromStr;
 
+use anyhow::{anyhow, Error, Result};
+
+use myopic_core::*;
+
+use crate::ChessBoard;
+use crate::enumset::EnumSet;
+use crate::FenComponent;
+use crate::imp::cache::CalculationCache;
+use crate::imp::rights::Rights;
+use crate::imp::history::History;
+use crate::imp::positions::Positions;
+use crate::MoveComputeType;
+use crate::mv::{Move, parse_op};
+use crate::parse::patterns;
+use crate::Termination;
+
 mod cache;
-mod castling;
+mod rights;
 mod evolve;
 mod fen;
 mod history;
@@ -28,7 +31,7 @@ mod test;
 pub struct Board {
     history: History,
     pieces: Positions,
-    castling: Castling,
+    rights: Rights,
     active: Side,
     enpassant: Option<Square>,
     clock: usize,
@@ -49,7 +52,7 @@ impl FromStr for Board {
             Ok(Board {
                 pieces: space_split[0].parse()?,
                 active: space_split[1].parse()?,
-                castling: space_split[2].parse()?,
+                rights: space_split[2].parse()?,
                 enpassant: parse_op(space_split[3].as_str())?,
                 clock: space_split[4].parse::<usize>()?,
                 history: History::new(2 * (max(curr_move, 1) - 1) + (active as usize)),
@@ -61,19 +64,21 @@ impl FromStr for Board {
     }
 }
 
-fn hash(pt: &Positions, ct: &Castling, active: Side, ep: Option<Square>) -> u64 {
-    pt.hash()
-        ^ ct.hash()
+fn hash(pos: &Positions, rights: Rights, active: Side, ep: Option<Square>) -> u64 {
+    pos.hash()
+        ^ crate::hash::zones(rights.0)
         ^ crate::hash::side(active)
         ^ ep.map_or(0u64, |x| crate::hash::enpassant(x))
 }
 
 #[cfg(test)]
 mod fen_test {
-    use crate::implementation::test::TestBoard;
-    use crate::Board;
     use anyhow::Result;
-    use myopic_core::{constants::*, CastleZone, CastleZoneSet, Side, Square};
+
+    use crate::{CastleZone, constants::*, Side, Square};
+    use crate::Board;
+    use crate::enumset::EnumSet;
+    use crate::imp::test::TestBoard;
 
     fn test(expected: TestBoard, fen_string: String) -> Result<()> {
         assert_eq!(Board::from(expected), fen_string.parse::<Board>()?);
@@ -100,9 +105,7 @@ mod fen_test {
                 C7,
                 G8,
             ],
-            castle_rights: CastleZoneSet::NONE,
-            white_status: Some(CastleZone::WK),
-            black_status: Some(CastleZone::BK),
+            castle_rights: EnumSet::empty(),
             clock: 3,
             active: Side::White,
             enpassant: None,
@@ -117,9 +120,7 @@ mod fen_test {
         let board = TestBoard {
             whites: vec![A2 | B2 | C4 | D4 | F2 | G2 | H2, F3, F1, A1 | H1, D1, E1],
             blacks: vec![A7 | B7 | C7 | E6 | F7 | G7 | H7, B8, C8, A8 | F8, F6, G8],
-            castle_rights: CastleZoneSet::WHITE,
-            white_status: None,
-            black_status: Some(CastleZone::BK),
+            castle_rights: CastleZone::WK | CastleZone::WQ,
             clock: 2,
             active: Side::White,
             enpassant: None,
@@ -148,9 +149,7 @@ mod fen_test {
                 D8,
                 E8,
             ],
-            castle_rights: CastleZoneSet::ALL,
-            white_status: None,
-            black_status: None,
+            castle_rights: EnumSet::all(),
             clock: 0,
             active: Side::White,
             enpassant: Some(Square::D6),
@@ -165,9 +164,7 @@ mod fen_test {
         let board = TestBoard {
             whites: vec![A2 | B2 | C3 | G2 | H2, H6, E3, A1, D4, G1],
             blacks: vec![A7 | A6 | G7 | H7, G6, C6, A8, F6, H8],
-            castle_rights: CastleZoneSet::NONE,
-            white_status: Some(CastleZone::WK),
-            black_status: Some(CastleZone::BK),
+            castle_rights: EnumSet::empty(),
             clock: 2,
             active: Side::Black,
             enpassant: None,
@@ -181,15 +178,15 @@ mod fen_test {
 impl Reflectable for Board {
     fn reflect(&self) -> Self {
         let pieces = self.pieces.reflect();
-        let castling = self.castling.reflect();
+        let rights = self.rights.reflect();
         let active = self.active.reflect();
         let enpassant = self.enpassant.reflect();
-        let hash = hash(&pieces, &castling, active, enpassant);
+        let hash = hash(&pieces, rights, active, enpassant);
         Board {
             history: self.history.reflect_for(hash),
             clock: self.clock,
             pieces,
-            castling,
+            rights,
             active,
             enpassant,
             cache: CalculationCache::default(),
@@ -200,7 +197,7 @@ impl Reflectable for Board {
 impl PartialEq<Board> for Board {
     fn eq(&self, other: &Board) -> bool {
         self.pieces == other.pieces
-            && self.castling.rights() == other.castling.rights()
+            && self.rights == other.rights
             && self.enpassant == other.enpassant
             && self.active == other.active
             && self.half_move_clock() == other.half_move_clock()
@@ -243,7 +240,7 @@ impl ChessBoard for Board {
     }
 
     fn hash(&self) -> u64 {
-        hash(&self.pieces, &self.castling, self.active, self.enpassant)
+        hash(&self.pieces, self.rights, self.active, self.enpassant)
     }
 
     fn active(&self) -> Side {
@@ -252,10 +249,6 @@ impl ChessBoard for Board {
 
     fn enpassant(&self) -> Option<Square> {
         self.enpassant
-    }
-
-    fn castle_status(&self, side: Side) -> Option<CastleZone> {
-        self.castling.status(side)
     }
 
     fn locs(&self, pieces: &[Piece]) -> BitBoard {
@@ -281,8 +274,8 @@ impl ChessBoard for Board {
         self.history.position_count()
     }
 
-    fn remaining_rights(&self) -> CastleZoneSet {
-        self.castling.rights()
+    fn remaining_rights(&self) -> EnumSet<CastleZone> {
+        self.rights.0
     }
 
     fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {

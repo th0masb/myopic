@@ -5,9 +5,10 @@ use crate::eval::{EvalChessBoard, EvalComponent};
 use crate::{eval, Board, PieceValues, PositionTables};
 use anyhow::Result;
 use myopic_board::{
-    BitBoard, CastleZone, CastleZoneSet, ChessBoard, FenComponent, Move, MoveComputeType, Piece,
+    BitBoard, CastleZone, ChessBoard, FenComponent, Move, MoveComputeType, Piece,
     Side, Square, Termination,
 };
+use crate::enumset::EnumSet;
 
 #[derive(Clone)]
 pub struct EvalBoard<B: ChessBoard> {
@@ -125,10 +126,6 @@ impl<B: ChessBoard> ChessBoard for EvalBoard<B> {
         self.board.enpassant()
     }
 
-    fn castle_status(&self, side: Side) -> Option<CastleZone> {
-        self.board.castle_status(side)
-    }
-
     fn locs(&self, pieces: &[Piece]) -> BitBoard {
         self.board.locs(pieces)
     }
@@ -149,7 +146,7 @@ impl<B: ChessBoard> ChessBoard for EvalBoard<B> {
         self.board.position_count()
     }
 
-    fn remaining_rights(&self) -> CastleZoneSet {
+    fn remaining_rights(&self) -> EnumSet<CastleZone> {
         self.board.remaining_rights()
     }
 
@@ -213,7 +210,7 @@ impl<B: ChessBoard> EvalChessBoard for EvalBoard<B> {
 
 #[cfg(test)]
 mod test {
-    use crate::eval::eval_impl::EvalBoard;
+    use crate::eval::imp::EvalBoard;
     use crate::eval::material;
     use crate::{Board, PieceValues, PositionTables};
     use myopic_board::{

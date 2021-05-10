@@ -1,7 +1,10 @@
-use crate::parse::patterns;
-use anyhow::{anyhow, Error, Result};
-use myopic_core::*;
 use std::str::FromStr;
+
+use anyhow::{anyhow, Error, Result};
+
+use myopic_core::*;
+
+use crate::parse::patterns;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub struct Positions {
@@ -165,12 +168,12 @@ impl Positions {
 
 #[cfg(test)]
 mod test {
+    use myopic_core::Piece;
     use myopic_core::Square::C3;
     use myopic_core::Square::E4;
     use myopic_core::Square::E5;
 
     use super::*;
-    use myopic_core::Piece;
 
     #[test]
     fn test_toggle_square() {

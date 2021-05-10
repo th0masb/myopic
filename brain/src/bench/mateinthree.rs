@@ -1,4 +1,4 @@
-use crate::eval::eval_impl::EvalBoard;
+use crate::eval::imp::EvalBoard;
 use crate::eval::WIN_VALUE;
 use crate::search::{search, SearchParameters};
 use crate::{Board, ChessBoard, Move};

@@ -1,2 +1,2 @@
-mod mate_in_three;
+mod mateinthree;
 mod middlegame;

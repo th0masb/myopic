@@ -23,7 +23,7 @@ impl<B: EvalChessBoard> MoveQualityEstimator<B> for ConstantEstimator {
     }
 }
 
-/// Main implementation of the heuristic move estimator trait,
+/// Main imp of the heuristic move estimator trait,
 /// it categorises moves into one of four subcategories from
 /// best (good exchanges) to worst (bad exchanges) and then
 /// also orders within those subcategories.
