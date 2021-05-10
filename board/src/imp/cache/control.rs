@@ -1,5 +1,6 @@
-use crate::implementation::Board;
 use myopic_core::*;
+
+use crate::imp::Board;
 
 impl Board {
     pub fn passive_control_impl(&mut self) -> BitBoard {
@@ -40,9 +41,10 @@ impl Board {
 
 #[cfg(test)]
 mod test {
-    use crate::implementation::test::TestBoard;
-    use crate::implementation::Board;
-    use myopic_core::{constants::*, BitBoard, CastleZoneSet, Side};
+    use crate::{BitBoard, constants::*, Side};
+    use crate::enumset::EnumSet;
+    use crate::imp::Board;
+    use crate::imp::test::TestBoard;
 
     struct TestCase {
         board: TestBoard,
@@ -75,9 +77,7 @@ mod test {
                 F6,
                 E8,
             ],
-            castle_rights: CastleZoneSet::ALL,
-            white_status: None,
-            black_status: None,
+            castle_rights: EnumSet::all(),
             enpassant: None,
             active: Side::White,
             clock: 20,

@@ -1,11 +1,13 @@
-use crate::implementation::cache::rays::RaySet;
-use crate::implementation::Board;
-use crate::ChessBoard;
-use crate::MoveComputeType;
-use myopic_core::*;
 use std::fmt::Debug;
 use std::fmt::Error;
 use std::fmt::Formatter;
+
+use myopic_core::*;
+
+use crate::ChessBoard;
+use crate::imp::Board;
+use crate::imp::cache::rays::RaySet;
+use crate::MoveComputeType;
 
 #[derive(Clone)]
 pub struct MoveConstraints {

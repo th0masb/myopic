@@ -1,17 +1,17 @@
-use crate::implementation::cache::CalculationCache;
-use crate::implementation::castling::Castling;
-use crate::implementation::history::History;
-use crate::implementation::positions::Positions;
-use crate::implementation::Board;
 use myopic_core::*;
+
+use crate::enumset::EnumSet;
+use crate::imp::Board;
+use crate::imp::cache::CalculationCache;
+use crate::imp::rights::Rights;
+use crate::imp::history::History;
+use crate::imp::positions::Positions;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {
     pub whites: Vec<BitBoard>,
     pub blacks: Vec<BitBoard>,
-    pub castle_rights: CastleZoneSet,
-    pub white_status: Option<CastleZone>,
-    pub black_status: Option<CastleZone>,
+    pub castle_rights: EnumSet<CastleZone>,
     pub active: Side,
     pub clock: usize,
     pub enpassant: Option<Square>,
@@ -28,15 +28,10 @@ impl From<TestBoard> for Board {
                 .collect::<Vec<BitBoard>>()
                 .as_slice(),
         );
-        let castling = Castling::new(
-            test_board.castle_rights,
-            test_board.white_status,
-            test_board.black_status,
-        );
         Board {
             history: History::new(test_board.history_count),
             pieces,
-            castling,
+            rights: Rights(test_board.castle_rights),
             active: test_board.active,
             enpassant: test_board.enpassant,
             clock: test_board.clock,
@@ -51,8 +46,6 @@ impl Reflectable for TestBoard {
             whites: (&self.blacks).reflect(),
             blacks: (&self.whites).reflect(),
             castle_rights: self.castle_rights.reflect(),
-            white_status: self.black_status.reflect(),
-            black_status: self.white_status.reflect(),
             active: self.active.reflect(),
             clock: self.clock,
             enpassant: self.enpassant.reflect(),

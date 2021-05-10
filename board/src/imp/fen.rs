@@ -1,5 +1,6 @@
-use crate::{ChessBoard, FenComponent};
 use myopic_core::*;
+
+use crate::{ChessBoard, FenComponent};
 
 pub(super) fn to_fen_impl<B: ChessBoard>(board: &B, cmps: &[FenComponent]) -> String {
     let mut dest = String::new();
@@ -112,9 +113,11 @@ fn piece_to_fen(piece: Piece) -> &'static str {
 
 #[cfg(test)]
 mod test {
-    use super::to_fen_impl;
-    use crate::{Board, ChessBoard, FenComponent};
     use anyhow::Result;
+
+    use crate::{Board, ChessBoard, FenComponent};
+
+    use super::to_fen_impl;
 
     #[test]
     fn start_position_board() {

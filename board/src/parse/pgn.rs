@@ -1,8 +1,10 @@
-use crate::parse::patterns::*;
-use crate::{ChessBoard, Move, MoveComputeType};
 use anyhow::{anyhow, Result};
-use myopic_core::{CastleZone, Piece, Square};
 use regex::Regex;
+
+use myopic_core::{CastleZone, Piece, Square};
+
+use crate::{ChessBoard, Move, MoveComputeType};
+use crate::parse::patterns::*;
 
 /// Extracts the moves encoded in standard pgn format starting at
 /// a custom board position.
@@ -151,8 +153,9 @@ fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
 
 #[cfg(test)]
 mod test {
-    use crate::{Board, ChessBoard};
     use anyhow::Result;
+
+    use crate::{Board, ChessBoard};
 
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) -> Result<()> {
         let finish = expected_finish.parse::<Board>()?;
@@ -214,8 +217,9 @@ mod test {
 
 #[cfg(test)]
 mod test_single_move {
-    use super::*;
     use crate::Board;
+
+    use super::*;
 
     fn execute_success_test(
         expected: &'static str,

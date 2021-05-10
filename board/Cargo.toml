@@ -1,6 +1,6 @@
 [package]
 name = "myopic-board"
-version = "2.1.2"
+version = "2.2.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -14,7 +14,7 @@ include = [
 ]
 
 [dependencies]
-myopic-core = "1.2.4"
+myopic-core = { path = "../core" }
 lazy_static = "1.2.0"
 itertools = "0.8"
 regex = "1"

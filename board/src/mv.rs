@@ -1,8 +1,11 @@
-use crate::{CastleZone, Piece, Square};
-use anyhow::Result;
-use myopic_core::{Reflectable, Side};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+
+use anyhow::Result;
+
+use myopic_core::{Reflectable, Side};
+
+use crate::{CastleZone, Piece, Square};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Move {
@@ -136,10 +139,12 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::mv::Move;
-    use crate::{CastleZone, Piece, Square};
     use anyhow::Result;
+
     use myopic_core::Side;
+
+    use crate::{CastleZone, Piece, Square};
+    use crate::mv::Move;
 
     #[test]
     fn standard() -> Result<()> {

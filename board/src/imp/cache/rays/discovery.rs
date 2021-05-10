@@ -1,6 +1,7 @@
-use crate::implementation::cache::rays::RaySet;
-use crate::{Board, ChessBoard};
 use myopic_core::*;
+
+use crate::{Board, ChessBoard};
+use crate::imp::cache::rays::RaySet;
 
 impl Board {
     pub fn compute_discoveries(&self) -> RaySet {

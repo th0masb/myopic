@@ -1,12 +1,14 @@
 use std::collections::btree_set::BTreeSet;
 
-use crate::implementation::Board;
-use crate::mv::Move;
-use crate::ChessBoard;
-use crate::MoveComputeType;
 use anyhow::Result;
 use itertools::Itertools;
+
 use myopic_core::*;
+
+use crate::ChessBoard;
+use crate::imp::Board;
+use crate::MoveComputeType;
+use crate::mv::Move;
 
 type MoveSet = BTreeSet<Move>;
 

@@ -1,9 +1,11 @@
-use crate::implementation::history::Discards;
-use crate::implementation::Board;
-use crate::mv::Move::*;
-use crate::{ChessBoard, Move};
 use anyhow::{anyhow, Result};
+
 use myopic_core::*;
+
+use crate::{ChessBoard, Move};
+use crate::imp::Board;
+use crate::imp::history::Discards;
+use crate::mv::Move::*;
 
 #[cfg(test)]
 mod test;
@@ -24,7 +26,7 @@ impl Board {
         self.history.push(
             mv.clone(),
             Discards {
-                rights: self.remaining_rights(),
+                rights: self.rights,
                 enpassant: self.enpassant(),
                 half_move_clock: self.half_move_clock(),
             },
@@ -68,7 +70,7 @@ impl Board {
             None => {}
             Some(p) => self.pieces.toggle_piece(p, &[target]),
         };
-        self.castling.remove_rights(source | target);
+        self.rights = self.rights.remove_rights(source | target);
         self.enpassant = Board::compute_enpassant(source, target, moving);
         self.clock = if captured.is_some() || moving.is_pawn() {
             0
@@ -78,7 +80,7 @@ impl Board {
     }
 
     fn evolve_c(&mut self, zone: CastleZone) {
-        self.castling.set_status(zone);
+        self.rights = self.rights.apply_castling(zone.side());
         self.toggle_castle_pieces(zone);
         self.enpassant = None;
         self.clock += 1;
@@ -133,7 +135,7 @@ impl Board {
             &Castle { zone, .. } => self.devolve_c(zone),
         };
 
-        self.castling.set_rights(state.rights);
+        self.rights = state.rights;
         self.clock = state.half_move_clock;
         self.enpassant = state.enpassant;
         self.active = self.active.reflect();
@@ -151,7 +153,6 @@ impl Board {
 
     fn devolve_c(&mut self, zone: CastleZone) {
         self.toggle_castle_pieces(zone);
-        self.castling.clear_status(zone.side());
     }
 
     fn devolve_e(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
