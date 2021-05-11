@@ -1,16 +1,16 @@
+use anyhow::Result;
+use myopic_brain::{Board, ChessBoard, EvalBoard};
+
 use crate::game::InitalPosition;
-use myopic_brain::{EvalBoardImpl, MutBoard, MutBoardImpl};
 
 pub fn get(
     initial: &InitalPosition,
     uci_sequence: &str,
-) -> Result<EvalBoardImpl<MutBoardImpl>, String> {
+) -> Result<EvalBoard<Board>> {
     let mut position = match initial {
-        InitalPosition::Start => myopic_brain::pos::start(),
-        InitalPosition::CustomFen(fen) => myopic_brain::pos::from_fen(fen.as_str())?,
+        InitalPosition::Start => myopic_brain::start(),
+        InitalPosition::CustomFen(fen) => fen.parse()?,
     };
-    for mv in myopic_brain::parse::partial_uci(&position, uci_sequence)? {
-        position.evolve(&mv);
-    }
-    Ok(position)
+    position.play_uci(uci_sequence)?;
+    Ok(EvalBoard::builder(position).build())
 }

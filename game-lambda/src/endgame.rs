@@ -1,9 +1,12 @@
-use crate::game::{InitalPosition, LookupService};
-use myopic_brain::MutBoard;
-use reqwest::{blocking, Error};
-use serde_derive::Deserialize;
 use std::time::Instant;
+
+use anyhow::{anyhow, Error, Result};
+use myopic_brain::ChessBoard;
+use reqwest::blocking;
+use serde_derive::Deserialize;
 use tokio::time::Duration;
+
+use crate::game::{InitalPosition, LookupService};
 
 const TIMEOUT_MS: u64 = 1500;
 const MAX_TABLE_MISSES: usize = 2;
@@ -17,21 +20,22 @@ pub struct EndgameService {
 }
 
 impl EndgameService {
-    fn execute_query(&self, query: &str) -> Result<blocking::Response, Error> {
+    fn execute_query(&self, query: &str) -> Result<blocking::Response> {
         self.client
             .get(TABLE_ENDPOINT)
             .query(&[("fen", query)])
             .timeout(Duration::from_millis(TIMEOUT_MS))
             .send()
+            .map_err(Error::from)
     }
 
-    fn process_response(&mut self, resp: blocking::Response) -> Result<Option<String>, String> {
+    fn process_response(&mut self, resp: blocking::Response) -> Result<Option<String>> {
         resp
             .json::<EndgameTableResponse>()
             .map_err(|e| {
                 self.table_misses += 1;
                 log::info!("Incrementing table misses due to {}", e);
-                format!("Problem deserializing response: {}", e)
+                anyhow!("Problem deserializing response: {}", e)
             })
             .and_then(|r| {
                 r.moves
@@ -43,7 +47,7 @@ impl EndgameService {
                     .ok_or_else(|| {
                         self.table_misses += 1;
                         log::info!("Incrementing table misses due to unknown position");
-                        format!("No suggested moves for position!")
+                        anyhow!("No suggested moves for position!")
                     })
             })
     }
@@ -54,7 +58,7 @@ impl LookupService for EndgameService {
         &mut self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
-    ) -> Result<Option<String>, String> {
+    ) -> Result<Option<String>> {
         let state = crate::position::get(initial_position, uci_sequence)?;
         let query = state.to_fen().replace(" ", "_");
         if self.table_misses >= MAX_TABLE_MISSES {
@@ -73,7 +77,7 @@ impl LookupService for EndgameService {
                 Err(e) => {
                     self.table_misses += 1;
                     log::info!("Incrementing table misses due to {}", e);
-                    Err(e.to_string())
+                    Err(e)
                 }
             }
         }

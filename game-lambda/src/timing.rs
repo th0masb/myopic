@@ -77,8 +77,9 @@ fn expected_half_moves_remaining(moves_played: usize) -> f64 {
 
 #[cfg(test)]
 mod test {
-    use crate::timing::Timing;
     use tokio::time::Duration;
+
+    use crate::timing::Timing;
 
     fn dummy_half_moves_remaining(moves_played: usize) -> f64 {
         moves_played as f64

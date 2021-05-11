@@ -1,11 +1,14 @@
-use crate::game::{InitalPosition, LookupService};
+use std::collections::HashMap;
+use std::str::FromStr;
+
+use anyhow::{anyhow, Result};
 use itertools::Itertools;
-use myopic_brain::{FenComponent, MutBoard};
+use myopic_brain::{ChessBoard, FenComponent};
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use serde::export::fmt::Debug;
-use std::collections::HashMap;
-use std::str::FromStr;
+
+use crate::game::{InitalPosition, LookupService};
 
 const MOVE_FREQ_SEPARATOR: &'static str = ":";
 const MAX_TABLE_MISSES: usize = 2;
@@ -37,7 +40,7 @@ impl DynamoDbOpeningService {
         }
     }
 
-    fn create_request(&self, query_position: String) -> Result<GetItemInput, String> {
+    fn create_request(&self, query_position: String) -> Result<GetItemInput> {
         // Create key
         let mut av = AttributeValue::default();
         av.s = Some(query_position);
@@ -56,7 +59,7 @@ impl LookupService for DynamoDbOpeningService {
         &mut self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
-    ) -> Result<Option<String>, String> {
+    ) -> Result<Option<String>> {
         if self.table_misses >= MAX_TABLE_MISSES {
             log::info!(
                 "Skipping table check as {} checks were missed",
@@ -78,22 +81,22 @@ impl LookupService for DynamoDbOpeningService {
             let result = tokio::runtime::Runtime::new()
                 .unwrap()
                 .block_on(self.client.get_item(self.create_request(query_position)?))
-                .map_err(|err| format!("{}", err))
+                .map_err(|err| anyhow!("{}", err))
                 .and_then(|response| match response.item {
                     None => {
                         log::info!("No match found!");
                         Ok(None)
                     }
                     Some(attributes) => match attributes.get(&self.recommended_move_attribute) {
-                        None => Err(format!(
+                        None => Err(anyhow!(
                             "Position exists but missing recommended move attribute"
                         )),
                         Some(attribute) => match &attribute.ss {
-                            None => Err(format!(
+                            None => Err(anyhow!(
                                 "Position and recommended move attribute exist but not string set type"
                             )),
                             Some(move_set) => match choose_move(move_set, rand::random) {
-                                None => Err(format!("Position exists with no valid recommendations!")),
+                                None => Err(anyhow!("Position exists with no valid recommendations!")),
                                 Some(mv) => {
                                     log::info!("Found matching set {:?}!", move_set);
                                     log::info!("Chose {} from set", &mv);

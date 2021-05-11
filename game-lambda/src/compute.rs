@@ -1,11 +1,12 @@
-use crate::game::{ComputeService, InitalPosition};
+use std::time::{Duration, Instant};
+
+use anyhow::{anyhow, Result};
 use bytes::Bytes;
 use rusoto_core::Region;
 use rusoto_lambda::{InvocationRequest, Lambda, LambdaClient};
 use serde_derive::{Deserialize, Serialize};
-use simple_error::SimpleError;
-use std::error::Error;
-use std::time::{Duration, Instant};
+
+use crate::game::{ComputeService, InitalPosition};
 
 pub struct LambdaMoveComputeService {
     region: Region,
@@ -61,7 +62,7 @@ impl ComputeService for LambdaMoveComputeService {
         initial_position: &InitalPosition,
         uci_sequence: &str,
         time_limit: Duration,
-    ) -> Result<String, Box<dyn Error>> {
+    ) -> Result<String> {
         let payload = serde_json::to_string(&RequestPayload::new(
             initial_position,
             uci_sequence,
@@ -82,7 +83,7 @@ impl ComputeService for LambdaMoveComputeService {
         log::info!("Response status: {:?}", invocation.status_code);
         log::info!("Invocation took {}ms", timer.elapsed().as_millis());
         match invocation.payload {
-            None => Err(Box::new(SimpleError::new("Missing response payload!")) as Box<dyn Error>),
+            None => Err(anyhow!("Missing response payload!")),
             Some(raw_bytes) => {
                 let decoded = String::from_utf8(raw_bytes.to_vec())?;
                 log::info!("Response payload: {}", decoded);
