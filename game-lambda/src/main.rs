@@ -1,3 +1,24 @@
+use std::error::Error;
+use std::io::{BufRead, BufReader};
+use std::ops::Add;
+use std::str::FromStr;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+
+use bytes::Bytes;
+use lambda_runtime::{Context, error::HandlerError, lambda};
+use reqwest::blocking::Response;
+use rusoto_core::Region;
+use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
+use serde_derive::{Deserialize, Serialize};
+use simple_logger::SimpleLogger;
+
+use game::Game;
+
+use crate::compute::LambdaMoveComputeService;
+use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
+use crate::endgame::EndgameService;
+use crate::game::{GameConfig, GameExecutionState};
+
 mod compute;
 mod dynamodb;
 mod endgame;
@@ -7,24 +28,6 @@ mod lichess;
 mod messages;
 pub mod position;
 mod timing;
-
-use crate::compute::LambdaMoveComputeService;
-use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
-use crate::endgame::EndgameService;
-use crate::game::{GameConfig, GameExecutionState};
-use bytes::Bytes;
-use game::Game;
-use lambda_runtime::{error::HandlerError, lambda, Context};
-use reqwest::blocking::Response;
-use rusoto_core::Region;
-use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
-use serde_derive::{Deserialize, Serialize};
-use simple_logger::SimpleLogger;
-use std::error::Error;
-use std::io::{BufRead, BufReader};
-use std::ops::Add;
-use std::str::FromStr;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
 type GameImpl = Game<DynamoDbOpeningService, LambdaMoveComputeService, EndgameService>;
@@ -143,7 +146,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
                     log::info!("Received event: {}", event);
                     match game
                         .process_event(event.as_str())
-                        .map_err(|err| HandlerError::from(err.as_str()))?
+                        .map_err(|err| HandlerError::from(format!("{}", err).as_str()))?
                     {
                         GameExecutionState::Running => continue,
                         GameExecutionState::Finished => break,

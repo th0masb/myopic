@@ -1,6 +1,9 @@
-use crate::game::GameExecutionState;
-use reqwest::{blocking, StatusCode};
 use std::collections::HashMap;
+
+use anyhow::{anyhow, Result};
+use reqwest::{blocking, StatusCode};
+
+use crate::game::GameExecutionState;
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 
@@ -26,27 +29,27 @@ impl LichessService {
         }
     }
 
-    pub fn abort(&self) -> Result<StatusCode, String> {
+    pub fn abort(&self) -> Result<StatusCode> {
         self.client
             .post(format!("{}/{}/abort", GAME_ENDPOINT, self.game_id).as_str())
             .bearer_auth(&self.auth_token)
             .send()
-            .map_err(|error| format!("Error aborting game: {}", error))
+            .map_err(|error| anyhow!("Error aborting game: {}", error))
             .map(|response| response.status())
     }
 
-    pub fn post_move(&self, mv: String) -> Result<GameExecutionState, String> {
+    pub fn post_move(&self, mv: String) -> Result<GameExecutionState> {
         // Add timeout and retry logic
         self.client
             .post(format!("{}/{}/move/{}", GAME_ENDPOINT, self.game_id, mv).as_str())
             .bearer_auth(&self.auth_token)
             .send()
-            .map_err(|error| format!("Error posting move: {}", error))
+            .map_err(|error| anyhow!("Error posting move: {}", error))
             .and_then(|response| {
                 if response.status().is_success() {
                     Ok(GameExecutionState::Running)
                 } else {
-                    Err(format!(
+                    Err(anyhow!(
                         "Lichess api responded with error {} during move post",
                         response.status()
                     ))
@@ -54,7 +57,7 @@ impl LichessService {
             })
     }
 
-    pub fn post_chatline(&self, text: &str, room: LichessChatRoom) -> Result<StatusCode, String> {
+    pub fn post_chatline(&self, text: &str, room: LichessChatRoom) -> Result<StatusCode> {
         let mut params = HashMap::new();
         params.insert("room", match room {
             LichessChatRoom::Player => "player",
@@ -66,7 +69,7 @@ impl LichessService {
             .bearer_auth(&self.auth_token)
             .form(&params)
             .send()
-            .map_err(|error| format!("Error posting chatline: {}", error))
+            .map_err(|error| anyhow!("Error posting chatline: {}", error))
             .map(|response| response.status())
     }
 }

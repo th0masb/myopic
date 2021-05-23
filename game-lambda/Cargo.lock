@@ -25,6 +25,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28b2cd92db5cbd74e8e5028f7e27dd7aa3090e89e4f2a197cc7c8dfb69c7063b"
+
+[[package]]
 name = "arc-swap"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -326,6 +332,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "darling"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f2c43f534ea4b0b049015d00269734195e6d3f0f6635cb692251aca6f9f8b3c"
+dependencies = [
+ "darling_core",
+ "darling_macro",
+]
+
+[[package]]
+name = "darling_core"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e91455b86830a1c21799d94524df0845183fa55bafd9aa137b01c7d1065fa36"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2 1.0.24",
+ "quote 1.0.7",
+ "strsim",
+ "syn 1.0.44",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29b5acf0dea37a7f66f7b25d2c5e93fd46f8f6968b1a5d7a3e02e97768afc95a"
+dependencies = [
+ "darling_core",
+ "quote 1.0.7",
+ "syn 1.0.44",
+]
+
+[[package]]
 name = "digest"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -380,6 +421,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a51b8cf747471cb9499b6d59e59b0444f4c90eba8968c4e44874e92b5b64ace2"
 dependencies = [
  "cfg-if 0.1.10",
+]
+
+[[package]]
+name = "enumset"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbd795df6708a599abf1ee10eacc72efd052b7a5f70fdf0715e4d5151a6db9c3"
+dependencies = [
+ "enumset_derive",
+]
+
+[[package]]
+name = "enumset_derive"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e19c52f9ec503c8a68dc04daf71a04b07e690c32ab1a8b68e33897f255269d47"
+dependencies = [
+ "darling",
+ "proc-macro2 1.0.24",
+ "quote 1.0.7",
+ "syn 1.0.44",
 ]
 
 [[package]]
@@ -545,8 +607,9 @@ dependencies = [
 
 [[package]]
 name = "game-lambda"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
+ "anyhow",
  "bytes 0.5.6",
  "itertools 0.8.2",
  "lambda_runtime",
@@ -560,7 +623,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "simple-error",
  "simple_logger",
  "tokio 0.2.22",
 ]
@@ -803,6 +865,12 @@ dependencies = [
  "tokio-rustls 0.14.1",
  "webpki",
 ]
+
+[[package]]
+name = "ident_case"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "idna"
@@ -1111,10 +1179,11 @@ dependencies = [
 
 [[package]]
 name = "myopic-board"
-version = "1.3.4"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b66f86c31068e6ef27c41ccee088b797e818c172cf07b37e68a2967a746149ea"
+checksum = "8020b3ac1da86b3d9391f66131d4130c5f457b1034f8845acf12d42fb437a4dc"
 dependencies = [
+ "anyhow",
  "itertools 0.8.2",
  "lazy_static",
  "myopic-core",
@@ -1123,10 +1192,11 @@ dependencies = [
 
 [[package]]
 name = "myopic-brain"
-version = "1.5.3"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab90f525a9fb650fcc6cc0aa3d57431147f01049ffc40d199e6e69df58f9ede5"
+checksum = "2a68537b0c33ef5b1774955736092a755fca2761e8fd84aa3320ebe027589a5a"
 dependencies = [
+ "anyhow",
  "itertools 0.9.0",
  "lazy_static",
  "myopic-board",
@@ -1138,10 +1208,12 @@ dependencies = [
 
 [[package]]
 name = "myopic-core"
-version = "1.1.2"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9198ad341a631345d49f71c5b8b7cbf0cf8abad5bf66c5448e40841a10c27b00"
+checksum = "be7efe730fda27a1cd551a242bedb1bd41524bcc7057e2186b41735f4c4adf1e"
 dependencies = [
+ "anyhow",
+ "enumset",
  "itertools 0.8.2",
  "lazy_static",
  "rand 0.6.5",
@@ -1875,12 +1947,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "simple-error"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "634bf7bc1315698154cb1b45c1db17fcd2e5ce41f925b7b4063e971536714bf1"
-
-[[package]]
 name = "simple_logger"
 version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1992,6 +2058,12 @@ checksum = "d24114bfcceb867ca7f71a0d3fe45d45619ec47a6fbfa98cb14e14250bfa5d6d"
 dependencies = [
  "bytes 0.4.12",
 ]
+
+[[package]]
+name = "strsim"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "subtle"

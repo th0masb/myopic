@@ -63,8 +63,9 @@ pub struct Clock {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use serde_json;
+
+    use super::*;
 
     #[test]
     fn deserialize_chat_line() {
@@ -76,7 +77,7 @@ mod test {
         }"#;
 
         match serde_json::from_str::<GameEvent>(json) {
-            Err(error) => panic!(format!("Parse error {:?}", error)),
+            Err(error) => panic!("Parse error {:?}", error),
             Ok(event) => match event {
                 GameEvent::ChatLine { content } => assert_eq!(
                     ChatLine {
@@ -86,7 +87,7 @@ mod test {
                     },
                     content
                 ),
-                _ => panic!(format!("Wrong event {:?}", event)),
+                _ => panic!("Wrong event {:?}", event),
             },
         }
     }
@@ -107,7 +108,7 @@ mod test {
         }"#;
 
         match serde_json::from_str::<GameEvent>(json) {
-            Err(error) => panic!(format!("Parse error {:?}", error)),
+            Err(error) => panic!("Parse error {:?}", error),
             Ok(event) => match event {
                 GameEvent::State { content: state } => assert_eq!(
                     GameState {
@@ -120,7 +121,7 @@ mod test {
                     },
                     state
                 ),
-                _ => panic!(format!("Wrong event {:?}", event)),
+                _ => panic!("Wrong event {:?}", event),
             },
         }
     }
@@ -164,7 +165,7 @@ mod test {
         }"#;
 
         match serde_json::from_str::<GameEvent>(json) {
-            Err(error) => panic!(format!("Parse error {:?}", error)),
+            Err(error) => panic!("Parse error {:?}", error),
             Ok(event) => match event {
                 GameEvent::GameFull { content } => {
                     assert_eq!(
@@ -198,7 +199,7 @@ mod test {
                         content.state
                     );
                 }
-                _ => panic!(format!("Wrong type {:?}", event)),
+                _ => panic!("Wrong type {:?}", event),
             },
         }
     }

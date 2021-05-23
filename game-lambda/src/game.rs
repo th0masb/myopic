@@ -1,13 +1,15 @@
-use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
-use crate::lichess::{LichessService, LichessChatRoom};
-use crate::messages;
-use crate::timing::Timing;
-use crate::TimeConstraints;
-use myopic_brain::{EvalBoardImpl, MutBoard, MutBoardImpl, Side};
-use reqwest::StatusCode;
-use std::error::Error;
 use std::ops::Add;
 use std::time::{Duration, Instant};
+
+use anyhow::{anyhow, Result};
+use myopic_brain::{Board, ChessBoard, EvalBoard, Side};
+use reqwest::StatusCode;
+
+use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
+use crate::lichess::{LichessChatRoom, LichessService};
+use crate::messages;
+use crate::TimeConstraints;
+use crate::timing::Timing;
 
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
@@ -19,7 +21,7 @@ pub trait LookupService {
         &mut self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
-    ) -> Result<Option<String>, String>;
+    ) -> Result<Option<String>>;
 }
 
 pub trait ComputeService {
@@ -28,7 +30,7 @@ pub trait ComputeService {
         initial_position: &InitalPosition,
         uci_sequence: &str,
         time_limit: Duration,
-    ) -> Result<String, Box<dyn Error>>;
+    ) -> Result<String>;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -106,7 +108,7 @@ where
         self.halfmove_count
     }
 
-    pub fn abort(&self) -> Result<StatusCode, String> {
+    pub fn abort(&self) -> Result<StatusCode> {
         self.lichess_service.abort()
     }
 
@@ -133,11 +135,11 @@ where
         }
     }
 
-    pub fn process_event(&mut self, event_json: &str) -> Result<GameExecutionState, String> {
+    pub fn process_event(&mut self, event_json: &str) -> Result<GameExecutionState> {
         match serde_json::from_str(event_json) {
             Err(error) => {
                 log::warn!("Error parsing event {}", error);
-                Err(format!("{}", error))
+                Err(anyhow!("{}", error))
             }
             Ok(event) => match event {
                 GameEvent::GameFull { content } => self.process_game_full(content),
@@ -147,12 +149,12 @@ where
         }
     }
 
-    fn process_chat_line(&self, _chat_line: ChatLine) -> Result<GameExecutionState, String> {
+    fn process_chat_line(&self, _chat_line: ChatLine) -> Result<GameExecutionState> {
         // Do nothing for now
         Ok(GameExecutionState::Running)
     }
 
-    fn process_game_full(&mut self, game_full: GameFull) -> Result<GameExecutionState, String> {
+    fn process_game_full(&mut self, game_full: GameFull) -> Result<GameExecutionState> {
         // Track info required for playing future gamestates
         self.inferred_metadata = Some(InferredGameMetadata {
             clock: game_full.clock,
@@ -163,7 +165,7 @@ where
                 log::info!("Detected lambda is playing as black");
                 Side::Black
             } else {
-                return Err(format!("Unrecognized names"));
+                return Err(anyhow!("Unrecognized names"));
             },
             initial_position: if game_full.initial_fen.as_str() == "startpos" {
                 InitalPosition::Start
@@ -174,19 +176,14 @@ where
         self.process_game_state(game_full.state)
     }
 
-    fn get_game_state(&self, moves: &str) -> Result<(EvalBoardImpl<MutBoardImpl>, u32), String> {
-        let mut state = match &self.get_latest_metadata()?.initial_position {
-            InitalPosition::Start => myopic_brain::pos::start(),
-            InitalPosition::CustomFen(fen) => myopic_brain::pos::from_fen(fen.as_str())?,
-        };
-        let moves = myopic_brain::parse::partial_uci(&state, moves)?;
-        moves.iter().for_each(|mv| {
-            state.evolve(mv);
-        });
-        Ok((state, moves.len() as u32))
+    fn get_game_state(&self, moves: &str) -> Result<(EvalBoard<Board>, u32)> {
+        let ip = &self.get_latest_metadata()?.initial_position;
+        let state = crate::position::get(ip, moves)?;
+        let pos_count = state.position_count();
+        Ok((state, pos_count as u32))
     }
 
-    fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState, String> {
+    fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState> {
         log::info!("Parsing previous game moves: {}", state.moves);
         let (board, n_moves) = self.get_game_state(state.moves.as_str())?;
         self.halfmove_count = n_moves as usize;
@@ -260,7 +257,7 @@ where
         &self,
         moves: &String,
         time: Duration,
-    ) -> Result<GameExecutionState, String> {
+    ) -> Result<GameExecutionState> {
         let lambda_end_instant = self.time_constraints.lambda_end_instant();
         if Instant::now().add(time) >= lambda_end_instant {
             Ok(GameExecutionState::Recurse)
@@ -268,7 +265,7 @@ where
             let metadata = self.get_latest_metadata()?;
             self.compute_service
                 .compute_move(&metadata.initial_position, moves.as_str(), time)
-                .map_err(|e| format!("{}", e))
+                .map_err(|e| anyhow!("{}", e))
                 .and_then(|mv| self.lichess_service.post_move(mv))
         }
     }
@@ -277,7 +274,7 @@ where
         &self,
         moves_played: u32,
         state: &GameState,
-    ) -> Result<Duration, String> {
+    ) -> Result<Duration> {
         let metadata = self.get_latest_metadata()?;
         let (remaining, inc) = match metadata.lambda_side {
             Side::White => (
@@ -297,9 +294,9 @@ where
         .compute_thinking_time(moves_played as usize, remaining))
     }
 
-    fn get_latest_metadata(&self) -> Result<&InferredGameMetadata, String> {
+    fn get_latest_metadata(&self) -> Result<&InferredGameMetadata> {
         self.inferred_metadata
             .as_ref()
-            .ok_or(format!("Metadata not initialized"))
+            .ok_or(anyhow!("Metadata not initialized"))
     }
 }

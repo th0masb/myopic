@@ -1,4 +1,4 @@
-pub const INTRO_1: &'static str = "Hello! I am a serverless engine written in Rust \
+pub const INTRO_1: &'static str = "Hello! I am a serverless program written in Rust \
 and deployed via two AWS Lambda functions for computation and a DynamoDB table for \
 openings";
 
