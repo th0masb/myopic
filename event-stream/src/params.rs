@@ -26,6 +26,8 @@ const MYOPIC_RETRY_WAIT_DURATION_SECS: &'static str = "MYOPIC_RETRY_WAIT_DURATIO
 const MYOPIC_ABORT_AFTER_SECS: &'static str = "MYOPIC_ABORT_AFTER_SECS";
 const MYOPIC_STATUS_POLL_GAP_SECS: &'static str = "MYOPIC_STATUS_POLL_GAP_SECS";
 const MYOPIC_MAX_STREAM_LIFE_MINS: &'static str = "MYOPIC_MAX_STREAM_LIFE_MINS";
+// Http server variables
+const MYOPIC_HTTP_SERVER_ADDRESS: &'static str = "MYOPIC_HTTP_SERVER_ADDRESS";
 
 #[derive(Debug, Clone)]
 pub struct ApplicationParameters {
@@ -48,6 +50,7 @@ pub struct ApplicationParameters {
     pub abort_after_secs: u64,
     pub status_poll_gap_secs: u64,
     pub max_stream_life_mins: u64,
+    pub http_addr: String,
 }
 
 impl ApplicationParameters {
@@ -72,6 +75,7 @@ impl ApplicationParameters {
             abort_after_secs: env::var(MYOPIC_ABORT_AFTER_SECS)?.parse()?,
             status_poll_gap_secs: env::var(MYOPIC_STATUS_POLL_GAP_SECS)?.parse()?,
             max_stream_life_mins: env::var(MYOPIC_MAX_STREAM_LIFE_MINS)?.parse()?,
+            http_addr: env::var(MYOPIC_HTTP_SERVER_ADDRESS)?,
         })
     }
 

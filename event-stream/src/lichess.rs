@@ -2,6 +2,7 @@ use anyhow::{anyhow, Error, Result};
 use futures_util::StreamExt;
 use reqwest::StatusCode;
 
+use crate::ChallengeRequest;
 use crate::events::{Challenge, ClockTimeControl};
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
@@ -52,7 +53,23 @@ impl LichessClient {
             .map_err(Error::from)
     }
 
-    pub async fn post_challenge_decision(
+    pub async fn post_challenge(
+        &self,
+        username: &str,
+        challenge_params: &ChallengeRequest
+    ) -> Result<(StatusCode, String)> {
+        let response = self.client
+            .post(format!("{}/{}", CHALLENGE_ENDPOINT, username))
+            .bearer_auth(&self.auth_token)
+            .form(challenge_params)
+            .send()
+            .await?;
+        let status = response.status();
+        let body = response.text().await?;
+        Ok((status, body))
+    }
+
+    pub async fn post_challenge_response(
         &self,
         challenge: &Challenge,
         decision: &str,
