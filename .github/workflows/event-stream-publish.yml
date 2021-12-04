@@ -14,10 +14,12 @@ jobs:
         run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
       - name: Print rustup version
         run: rustup --version
+      - name: Install aarch64 musl target
+        run: rustup target add aarch64-unknown-linux-musl
       - name: Install cross
         run: cargo install cross
-      - name: Echo pwd
-        run: pwd
+      - name: Enter event-stream
+        run: cd event-stream
       - name: Build event-stream
-        run: cross build --manifest-path=event-stream/Cargo.toml --target=aarch64-unknown-linux-musl
+        run: cd event-stream && cross build --target=aarch64-unknown-linux-musl
 
