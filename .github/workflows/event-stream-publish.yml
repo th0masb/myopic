@@ -13,5 +13,7 @@ jobs:
       - name: Install rustup
         run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
       - name: Print rustup version
-        run: rustup version
+        run: rustup --version
+      - name: Install cross
+        run: cargo install cross
 
