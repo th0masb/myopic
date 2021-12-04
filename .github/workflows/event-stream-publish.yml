@@ -16,4 +16,8 @@ jobs:
         run: rustup --version
       - name: Install cross
         run: cargo install cross
+      - name: Echo pwd
+        run: pwd
+      - name: Build event-stream
+        run: cross build --manifest-path=event-stream/Cargo.toml --target=aarch64-unknown-linux-musl
 
