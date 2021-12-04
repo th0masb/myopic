@@ -1,0 +1,17 @@
+name: Publish event-stream
+on:
+  push:
+    branches:
+      - ISSUE-131
+        #  paths:
+        #    - event-stream/**
+jobs:
+  publish-event-stream:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install rustup
+        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
+      - name: Print rustup version
+        run: rustup version
+
