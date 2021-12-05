@@ -18,8 +18,6 @@ jobs:
         run: rustup target add aarch64-unknown-linux-musl
       - name: Install cross
         run: cargo install cross
-      - name: Enter event-stream
-        run: cd event-stream
       - name: Build event-stream
-        run: cd event-stream && cross build --target=aarch64-unknown-linux-musl
+        run: cd event-stream && cross build --release --target=aarch64-unknown-linux-musl
 
