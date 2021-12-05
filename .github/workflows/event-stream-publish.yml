@@ -10,14 +10,16 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Install rustup
-        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
-      - name: Print rustup version
-        run: rustup --version
-      - name: Install aarch64 musl target
-        run: rustup target add aarch64-unknown-linux-musl
-      - name: Install cross
-        run: cargo install cross
-      - name: Build event-stream
-        run: cd event-stream && cross build --release --target=aarch64-unknown-linux-musl
+      - name: Build images
+        run: docker buildx build --platform linux/amd64  -t th0masb/multi-platform-test:other2 ./event-stream
+        #      - name: Install rustup
+        #        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
+        #      - name: Print rustup version
+        #        run: rustup --version
+        #      - name: Install aarch64 musl target
+        #        run: rustup target add aarch64-unknown-linux-musl
+        #      - name: Install cross
+        #        run: cargo install cross
+        #      - name: Build event-stream
+        #        run: cd event-stream && cross build --release --target=aarch64-unknown-linux-musl
 
