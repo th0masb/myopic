@@ -8,24 +8,34 @@ on:
 jobs:
   publish-event-stream:
     runs-on: ubuntu-20.04
+    env:
+      APPLICATION_DIR: event-stream
+      TARGETS: "aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu"
+      VERSION: 1
+      DOCKERFILE: Dockerfile
     steps:
       - uses: actions/checkout@v2
       - name: Install QEMU
         run: sudo apt-get install -y qemu binfmt-support
       - name: Register fix_binary flag
         run: docker run --privileged --rm tonistiigi/binfmt --install all
-      - name: Configure buildx driver
-        run: docker buildx create --use --driver docker-container
-      - name: Build images
-        run: docker buildx build --platform linux/arm64  -t th0masb/multi-platform-test:other2 ./event-stream
-        #      - name: Install rustup
-        #        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
-        #      - name: Print rustup version
-        #        run: rustup --version
-        #      - name: Install aarch64 musl target
-        #        run: rustup target add aarch64-unknown-linux-musl
-        #      - name: Install cross
-        #        run: cargo install cross
-        #      - name: Build event-stream
-        #        run: cd event-stream && cross build --release --target=aarch64-unknown-linux-musl
+      - name: Install rustup
+        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
+      - name: Print rustup version
+        run: rustup --version
+      - name: Install rustup targets
+        run: rustup target add $TARGETS
+      - name: Install cross
+        run: cargo install cross
+      - name: Build event-stream
+        run: ./publish-multi-platform.sh
+        #run: cd event-stream && cross build --release --target=aarch64-unknown-linux-musl
+        #      - name: Install QEMU
+        #        run: sudo apt-get install -y qemu binfmt-support
+        #      - name: Register fix_binary flag
+        #        run: docker run --privileged --rm tonistiigi/binfmt --install all
+        #      - name: Configure buildx driver
+        #        run: docker buildx create --use --driver docker-container
+        #      - name: Build images
+        #        run: docker buildx build --platform linux/amd64,linux/arm64 -t th0masb/multi-platform-test:other2 ./event-stream
 
