@@ -11,7 +11,6 @@ jobs:
     env:
       APPLICATION_DIR: event-stream
       TARGETS: "aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu"
-      VERSION: 1
       DOCKERFILE: Dockerfile
     steps:
       - uses: actions/checkout@v2
@@ -33,6 +32,7 @@ jobs:
         run: rustup target add $TARGETS
       - name: Install cross
         run: cargo install cross
+        #- run: echo "VERSION=$GITHUB_SHA" >> $GITHUB_ENV
       - name: Build event-stream
-        run: ./publish-multi-platform.sh
+        run: VERSION="$GITHUB_SHA" ./publish-multi-platform.sh
 

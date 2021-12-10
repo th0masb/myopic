@@ -23,13 +23,15 @@ mkdir -p "$build_context"
 cp "$DOCKERFILE" "$build_context"
 cd $APPLICATION_DIR
 for target in $TARGETS; do
-	docker_platform="linux/$(map_target "$target")"
-	echo "Building container for $docker_platform"
+	mapped_target=$(map_target "$target")
+	#docker_platform="linux/$(map_target "$target")"
+	echo "Building container for $mapped_target"
 	cross build --release --target=$target
 	cp "target/$target/release/$APPLICATION_DIR" "$build_context/app"
 	docker buildx build \
-		--platform "$docker_platform" \
-		-t "th0masb/multi-platform-test:$VERSION-$target" \
+		--push \
+		--platform "linux/$mapped_target" \
+		-t "ghcr.io/th0masb/myopic/test:$VERSION-$mapped_target" \
 		"$build_context"
 done
 
