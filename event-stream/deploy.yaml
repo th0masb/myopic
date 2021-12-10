@@ -1,7 +1,9 @@
 version: "3"
 services:
   event-stream:
-    image: "th0masb/multi-platform-test:1-aarch64-unknown-linux-gnu"
+    image: "ghcr.io/th0masb/myopic/event-stream:latest"
+    ports:
+      - "8080"
     volumes:
       # Mount AWS credentials on host machine into the container
       - ~/.myopic:/root/.aws:ro
