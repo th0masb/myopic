@@ -1,18 +1,42 @@
-This is a rust application which polls the lichess event stream endpoint
-to detect when our lambda function should be invoked. In my personal case
-I run this program on a dedicated raspberry pi zero instance as it is a
-good balance of low downtime and cheap running costs. The rust binary is
-running on "bare metal" i.e. outside of any docker container and needs to
-be cross-compiled correctly. Some pain has been avoided in switching from
-openssl to rustls but it can still be a bit painful without the right 
-tools.
 
-I recommend using the "cross" tool outlined here: 
-https://github.com/rust-embedded/cross. I'm running ubuntu on my machine
-and it works well, I was running into some issues on macos though.
-You can install using
+This application polls the lichess event stream endpoint
+to detect valid challenges and react to them by
+invoking the game lambda function. It is published as a
+docker image for both amd64 and arm64 platforms, to pull
+the latest version run
 
-`cross build --release --target arm-unknown-linux-gnueabihf`
+```shell
+docker pull ghcr.io/th0masb/myopic/event-stream:latest
+```
 
-and then I scp the binary to the pi.
+The image is built and published automatically each time
+a change is merged to the main branch, versioning is just
+done by commit sha.
+
+The container requires various bits of configuration to
+be injected into either through environment variables
+or credential files on the host. The easiest way to start
+the application is via the docker-compose config file
+deploy.yaml which defines the config required and provides
+default values for most variables. You can pull this file
+using 
+
+```shell
+curl https://raw.githubusercontent.com/th0masb/myopic/master/event-stream/deploy.yaml \
+    -o event-stream-deploy.yaml
+```
+
+and then start the application with
+
+```shell
+docker-compose -f event-stream-deploy.yaml up -d
+```
+
+Note that `~/myopic/credentials` must be present on the
+docker host and will be injected into the container to be
+used as the AWS credentials file. The `MYOPIC_LICHESS_AUTH_TOKEN`
+defined in deploy.yaml is for authorizing the Lichess user
+account, the value can be manually added in the file or it
+will be pulled in automatically from the environment variable
+of the same name defined on the docker host if it exists.
 

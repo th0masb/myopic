@@ -1,0 +1,36 @@
+name: Publish event-stream
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - event-stream/**
+      - tools/**
+jobs:
+  publish-event-stream:
+    runs-on: ubuntu-20.04
+    env:
+      APPLICATION_DIR: event-stream
+      TARGETS: "aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu"
+      DOCKERFILE: tools/Dockerfile.debian
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install QEMU
+        run: sudo apt-get install -y qemu binfmt-support
+      - name: Register fix_binary flag
+        run: docker run --privileged --rm tonistiigi/binfmt --install all
+      - name: Install rustup
+        run: curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
+      - name: Install rustup targets
+        run: rustup target add $TARGETS
+      - name: Install cross
+        run: cargo install cross
+      - name: Build event-stream
+        run: VERSION="$GITHUB_SHA" ./tools/publish-multi-platform.sh
+
