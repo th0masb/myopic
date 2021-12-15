@@ -1,6 +1,6 @@
 [package]
-name = "game-lambda"
-version = "1.0.0"
+name = "chessgame-lambda"
+version = "0.0.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
 edition = "2018"
 
