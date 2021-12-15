@@ -1,6 +1,6 @@
 [package]
 name = "move-lambda"
-version = "0.1.0"
+version = "0.0.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
 edition = "2018"
 
