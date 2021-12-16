@@ -22,7 +22,7 @@ default values for most variables. You can pull this file
 using 
 
 ```shell
-curl https://raw.githubusercontent.com/th0masb/myopic/master/event-stream/deploy.yaml \
+curl https://raw.githubusercontent.com/th0masb/myopic/master/event-stream/docker-compose.yaml \
     -o event-stream-deploy.yaml
 ```
 
