@@ -1,0 +1,26 @@
+name: Pull request checks
+on:
+  pull_request:
+    branches:
+      - master
+jobs:
+  compile_and_test:
+    name: Compile and test
+    runs-on: ubuntu-20.04
+    container:
+      image: rust:1.57-bullseye
+    strategy:
+      matrix:
+        manifest:
+          - engine/core
+          - engine/board
+          - engine/brain
+          - lambda/chessmove
+          - lambda/chessgame
+          - lambda/benchmark
+          - openings/pgn-extractor
+          - event-stream
+    steps:
+      - uses: actions/checkout@v2
+      - run: cargo build --release --manifest-path "${{ matrix.manifest }}/Cargo.toml"
+      - run: cargo test --release --manifest-path "${{ matrix.manifest }}/Cargo.toml"
