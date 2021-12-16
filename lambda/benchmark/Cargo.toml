@@ -1,17 +1,18 @@
 [package]
-name = "bench-lambda"
-version = "0.1.0"
+name = "chessmove-benchmark-lambda"
+version = "0.0.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+myopic-brain = { path = "../../engine/brain" }
 simple_logger = "1.9.0"
 log = "0.4.11"
 serde_derive = "1.0.115"
+anyhow = "1.0.35"
 serde = "1.0.115"
 serde_json = "1.0.59"
 lambda_runtime = "0.2.1"
-myopic-brain = "1.5.3"
 itertools = "0.9.0"

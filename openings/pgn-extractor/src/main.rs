@@ -4,7 +4,7 @@ mod game_stream;
 
 use errors::Errors;
 use game_stream::GameStream;
-use myopic_board::{FenComponent, Move, MutBoard};
+use myopic_board::{FenComponent, Move, ChessBoard};
 use std::{collections::HashMap, error::Error, fs, fs::File, path::PathBuf};
 use structopt::StructOpt;
 
@@ -153,19 +153,19 @@ fn parse_entries(
     offset: usize,
     depth: usize,
     game: &str,
-) -> Result<Vec<CollectionEntry>, errors::Error> {
-    let moves: Vec<Move> = myopic_board::parse::pgn(game)
-        .map_err(|msg| errors::err(msg.as_str()))?
+) -> Result<Vec<CollectionEntry>, anyhow::Error> {
+    let mut board = myopic_board::start();
+    let moves: Vec<Move> = board.play_pgn(game)?
         .into_iter()
         .take(offset + depth)
         .collect();
 
-    let (mut board, mut entries) = (myopic_board::start_position(), vec![]);
+    let (mut board, mut entries) = (myopic_board::start(), vec![]);
     for (i, mv) in moves.into_iter().enumerate() {
         if i >= offset {
             match mv {
                 // Ignore enpassant moves for now
-                Move::Enpassant(_, _) => {}
+                Move::Enpassant { .. } => {}
                 _ => {
                     entries.push(CollectionEntry {
                         position: board.to_partial_fen(format.as_slice()),
@@ -174,7 +174,7 @@ fn parse_entries(
                 }
             }
         }
-        board.evolve(&mv);
+        board.make(mv)?;
     }
 
     Ok(entries)

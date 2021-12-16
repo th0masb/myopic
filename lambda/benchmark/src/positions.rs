@@ -1,10 +1,10 @@
-use myopic_brain::{EvalBoardImpl, MutBoardImpl};
+use myopic_brain::{EvalBoard, Board};
 use lambda_runtime::error::HandlerError;
 
-pub fn get(n: usize) -> Result<Vec<EvalBoardImpl<MutBoardImpl>>, HandlerError> {
+pub fn get(n: usize) -> Result<Vec<EvalBoard<Board>>, HandlerError> {
     let mut roots = vec![];
     for &fen in POSITIONS.iter().take(n) {
-        roots.push(myopic_brain::pos::from_fen(fen).map_err(super::h_err)?);
+        roots.push(EvalBoard::builder_fen(fen).map_err(super::to_handler_err)?.build());
     }
     Ok(roots)
 }

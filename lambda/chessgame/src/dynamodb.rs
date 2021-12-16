@@ -6,7 +6,6 @@ use itertools::Itertools;
 use myopic_brain::{ChessBoard, FenComponent};
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
-use serde::export::fmt::Debug;
 
 use crate::game::{InitalPosition, LookupService};
 

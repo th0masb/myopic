@@ -3,7 +3,6 @@ use myopic_brain::negascout::SearchContext;
 use myopic_brain::{Board, ChessBoard, EvalBoard, SearchParameters};
 use serde_derive::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
-use std::error::Error;
 use std::time::Duration;
 
 const DEFAULT_TIMEOUT_MILLIS: u64 = 1000;
@@ -84,7 +83,7 @@ struct ComputeMoveOutput {
     eval: i32,
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     SimpleLogger::new()
         .with_level(log::LevelFilter::Info)
         .init()?;
@@ -168,6 +167,7 @@ mod test {
     use anyhow::Result;
     use crate::{ComputeMoveEvent, SearchTerminator, MaxDepth, TimeoutMillis};
 
+    #[test]
     fn deserialize_default_tablesize() -> Result<()> {
         assert_eq!(
             ComputeMoveEvent::Fen {

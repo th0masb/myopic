@@ -1,10 +1,13 @@
-mod positions;
+use std::time::Instant;
 
-use lambda_runtime::{error::HandlerError, lambda, Context};
+use itertools::Itertools;
+use lambda_runtime::{Context, error::HandlerError, lambda};
 use serde_derive::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
-use itertools::Itertools;
-use std::time::Instant;
+
+use myopic_brain::SearchParameters;
+
+mod positions;
 
 const LOG_GAP: usize = 2;
 
@@ -12,6 +15,7 @@ const LOG_GAP: usize = 2;
 struct BenchStartEvent {
     positions: usize,
     depth: usize,
+    table_size: usize,
 }
 
 #[derive(Serialize)]
@@ -43,7 +47,10 @@ fn handler(e: BenchStartEvent, ctx: Context) -> Result<BenchOutput, HandlerError
         if i % LOG_GAP == 0 {
             log::info!("[Position {}, Elapsed {}ms]", i, start.elapsed().as_millis());
         }
-        moves.push(myopic_brain::search(root, e.depth).map_err(h_err)?);
+        moves.push(myopic_brain::search(root, SearchParameters {
+            terminator: e.depth,
+            table_size: e.table_size,
+        }).map_err(to_handler_err)?);
     }
 
     let execution_times = moves
@@ -67,6 +74,6 @@ fn handler(e: BenchStartEvent, ctx: Context) -> Result<BenchOutput, HandlerError
     Ok(output)
 }
 
-fn h_err(s: String) -> HandlerError {
-    HandlerError::from(s.as_str())
+fn to_handler_err(e: anyhow::Error) -> HandlerError {
+    HandlerError::from(format!("{}", e).as_str())
 }
