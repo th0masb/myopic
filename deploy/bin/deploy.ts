@@ -3,6 +3,7 @@ import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
 import { MyopicLambdaStack } from '../lib/myopic-lambda-stack';
 import { MyopicDatabaseStack } from "../lib/opening-db-stack";
+import { TestStack } from "../lib/test-stack";
 
 require('dotenv').config()
 
@@ -11,6 +12,10 @@ const envConfig = {
   region: process.env.MYOPIC_AWS_REGION!,
   account: process.env.MYOPIC_AWS_ACCOUNT!
 }
+
+new TestStack(app, "MyopicTestStack", {
+  env: envConfig
+})
 
 new MyopicDatabaseStack(app, 'MyopicDatabaseStack', {
   openingsTableName: process.env.OPENINGS_TABLE_NAME!,
