@@ -7,26 +7,22 @@ import { MyopicDatabaseStack } from "../lib/opening-db-stack";
 require('dotenv').config()
 
 const app = new cdk.App();
+const envConfig = {
+  region: process.env.MYOPIC_AWS_REGION!,
+  account: process.env.MYOPIC_AWS_ACCOUNT!
+}
 
 new MyopicDatabaseStack(app, 'MyopicDatabaseStack', {
   openingsTableName: process.env.OPENINGS_TABLE_NAME!,
   positionAttributeName: process.env.POSITION_ATTRIBUTE_NAME!,
   readCapacity: Number.parseInt(process.env.READ_CAPACITY!),
   writeCapacity: Number.parseInt(process.env.WRITE_CAPACITY!),
-  env: {
-    region: process.env.REGION!,
-    account: process.env.ACCOUNT!,
-  }
+  env: envConfig
 });
 
 new MyopicLambdaStack(app, 'MyopicLambdaStack', {
   openingsTableName: process.env.OPENINGS_TABLE_NAME!,
-  region: process.env.REGION!,
-  account: process.env.ACCOUNT!,
-  env: {
-    region: process.env.REGION!,
-    account: process.env.ACCOUNT!
-  },
+  env: envConfig,
   gameLambdaConfig: {
     assetName: process.env.GAME_HANDLER_ASSET_NAME!,
     functionName: process.env.GAME_HANDLER_FUNCTION_NAME!,
@@ -46,3 +42,4 @@ new MyopicLambdaStack(app, 'MyopicLambdaStack', {
     memoryLimit: Number.parseInt(process.env.MOVE_MEMORY_SIZE!),
   }
 });
+
