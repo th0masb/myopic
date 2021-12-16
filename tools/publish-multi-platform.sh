@@ -31,16 +31,21 @@ for target in $TARGETS; do
   cross build --release --target=$target
   cp "target/$target/release/$APPLICATION_DIR" "$build_context/app"
   image_tag="$image_name:$VERSION-$mapped_target"
+  push="--push"
+  if [ $DRYRUN = "1" ]; then
+    push=""
+  fi
   docker buildx build \
-    --push \
+    $push \
     --platform "linux/$mapped_target" \
     -t "$image_tag" \
     "$build_context"
   manifest_amendments="$manifest_amendments --amend $image_tag"
 done
 
-docker manifest create "$image_name:$VERSION" $manifest_amendments
-docker manifest push "$image_name:$VERSION"
-docker manifest create "$image_name:latest" $manifest_amendments
-docker manifest push "$image_name:latest"
-
+if [ $DRYRUN != "1" ]; then
+  docker manifest create "$image_name:$VERSION" $manifest_amendments
+  docker manifest push "$image_name:$VERSION"
+  docker manifest create "$image_name:latest" $manifest_amendments
+  docker manifest push "$image_name:latest"
+fi
