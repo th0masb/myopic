@@ -5,12 +5,10 @@ import * as iam from '@aws-cdk/aws-iam';
 import * as path from 'path';
 
 export interface MyopicLambdaStackProps extends cdk.StackProps {
-  account: string
-  region: string
-  openingsTableName: string
-  gameLambdaConfig: LambdaConfig
-  benchLambdaConfig: LambdaConfig
-  moveLambdaConfig: LambdaConfig
+  readonly openingsTableName: string
+  readonly gameLambdaConfig: LambdaConfig
+  readonly benchLambdaConfig: LambdaConfig
+  readonly moveLambdaConfig: LambdaConfig
 }
 
 export interface LambdaConfig {
@@ -69,11 +67,11 @@ export class MyopicLambdaStack extends cdk.Stack {
     ps.addActions("lambda:InvokeFunction", "dynamodb:GetItem")
     ps.addResources(
       // Recursively invoke itself
-      `arn:aws:lambda:${props.region}:${props.account}:function:${props.gameLambdaConfig.functionName}`,
+      `arn:aws:lambda:${props.env!.region}:${props.env!.account}:function:${props.gameLambdaConfig.functionName}`,
       // Access the opening table
-      `arn:aws:dynamodb:${props.region}:${props.account}:table/${props.openingsTableName}`,
+      `arn:aws:dynamodb:${props.env!.region}:${props.env!.account}:table/${props.openingsTableName}`,
       // Access the move lambda for computations
-        `arn:aws:lambda:${props.region}:${props.account}:function:${props.moveLambdaConfig.functionName}`,
+        `arn:aws:lambda:${props.env!.region}:${props.env!.account}:function:${props.moveLambdaConfig.functionName}`,
     )
     gameHandler.addToRolePolicy(ps)
   }
