@@ -2,33 +2,14 @@ use std::time::Instant;
 
 use itertools::Itertools;
 use lambda_runtime::{Context, error::HandlerError, lambda};
-use serde_derive::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
 
+use lambda_payloads::benchmark::*;
 use myopic_brain::SearchParameters;
 
 mod positions;
 
 const LOG_GAP: usize = 2;
-
-#[derive(Deserialize)]
-struct BenchStartEvent {
-    positions: usize,
-    depth: usize,
-    table_size: usize,
-}
-
-#[derive(Serialize)]
-struct BenchOutput {
-    positions_searched: usize,
-    depth_searched: usize,
-    min_search_time_millis: u64,
-    average_search_time_millis: u64,
-    max_search_time_millis: u64,
-    median_search_time_millis: u64,
-    total_search_time_secs: u64,
-    memory_allocated_mb: usize,
-}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     SimpleLogger::new()
