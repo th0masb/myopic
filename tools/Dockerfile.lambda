@@ -5,7 +5,7 @@ COPY . .
 ARG APP_DIR
 RUN cargo build --release --manifest-path "$APP_DIR/Cargo.toml"
 
-FROM public.ecr.aws/lambda/provided:al2
+FROM amazonlinux:2
 
 WORKDIR /app
 ARG APP_DIR
