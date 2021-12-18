@@ -2,8 +2,7 @@ use std::time::Instant;
 
 use anyhow::{anyhow, Error, Result};
 use tokio::time::Duration;
-
-use crate::params::ApplicationParameters;
+use crate::config::AppConfig;
 
 const STATUS_ENDPOINT: &'static str = "https://lichess.org/api/users/status";
 
@@ -15,12 +14,12 @@ pub struct StatusService {
 }
 
 impl StatusService {
-    pub fn new(parameters: &ApplicationParameters) -> StatusService {
+    pub fn new(parameters: &AppConfig) -> StatusService {
         StatusService {
             client: StatusClient::default(),
-            status_poll_gap: Duration::from_secs(parameters.status_poll_gap_secs as u64),
+            status_poll_gap: Duration::from_secs(parameters.event_loop.status_poll_gap_secs as u64),
             status_checkpoint: Instant::now(),
-            user_id: parameters.lichess_bot_id.to_string(),
+            user_id: parameters.lichess_bot.bot_id.to_string(),
         }
     }
 

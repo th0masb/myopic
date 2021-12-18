@@ -18,6 +18,7 @@ jobs:
           - lambda/chessmove
           - lambda/chessgame
           - lambda/benchmark
+          - lambda/payloads
           - openings/pgn-extractor
           - event-stream
     steps:

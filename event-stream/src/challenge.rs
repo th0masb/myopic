@@ -1,8 +1,8 @@
 use anyhow::Result;
+use crate::config::AppConfig;
 
 use crate::events::{Challenge, ClockTimeControl, TimeControl, Variant};
 use crate::lichess::LichessClient;
-use crate::params::ApplicationParameters;
 use crate::validity::TimeValidity;
 
 const STANDARD_VARIANT_KEY: &'static str = "standard";
@@ -14,17 +14,17 @@ pub struct ChallengeService {
 }
 
 impl ChallengeService {
-    pub fn new(parameters: &ApplicationParameters) -> ChallengeService {
+    pub fn new(parameters: &AppConfig) -> ChallengeService {
         ChallengeService {
-            client: LichessClient::new(parameters.lichess_auth_token.clone()),
+            client: LichessClient::new(parameters.lichess_bot.auth_token.clone()),
             time_validity: TimeValidity {
                 initial_bounds_secs: (
-                    parameters.min_initial_time_secs,
-                    parameters.max_initial_time_secs,
+                    parameters.time_constraints.min_initial_time_secs,
+                    parameters.time_constraints.max_initial_time_secs,
                 ),
                 increment_bounds_secs: (
-                    parameters.min_increment_secs,
-                    parameters.max_increment_secs,
+                    parameters.time_constraints.min_increment_secs,
+                    parameters.time_constraints.max_increment_secs,
                 ),
             },
         }

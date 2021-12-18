@@ -4,9 +4,9 @@ use anyhow::{Error, Result};
 use futures_util::StreamExt;
 
 use crate::challenge::ChallengeService;
+use crate::config::AppConfig;
 use crate::eventprocessor::EventProcessor;
 use crate::gamestart::GameStartService;
-use crate::params::ApplicationParameters;
 use crate::userstatus::StatusService;
 
 const EVENT_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/stream/event";
@@ -16,7 +16,7 @@ pub enum LoopAction {
     Break,
 }
 
-pub async fn stream(params: ApplicationParameters) {
+pub async fn stream(params: AppConfig) {
     loop {
         let mut event_processor = EventProcessor {
             challenge_service: ChallengeService::new(&params),
@@ -26,9 +26,9 @@ pub async fn stream(params: ApplicationParameters) {
 
         log::info!("Opening event stream");
         let start = Instant::now();
-        let max_stream_duration = Duration::from_secs(params.max_stream_life_mins * 60);
+        let max_stream_duration = Duration::from_secs((params.event_loop.max_stream_life_mins * 60) as u64);
 
-        match open_event_stream(&params.lichess_auth_token).await {
+        match open_event_stream(&params.lichess_bot.auth_token).await {
             Err(e) => log::warn!("Cannot connect to event stream {}", e),
             Ok(eventstream_resp) => {
                 let mut eventstream = eventstream_resp.bytes_stream();
@@ -55,8 +55,9 @@ pub async fn stream(params: ApplicationParameters) {
             }
         }
 
-        log::info!("Sleeping for {} seconds", params.retry_wait_duration_secs);
-        tokio::time::sleep(Duration::from_secs(params.retry_wait_duration_secs)).await;
+        log::info!("Sleeping for {} seconds", params.event_loop.retry_wait_duration_secs);
+        let sleep_duration = Duration::from_secs(params.event_loop.retry_wait_duration_secs as u64);
+        tokio::time::sleep(sleep_duration).await;
     }
 }
 

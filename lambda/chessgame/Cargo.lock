@@ -180,6 +180,7 @@ dependencies = [
  "anyhow",
  "bytes 0.5.6",
  "itertools 0.8.2",
+ "lambda-payloads",
  "lambda_runtime",
  "log",
  "myopic-brain",
@@ -942,6 +943,15 @@ checksum = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 dependencies = [
  "winapi 0.2.8",
  "winapi-build",
+]
+
+[[package]]
+name = "lambda-payloads"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
