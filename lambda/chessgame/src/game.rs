@@ -50,7 +50,6 @@ struct InferredGameMetadata {
 pub struct GameConfig {
     pub game_id: String,
     pub bot_id: String,
-    pub expected_half_moves: u32,
     pub time_constraints: TimeConstraints,
     pub lichess_auth_token: String,
 }
@@ -63,7 +62,6 @@ where
     E: LookupService,
 {
     bot_id: String,
-    expected_half_moves: u32,
     time_constraints: TimeConstraints,
     inferred_metadata: Option<InferredGameMetadata>,
     lichess_service: LichessService,
@@ -93,7 +91,6 @@ where
             endgame_service: endgame,
             compute_service: compute,
             bot_id: config.bot_id,
-            expected_half_moves: config.expected_half_moves,
             time_constraints: config.time_constraints,
             inferred_metadata: None,
             halfmove_count: 0,

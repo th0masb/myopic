@@ -3,10 +3,10 @@ use std::str::FromStr;
 use anyhow::{anyhow, Error, Result};
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
+use crate::config::AppConfig;
 
-use crate::events::{ClockTimeControl, GameStart};
+use crate::events::{GameStart};
 use crate::lichess::LichessClient;
-use crate::params::ApplicationParameters;
 
 pub struct GameStartService {
     client: LichessClient,
@@ -14,17 +14,17 @@ pub struct GameStartService {
 }
 
 impl GameStartService {
-    pub fn new(parameters: &ApplicationParameters) -> GameStartService {
+    pub fn new(parameters: &AppConfig) -> GameStartService {
         GameStartService {
-            client: LichessClient::new(parameters.lichess_auth_token.clone()),
+            client: LichessClient::new(parameters.lichess_bot.auth_token.clone()),
             invoker: LambdaInvoker::new(parameters.clone()),
         }
     }
 
     pub async fn process_gamestart(&self, game_start: GameStart) -> Result<String> {
         let id = game_start.id.as_str();
-        let clock = self.client.get_clock(id).await?;
-        match self.invoker.trigger_lambda(id, &clock).await {
+        //let clock = self.client.get_clock(id).await?;
+        match self.invoker.trigger_lambda(id).await {
             Err(e) => Err(anyhow!(
                 "Unable to trigger lambda: {}, abort status: {:?}",
                 e,
@@ -54,29 +54,23 @@ impl GameStartService {
 }
 
 struct LambdaInvoker {
-    params: ApplicationParameters,
+    params: AppConfig,
     client: LambdaClient,
 }
 
 impl LambdaInvoker {
-    fn new(params: ApplicationParameters) -> LambdaInvoker {
+    fn new(params: AppConfig) -> LambdaInvoker {
+        let region = Region::from_str(params.game_function.id.region.as_str()).unwrap();
         LambdaInvoker {
-            client: LambdaClient::new(Region::from_str(params.function_region.as_str()).unwrap()),
+            client: LambdaClient::new(region),
             params,
         }
     }
 
-    async fn trigger_lambda(
-        &self,
-        game_id: &str,
-        time_control: &ClockTimeControl,
-    ) -> Result<Option<i64>> {
-        let max_depth = self.compute_max_depth(&time_control);
-        let payload = self
-            .params
-            .to_lambda_invocation_payload(game_id.to_string(), max_depth)?;
+    async fn trigger_lambda(&self, game_id: &str) -> Result<Option<i64>> {
+        let payload = crate::config::extract_game_lambda_payload(&self.params, game_id);
         let request = InvokeAsyncRequest {
-            function_name: self.params.function_name.clone(),
+            function_name: self.params.game_function.id.name.clone(),
             invoke_args: bytes::Bytes::from(payload),
         };
         self.client
@@ -84,13 +78,5 @@ impl LambdaInvoker {
             .await
             .map(|response| response.status)
             .map_err(Error::from)
-    }
-
-    fn compute_max_depth(&self, time_control: &ClockTimeControl) -> u8 {
-        let p = &self.params;
-        let max_lambda_execution_time_secs = p.max_lambda_duration_mins as u32 * 60;
-        let increment_allowance_secs = p.increment_allowance_mins as u32 * 60;
-        let total_limit = 2 * time_control.limit;
-        (1 + (total_limit + increment_allowance_secs) / max_lambda_execution_time_secs) as u8
     }
 }

@@ -9,10 +9,10 @@ use lambda_runtime::{Context, error::HandlerError, lambda};
 use reqwest::blocking::Response;
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
-use serde_derive::{Deserialize, Serialize};
 use simple_logger::SimpleLogger;
 
 use game::Game;
+use lambda_payloads::chessgame::*;
 
 use crate::compute::LambdaMoveComputeService;
 use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
@@ -31,61 +31,6 @@ mod timing;
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
 type GameImpl = Game<DynamoDbOpeningService, LambdaMoveComputeService, EndgameService>;
-
-/// The input payload of this lambda
-#[derive(Serialize, Deserialize, Clone)]
-struct PlayGameEvent {
-    /// The current call depth of the lambda invokation
-    #[serde(rename = "functionDepthRemaining")]
-    function_depth_remaining: u8,
-    /// The region this lambda is deployed in
-    #[serde(rename = "functionRegion")]
-    function_region: String,
-    /// The name of this lambda function
-    #[serde(rename = "functionName")]
-    function_name: String,
-    /// The lichess game id this lambda will participate in
-    #[serde(rename = "lichessGameId")]
-    lichess_game_id: String,
-    /// An auth token for the lichess bot this lambda will play as
-    #[serde(rename = "lichessAuthToken")]
-    lichess_auth_token: String,
-    /// The id of the lichess bot this lambda will play as
-    #[serde(rename = "lichessBotId")]
-    lichess_bot_id: String,
-    /// The name of the dynamodb table used to store opening positions
-    #[serde(rename = "openingTableName")]
-    opening_table_name: String,
-    /// The region in which the opening table is deployed
-    #[serde(rename = "openingTableRegion")]
-    opening_table_region: String,
-    /// The name of the position key used as a pk in the opening table
-    #[serde(rename = "openingTablePositionKey")]
-    opening_table_position_key: String,
-    /// The name of the move key used in the opening table
-    #[serde(rename = "openingTableMoveKey")]
-    opening_table_move_key: String,
-    /// How many half moves we expect the game to last for
-    #[serde(rename = "expectedHalfMoves")]
-    expected_half_moves: u32,
-    /// How many seconds to wait for the first full move to take place
-    /// before aborting the game
-    #[serde(rename = "abortAfterSecs")]
-    abort_after_secs: usize,
-}
-
-impl PlayGameEvent {
-    fn increment_depth(&self) -> PlayGameEvent {
-        let mut new_event = self.clone();
-        new_event.function_depth_remaining = self.function_depth_remaining - 1;
-        new_event
-    }
-}
-
-#[derive(Serialize, Clone)]
-struct PlayGameOutput {
-    message: String,
-}
 
 #[derive(Debug, Copy, Clone)]
 pub struct TimeConstraints {
@@ -176,7 +121,6 @@ fn init_game(e: &PlayGameEvent, ctx: &Context) -> Result<GameImpl, HandlerError>
         GameConfig {
             game_id: e.lichess_game_id.clone(),
             bot_id: e.lichess_bot_id.clone(),
-            expected_half_moves: e.expected_half_moves,
             lichess_auth_token: e.lichess_auth_token.clone(),
             time_constraints: TimeConstraints {
                 start_time: Instant::now(),
@@ -223,7 +167,7 @@ fn open_game_stream(
 
 fn recurse(source_event: &PlayGameEvent) -> Result<PlayGameOutput, HandlerError> {
     // Inject region as part of the PlayGameEvent
-    let next_event = source_event.increment_depth();
+    let next_event = increment_depth(source_event);
     let region = parse_region(next_event.function_region.as_str())?;
     tokio::runtime::Runtime::new()
         .unwrap()
@@ -238,4 +182,10 @@ fn recurse(source_event: &PlayGameEvent) -> Result<PlayGameOutput, HandlerError>
                 next_event.function_depth_remaining, response.status
             ),
         })
+}
+
+fn increment_depth(event: &PlayGameEvent) -> PlayGameEvent {
+    let mut new_event = event.clone();
+    new_event.function_depth_remaining = event.function_depth_remaining - 1;
+    new_event
 }

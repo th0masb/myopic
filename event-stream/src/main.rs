@@ -14,19 +14,20 @@ use warp::Filter;
 
 use crate::forwarding::ChallengeRequest;
 use crate::lichess::LichessClient;
-use crate::params::ApplicationParameters;
 use std::net::SocketAddr;
+
+use crate::config::AppConfig;
 
 mod challenge;
 mod eventprocessor;
 mod events;
 mod gamestart;
 mod lichess;
-mod params;
 mod streamloop;
 mod userstatus;
 mod validity;
 mod forwarding;
+mod config;
 
 #[tokio::main]
 async fn main() {
@@ -36,8 +37,9 @@ async fn main() {
         .init()
         .unwrap_or_else(|e| panic!("Unable to init logger: {}", e));
 
-    let params = load_params();
-    let (auth, server_addr) = (params.lichess_auth_token.clone(), params.http_addr.clone());
+    let params = AppConfig::default();
+    let auth = params.lichess_bot.auth_token.clone();
+    let server_addr = params.challenge_server_address.clone();
 
     // Client instance responsible for all forwarded requests to Lichess
     let client = Arc::new(LichessClient::new(auth));
@@ -63,9 +65,4 @@ async fn main() {
     warp::serve(challenge_forwarding)
         .run(server_addr.parse::<SocketAddr>().unwrap())
         .await;
-}
-
-fn load_params() -> ApplicationParameters {
-    ApplicationParameters::load()
-        .unwrap_or_else(|e| panic!("Unable to load application params: {}", e))
 }
