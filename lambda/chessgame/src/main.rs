@@ -30,6 +30,7 @@ pub mod position;
 mod timing;
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
+
 type GameImpl = Game<DynamoDbOpeningService, LambdaMoveComputeService, EndgameService>;
 
 #[derive(Debug, Copy, Clone)]
@@ -137,7 +138,10 @@ fn init_game(e: &PlayGameEvent, ctx: &Context) -> Result<GameImpl, HandlerError>
             move_key: e.opening_table_move_key.clone(),
             table_region: parse_region(e.opening_table_region.as_str())?,
         }),
-        LambdaMoveComputeService::default(),
+        LambdaMoveComputeService {
+            function_name: e.move_function_name.clone(),
+            region: parse_region(e.move_function_region.as_str())?,
+        },
         EndgameService::default(),
     ))
 }

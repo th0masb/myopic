@@ -4,56 +4,14 @@ use anyhow::{anyhow, Result};
 use bytes::Bytes;
 use rusoto_core::Region;
 use rusoto_lambda::{InvocationRequest, Lambda, LambdaClient};
-use serde_derive::{Deserialize, Serialize};
+
+use lambda_payloads::chessmove::*;
 
 use crate::game::{ComputeService, InitalPosition};
 
 pub struct LambdaMoveComputeService {
-    region: Region,
-    function_name: String,
-}
-impl Default for LambdaMoveComputeService {
-    fn default() -> Self {
-        LambdaMoveComputeService {
-            region: Region::EuWest2,
-            function_name: format!("MyopicMove"),
-        }
-    }
-}
-
-#[derive(Serialize, Clone)]
-struct RequestPayload {
-    #[serde(rename = "type")]
-    payload_type: String,
-    sequence: String,
-    #[serde(rename = "startFen")]
-    start_fen: Option<String>,
-    #[serde(rename = "timeoutMillis")]
-    timeout_millis: u64,
-}
-impl RequestPayload {
-    fn new(initial_position: &InitalPosition, sequence: &str, limit: Duration) -> RequestPayload {
-        RequestPayload {
-            start_fen: match initial_position {
-                InitalPosition::Start => None,
-                InitalPosition::CustomFen(fen) => Some(fen.clone()),
-            },
-            payload_type: format!("uciSequence"),
-            sequence: sequence.to_string(),
-            timeout_millis: limit.as_millis() as u64,
-        }
-    }
-}
-
-#[derive(Deserialize, Clone)]
-struct ResponsePayload {
-    #[serde(rename = "bestMove")]
-    best_move: String,
-    #[serde(rename = "depthSearched")]
-    depth_searched: usize,
-    #[serde(rename = "searchDurationMillis")]
-    search_duration_millis: u64,
-    eval: i32,
+    pub region: Region,
+    pub function_name: String,
 }
 
 impl ComputeService for LambdaMoveComputeService {
@@ -63,11 +21,7 @@ impl ComputeService for LambdaMoveComputeService {
         uci_sequence: &str,
         time_limit: Duration,
     ) -> Result<String> {
-        let payload = serde_json::to_string(&RequestPayload::new(
-            initial_position,
-            uci_sequence,
-            time_limit,
-        ))?;
+        let payload = new_request_payload(initial_position, uci_sequence, time_limit)?;
         log::info!("Request payload {}", payload);
         let timer = Instant::now();
         let invocation = tokio::runtime::Runtime::new().unwrap().block_on(
@@ -87,11 +41,30 @@ impl ComputeService for LambdaMoveComputeService {
             Some(raw_bytes) => {
                 let decoded = String::from_utf8(raw_bytes.to_vec())?;
                 log::info!("Response payload: {}", decoded);
-                let response = serde_json::from_str::<ResponsePayload>(decoded.as_str())?;
+                let response = serde_json::from_str::<ComputeMoveOutput>(decoded.as_str())?;
                 Ok(response.best_move)
             }
         }
     }
+}
+
+fn new_request_payload(
+    initial_position: &InitalPosition,
+    sequence: &str,
+    limit: Duration
+) -> serde_json::Result<String> {
+    serde_json::to_string(&ComputeMoveEvent::UciSequence {
+        table_size: Default::default(),
+        sequence: sequence.to_string(),
+        terminator: SearchTerminator {
+            max_depth: Default::default(),
+            timeout_millis: TimeoutMillis(limit.as_millis() as u64)
+        },
+        start_fen: match initial_position {
+            InitalPosition::Start => None,
+            InitalPosition::CustomFen(fen) => Some(fen.clone()),
+        },
+    })
 }
 
 #[cfg(test)]
