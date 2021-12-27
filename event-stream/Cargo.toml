@@ -1,13 +1,12 @@
 [package]
 name = "event-stream"
-version = "1.1.0"
+version = "0.0.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lambda-payloads = { path = "../lambda/payloads" }
 serde = "1.0.115"
 serde_derive = "1.0.115"
 serde_json = "1.0.59"
