@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 myopic-brain = { path = "../../engine/brain" }
+lambda-payloads = { path = "../payloads" }
 lambda_runtime = "0.2.1"
 serde_derive = "1.0.115"
 serde = "1.0.115"
