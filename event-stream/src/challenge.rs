@@ -1,63 +1,67 @@
 use anyhow::Result;
-use crate::config::AppConfig;
 
-use crate::events::{Challenge, ClockTimeControl, TimeControl, Variant};
+use crate::config::{AppConfig, TimeConstraints};
+use crate::events::{Challenge, TimeControl};
 use crate::lichess::LichessClient;
-use crate::validity::TimeValidity;
-
-const STANDARD_VARIANT_KEY: &'static str = "standard";
-const FEN_VARIANT_KEY: &'static str = "fromPosition";
 
 pub struct ChallengeService {
     client: LichessClient,
-    time_validity: TimeValidity,
+    validity_checks: Vec<Box<dyn ValidityCheck + Send + Sync>>,
 }
 
 impl ChallengeService {
     pub fn new(parameters: &AppConfig) -> ChallengeService {
         ChallengeService {
             client: LichessClient::new(parameters.lichess_bot.auth_token.clone()),
-            time_validity: TimeValidity {
-                initial_bounds_secs: (
-                    parameters.time_constraints.min_initial_time_secs,
-                    parameters.time_constraints.max_initial_time_secs,
-                ),
-                increment_bounds_secs: (
-                    parameters.time_constraints.min_increment_secs,
-                    parameters.time_constraints.max_increment_secs,
-                ),
-            },
+            validity_checks: vec![
+                Box::new(parameters.time_constraints.clone()),
+                Box::new(VariantCheck),
+            ]
         }
     }
 
     pub async fn process_challenge(&self, challenge: Challenge) -> Result<String> {
-        match challenge.time_control {
-            TimeControl::Unlimited | TimeControl::Correspondence { .. } => {
-                log::info!("Cannot play game without real time clock...");
-                self.client
-                    .post_challenge_response(&challenge, "decline")
-                    .await
-                    .map(|status| format!("{} from challenge decline", status))
-            }
-            TimeControl::Clock { ref clock } => {
-                if self.is_legal_challenge(clock, &challenge.variant) {
-                    self.client
-                        .post_challenge_response(&challenge, "accept")
-                        .await
-                        .map(|status| format!("{} from challenge accept", status))
-                } else {
-                    log::info!("Illegal challenge: {:?} {:?}", challenge.variant, clock);
-                    self.client
-                        .post_challenge_response(&challenge, "decline")
-                        .await
-                        .map(|status| format!("{} from challenge decline", status))
-                }
-            }
+        if self.validity_checks.iter().all(|check| check.accepts(&challenge)) {
+            log::info!("Challenge is valid, posting accept response");
+            self.client
+                .post_challenge_response(&challenge, "accept")
+                .await
+                .map(|status| format!("{} from challenge accept", status))
+        } else {
+            log::info!("Illegal challenge: {:?}", &challenge);
+            self.client
+                .post_challenge_response(&challenge, "decline")
+                .await
+                .map(|status| format!("{} from challenge decline", status))
         }
     }
+}
 
-    fn is_legal_challenge(&self, time_control: &ClockTimeControl, variant: &Variant) -> bool {
-        self.time_validity.is_valid(time_control) && variant.key.as_str() == STANDARD_VARIANT_KEY
-            || variant.key.as_str() == FEN_VARIANT_KEY
+trait ValidityCheck {
+    fn accepts(&self, challenge: &Challenge) -> bool;
+}
+
+const STANDARD_VARIANT_KEY: &'static str = "standard";
+// TODO Support custom FEN variant
+//const FEN_VARIANT_KEY: &'static str = "fromPosition";
+
+struct VariantCheck;
+impl ValidityCheck for VariantCheck {
+    fn accepts(&self, challenge: &Challenge) -> bool {
+        challenge.variant.key.as_str() == STANDARD_VARIANT_KEY
+    }
+}
+
+impl ValidityCheck for TimeConstraints {
+    fn accepts(&self, challenge: &Challenge) -> bool {
+        match &challenge.time_control {
+            TimeControl::Unlimited | TimeControl::Correspondence { .. } => false,
+            TimeControl::Clock { clock } => {
+                self.min_initial_time_secs <= clock.limit
+                    && self.max_initial_time_secs >= clock.limit
+                    && self.min_increment_secs <= clock.increment
+                    && self.max_increment_secs >= clock.increment
+            }
+        }
     }
 }

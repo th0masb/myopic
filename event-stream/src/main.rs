@@ -25,7 +25,6 @@ mod gamestart;
 mod lichess;
 mod streamloop;
 mod userstatus;
-mod validity;
 mod forwarding;
 mod config;
 mod payload;
