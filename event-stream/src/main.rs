@@ -28,6 +28,7 @@ mod userstatus;
 mod validity;
 mod forwarding;
 mod config;
+mod payload;
 
 #[tokio::main]
 async fn main() {

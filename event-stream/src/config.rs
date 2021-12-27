@@ -1,5 +1,5 @@
 use serde_derive::{Serialize, Deserialize};
-use lambda_payloads::chessgame::PlayGameEvent;
+use crate::payload::PlayGameEvent;
 
 const LICHESS_AUTH_TOKEN_VAR: &'static str = "MYOPIC_LICHESS_AUTH_TOKEN";
 const CONFIG_VAR: &'static str = "MYOPIC_CONFIG";
