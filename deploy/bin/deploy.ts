@@ -50,23 +50,20 @@ new MyopicLambdaStack(app, "MyopicLambdaStack", {
   },
 });
 
+new BotStack(app, "Myopic", {
+  env: envConfig,
+  openingTableName: process.env.OPENINGS_TABLE_NAME!,
+  params: new Map([
+    [ LambdaConfigType.Move, { memory: 1792, timeout: cdk.Duration.minutes(10) } ],
+    [ LambdaConfigType.Game, { memory: 128, timeout: cdk.Duration.minutes(10) } ],
+  ]),
+});
+
 new BotStack(app, "Hyperopic", {
   env: envConfig,
   openingTableName: process.env.OPENINGS_TABLE_NAME!,
   params: new Map([
-    [
-      LambdaConfigType.Move,
-      {
-        memory: 1792,
-        timeout: cdk.Duration.minutes(10),
-      },
-    ],
-    [
-      LambdaConfigType.Game,
-      {
-        memory: 128,
-        timeout: cdk.Duration.minutes(10),
-      },
-    ],
+    [ LambdaConfigType.Move, { memory: 1792, timeout: cdk.Duration.minutes(10) } ],
+    [ LambdaConfigType.Game, { memory: 128, timeout: cdk.Duration.minutes(10) } ],
   ]),
 });
