@@ -1,4 +1,6 @@
-use serde_derive::{Serialize, Deserialize};
+use regex::Regex;
+use serde_derive::{Deserialize, Serialize};
+
 use crate::payload::PlayGameEvent;
 
 const LICHESS_AUTH_TOKEN_VAR: &'static str = "MYOPIC_LICHESS_AUTH_TOKEN";
@@ -28,6 +30,8 @@ pub struct LichessConfig {
     pub bot_id: String,
     #[serde(rename = "authToken", default = "get_lichess_auth_token")]
     pub auth_token: String,
+    #[serde(rename = "userMatchers", default = "default_user_matchers")]
+    pub user_matchers: Vec<StringMatcher>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,6 +81,14 @@ pub struct TimeConstraints {
     pub max_increment_secs: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StringMatcher {
+    pub include: bool,
+    #[serde(with = "serde_regex")]
+    pub pattern: Regex,
+}
+
+
 impl Default for AppConfig {
     fn default() -> Self {
         let config = get_env_var(CONFIG_VAR);
@@ -120,6 +132,12 @@ fn default_region() -> String {
 
 fn default_position_key() -> String {
     "PositionFEN".to_string()
+}
+
+fn default_user_matchers() -> Vec<StringMatcher> {
+    vec![
+        StringMatcher{ include: true, pattern: Regex::new(r".*").unwrap() }
+    ]
 }
 
 fn default_moves_key() -> String {

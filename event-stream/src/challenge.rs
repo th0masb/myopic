@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::config::{AppConfig, TimeConstraints};
+use crate::config::{AppConfig, StringMatcher, TimeConstraints};
 use crate::events::{Challenge, TimeControl};
 use crate::lichess::LichessClient;
 
@@ -16,6 +16,7 @@ impl ChallengeService {
             validity_checks: vec![
                 Box::new(parameters.time_constraints.clone()),
                 Box::new(VariantCheck),
+                Box::new(parameters.lichess_bot.user_matchers.clone())
             ]
         }
     }
@@ -63,5 +64,15 @@ impl ValidityCheck for TimeConstraints {
                     && self.max_increment_secs >= clock.increment
             }
         }
+    }
+}
+
+impl ValidityCheck for Vec<StringMatcher> {
+    fn accepts(&self, challenge: &Challenge) -> bool {
+        let name = challenge.challenger.name.as_str();
+        self.iter()
+            .find(|&matcher| matcher.pattern.is_match(name))
+            .map(|matcher| matcher.include)
+            .unwrap_or(false)
     }
 }
