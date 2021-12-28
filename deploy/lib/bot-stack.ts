@@ -34,7 +34,7 @@ export class BotStack extends cdk.Stack {
         code: lambda.DockerImageCode.fromImageAsset(
           path.join(__dirname, "..", ".."),
           {
-            file: path.join("tools", "Dockerfile.lambda"),
+            file: path.join("tools", "lambda.dockerfile"),
             buildArgs: {
               APP_DIR: `${config.cargoDir}`,
               APP_NAME: `${config.cargoName}`,
