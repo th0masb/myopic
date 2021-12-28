@@ -10,6 +10,7 @@ use myopic_brain::negascout::SearchContext;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     SimpleLogger::new()
         .with_level(log::LevelFilter::Info)
+        .without_timestamps()
         .init()?;
     lambda!(move_compute_handler);
     Ok(())

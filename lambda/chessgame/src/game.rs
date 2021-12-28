@@ -2,8 +2,9 @@ use std::ops::Add;
 use std::time::{Duration, Instant};
 
 use anyhow::{anyhow, Result};
-use myopic_brain::{Board, ChessBoard, EvalBoard, Side};
 use reqwest::StatusCode;
+
+use myopic_brain::{Board, ChessBoard, EvalBoard, Side};
 
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::lichess::{LichessChatRoom, LichessService};
@@ -49,7 +50,7 @@ struct InferredGameMetadata {
 #[derive(Debug, Clone)]
 pub struct GameConfig {
     pub game_id: String,
-    pub bot_id: String,
+    pub bot_name: String,
     pub time_constraints: TimeConstraints,
     pub lichess_auth_token: String,
 }
@@ -61,7 +62,7 @@ where
     C: ComputeService,
     E: LookupService,
 {
-    bot_id: String,
+    bot_name: String,
     time_constraints: TimeConstraints,
     inferred_metadata: Option<InferredGameMetadata>,
     lichess_service: LichessService,
@@ -90,7 +91,7 @@ where
             opening_service: openings,
             endgame_service: endgame,
             compute_service: compute,
-            bot_id: config.bot_id,
+            bot_name: config.bot_name,
             time_constraints: config.time_constraints,
             inferred_metadata: None,
             halfmove_count: 0,
@@ -155,14 +156,19 @@ where
         // Track info required for playing future gamestates
         self.inferred_metadata = Some(InferredGameMetadata {
             clock: game_full.clock,
-            lambda_side: if self.bot_id == game_full.white.id {
+            lambda_side: if self.bot_name == game_full.white.name {
                 log::info!("Detected lambda is playing as white");
                 Side::White
-            } else if self.bot_id == game_full.black.id {
+            } else if self.bot_name == game_full.black.name {
                 log::info!("Detected lambda is playing as black");
                 Side::Black
             } else {
-                return Err(anyhow!("Unrecognized names"));
+                return Err(anyhow!(
+                    "Name not matched, us: {} w: {} b: {}",
+                    self.bot_name,
+                    game_full.white.name,
+                    game_full.black.name)
+                );
             },
             initial_position: if game_full.initial_fen.as_str() == "startpos" {
                 InitalPosition::Start
