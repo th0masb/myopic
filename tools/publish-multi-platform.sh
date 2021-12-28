@@ -31,9 +31,9 @@ for target in $TARGETS; do
   cross build --release --target=$target
   cp "target/$target/release/$APPLICATION_DIR" "$build_context/app"
   image_tag="$image_name:$VERSION-$mapped_target"
-  push="--push"
-  if [ $DRYRUN = "1" ]; then
-    push=""
+  push=""
+  if [ "$DRYRUN" != "1" ]; then
+    push="--push"
   fi
   docker buildx build \
     $push \
@@ -43,7 +43,7 @@ for target in $TARGETS; do
   manifest_amendments="$manifest_amendments --amend $image_tag"
 done
 
-if [ $DRYRUN != "1" ]; then
+if [ "$DRYRUN" != "1" ]; then
   docker manifest create "$image_name:$VERSION" $manifest_amendments
   docker manifest push "$image_name:$VERSION"
   docker manifest create "$image_name:latest" $manifest_amendments
