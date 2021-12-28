@@ -14,6 +14,12 @@ pub struct Challenge {
     pub variant: Variant,
     #[serde(rename = "timeControl")]
     pub time_control: TimeControl,
+    pub challenger: Challenger,
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct Challenger {
+    pub name: String,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -133,6 +139,9 @@ mod test {
                         variant: Variant {
                             key: "standard".to_owned()
                         },
+                        challenger: Challenger {
+                            name: "th0masb".to_string()
+                        },
                         time_control: TimeControl::Unlimited,
                     },
                     challenge
@@ -195,6 +204,9 @@ mod test {
                         id: "qG23jvtf".to_owned(),
                         variant: Variant {
                             key: "standard".to_owned()
+                        },
+                        challenger: Challenger {
+                            name: "th0masb".to_string()
                         },
                         time_control: TimeControl::Correspondence { days_per_turn: 2 },
                     },
@@ -260,6 +272,9 @@ mod test {
                         id: "fLIBOP1V".to_owned(),
                         variant: Variant {
                             key: "standard".to_owned()
+                        },
+                        challenger: Challenger {
+                            name: "th0masb".to_string()
                         },
                         time_control: TimeControl::Clock {
                             clock: ClockTimeControl {
