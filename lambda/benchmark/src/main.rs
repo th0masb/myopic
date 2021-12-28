@@ -14,6 +14,7 @@ const LOG_GAP: usize = 2;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     SimpleLogger::new()
         .with_level(log::LevelFilter::Info)
+        .without_timestamps()
         .init()?;
     lambda!(handler);
     Ok(())

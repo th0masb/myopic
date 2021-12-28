@@ -48,6 +48,7 @@ impl TimeConstraints {
 fn main() -> Result<(), Box<dyn Error>> {
     SimpleLogger::new()
         .with_level(log::LevelFilter::Info)
+        .without_timestamps()
         .init()?;
     lambda!(game_handler);
     Ok(())
@@ -121,7 +122,7 @@ fn init_game(e: &PlayGameEvent, ctx: &Context) -> Result<GameImpl, HandlerError>
     Ok(Game::new(
         GameConfig {
             game_id: e.lichess_game_id.clone(),
-            bot_id: e.lichess_bot_id.clone(),
+            bot_name: e.lichess_bot_id.clone(),
             lichess_auth_token: e.lichess_auth_token.clone(),
             time_constraints: TimeConstraints {
                 start_time: Instant::now(),

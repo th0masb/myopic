@@ -52,7 +52,7 @@ pub struct GameState {
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct Player {
-    pub id: String,
+    pub name: String,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
@@ -170,13 +170,13 @@ mod test {
                 GameEvent::GameFull { content } => {
                     assert_eq!(
                         Player {
-                            id: format!("th0masb")
+                            name: format!("th0masb")
                         },
                         content.white
                     );
                     assert_eq!(
                         Player {
-                            id: format!("myopic-bot")
+                            name: format!("myopic-bot")
                         },
                         content.black
                     );
