@@ -139,7 +139,8 @@ fn benchmark() {
         if i % 5 == 0 {
             print_progress(case_count, err_count, search_duration.clone());
         }
-        match search(test_case.board.clone(), SearchParameters { terminator: depth, table_size }) {
+        let board_fen = test_case.board.to_fen();
+        match search(test_case.board, SearchParameters { terminator: depth, table_size }) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 search_duration += outcome.time;
@@ -148,7 +149,7 @@ fn benchmark() {
                     println!(
                         "Error at {}: Position {}, expected {}, actual {}",
                         i,
-                        test_case.board.to_fen(),
+                        board_fen,
                         test_case.expected_move.uci_format(),
                         outcome.best_move.uci_format()
                     );
@@ -206,7 +207,7 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
     dest
 }
 
-#[derive(Clone)]
+//#[derive(Clone)]
 struct TestCase {
     board: EvalBoard<Board>,
     expected_move: Move,

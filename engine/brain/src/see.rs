@@ -164,12 +164,12 @@ mod test {
     }
 
     #[derive(Clone, Debug)]
-    struct TestCase<B: ChessBoard> {
+    struct TestCase<B> {
         board: B,
         expected: Vec<(Square, Square, i32)>,
     }
 
-    impl<B: ChessBoard + Reflectable> Reflectable for TestCase<B> {
+    impl<B: ChessBoard + Reflectable + Clone> Reflectable for TestCase<B> {
         fn reflect(&self) -> Self {
             let mut reflected_expected = Vec::new();
             for (src, targ, result) in self.expected.iter() {
@@ -182,7 +182,7 @@ mod test {
         }
     }
 
-    fn execute_case<B: ChessBoard + Reflectable>(test_case: TestCase<B>) {
+    fn execute_case<B: ChessBoard + Reflectable + Clone>(test_case: TestCase<B>) {
         execute_case_impl(test_case.clone());
         execute_case_impl(test_case.reflect())
     }

@@ -4,21 +4,21 @@ use std::time::{Duration, Instant};
 use serde::ser::SerializeStruct;
 use serde::Serializer;
 
+use movehints::MoveOrderingHints;
 use myopic_board::anyhow::{anyhow, Result};
 use myopic_board::Move;
-use orderinghints::OrderingHints;
 use terminator::SearchTerminator;
 
 use crate::eval;
 use crate::eval::EvalChessBoard;
+use crate::search::movequality::EstimatorImpl;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
-use crate::search::ordering::EstimatorImpl;
 use crate::search::transpositions::TranspositionTable;
 
 pub mod interactive;
 pub mod negascout;
-mod ordering;
-mod orderinghints;
+mod movequality;
+mod movehints;
 pub mod terminator;
 mod transpositions;
 
@@ -30,15 +30,14 @@ const SHALLOW_EVAL_DEPTH: usize = 1;
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
 pub fn search<B, T>(root: B, parameters: SearchParameters<T>) -> Result<SearchOutcome>
-where
-    B: EvalChessBoard,
-    T: SearchTerminator,
+    where
+        B: EvalChessBoard,
+        T: SearchTerminator,
 {
     Search {
         root,
         terminator: parameters.terminator,
-    }
-    .search(parameters.table_size)
+    }.search(parameters.table_size)
 }
 
 pub struct SearchParameters<T: SearchTerminator> {
@@ -132,10 +131,10 @@ struct BestMoveResponse {
 }
 
 impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
-    pub fn search(&self, transposition_table_size: usize) -> Result<SearchOutcome> {
+    pub fn search(&mut self, transposition_table_size: usize) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
-        let mut ordering_hints = OrderingHints::new(self.root.clone());
+        let mut ordering_hints = MoveOrderingHints::default();
         // TODO inject desired size
         let mut transposition_table = TranspositionTable::new(transposition_table_size)?;
         let mut best_response = None;
@@ -152,7 +151,7 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
                     // Only fill in the shallow eval when we get deep
                     // enough to male it worthwhile
                     if i == SHALLOW_EVAL_TRIGGER_DEPTH {
-                        ordering_hints.populate_shallow_eval(SHALLOW_EVAL_DEPTH);
+                        ordering_hints.populate(&mut self.root, SHALLOW_EVAL_DEPTH);
                     }
                 }
             }
@@ -170,10 +169,10 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
     }
 
     fn best_move(
-        &self,
+        &mut self,
         depth: usize,
         search_start: Instant,
-        ordering_hints: &OrderingHints<B>,
+        ordering_hints: &MoveOrderingHints,
         transposition_table: &mut TranspositionTable,
     ) -> Result<BestMoveResponse> {
         if depth < 1 {
@@ -188,7 +187,7 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
             board_type: PhantomData,
         }
         .search(
-            &mut self.root.clone(),
+            &mut self.root,
             SearchContext {
                 depth_remaining: depth,
                 start_time: search_start,

@@ -5,28 +5,28 @@ use crate::Move;
 pub mod opening;
 
 #[derive(Clone)]
-pub enum AdditionalEvalComponent {
+pub enum EvalComponents {
     /// This component must only be used from a standard
     /// starting position.
     Opening(OpeningComponent),
 }
 
-impl EvalComponent for AdditionalEvalComponent {
+impl EvalComponent for EvalComponents {
     fn static_eval(&self) -> i32 {
         match self {
-            AdditionalEvalComponent::Opening(cmp) => cmp.static_eval(),
+            EvalComponents::Opening(cmp) => cmp.static_eval(),
         }
     }
 
     fn make(&mut self, mv: &Move) {
         match self {
-            AdditionalEvalComponent::Opening(cmp) => cmp.make(mv),
+            EvalComponents::Opening(cmp) => cmp.make(mv),
         }
     }
 
     fn unmake(&mut self, mv: &Move) {
         match self {
-            AdditionalEvalComponent::Opening(cmp) => cmp.unmake(mv),
+            EvalComponents::Opening(cmp) => cmp.unmake(mv),
         }
     }
 }

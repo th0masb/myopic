@@ -47,7 +47,7 @@ pub trait EvalChessBoard: ChessBoard {
     fn positional_eval(&self, piece: Piece, location: Square) -> i32;
 }
 
-pub trait EvalComponent: Clone + Send {
+pub trait EvalComponent {
     fn static_eval(&self) -> i32;
 
     fn make(&mut self, mv: &Move);

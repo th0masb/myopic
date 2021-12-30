@@ -9,8 +9,8 @@ use myopic_board::anyhow::{anyhow, Result};
 
 use crate::{EvalChessBoard, quiescent};
 use crate::search::eval;
-use crate::search::ordering::{EstimatorImpl, MoveQualityEstimator};
-use crate::search::orderinghints::OrderingHints;
+use crate::search::movequality::{EstimatorImpl, MoveQualityEstimator};
+use crate::search::movehints::MoveOrderingHints;
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{TranspositionTable, TreeNode};
 
@@ -25,7 +25,7 @@ where
 {
     Scout {
         terminator: &depth,
-        ordering_hints: &OrderingHints::new(root.clone()),
+        ordering_hints: &MoveOrderingHints::default(),
         transposition_table: &mut TranspositionTable::new(1)?,
         move_quality_estimator: EstimatorImpl,
         board_type: PhantomData,
@@ -108,7 +108,7 @@ where
     /// generated for positions in the search tree.
     /// These can be thought of as 'pure' hints which
     /// aren't changed during the search.
-    pub ordering_hints: &'a OrderingHints<B>,
+    pub ordering_hints: &'a MoveOrderingHints,
     /// Cache of search information for all nodes in
     /// the tree which is shared across searches
     /// during an iterative deepening run. It can be
@@ -311,27 +311,25 @@ where
         precursors: &Vec<Move>,
         table_suggestion: Option<TableSuggestion>,
     ) -> Vec<Move> {
-        let sm = self.ordering_hints;
-        match (sm.get_pvs(precursors), sm.get_evs(precursors)) {
+        let pvs = self.ordering_hints.get_pvs(precursors);
+        let evs = self.ordering_hints.get_evs(precursors);
+        match (pvs, evs) {
             (None, None) => {
                 let mut mvs = self.compute_heuristically_ordered_moves(board);
                 check_and_reposition_first(&mut mvs, table_suggestion);
                 mvs
             }
-
             (Some(pvs_ref), None) => {
                 let pvs = pvs_ref.iter().map(|m| m.mv.clone()).collect_vec();
                 let mut all_mvs = self.compute_heuristically_ordered_moves(board);
                 check_and_reposition_first(&mut all_mvs, table_suggestion);
                 pvs.into_iter().chain(all_mvs.into_iter()).dedup().collect()
             }
-
             (None, Some(evs)) => {
                 let mut mvs = evs.into_iter().map(|sm| sm.mv.clone()).collect_vec();
                 check_and_reposition_first(&mut mvs, table_suggestion);
                 mvs
             }
-
             (Some(pvs_ref), Some(evs_ref)) => {
                 let pvs = pvs_ref.iter().map(|m| m.mv.clone()).collect_vec();
                 let mut evs = evs_ref.iter().map(|m| m.mv.clone()).collect_vec();
