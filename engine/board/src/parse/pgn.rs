@@ -7,7 +7,7 @@ use crate::parse::patterns::*;
 
 /// Extracts the moves encoded in standard pgn format starting at
 /// a custom board position.
-pub fn moves<B: ChessBoard>(start: &B, encoded: &str) -> Result<Vec<Move>> {
+pub fn moves<B: ChessBoard + Clone>(start: &B, encoded: &str) -> Result<Vec<Move>> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in pgn_move().find_iter(encoded) {
