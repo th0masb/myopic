@@ -205,23 +205,23 @@ impl PartialEq<Board> for Board {
 
 impl ChessBoard for Board {
     fn make(&mut self, mv: Move) -> Result<()> {
-        self.evolve_impl(mv)
+        self.make(mv)
     }
 
     fn unmake(&mut self) -> Result<Move> {
-        self.devolve_impl()
+        self.unmake()
     }
 
     fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
-        self.compute_moves_impl(computation_type)
+        self.compute_moves(computation_type)
     }
 
     fn termination_status(&mut self) -> Option<Termination> {
-        self.termination_status_impl()
+        self.termination_status()
     }
 
     fn in_check(&mut self) -> bool {
-        self.passive_control_impl().contains(self.king(self.active))
+        self.passive_control().contains(self.king(self.active))
     }
 
     fn side(&self, side: Side) -> BitBoard {

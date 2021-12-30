@@ -1,7 +1,9 @@
+use std::rc::Rc;
 pub use constraints::MoveConstraints;
 use myopic_core::BitBoard;
+use myopic_core::enum_map::EnumMap;
 
-use crate::Board;
+use crate::{Board, MoveComputeType};
 use crate::imp::cache::rays::RaySet;
 use crate::Termination;
 
@@ -10,13 +12,12 @@ mod control;
 mod rays;
 mod termination;
 
-// TODO Can we switch to returning references from the cache?
 #[derive(Debug, Clone, Default)]
 pub struct CalculationCache {
     termination_status: Option<Option<Termination>>,
     passive_control: Option<BitBoard>,
-    pinned_set: Option<RaySet>,
-    move_constraints: Option<MoveConstraints>,
+    pinned_set: Option<Rc<RaySet>>,
+    move_constraints: EnumMap<MoveComputeType, Option<Rc<MoveConstraints>>>,
 }
 
 impl Board {
@@ -24,6 +25,6 @@ impl Board {
         self.cache.termination_status = None;
         self.cache.passive_control = None;
         self.cache.pinned_set = None;
-        self.cache.move_constraints = None;
+        self.cache.move_constraints = EnumMap::default();
     }
 }

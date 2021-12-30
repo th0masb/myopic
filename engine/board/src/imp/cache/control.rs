@@ -3,11 +3,11 @@ use myopic_core::*;
 use crate::imp::Board;
 
 impl Board {
-    pub fn passive_control_impl(&mut self) -> BitBoard {
+    pub fn passive_control(&mut self) -> BitBoard {
         match &self.cache.passive_control {
             Some(x) => *x,
             None => {
-                let result = self.compute_control(self.active.reflect());
+                let result = self.compute_passive_control(self.active.reflect());
                 self.cache.passive_control = Some(result);
                 result
             }
@@ -19,7 +19,7 @@ impl Board {
     /// check it cannot create it's own escape squares by blocking the
     /// control ray of an attacking slider. TODO Improve efficiency by
     /// treated all pawns as a block
-    fn compute_control(&self, side: Side) -> BitBoard {
+    fn compute_passive_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
             Side::White => (
@@ -55,7 +55,7 @@ mod test {
     fn execute_test(case: TestCase) {
         assert_eq!(
             case.expected_control,
-            Board::from(case.board).compute_control(case.side)
+            Board::from(case.board).compute_passive_control(case.side)
         );
     }
 

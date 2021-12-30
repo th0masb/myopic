@@ -1,6 +1,5 @@
 use myopic_core::*;
 
-/// TODO Could have adjacent files in a constant array
 pub(super) fn squares(active: Side, enpassant_target: Square) -> BitBoard {
     ADJACENTS[enpassant_target.file_index() as usize] & active.reflect().pawn_third_rank()
 }

@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::fmt::Error;
 use std::fmt::Formatter;
+use std::rc::Rc;
 
 use myopic_core::*;
 
@@ -69,28 +70,21 @@ impl MoveConstraints {
 }
 
 impl Board {
-    pub fn constraints_impl(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
-        match computation_type {
-            MoveComputeType::Attacks => self.compute_constraints(computation_type),
-            MoveComputeType::AttacksChecks => self.compute_constraints(computation_type),
-            MoveComputeType::All => match &self.cache.move_constraints {
-                Some(x) => x.clone(),
-                None => {
-                    let result = self.compute_constraints(computation_type);
-                    self.cache.move_constraints = Some(result.clone());
-                    result
-                }
-            },
-        }
+    pub fn move_constraints(&mut self, compute_type: MoveComputeType) -> Rc<MoveConstraints> {
+        self.cache.move_constraints[compute_type].clone().unwrap_or_else(|| {
+            let computed = Rc::new(self.compute_move_constraints(compute_type));
+            self.cache.move_constraints[compute_type] = Some(computed.clone());
+            computed
+        })
     }
 
-    fn compute_constraints(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
-        let passive_control = self.passive_control_impl();
+    fn compute_move_constraints(&mut self, compute_type: MoveComputeType) -> MoveConstraints {
+        let passive_control = self.passive_control();
         let pinned = self.pinned_set();
         if passive_control.contains(self.king(self.active)) {
             self.check(passive_control, &pinned)
         } else {
-            match computation_type {
+            match compute_type {
                 MoveComputeType::All => self.any(passive_control, &pinned),
                 MoveComputeType::Attacks => self.attacks(passive_control, &pinned, false),
                 MoveComputeType::AttacksChecks => self.attacks(passive_control, &pinned, true),

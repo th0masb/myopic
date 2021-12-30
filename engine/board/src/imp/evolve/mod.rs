@@ -16,7 +16,7 @@ impl Board {
     /// Public API for evolving a board. All that is required is a reference to
     /// a move which is assumed to be legal. The information required to reverse
     /// this same move is returned and the board is mutated to the next state.
-    pub(super) fn evolve_impl(&mut self, mv: Move) -> Result<()> {
+    pub(crate) fn make(&mut self, mv: Move) -> Result<()> {
         // Check this move came from this position
         if self.hash() != mv.source() {
             return Err(anyhow!("Mismatched source hash for {}", mv));
@@ -106,7 +106,7 @@ impl Board {
 
     /// Public API for devolving a move, the information lost at evolve time is
     /// required as an input here to recover the lost state exactly.
-    pub(super) fn devolve_impl(&mut self) -> Result<Move> {
+    pub(crate) fn unmake(&mut self) -> Result<Move> {
         let (mv, state) = self.history.attempt_pop()?;
 
         match &mv {
