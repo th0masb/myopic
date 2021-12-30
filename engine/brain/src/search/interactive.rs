@@ -43,7 +43,8 @@ pub enum SearchCommand<B: EvalChessBoard> {
 /// Create an interactive search running on a separate thread, communication happens
 /// via an input channel which accepts a variety of commands and an output channel
 /// which transmits the search results.
-pub fn search<B: EvalChessBoard + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
+/// TODO How to best handle need for board to be Send + Sync when it uses Rc?
+pub fn search<B: EvalChessBoard + Send + Sync + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<Result<SearchOutcome>>();
     std::thread::spawn(move || {
