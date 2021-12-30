@@ -58,7 +58,7 @@ impl MoveConstraints {
     }
 
     fn intersect_pins(&mut self, pinned: &RaySet) {
-        for loc in pinned.ray_points {
+        for loc in pinned.points() {
             self.intersect(loc, pinned.ray(loc).unwrap_or(BitBoard::ALL))
         }
     }
@@ -86,7 +86,7 @@ impl Board {
 
     fn compute_constraints(&mut self, computation_type: MoveComputeType) -> MoveConstraints {
         let passive_control = self.passive_control_impl();
-        let pinned = self.pinned_set_impl();
+        let pinned = self.pinned_set();
         if passive_control.contains(self.king(self.active)) {
             self.check(passive_control, &pinned)
         } else {

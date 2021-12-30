@@ -111,6 +111,12 @@ impl BitBoard {
     ];
 }
 
+impl Default for BitBoard {
+    fn default() -> Self {
+        BitBoard::EMPTY
+    }
+}
+
 /// A bitboard is a set of squares and is therefore iterable.
 impl IntoIterator for BitBoard {
     type Item = Square;
