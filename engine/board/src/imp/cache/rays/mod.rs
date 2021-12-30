@@ -1,6 +1,7 @@
-use std::collections::BTreeSet;
+use std::iter::FromIterator;
 
 use myopic_core::*;
+use myopic_core::enum_map::EnumMap;
 
 pub const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
 pub const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
@@ -11,27 +12,32 @@ pub mod pinning;
 /// A pinned set consisted of the locations of all the pieces which are pinned
 /// alongside a vector containing the constraint area for each of these pinned
 /// pieces.
-#[derive(Debug, Clone, PartialOrd, Hash)]
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct RaySet {
-    pub ray_points: BitBoard,
-    // TODO Replace vec with fixed length array
-    pub rays: Vec<(Square, BitBoard)>,
+    points: BitBoard,
+    contents: EnumMap<Square, BitBoard>,
 }
 
-impl PartialEq<RaySet> for RaySet {
-    fn eq(&self, other: &RaySet) -> bool {
-        self.ray_points == other.ray_points && {
-            let this_rayset = self.rays.iter().collect::<BTreeSet<_>>();
-            let other_rayset = other.rays.iter().collect::<BTreeSet<_>>();
-            this_rayset == other_rayset
+impl FromIterator<(Square, BitBoard)> for RaySet {
+    fn from_iter<T: IntoIterator<Item=(Square, BitBoard)>>(iter: T) -> Self {
+        let mut points = BitBoard::EMPTY;
+        let mut contents = EnumMap::default();
+        for (square, board) in iter {
+            contents[square] = board;
+            points |= square;
         }
+        RaySet { points, contents }
     }
 }
 
 impl RaySet {
+    pub fn points(&self) -> BitBoard {
+        self.points
+    }
+
     pub fn ray(&self, loc: Square) -> Option<BitBoard> {
-        if self.ray_points.contains(loc) {
-            self.rays.iter().find(|(sq, _)| *sq == loc).map(|(_, c)| *c)
+        if self.points.contains(loc) {
+            Some(self.contents[loc])
         } else {
             None
         }
@@ -40,9 +46,10 @@ impl RaySet {
 
 impl Reflectable for RaySet {
     fn reflect(&self) -> Self {
-        RaySet {
-            ray_points: self.ray_points.reflect(),
-            rays: self.rays.reflect(),
+        let mut contents = EnumMap::default();
+        for point in self.points {
+            contents[point.reflect()] = self.contents[point].reflect();
         }
+        RaySet { points: self.points.reflect(), contents }
     }
 }

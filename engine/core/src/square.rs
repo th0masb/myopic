@@ -1,11 +1,12 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
+use enum_map::Enum;
 
 use crate::{BitBoard, Dir};
 
 /// Type representing a square on a chessboard.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Enum)]
 #[rustfmt::skip]
 pub enum Square {
     H1, G1, F1, E1, D1, C1, B1, A1,
