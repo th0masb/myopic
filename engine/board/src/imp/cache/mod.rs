@@ -1,4 +1,5 @@
 use std::rc::Rc;
+
 pub use constraints::MoveConstraints;
 use myopic_core::BitBoard;
 use myopic_core::enum_map::EnumMap;

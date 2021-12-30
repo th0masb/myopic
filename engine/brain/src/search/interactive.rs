@@ -162,8 +162,8 @@ impl<B: EvalChessBoard + Clone> SearchTerminator for InteractiveSearchTerminator
         ctx.start_time.elapsed() > self.max_time
             || ctx.depth_remaining >= self.max_depth
             || match self.stop_signal.try_recv() {
-                Ok(SearchCommand::Stop) => true,
-                _ => false,
-            }
+            Ok(SearchCommand::Stop) => true,
+            _ => false,
+        }
     }
 }

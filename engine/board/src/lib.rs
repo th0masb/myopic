@@ -1,7 +1,7 @@
 pub use mv::Move;
 pub use myopic_core::*;
-use myopic_core::enum_map::Enum;
 use myopic_core::anyhow::Result;
+use myopic_core::enum_map::Enum;
 pub use parse::uci::UciMove;
 
 use crate::enumset::EnumSet;
@@ -12,11 +12,11 @@ mod mv;
 mod parse;
 
 /// The start position of a chess game encoded in FEN format
-pub const STARTPOS_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+pub const START_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 /// Return the start position of a standard game
 pub fn start() -> Board {
-    STARTPOS_FEN.parse().unwrap()
+    START_FEN.parse().unwrap()
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash, Enum)]
@@ -175,7 +175,7 @@ mod uci_conversion_test {
                 dest: Square::E4,
                 capture: None,
             }
-            .uci_format()
+                .uci_format()
         );
     }
 
@@ -190,7 +190,7 @@ mod uci_conversion_test {
                 dest: Square::H7,
                 capture: Some(Piece::WQ),
             }
-            .uci_format()
+                .uci_format()
         );
     }
 
@@ -200,33 +200,33 @@ mod uci_conversion_test {
             "e1g1",
             Move::Castle {
                 source: 1u64,
-                zone: CastleZone::WK
+                zone: CastleZone::WK,
             }
-            .uci_format()
+                .uci_format()
         );
         assert_eq!(
             "e1c1",
             Move::Castle {
                 source: 1u64,
-                zone: CastleZone::WQ
+                zone: CastleZone::WQ,
             }
-            .uci_format()
+                .uci_format()
         );
         assert_eq!(
             "e8g8",
             Move::Castle {
                 source: 8u64,
-                zone: CastleZone::BK
+                zone: CastleZone::BK,
             }
-            .uci_format()
+                .uci_format()
         );
         assert_eq!(
             "e8c8",
             Move::Castle {
                 source: 8u64,
-                zone: CastleZone::BQ
+                zone: CastleZone::BQ,
             }
-            .uci_format()
+                .uci_format()
         );
     }
 
@@ -241,7 +241,7 @@ mod uci_conversion_test {
                 promoted: Piece::WQ,
                 capture: Some(Piece::BB),
             }
-            .uci_format()
+                .uci_format()
         )
     }
 
@@ -256,7 +256,7 @@ mod uci_conversion_test {
                 dest: Square::D6,
                 capture: Square::D5,
             }
-            .uci_format()
+                .uci_format()
         )
     }
 }

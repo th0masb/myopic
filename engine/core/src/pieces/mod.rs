@@ -16,8 +16,18 @@ mod sliding;
 #[derive(Debug, EnumSetType, Ord, PartialOrd, Hash)]
 #[rustfmt::skip]
 pub enum Piece {
-    WP, WN, WB, WR, WQ, WK,
-    BP, BN, BB, BR, BQ, BK,
+    WP,
+    WN,
+    WB,
+    WR,
+    WQ,
+    WK,
+    BP,
+    BN,
+    BB,
+    BR,
+    BQ,
+    BK,
 }
 
 impl Display for Piece {
@@ -39,17 +49,17 @@ impl FromStr for Piece {
 
 impl Piece {
     /// Create an iterator traversing over all pieces in order.
-    pub fn all() -> impl Iterator<Item = Piece> {
+    pub fn all() -> impl Iterator<Item=Piece> {
         ALL.iter().cloned()
     }
 
     /// Create an iterator traversing over all white pieces in order.
-    pub fn whites() -> impl Iterator<Item = Piece> {
+    pub fn whites() -> impl Iterator<Item=Piece> {
         WHITE.iter().cloned()
     }
 
     /// Create an iterator traversing over all black pieces in order.
-    pub fn blacks() -> impl Iterator<Item = Piece> {
+    pub fn blacks() -> impl Iterator<Item=Piece> {
         BLACK.iter().cloned()
     }
 
@@ -86,7 +96,7 @@ impl Piece {
     }
 
     /// Returns a slice containing all pieces belonging to the given side.
-    pub fn of(side: Side) -> impl Iterator<Item = Piece> {
+    pub fn of(side: Side) -> impl Iterator<Item=Piece> {
         match side {
             Side::White => (&WHITE).iter().cloned(),
             Side::Black => (&BLACK).iter().cloned(),

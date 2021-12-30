@@ -239,12 +239,12 @@ mod test {
     use myopic_board::ChessBoard;
 
     use crate::{Board, EvalBoard, Reflectable, UciMove};
-    use crate::eval::additional_components::opening::{OpeningComponent, OpeningRewards};
     use crate::eval::EvalComponent;
+    use crate::eval::opening::{OpeningComponent, OpeningRewards};
 
     #[test]
     fn issue_97() -> Result<()> {
-        let mut state = EvalBoard::start();
+        let mut state = EvalBoard::default();
         state.play_uci(
             "e2e4 g7g6 d2d4 f8g7 c2c4 d7d6 b1c3 g8f6 g1f3 e8g8 f1d3 e7e5 f3d2 e5d4 d2b1 d4c3 b2c3",
         )?;

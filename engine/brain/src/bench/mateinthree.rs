@@ -194,7 +194,7 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
                 Ok(moves) => {
                     let expected_move = moves.first().unwrap().to_owned();
                     dest.push(TestCase {
-                        board: EvalBoard::builder(board).build(),
+                        board: EvalBoard::from(board),
                         expected_move,
                     });
                     if dest.len() == max_cases {

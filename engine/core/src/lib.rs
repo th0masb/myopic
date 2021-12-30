@@ -98,7 +98,22 @@ impl Side {
 #[derive(Debug, EnumSetType, Hash, PartialOrd, Ord)]
 #[rustfmt::skip]
 pub enum Dir {
-    N, E, S, W, NE, SE, SW, NW, NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW
+    N,
+    E,
+    S,
+    W,
+    NE,
+    SE,
+    SW,
+    NW,
+    NNE,
+    NEE,
+    SEE,
+    SSE,
+    SSW,
+    SWW,
+    NWW,
+    NNW,
 }
 
 #[cfg(test)]

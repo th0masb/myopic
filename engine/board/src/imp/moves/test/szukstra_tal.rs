@@ -19,17 +19,17 @@ fn black_move_eight() -> Result<()> {
             "sbkg8h8-",
             "sbbg7h6-", "sbbg7h8-",
             "sbpg6g5-",
-            "sbph7h6-", "sbph7h5-"
+            "sbph7h6-", "sbph7h5-",
         ],
         #[rustfmt::skip]
         expected_attacks: vec![
             "sbpe5d4wp",
-            "sbnf6e4wp"
+            "sbnf6e4wp",
         ],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
             "sbpe5d4wp",
-            "sbnf6e4wp"
+            "sbnf6e4wp",
         ],
     })
 }
@@ -88,7 +88,7 @@ fn black_move_nine() -> Result<()> {
             "sbkg8h8-",
             "sbbg7h6-", "sbbg7h8-",
             "sbpg6g5-",
-            "sbph7h6-", "sbph7h5-"
+            "sbph7h6-", "sbph7h5-",
         ],
         #[rustfmt::skip]
         expected_attacks: vec![
@@ -129,7 +129,7 @@ fn white_move_ten() -> Result<()> {
             "swnc3d5bp",
             "swpc4d5bp",
             "swnd4c6bp",
-            "swpe4d5bp"
+            "swpe4d5bp",
         ],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
@@ -137,7 +137,7 @@ fn white_move_ten() -> Result<()> {
             "swnc3d5bp",
             "swpc4d5bp",
             "swnd4c6bp",
-            "swpe4d5bp"
+            "swpe4d5bp",
         ],
     })
 }
@@ -159,7 +159,7 @@ fn black_move_ten() -> Result<()> {
             "sbkg8h8-",
             "sbbg7h6-", "sbbg7h8-",
             "sbpg6g5-",
-            "sbph7h6-", "sbph7h5-"
+            "sbph7h6-", "sbph7h5-",
         ],
         #[rustfmt::skip]
         expected_attacks: vec![
@@ -232,7 +232,7 @@ fn black_move_eleven() -> Result<()> {
             "sbkg8h8-",
             "sbbg7h6-", "sbbg7h8-",
             "sbpg6g5-",
-            "sbph7h6-", "sbph7h5-"
+            "sbph7h6-", "sbph7h5-",
         ],
         #[rustfmt::skip]
         expected_attacks: vec![

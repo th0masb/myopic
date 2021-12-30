@@ -25,12 +25,11 @@ pub struct MoveOrderingHints {
 }
 
 impl MoveOrderingHints {
-
-    pub fn populate<B : EvalChessBoard>(&mut self, root: &mut B, depth: usize) {
+    pub fn populate<B: EvalChessBoard>(&mut self, root: &mut B, depth: usize) {
         self.populate_impl(root, depth, vec![])
     }
 
-    fn populate_impl<B : EvalChessBoard>(&mut self, root: &mut B, depth: usize, precursors: Vec<Move>) {
+    fn populate_impl<B: EvalChessBoard>(&mut self, root: &mut B, depth: usize, precursors: Vec<Move>) {
         let curr_level = self.compute_shallow_eval(root);
         let next_paths = curr_level
             .iter()
@@ -51,7 +50,7 @@ impl MoveOrderingHints {
         }
     }
 
-    fn compute_shallow_eval<B : EvalChessBoard>(&mut self, root: &mut B) -> Vec<SEMove> {
+    fn compute_shallow_eval<B: EvalChessBoard>(&mut self, root: &mut B) -> Vec<SEMove> {
         let mut dest = vec![];
         for mv in root.compute_moves(MoveComputeType::All) {
             root.make(mv).unwrap();

@@ -5,13 +5,13 @@ use myopic_board::{ChessBoard, Move, Piece, Square};
 use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
 
-pub mod additional_components;
 #[cfg(test)]
 mod clearcut;
 pub mod imp;
 mod material;
 pub mod tables;
 pub mod values;
+pub mod opening;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;

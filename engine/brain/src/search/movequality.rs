@@ -18,6 +18,7 @@ pub trait MoveQualityEstimator<B: EvalChessBoard> {
 /// Simplest estimator which simply evaluates all moves
 /// as equal.
 pub struct ConstantEstimator;
+
 impl<B: EvalChessBoard> MoveQualityEstimator<B> for ConstantEstimator {
     fn estimate(&self, _board: &mut B, _mv: &Move) -> i32 {
         0
@@ -29,6 +30,7 @@ impl<B: EvalChessBoard> MoveQualityEstimator<B> for ConstantEstimator {
 /// best (good exchanges) to worst (bad exchanges) and then
 /// also orders within those subcategories.
 pub struct EstimatorImpl;
+
 // Idea is we split the moves into different categories which are ordered
 // so that if category A has more value than category B then all moves in
 // A are assigned a greater value than those in B. There is then further
@@ -92,7 +94,7 @@ fn get_category<B: EvalChessBoard>(board: &mut B, mv: &Move) -> MoveCategory {
                         MoveCategory::Positional(
                             parity(moving.side())
                                 * (board.positional_eval(moving, dest)
-                                    - board.positional_eval(moving, from)),
+                                - board.positional_eval(moving, from)),
                         )
                     })
             }

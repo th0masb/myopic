@@ -1,4 +1,5 @@
 use std::rc::Rc;
+
 use myopic_core::*;
 
 use crate::ChessBoard;

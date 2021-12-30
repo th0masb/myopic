@@ -127,8 +127,8 @@ fn slice(s: &str, skip: usize, take: usize) -> String {
 }
 
 pub fn parse_op<F>(s: &str) -> Result<Option<F>>
-where
-    F: FromStr<Err = Error>,
+    where
+        F: FromStr<Err=Error>,
 {
     match s {
         "-" => Ok(None),
@@ -213,7 +213,7 @@ mod test {
         assert_eq!(
             Move::Castle {
                 source: 0,
-                zone: CastleZone::BK
+                zone: CastleZone::BK,
             },
             Move::from("cbk", 0u64)?
         );
