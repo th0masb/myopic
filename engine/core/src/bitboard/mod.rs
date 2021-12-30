@@ -18,6 +18,7 @@ mod iterator;
 /// use a bitboard to to capture the available moves for that piece.
 #[derive(Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct BitBoard(pub u64);
+
 impl BitBoard {
     /// Check if this bitboard contains a particular square.
     pub fn contains(self, square: Square) -> bool {
@@ -51,7 +52,7 @@ impl BitBoard {
         self.0.count_ones() as usize
     }
 
-    pub fn iter(self) -> impl Iterator<Item = Square> {
+    pub fn iter(self) -> impl Iterator<Item=Square> {
         self.into_iter()
     }
 
@@ -128,7 +129,7 @@ impl IntoIterator for BitBoard {
 
 /// A set of squares can be built from an iterator traversing squares.
 impl FromIterator<Square> for BitBoard {
-    fn from_iter<I: IntoIterator<Item = Square>>(iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item=Square>>(iter: I) -> Self {
         iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
     }
 }
@@ -136,7 +137,7 @@ impl FromIterator<Square> for BitBoard {
 /// We can collect an iterator of bitboards into a single bitboard under
 /// the logical OR binary operator on sets.
 impl FromIterator<BitBoard> for BitBoard {
-    fn from_iter<I: IntoIterator<Item = BitBoard>>(iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item=BitBoard>>(iter: I) -> Self {
         iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
     }
 }

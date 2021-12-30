@@ -62,15 +62,15 @@ impl CastleZone {
     }
 
     /// Create an iterator traversing all zones in order.
-    pub fn iter() -> impl Iterator<Item = CastleZone> {
+    pub fn iter() -> impl Iterator<Item=CastleZone> {
         [
             CastleZone::WK,
             CastleZone::WQ,
             CastleZone::BK,
             CastleZone::BQ,
         ]
-        .iter()
-        .cloned()
+            .iter()
+            .cloned()
     }
 
     /// Returns a set of exactly two squares which denote the required

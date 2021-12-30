@@ -158,7 +158,7 @@ mod test {
 
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) -> Result<()> {
         let finish = expected_finish.parse::<Board>()?;
-        let mut board = crate::STARTPOS_FEN.parse::<Board>()?;
+        let mut board = crate::START_FEN.parse::<Board>()?;
         for evolve in super::moves(&board, &String::from(pgn))? {
             board.make(evolve)?;
         }
@@ -191,6 +191,7 @@ mod test {
             52. Rxg8 Kxg8 53. Kg1 Kh7 54. Nc6 Qb1+ 55. Kg2 Qe4+ 1/2-1/2",
         )
     }
+
     #[test]
     fn case_two() -> Result<()> {
         execute_success_test(
@@ -321,6 +322,7 @@ mod test_single_move {
             "O-O",
         )
     }
+
     #[test]
     fn case_eleven() -> Result<()> {
         execute_success_test(

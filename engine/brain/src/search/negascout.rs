@@ -9,8 +9,8 @@ use myopic_board::anyhow::{anyhow, Result};
 
 use crate::{EvalChessBoard, quiescent};
 use crate::search::eval;
-use crate::search::movequality::{EstimatorImpl, MoveQualityEstimator};
 use crate::search::movehints::MoveOrderingHints;
+use crate::search::movequality::{EstimatorImpl, MoveQualityEstimator};
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{TranspositionTable, TreeNode};
 
@@ -20,8 +20,8 @@ use crate::search::transpositions::{TranspositionTable, TreeNode};
 /// this function will support a depth 0 search which performs
 /// a quiescent search on the provided root.
 pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse>
-where
-    B: EvalChessBoard,
+    where
+        B: EvalChessBoard,
 {
     Scout {
         terminator: &depth,
@@ -30,16 +30,16 @@ where
         move_quality_estimator: EstimatorImpl,
         board_type: PhantomData,
     }
-    .search(
-        root,
-        SearchContext {
-            start_time: Instant::now(),
-            alpha: -eval::INFTY,
-            beta: eval::INFTY,
-            depth_remaining: depth,
-            precursors: vec![],
-        },
-    )
+        .search(
+            root,
+            SearchContext {
+                start_time: Instant::now(),
+                alpha: -eval::INFTY,
+                beta: eval::INFTY,
+                depth_remaining: depth,
+                precursors: vec![],
+            },
+        )
 }
 
 /// Provides relevant callstack information for the search to
@@ -96,10 +96,10 @@ impl Default for SearchResponse {
 }
 
 pub struct Scout<'a, T, B, M>
-where
-    T: SearchTerminator,
-    B: EvalChessBoard,
-    M: MoveQualityEstimator<B>,
+    where
+        T: SearchTerminator,
+        B: EvalChessBoard,
+        M: MoveQualityEstimator<B>,
 {
     /// The terminator is responsible for deciding when the
     /// search is complete
@@ -142,10 +142,10 @@ impl TableSuggestion {
 }
 
 impl<T, B, M> Scout<'_, T, B, M>
-where
-    T: SearchTerminator,
-    B: EvalChessBoard,
-    M: MoveQualityEstimator<B>,
+    where
+        T: SearchTerminator,
+        B: EvalChessBoard,
+        M: MoveQualityEstimator<B>,
 {
     ///
     pub fn search(&mut self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse> {
@@ -157,16 +157,16 @@ where
                 Some(Termination::Draw) => Ok(eval::DRAW_VALUE),
                 None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
             }
-            .map(|eval| SearchResponse { eval, path: vec![] })
+                .map(|eval| SearchResponse { eval, path: vec![] })
         } else {
             let (hash, mut table_suggestion) = (root.hash(), None);
             match self.transposition_table.get(hash) {
                 None => {}
                 Some(TreeNode::Pv {
-                    depth,
-                    eval,
-                    optimal_path,
-                }) => {
+                         depth,
+                         eval,
+                         optimal_path,
+                     }) => {
                     if (*depth as usize) >= ctx.depth_remaining {
                         // We already searched this position fully at a sufficient depth
                         return Ok(SearchResponse {
@@ -182,10 +182,10 @@ where
                     }
                 }
                 Some(TreeNode::Cut {
-                    depth,
-                    beta,
-                    cutoff_move,
-                }) => {
+                         depth,
+                         beta,
+                         cutoff_move,
+                     }) => {
                     if (*depth as usize) >= ctx.depth_remaining && ctx.beta <= *beta {
                         return Ok(SearchResponse {
                             eval: ctx.beta,
@@ -196,10 +196,10 @@ where
                     }
                 }
                 Some(TreeNode::All {
-                    depth,
-                    eval,
-                    best_move,
-                }) => {
+                         depth,
+                         eval,
+                         best_move,
+                     }) => {
                     if (*depth as usize) >= ctx.depth_remaining && *eval <= ctx.alpha {
                         return Ok(SearchResponse {
                             eval: *eval,
@@ -219,7 +219,7 @@ where
             {
                 root.make(evolve.clone())?;
                 #[allow(unused_assignments)]
-                let mut response = SearchResponse::default();
+                    let mut response = SearchResponse::default();
                 if i == 0 {
                     // Perform a full search immediately on the first move which
                     // we expect to be the best

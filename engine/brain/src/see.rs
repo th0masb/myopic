@@ -21,7 +21,7 @@ pub fn exchange_value<B: ChessBoard>(
         target,
         values: piece_values,
     }
-    .exchange_value()
+        .exchange_value()
 }
 
 type BitBoardPair = (BitBoard, BitBoard);

@@ -91,8 +91,8 @@ mod test {
             A1, A2, A3, A4, A6, B1, B3, B5, C1, C2, C3, C4, D1, D2, D3, D4, D5, E1, E2, E3, E5, F1,
             F2, F3, F5, G1, G2, G3, G5, H2, H3, H4,
         ]
-        .into_iter()
-        .collect();
+            .into_iter()
+            .collect();
 
         execute_test(TestCase {
             board: get_test_board(),
@@ -107,8 +107,8 @@ mod test {
             A7, A6, A5, B8, B7, B6, B4, C8, C6, D8, D7, D6, D4, E7, E6, E5, F8, F7, F6, F5, F4, F3,
             G8, G7, G6, G5, G4, H7, H6, H5, H4,
         ]
-        .into_iter()
-        .collect();
+            .into_iter()
+            .collect();
 
         execute_test(TestCase {
             board: get_test_board(),

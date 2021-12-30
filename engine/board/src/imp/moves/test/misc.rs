@@ -15,7 +15,7 @@ fn case_01() -> Result<()> {
             "swbf3e2-", "swbf3d1-", "swbf3e4-", "swbf3d5-", "swbf3c6bp", "swbf3g4-", "swbf3h5-",
             "swpf5g6bb", "swpf5f6-", "ewf5e6e5",
             "swpg2g3-", "swpg2g4-",
-            "swrh1g1-", "swrh1f1-", "swrh1h2-", "swrh1h3-", "swrh1h4-", "swrh1h5-", "swrh1h6-", "swrh1h7bp"
+            "swrh1g1-", "swrh1f1-", "swrh1h2-", "swrh1h3-", "swrh1h4-", "swrh1h5-", "swrh1h6-", "swrh1h7bp",
         ],
         #[rustfmt::skip]
         expected_attacks: vec![
@@ -84,7 +84,7 @@ fn case_03() -> Result<()> {
             "swre1e2-",
             "swqc2e2-", "swqc2d3-",
             "swnc3e2-", "swnc3b5bb",
-            "swbf3e2-"
+            "swbf3e2-",
         ],
         #[rustfmt::skip]
         expected_attacks: vec![
@@ -92,7 +92,7 @@ fn case_03() -> Result<()> {
             "swre1e2-",
             "swqc2e2-", "swqc2d3-",
             "swnc3e2-", "swnc3b5bb",
-            "swbf3e2-"
+            "swbf3e2-",
         ],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
@@ -100,7 +100,7 @@ fn case_03() -> Result<()> {
             "swre1e2-",
             "swqc2e2-", "swqc2d3-",
             "swnc3e2-", "swnc3b5bb",
-            "swbf3e2-"
+            "swbf3e2-",
         ],
     })
 }
@@ -114,21 +114,21 @@ fn case_05() -> Result<()> {
             "sbke8f8-", "sbke8d8-", "sbke8d7-",
             "sbqc7e7-", "sbqc7e5-",
             "sbbg6e4-",
-            "sbbb5e2-"
+            "sbbb5e2-",
         ],
         #[rustfmt::skip]
         expected_attacks: vec![
             "sbke8f8-", "sbke8d8-", "sbke8d7-",
             "sbqc7e7-", "sbqc7e5-",
             "sbbg6e4-",
-            "sbbb5e2-"
+            "sbbb5e2-",
         ],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
             "sbke8f8-", "sbke8d8-", "sbke8d7-",
             "sbqc7e7-", "sbqc7e5-",
             "sbbg6e4-",
-            "sbbb5e2-"
+            "sbbb5e2-",
         ],
     })
 }
@@ -202,14 +202,12 @@ fn case_10() -> Result<()> {
         board: "6k1/8/1K6/2Pp4/8/4b3/8/8 w - - 3 10",
         #[rustfmt::skip]
         expected_all: vec![
-            "swkb6b5-", "swkb6c6-", "swkb6c7-", "swkb6b7-", "swkb6a7-", "swkb6a6-", "swkb6a5-"
+            "swkb6b5-", "swkb6c6-", "swkb6c7-", "swkb6b7-", "swkb6a7-", "swkb6a6-", "swkb6a5-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
-        ],
+        expected_attacks: vec![],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
-        ],
+        expected_attacks_checks: vec![],
     })
 }
 
@@ -218,14 +216,11 @@ fn case_11() -> Result<()> {
     execute_test(TestCase {
         board: "r1bk2br/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q7 b - - 3 10",
         #[rustfmt::skip]
-        expected_all: vec![
-        ],
+        expected_all: vec![],
         #[rustfmt::skip]
-        expected_attacks: vec![
-        ],
+        expected_attacks: vec![],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
-        ],
+        expected_attacks_checks: vec![],
     })
 }
 
@@ -240,8 +235,7 @@ fn case_12() -> Result<()> {
             "swrh1g1-", "swrh1f1-", "swrh1e1-", "swrh1d1-", "swrh1c1-", "swrh1b1-", "swrh1a1-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
-        ],
+        expected_attacks: vec![],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
             "swkh2g1-"
@@ -280,11 +274,9 @@ fn case_14() -> Result<()> {
             "sbpf4f3-"
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
-        ],
+        expected_attacks: vec![],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
-        ],
+        expected_attacks_checks: vec![],
     })
 }
 
@@ -295,11 +287,10 @@ fn case_15() -> Result<()> {
         #[rustfmt::skip]
         expected_all: vec![
             "pd7d8wn-", "pd7d8wb-", "pd7d8wr-", "pd7d8wq-",
-            "swkh3g2-"
+            "swkh3g2-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
-        ],
+        expected_attacks: vec![],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
             "pd7d8wn-", "pd7d8wb-", "pd7d8wr-", "pd7d8wq-",
@@ -314,11 +305,10 @@ fn case_16() -> Result<()> {
         #[rustfmt::skip]
         expected_all: vec![
             "pd7d8wn-", "pd7d8wb-", "pd7d8wr-", "pd7d8wq-",
-            "swkh3g2-"
+            "swkh3g2-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
-        ],
+        expected_attacks: vec![],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
             "pd7d8wn-", "pd7d8wb-", "pd7d8wr-", "pd7d8wq-",
@@ -358,7 +348,7 @@ fn case_18() -> Result<()> {
             "swpe4e5-",
             "swpd4d5-",
             "swpa5a6-",
-            "swrd6d5-", "swrd6c6-", "swrd6b6-", "swrd6a6-", "swrd6d7-", "swrd6d8-", "swrd6e6-", "swrd6f6-", "swrd6g6-", "swrd6h6-"
+            "swrd6d5-", "swrd6c6-", "swrd6b6-", "swrd6a6-", "swrd6d7-", "swrd6d8-", "swrd6e6-", "swrd6f6-", "swrd6g6-", "swrd6h6-",
         ],
         #[rustfmt::skip]
         expected_attacks: vec![

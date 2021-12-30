@@ -1,15 +1,16 @@
+use std::str::FromStr;
+
 use myopic_board::{
     BitBoard, CastleZone, ChessBoard, FenComponent, Move, MoveComputeType, Piece,
     Side, Square, Termination,
 };
-use myopic_board::anyhow::Result;
+use myopic_board::anyhow::{Error, Result};
 
 use crate::{Board, eval, PieceValues, PositionTables};
 use crate::enumset::EnumSet;
 use crate::eval::{EvalChessBoard, EvalComponent};
-use crate::eval::additional_components::EvalComponents;
-use crate::eval::additional_components::opening::OpeningComponent;
 use crate::eval::material::Material;
+use crate::eval::opening::OpeningComponent;
 
 pub struct EvalBoard<B: ChessBoard> {
     board: B,
@@ -17,25 +18,73 @@ pub struct EvalBoard<B: ChessBoard> {
     cmps: Vec<Box<dyn EvalComponent>>,
 }
 
-pub struct Builder<B: ChessBoard> {
+pub struct BoardBuilder<B: ChessBoard> {
     board: B,
     piece_values: PieceValues,
     position_tables: PositionTables,
     cmps: Vec<Box<dyn EvalComponent>>,
 }
 
-impl<B: ChessBoard> Builder<B> {
-    pub fn set_piece_values(mut self, piece_values: PieceValues) -> Builder<B> {
+impl Default for EvalBoard<Board> {
+    fn default() -> Self {
+        crate::START_FEN.parse().unwrap()
+    }
+}
+
+impl<B: ChessBoard> From<B> for EvalBoard<B> {
+    fn from(board: B) -> Self {
+        BoardBuilder::from(board).build()
+    }
+}
+
+impl<B: ChessBoard> From<B> for BoardBuilder<B> {
+    fn from(board: B) -> Self {
+        BoardBuilder {
+            board,
+            position_tables: PositionTables::default(),
+            piece_values: PieceValues::default(),
+            cmps: Vec::default(),
+        }
+    }
+}
+
+impl FromStr for BoardBuilder<Board> {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(BoardBuilder {
+            board: s.parse::<Board>()?,
+            piece_values: PieceValues::default(),
+            position_tables: PositionTables::default(),
+            cmps: if s == crate::START_FEN {
+                vec![Box::new(OpeningComponent::default())]
+            } else {
+                vec![]
+            },
+        })
+    }
+}
+
+impl FromStr for EvalBoard<Board> {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.parse::<BoardBuilder<Board>>().map(|b| b.build())
+    }
+}
+
+impl<B: ChessBoard> BoardBuilder<B> {
+    pub fn set_piece_values(mut self, piece_values: PieceValues) -> BoardBuilder<B> {
         self.piece_values = piece_values;
         self
     }
 
-    pub fn set_position_tables(mut self, position_tables: PositionTables) -> Builder<B> {
+    pub fn set_position_tables(mut self, position_tables: PositionTables) -> BoardBuilder<B> {
         self.position_tables = position_tables;
         self
     }
 
-    pub fn add_eval_component(mut self, cmp: Box<dyn EvalComponent>) -> Builder<B> {
+    pub fn add_eval_component(mut self, cmp: Box<dyn EvalComponent>) -> BoardBuilder<B> {
         self.cmps.push(cmp);
         self
     }
@@ -45,33 +94,6 @@ impl<B: ChessBoard> Builder<B> {
             material: Material::new(&self.board, self.piece_values, self.position_tables),
             board: self.board,
             cmps: self.cmps,
-        }
-    }
-}
-
-impl EvalBoard<Board> {
-    pub fn start() -> EvalBoard<Board> {
-        EvalBoard::builder_fen(crate::STARTPOS_FEN)
-            .unwrap()
-            .add_eval_component(Box::new(OpeningComponent::default()))
-            .build()
-    }
-
-    pub fn builder_fen(fen: &str) -> Result<Builder<Board>> {
-        Ok(EvalBoard::builder(fen.parse()?))
-    }
-}
-
-impl<B> EvalBoard<B>
-where
-    B: ChessBoard,
-{
-    pub fn builder(board: B) -> Builder<B> {
-        Builder {
-            board,
-            piece_values: PieceValues::default(),
-            position_tables: PositionTables::default(),
-            cmps: Vec::default(),
         }
     }
 }
@@ -210,12 +232,9 @@ impl<B: ChessBoard> EvalChessBoard for EvalBoard<B> {
 
 #[cfg(test)]
 mod test {
-    use myopic_board::{
-        ChessBoard, Reflectable, UciMove,
-    };
+    use myopic_board::{ChessBoard, Reflectable, UciMove};
 
-    use crate::{Board, PieceValues, PositionTables};
-    use crate::eval::imp::EvalBoard;
+    use crate::{Board, BoardBuilder, PieceValues, PositionTables};
     use crate::eval::material;
 
     #[derive(Clone, Eq, PartialEq)]
@@ -240,7 +259,7 @@ mod test {
 
     fn execute_test_impl<B: ChessBoard>(test_case: TestCase<B>) {
         let (tables, values) = (PositionTables::default(), PieceValues::default());
-        let mut start = EvalBoard::builder(test_case.start_position)
+        let mut start = BoardBuilder::from(test_case.start_position)
             .set_piece_values(values.clone())
             .set_position_tables(tables.clone())
             .build();

@@ -124,8 +124,8 @@ mod test {
         assert_eq!(
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
             to_fen_impl(
-                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
-                &[FenComponent::Board]
+                &crate::START_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::Board],
             )
         )
     }
@@ -135,8 +135,8 @@ mod test {
         assert_eq!(
             "w",
             to_fen_impl(
-                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
-                &[FenComponent::Active]
+                &crate::START_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::Active],
             )
         )
     }
@@ -146,8 +146,8 @@ mod test {
         assert_eq!(
             "KQkq",
             to_fen_impl(
-                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
-                &[FenComponent::CastlingRights]
+                &crate::START_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::CastlingRights],
             )
         )
     }
@@ -157,8 +157,8 @@ mod test {
         assert_eq!(
             "-",
             to_fen_impl(
-                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
-                &[FenComponent::Enpassant]
+                &crate::START_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::Enpassant],
             )
         )
     }
@@ -168,8 +168,8 @@ mod test {
         assert_eq!(
             "0",
             to_fen_impl(
-                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
-                &[FenComponent::HalfMoveCount]
+                &crate::START_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::HalfMoveCount],
             )
         )
     }
@@ -179,8 +179,8 @@ mod test {
         assert_eq!(
             "1",
             to_fen_impl(
-                &crate::STARTPOS_FEN.parse::<Board>().unwrap(),
-                &[FenComponent::MoveCount]
+                &crate::START_FEN.parse::<Board>().unwrap(),
+                &[FenComponent::MoveCount],
             )
         )
     }
@@ -188,9 +188,9 @@ mod test {
     #[test]
     fn start_position_all() -> Result<()> {
         assert_eq!(
-            crate::STARTPOS_FEN,
+            crate::START_FEN,
             to_fen_impl(
-                &crate::STARTPOS_FEN.parse::<Board>()?,
+                &crate::START_FEN.parse::<Board>()?,
                 &[
                     FenComponent::Board,
                     FenComponent::Active,
@@ -198,12 +198,12 @@ mod test {
                     FenComponent::Enpassant,
                     FenComponent::HalfMoveCount,
                     FenComponent::MoveCount,
-                ]
+                ],
             )
         );
         assert_eq!(
-            crate::STARTPOS_FEN,
-            crate::STARTPOS_FEN.parse::<Board>()?.to_fen()
+            crate::START_FEN,
+            crate::START_FEN.parse::<Board>()?.to_fen()
         );
         Ok(())
     }
@@ -269,7 +269,7 @@ mod test {
                     FenComponent::Enpassant,
                     FenComponent::HalfMoveCount,
                     FenComponent::MoveCount,
-                ]
+                ],
             )
         );
         assert_eq!(expected, position_1().to_fen());
@@ -336,7 +336,7 @@ mod test {
                     FenComponent::Enpassant,
                     FenComponent::HalfMoveCount,
                     FenComponent::MoveCount,
-                ]
+                ],
             )
         );
         assert_eq!(expected, position_2().to_fen());

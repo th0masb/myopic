@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
 
-use crate::EvalBoard;
+use crate::{Board, EvalBoard};
 use crate::search::SearchParameters;
 
 #[rustfmt::skip]
@@ -63,7 +63,7 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
         .lines()
         .take(max_positions)
         .map(|l| l.unwrap())
-        .map(|l| match EvalBoard::builder_fen(l.as_str()).map(|b| b.build()) {
+        .map(|l| match l.as_str().parse::<EvalBoard<Board>>() {
             Err(message) => panic!("{}", message),
             Ok(position) => position,
         })

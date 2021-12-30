@@ -8,9 +8,10 @@ pub fn get(
     uci_sequence: &str,
 ) -> Result<EvalBoard<Board>> {
     let mut position = match initial {
-        InitalPosition::Start => myopic_brain::start(),
-        InitalPosition::CustomFen(fen) => fen.parse()?,
-    };
+        InitalPosition::Start => myopic_brain::START_FEN,
+        InitalPosition::CustomFen(fen) => fen.as_str(),
+    }.parse::<EvalBoard<Board>>()?;
+
     position.play_uci(uci_sequence)?;
-    Ok(EvalBoard::builder(position).build())
+    Ok(position)
 }

@@ -49,11 +49,11 @@ fn compute_cord_impl(source: Square, target: Square) -> BitBoard {
         Dir::W,
         Dir::NW,
     ]
-    .iter()
-    .find(|&d| source.search(*d).contains(target))
-    .map_or(BitBoard::EMPTY, |&d| {
-        takewhile_inc(source, target, d) | source
-    })
+        .iter()
+        .find(|&d| source.search(*d).contains(target))
+        .map_or(BitBoard::EMPTY, |&d| {
+            takewhile_inc(source, target, d) | source
+        })
 }
 
 fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {
