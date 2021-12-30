@@ -40,22 +40,22 @@ impl Board {
                 dest,
                 capture,
                 ..
-            } => self.evolve_s(moving, from, dest, capture),
-            Castle { zone, .. } => self.evolve_c(zone),
+            } => self.make_standard(moving, from, dest, capture),
+            Castle { zone, .. } => self.make_castle(zone),
             Enpassant {
                 side,
                 from,
                 dest,
                 capture,
                 ..
-            } => self.evolve_e(side, from, dest, capture),
+            } => self.make_enpassant(side, from, dest, capture),
             Promotion {
                 from,
                 dest,
                 promoted,
                 capture,
                 ..
-            } => self.evolve_p(from, dest, promoted, capture),
+            } => self.make_promotion(from, dest, promoted, capture),
         };
 
         // General actions
@@ -64,7 +64,7 @@ impl Board {
         Ok(())
     }
 
-    fn evolve_s(&mut self, moving: Piece, source: Square, target: Square, captured: Option<Piece>) {
+    fn make_standard(&mut self, moving: Piece, source: Square, target: Square, captured: Option<Piece>) {
         self.pieces.toggle_piece(moving, &[source, target]);
         match captured {
             None => {}
@@ -79,20 +79,20 @@ impl Board {
         };
     }
 
-    fn evolve_c(&mut self, zone: CastleZone) {
+    fn make_castle(&mut self, zone: CastleZone) {
         self.rights = self.rights.apply_castling(zone.side());
         self.toggle_castle_pieces(zone);
         self.enpassant = None;
         self.clock += 1;
     }
 
-    fn evolve_e(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
+    fn make_enpassant(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
         self.toggle_enpassant_pieces(side, from, dest, capture);
         self.enpassant = None;
         self.clock = 0;
     }
 
-    fn evolve_p(&mut self, from: Square, dest: Square, promoted: Piece, captured: Option<Piece>) {
+    fn make_promotion(&mut self, from: Square, dest: Square, promoted: Piece, captured: Option<Piece>) {
         let moved = Piece::pawn(promoted.side());
         self.pieces.toggle_piece(moved, &[from]);
         self.pieces.toggle_piece(promoted, &[dest]);
@@ -116,7 +116,7 @@ impl Board {
                 dest,
                 capture,
                 ..
-            } => self.devolve_s(moving, from, dest, capture),
+            } => self.unmake_standard(moving, from, dest, capture),
 
             &Promotion {
                 from,
@@ -124,15 +124,15 @@ impl Board {
                 promoted,
                 capture,
                 ..
-            } => self.devolve_p(from, dest, promoted, capture),
+            } => self.unmake_promotion(from, dest, promoted, capture),
             &Enpassant {
                 side,
                 from,
                 dest,
                 capture,
                 ..
-            } => self.devolve_e(side, from, dest, capture),
-            &Castle { zone, .. } => self.devolve_c(zone),
+            } => self.unmake_enpassant(side, from, dest, capture),
+            &Castle { zone, .. } => self.unmake_castle(zone),
         };
 
         self.rights = state.rights;
@@ -143,7 +143,7 @@ impl Board {
         Ok(mv)
     }
 
-    fn devolve_s(&mut self, piece: Piece, source: Square, target: Square, captured: Option<Piece>) {
+    fn unmake_standard(&mut self, piece: Piece, source: Square, target: Square, captured: Option<Piece>) {
         self.pieces.toggle_piece(piece, &[target, source]);
         match captured {
             None => {}
@@ -151,15 +151,15 @@ impl Board {
         };
     }
 
-    fn devolve_c(&mut self, zone: CastleZone) {
+    fn unmake_castle(&mut self, zone: CastleZone) {
         self.toggle_castle_pieces(zone);
     }
 
-    fn devolve_e(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
+    fn unmake_enpassant(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
         self.toggle_enpassant_pieces(side, from, dest, capture);
     }
 
-    fn devolve_p(&mut self, from: Square, dest: Square, promoted: Piece, captured: Option<Piece>) {
+    fn unmake_promotion(&mut self, from: Square, dest: Square, promoted: Piece, captured: Option<Piece>) {
         let moved_pawn = Piece::pawn(promoted.side());
         self.pieces.toggle_piece(moved_pawn, &[from]);
         self.pieces.toggle_piece(promoted, &[dest]);

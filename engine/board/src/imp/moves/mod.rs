@@ -12,7 +12,7 @@ mod test;
 mod enpassantsrc;
 
 impl Board {
-    pub fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
+    pub(crate) fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
         let constraints = self.move_constraints(computation_type);
         let pawn_moves = self.compute_pawn_moves(&constraints);
         let nbrqk_moves = self.compute_nbrqk_moves(&constraints);
