@@ -7,7 +7,7 @@ use crate::imp::cache::rays::RaySet;
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
 
 impl Board {
-    pub fn pinned_set_impl(&mut self) -> RaySet {
+    pub fn pinned_set(&mut self) -> RaySet {
         match &self.cache.pinned_set {
             Some(x) => x.clone(),
             None => {
@@ -22,23 +22,18 @@ impl Board {
     /// i.e have their movement areas constrained so that they do not move
     /// and leave the king in check.
     fn compute_pinned(&self) -> RaySet {
-        let locs = |side: Side| self.side(side);
-        let (active, passive) = (locs(self.active), locs(self.active.reflect()));
+        let active = self.side(self.active);
+        let passive = self.side(self.active.reflect());
         let king_loc = self.pieces.king_location(self.active);
-        let mut constraint_areas: Vec<(Square, BitBoard)> = Vec::with_capacity(2);
-        let mut pinned_locations = BitBoard::EMPTY;
-        for potential_pinner in self.compute_potential_pinners(king_loc) {
-            let cord = BitBoard::cord(king_loc, potential_pinner);
-            if (cord & active).size() == 2 && (cord & passive).size() == 1 {
-                let pinned_loc = ((cord & active) - king_loc).into_iter().next().unwrap();
-                constraint_areas.push((pinned_loc, cord));
-                pinned_locations |= pinned_loc;
-            }
-        }
-        RaySet {
-            ray_points: pinned_locations,
-            rays: constraint_areas,
-        }
+
+        self.compute_potential_pinners(king_loc)
+            .iter()
+            .map(|square| BitBoard::cord(king_loc, square))
+            .filter(|&cord| (cord & active).size() == 2 && (cord & passive).size() == 1)
+            .map(|cord| {
+                let pinned_loc = ((cord & active) - king_loc).first().unwrap();
+                (pinned_loc, cord)
+            }).collect()
     }
 
     fn compute_potential_pinners(&self, king_loc: Square) -> BitBoard {
@@ -69,14 +64,12 @@ mod test {
     #[test]
     fn case_one() {
         let fen = "K2Q4/7p/1B4n1/2bq4/2rkp1R1/4p3/5br1/6B1 b KQkq - 5 10";
-        let expected_pinned = RaySet {
-            ray_points: C5 | D5 | E4,
-            rays: vec![
-                (Square::E4, D4 | E4 | F4 | G4),
-                (Square::C5, B6 | C5 | D4),
-                (Square::D5, D4 | D5 | D6 | D7 | D8),
-            ],
-        };
+        let expected_pinned = vec![
+            (Square::E4, D4 | E4 | F4 | G4),
+            (Square::C5, B6 | C5 | D4),
+            (Square::D5, D4 | D5 | D6 | D7 | D8),
+        ].into_iter().collect();
+
         execute_test(fen, expected_pinned);
     }
 }
