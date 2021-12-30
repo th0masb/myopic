@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use anyhow::{anyhow, Result};
 use itertools::Itertools;
-use myopic_brain::{ChessBoard, FenComponent};
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
+
+use myopic_brain::{ChessBoard, FenComponent};
+use myopic_brain::anyhow::{anyhow, Result};
 
 use crate::game::{InitalPosition, LookupService};
 

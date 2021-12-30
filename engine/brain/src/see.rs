@@ -1,5 +1,6 @@
-use myopic_board::{BitBoard, ChessBoard, Piece, Reflectable, Side, Square};
 use std::cmp;
+
+use myopic_board::{BitBoard, ChessBoard, Piece, Reflectable, Side, Square};
 
 /// API function for determining whether an exchange is good on the given
 /// board. The board must have a piece at both the source and target square
@@ -153,10 +154,10 @@ fn is_slider(piece: Piece) -> bool {
 
 #[cfg(test)]
 mod test {
-    use crate::see::See;
+    use myopic_board::{ChessBoard, Reflectable, Square};
 
     use crate::Board;
-    use myopic_board::{ChessBoard, Reflectable, Square};
+    use crate::see::See;
 
     fn dummy_values() -> [i32; 6] {
         [1, 3, 3, 5, 9, 1000]

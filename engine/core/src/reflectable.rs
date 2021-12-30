@@ -1,6 +1,8 @@
-use crate::{BitBoard, CastleZone, Dir, Piece, Side, Square};
 use std::collections::BTreeSet;
+
 use enumset::EnumSet;
+
+use crate::{BitBoard, CastleZone, Dir, Piece, Side, Square};
 
 /// Chess is a symmetric game and this trait represents a component of
 /// the game which can be reflected to it's symmetric opposite component.

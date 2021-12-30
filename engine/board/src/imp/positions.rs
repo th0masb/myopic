@@ -1,8 +1,7 @@
 use std::str::FromStr;
 
-use anyhow::{anyhow, Error, Result};
-
 use myopic_core::*;
+use myopic_core::anyhow::{anyhow, Error, Result};
 
 use crate::parse::patterns;
 

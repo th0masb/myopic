@@ -1,17 +1,16 @@
 use std::cmp::max;
 use std::str::FromStr;
 
-use anyhow::{anyhow, Error, Result};
-
 use myopic_core::*;
+use myopic_core::anyhow::{anyhow, Error, Result};
 
 use crate::ChessBoard;
 use crate::enumset::EnumSet;
 use crate::FenComponent;
 use crate::imp::cache::CalculationCache;
-use crate::imp::rights::Rights;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;
+use crate::imp::rights::Rights;
 use crate::MoveComputeType;
 use crate::mv::{Move, parse_op};
 use crate::parse::patterns;
@@ -73,12 +72,12 @@ fn hash(pos: &Positions, rights: Rights, active: Side, ep: Option<Square>) -> u6
 
 #[cfg(test)]
 mod fen_test {
-    use anyhow::Result;
-
     use crate::{CastleZone, constants::*, Side, Square};
     use crate::Board;
     use crate::enumset::EnumSet;
     use crate::imp::test::TestBoard;
+
+    use super::*;
 
     fn test(expected: TestBoard, fen_string: String) -> Result<()> {
         assert_eq!(Board::from(expected), fen_string.parse::<Board>()?);

@@ -3,9 +3,9 @@ use myopic_core::*;
 use crate::enumset::EnumSet;
 use crate::imp::Board;
 use crate::imp::cache::CalculationCache;
-use crate::imp::rights::Rights;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;
+use crate::imp::rights::Rights;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {

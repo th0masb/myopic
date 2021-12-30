@@ -1,5 +1,5 @@
-use anyhow::Result;
 use myopic_brain::{Board, ChessBoard, EvalBoard};
+use myopic_brain::anyhow::Result;
 
 use crate::game::InitalPosition;
 

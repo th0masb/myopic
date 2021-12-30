@@ -1,11 +1,11 @@
 use std::time::{Duration, Instant};
 
-use anyhow::{anyhow, Result};
 use bytes::Bytes;
 use rusoto_core::Region;
 use rusoto_lambda::{InvocationRequest, Lambda, LambdaClient};
 
 use lambda_payloads::chessmove::*;
+use myopic_brain::anyhow::{anyhow, Result};
 
 use crate::game::{ComputeService, InitalPosition};
 

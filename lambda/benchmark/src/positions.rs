@@ -1,5 +1,6 @@
-use myopic_brain::{EvalBoard, Board};
 use lambda_runtime::error::HandlerError;
+
+use myopic_brain::{Board, EvalBoard};
 
 pub fn get(n: usize) -> Result<Vec<EvalBoard<Board>>, HandlerError> {
     let mut roots = vec![];
