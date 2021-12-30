@@ -344,3 +344,30 @@ fn case_17() -> Result<()> {
         ],
     })
 }
+
+#[test]
+fn case_18() -> Result<()> {
+    execute_test(TestCase {
+        board: "2r3k1/5p2/3R4/P4KpP/3PP3/5PP1/8/8 w - - 1 92",
+        #[rustfmt::skip]
+        expected_all: vec![
+            "swph5h6-",
+            "swpg3g4-",
+            "swpf3f4-",
+            "swkf5g5bp", "swkf5g4-", "swkf5e5-", "swkf5f6-",
+            "swpe4e5-",
+            "swpd4d5-",
+            "swpa5a6-",
+            "swrd6d5-", "swrd6c6-", "swrd6b6-", "swrd6a6-", "swrd6d7-", "swrd6d8-", "swrd6e6-", "swrd6f6-", "swrd6g6-", "swrd6h6-"
+        ],
+        #[rustfmt::skip]
+        expected_attacks: vec![
+            "swkf5g5bp"
+        ],
+        #[rustfmt::skip]
+        expected_attacks_checks: vec![
+            "swkf5g5bp",
+            "swrd6d8-", "swrd6g6-",
+        ],
+    })
+}

@@ -1,10 +1,10 @@
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
-use anyhow::{anyhow, Result};
 use reqwest::StatusCode;
 
 use myopic_brain::{Board, ChessBoard, EvalBoard, Side};
+use myopic_brain::anyhow::{anyhow, Result};
 
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::lichess::{LichessChatRoom, LichessService};

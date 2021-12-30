@@ -1,9 +1,17 @@
-#[macro_use]
-extern crate itertools;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-pub extern crate enumset;
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
+
+pub use anyhow;
+pub use enum_map;
+pub use enumset;
+use enumset::EnumSetType;
+
+pub use bitboard::BitBoard;
+pub use bitboard::constants;
+pub use castlezone::CastleZone;
+pub use pieces::Piece;
+pub use reflectable::Reflectable;
+pub use square::Square;
 
 mod bitboard;
 mod castlezone;
@@ -11,16 +19,6 @@ pub mod hash;
 mod pieces;
 mod reflectable;
 mod square;
-
-use anyhow::anyhow;
-pub use bitboard::constants;
-pub use bitboard::BitBoard;
-pub use castlezone::CastleZone;
-pub use pieces::Piece;
-pub use reflectable::Reflectable;
-pub use square::Square;
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
 
 /// Represents the two different teams in a game of chess.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -45,7 +43,7 @@ impl FromStr for Side {
         match s {
             "w" | "W" => Ok(Side::White),
             "b" | "B" => Ok(Side::Black),
-            _ => Err(anyhow!("Cannot parse Side from {}", s)),
+            _ => Err(anyhow::anyhow!("Cannot parse Side from {}", s)),
         }
     }
 }

@@ -1,5 +1,6 @@
+use myopic_board::anyhow::{anyhow, Result};
+
 use crate::Move;
-use anyhow::{anyhow, Result};
 
 // Let's estimate 24 bytes per table entry
 const MAX_ENTRIES: usize = 30_000_000;

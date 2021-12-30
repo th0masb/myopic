@@ -1,10 +1,11 @@
-use crate::castlezone::CastleZone;
-use crate::pieces::Piece;
-use crate::square::Square;
-use crate::Side;
+use enumset::EnumSet;
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
-use enumset::EnumSet;
+
+use crate::castlezone::CastleZone;
+use crate::pieces::Piece;
+use crate::Side;
+use crate::square::Square;
 
 // Total number of hashing features
 const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
@@ -56,8 +57,9 @@ fn gen_unique(seed: u64, count: usize) -> Vec<u64> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use crate::square::Square;
+
+    use super::*;
 
     #[test]
     fn test_uniqueness() {

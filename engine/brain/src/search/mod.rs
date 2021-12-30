@@ -1,17 +1,19 @@
+use std::marker::PhantomData;
 use std::time::{Duration, Instant};
+
+use serde::ser::SerializeStruct;
+use serde::Serializer;
+
+use myopic_board::anyhow::{anyhow, Result};
+use myopic_board::Move;
+use orderinghints::OrderingHints;
+use terminator::SearchTerminator;
 
 use crate::eval;
 use crate::eval::EvalChessBoard;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::ordering::EstimatorImpl;
 use crate::search::transpositions::TranspositionTable;
-use anyhow::{anyhow, Result};
-use myopic_board::Move;
-use orderinghints::OrderingHints;
-use serde::ser::SerializeStruct;
-use serde::Serializer;
-use terminator::SearchTerminator;
-use std::marker::PhantomData;
 
 pub mod interactive;
 pub mod negascout;
@@ -78,10 +80,13 @@ impl serde::Serialize for SearchOutcome {
 
 #[cfg(test)]
 mod searchoutcome_serialize_test {
-    use super::SearchOutcome;
-    use myopic_board::{CastleZone, Move, Piece, Square};
-    use serde_json;
     use std::time::Duration;
+
+    use serde_json;
+
+    use myopic_board::{CastleZone, Move, Piece, Square};
+
+    use super::SearchOutcome;
 
     #[test]
     fn test_json_serialize() {
@@ -217,10 +222,11 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
 /// checkmating or escaping checkmate etc.
 #[cfg(test)]
 mod test {
+    use myopic_board::{Board, Reflectable};
+
+    use crate::{eval, EvalBoard, UciMove};
     use crate::eval::EvalChessBoard;
     use crate::search::SearchParameters;
-    use crate::{eval, EvalBoard, UciMove};
-    use myopic_board::{Reflectable, Board};
 
     const DEPTH: usize = 3;
     const TABLE_SIZE: usize = 10_000;

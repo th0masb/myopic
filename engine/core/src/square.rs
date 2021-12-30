@@ -1,6 +1,8 @@
-use crate::{BitBoard, Dir};
-use anyhow::{anyhow, Error, Result};
 use std::str::FromStr;
+
+use anyhow::{anyhow, Error, Result};
+
+use crate::{BitBoard, Dir};
 
 /// Type representing a square on a chessboard.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -192,9 +194,9 @@ const ALL: [Square; 64] = [
 
 #[cfg(test)]
 mod test {
+    use crate::Dir::*;
     use crate::square::Square;
     use crate::square::Square::*;
-    use crate::Dir::*;
 
     #[test]
     fn test_rank() {

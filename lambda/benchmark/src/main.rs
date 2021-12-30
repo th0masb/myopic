@@ -5,6 +5,7 @@ use lambda_runtime::{Context, error::HandlerError, lambda};
 use simple_logger::SimpleLogger;
 
 use lambda_payloads::benchmark::*;
+use myopic_brain::anyhow;
 use myopic_brain::SearchParameters;
 
 mod positions;

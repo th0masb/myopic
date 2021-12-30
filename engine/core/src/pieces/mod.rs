@@ -1,8 +1,10 @@
-use crate::{BitBoard, Side, Square};
-use anyhow::{anyhow, Error, Result};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+
+use anyhow::{anyhow, Error, Result};
 use enumset::EnumSetType;
+
+use crate::{BitBoard, Side, Square};
 
 mod kings;
 mod knights;

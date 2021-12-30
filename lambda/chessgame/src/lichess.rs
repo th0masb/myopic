@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Result};
 use reqwest::{blocking, StatusCode};
+
+use myopic_brain::anyhow::{anyhow, Result};
 
 use crate::game::GameExecutionState;
 

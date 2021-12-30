@@ -1,9 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use anyhow::Result;
-
-use myopic_core::{Reflectable, Side};
+use myopic_core::{anyhow::{Error, Result}, Reflectable, Side};
 
 use crate::{CastleZone, Piece, Square};
 
@@ -88,8 +86,9 @@ impl Display for Move {
 #[cfg(test)]
 impl Move {
     pub fn from(s: &str, source: u64) -> Result<Move> {
+        use myopic_core::anyhow::anyhow;
         match s.chars().next() {
-            None => Err(anyhow::anyhow!("Cannot parse move from empty string!")),
+            None => Err(anyhow!("Cannot parse move from empty string!")),
             Some(t) => match t {
                 's' => Ok(Move::Standard {
                     source,
@@ -116,7 +115,7 @@ impl Move {
                     source,
                     zone: slice(s, 1, 2).parse()?,
                 }),
-                _ => Err(anyhow::anyhow!("Cannot parse {} as a move", s)),
+                _ => Err(anyhow!("Cannot parse {} as a move", s)),
             },
         }
     }
@@ -129,7 +128,7 @@ fn slice(s: &str, skip: usize, take: usize) -> String {
 
 pub fn parse_op<F>(s: &str) -> Result<Option<F>>
 where
-    F: FromStr<Err = anyhow::Error>,
+    F: FromStr<Err = Error>,
 {
     match s {
         "-" => Ok(None),
@@ -139,12 +138,10 @@ where
 
 #[cfg(test)]
 mod test {
-    use anyhow::Result;
-
-    use myopic_core::Side;
-
     use crate::{CastleZone, Piece, Square};
     use crate::mv::Move;
+
+    use super::*;
 
     #[test]
     fn standard() -> Result<()> {

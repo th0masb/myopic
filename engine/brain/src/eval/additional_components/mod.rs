@@ -1,8 +1,8 @@
-pub mod opening;
-
 use crate::eval::additional_components::opening::OpeningComponent;
 use crate::eval::EvalComponent;
 use crate::Move;
+
+pub mod opening;
 
 #[derive(Clone)]
 pub enum AdditionalEvalComponent {

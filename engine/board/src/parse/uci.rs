@@ -1,8 +1,7 @@
 use std::fmt::{Display, Formatter};
 
-use anyhow::{anyhow, Result};
-
 use myopic_core::{Piece, Square};
+use myopic_core::anyhow::{anyhow, Result};
 
 use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
 use crate::parse::patterns::uci_move;
@@ -167,7 +166,7 @@ fn piece_char(piece: Piece) -> char {
 }
 #[cfg(test)]
 mod test {
-    use anyhow::Result;
+    use myopic_core::anyhow::Result;
 
     use crate::{Board, ChessBoard};
 

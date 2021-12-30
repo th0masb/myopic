@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Result};
 use itertools::Itertools;
 
 use myopic_core::{Reflectable, Square};
+use myopic_core::anyhow::{anyhow, Result};
 
-use crate::Move;
 use crate::imp::rights::Rights;
+use crate::Move;
 
 const REPETITION_WINDOW: usize = 15;
 

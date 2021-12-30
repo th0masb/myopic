@@ -1,6 +1,7 @@
-use crate::eval::EvalComponent;
-use crate::{PieceValues, PositionTables, Reflectable};
 use myopic_board::{ChessBoard, Move, Piece, Square};
+
+use crate::{PieceValues, PositionTables, Reflectable};
+use crate::eval::EvalComponent;
 
 const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
 const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]

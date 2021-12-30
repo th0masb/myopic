@@ -1,15 +1,18 @@
-use crate::bitboard::BitBoard;
-use crate::pieces::Piece;
-use crate::square::Square;
-use crate::Side;
-use anyhow::anyhow;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-use enumset::*;
+
+use anyhow::anyhow;
+use enum_map::Enum;
+use enumset::{enum_set, EnumSet, EnumSetType};
+
+use crate::bitboard::BitBoard;
+use crate::pieces::Piece;
+use crate::Side;
+use crate::square::Square;
 
 /// Represents one of the four different areas on a chessboard where
 /// the special castling move can take place (two for each side).
-#[derive(Debug, EnumSetType, PartialOrd, Ord, Hash)]
+#[derive(Debug, EnumSetType, Enum, PartialOrd, Ord, Hash)]
 #[rustfmt::skip]
 pub enum CastleZone { WK, WQ, BK, BQ }
 
