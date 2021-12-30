@@ -42,26 +42,19 @@ fn move_compute_handler(
 
 fn extract_position(e: &ComputeMoveEvent) -> Result<EvalBoard<Board>, anyhow::Error> {
     match e {
-        ComputeMoveEvent::Fen { position, .. } => {
-            EvalBoard::builder_fen(position).map(|b| b.build())
-        }
+        ComputeMoveEvent::Fen { position, .. } => position.as_str().parse(),
         ComputeMoveEvent::UciSequence {
             sequence,
             start_fen,
             ..
         } => {
-            let fen = start_fen
+            let mut state = start_fen
                 .as_ref()
-                .cloned()
-                .unwrap_or(myopic_brain::STARTPOS_FEN.to_string());
-            let mut state = if fen.as_str() == myopic_brain::STARTPOS_FEN {
-                log::info!("Constructed state from standard start position");
-                EvalBoard::start()
-            } else {
-                log::info!("Constructed state from custom position {}", fen.as_str());
-                EvalBoard::builder_fen(fen.as_str())?.build()
-            };
+                .map(|s| s.as_str())
+                .unwrap_or(myopic_brain::START_FEN)
+                .parse::<EvalBoard<Board>>()?;
             state.play_uci(sequence.as_str())?;
+            log::info!("Constructed state from {:?} then {}", start_fen, sequence);
             Ok(state)
         }
     }

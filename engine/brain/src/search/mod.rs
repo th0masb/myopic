@@ -57,8 +57,8 @@ pub struct SearchOutcome {
 
 impl serde::Serialize for SearchOutcome {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let mut state = serializer.serialize_struct("SearchOutcome", 4)?;
         state.serialize_field("bestMove", &self.best_move.uci_format())?;
@@ -186,16 +186,16 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
             transposition_table,
             board_type: PhantomData,
         }
-        .search(
-            &mut self.root,
-            SearchContext {
-                depth_remaining: depth,
-                start_time: search_start,
-                alpha: -eval::INFTY,
-                beta: eval::INFTY,
-                precursors: vec![],
-            },
-        )?;
+            .search(
+                &mut self.root,
+                SearchContext {
+                    depth_remaining: depth,
+                    start_time: search_start,
+                    alpha: -eval::INFTY,
+                    beta: eval::INFTY,
+                    precursors: vec![],
+                },
+            )?;
 
         // The path returned from the negamax function is ordered deepest move -> shallowest
         // so we reverse as the shallowest move is the one we make in this position.
@@ -232,8 +232,8 @@ mod test {
 
     fn test(fen_string: &'static str, expected_move_pool: Vec<UciMove>, is_won: bool) {
         let base_board = fen_string.parse::<Board>().unwrap();
-        let ref_board = EvalBoard::builder(base_board.reflect()).build();
-        let board = EvalBoard::builder(base_board).build();
+        let ref_board = EvalBoard::from(base_board.reflect());
+        let board = EvalBoard::from(base_board);
         let ref_move_pool = expected_move_pool.reflect();
         test_impl(board, expected_move_pool, is_won);
         test_impl(ref_board, ref_move_pool, is_won);

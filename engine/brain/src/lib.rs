@@ -3,7 +3,7 @@
 extern crate lazy_static;
 
 pub use eval::{EvalChessBoard, MaterialParameters};
-pub use eval::imp::EvalBoard;
+pub use eval::imp::{BoardBuilder, EvalBoard};
 pub use eval::tables::PositionTables;
 pub use eval::values::PieceValues;
 pub use myopic_board::*;
@@ -15,7 +15,6 @@ pub use search::SearchParameters;
 pub use search::terminator::SearchTerminator;
 
 mod eval;
-pub mod pos;
 
 mod quiescent;
 mod search;

@@ -55,6 +55,7 @@ pub enum TreeNode {
         best_move: Move,
     },
 }
+
 impl TreeNode {
     fn matches(&self, hash: u64) -> bool {
         match self {

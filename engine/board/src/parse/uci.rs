@@ -131,8 +131,8 @@ pub fn single_move<B: ChessBoard>(start: &mut B, uci_move: &str) -> Result<Move>
                 from == f
                     && dest == d
                     && promoting
-                        .map(|c| piece_char(promoted) == c)
-                        .unwrap_or(false)
+                    .map(|c| piece_char(promoted) == c)
+                    .unwrap_or(false)
             }
         })
         .ok_or(anyhow!("No moves matching {}", uci_move))
@@ -164,6 +164,7 @@ fn piece_char(piece: Piece) -> char {
         _ => 'x',
     }
 }
+
 #[cfg(test)]
 mod test {
     use myopic_core::anyhow::Result;
@@ -172,7 +173,7 @@ mod test {
 
     fn execute_success_test(expected_finish: &'static str, uci: &'static str) -> Result<()> {
         let finish = expected_finish.parse::<Board>()?;
-        let mut board = crate::STARTPOS_FEN.parse::<Board>()?;
+        let mut board = crate::START_FEN.parse::<Board>()?;
         for evolve in super::move_sequence(&board, uci)? {
             board.make(evolve)?;
         }
@@ -327,6 +328,7 @@ mod test_single_move {
             "e1g1",
         )
     }
+
     #[test]
     fn case_eleven() -> Result<()> {
         execute_success_test(
