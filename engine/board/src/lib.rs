@@ -1,10 +1,7 @@
-#[macro_use]
-extern crate lazy_static;
-
-use anyhow::Result;
-
 pub use mv::Move;
 pub use myopic_core::*;
+use myopic_core::enum_map::Enum;
+use myopic_core::anyhow::Result;
 pub use parse::uci::UciMove;
 
 use crate::enumset::EnumSet;
@@ -22,7 +19,7 @@ pub fn start() -> Board {
     STARTPOS_FEN.parse().unwrap()
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash, Enum)]
 pub enum MoveComputeType {
     All,
     Attacks,
@@ -59,7 +56,7 @@ pub enum FenComponent {
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
 /// properties.
-pub trait ChessBoard: Clone + Send {
+pub trait ChessBoard: Clone {
     /// Evolves the position by making the given move. If the source hash
     /// of the move does not match the hash of this position (prior to making
     /// the move) then an error will be returned. If the hash matches but
