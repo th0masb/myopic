@@ -23,7 +23,7 @@ type CmdRx<B> = Receiver<SearchCommand<B>>;
 type ResultTx = Sender<Result<SearchOutcome>>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum SearchCommand<B: EvalChessBoard> {
+pub enum SearchCommand<B: EvalChessBoard + Clone> {
     Go,
     GoOnce,
     Stop,
@@ -44,7 +44,7 @@ pub enum SearchCommand<B: EvalChessBoard> {
 /// via an input channel which accepts a variety of commands and an output channel
 /// which transmits the search results.
 /// TODO How to best handle need for board to be Send + Sync when it uses Rc?
-pub fn search<B: EvalChessBoard + Send + Sync + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
+pub fn search<B: EvalChessBoard + Clone + Send + Sync + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<Result<SearchOutcome>>();
     std::thread::spawn(move || {
@@ -80,7 +80,7 @@ pub fn search<B: EvalChessBoard + Send + Sync + 'static>() -> (SearchCommandTx<B
     (input_tx, output_rx)
 }
 
-struct InteractiveSearch<B: EvalChessBoard> {
+struct InteractiveSearch<B: EvalChessBoard + Clone> {
     input_rx: Rc<CmdRx<B>>,
     output_tx: ResultTx,
     root: Option<B>,
@@ -89,7 +89,7 @@ struct InteractiveSearch<B: EvalChessBoard> {
     transposition_table_size: usize,
 }
 
-impl<B: EvalChessBoard + 'static> InteractiveSearch<B> {
+impl<B: EvalChessBoard + Clone + 'static> InteractiveSearch<B> {
     pub fn new(input_rx: CmdRx<B>, output_tx: ResultTx) -> InteractiveSearch<B> {
         InteractiveSearch {
             input_rx: Rc::new(input_rx),
@@ -151,13 +151,13 @@ impl<B: EvalChessBoard + 'static> InteractiveSearch<B> {
     }
 }
 
-struct InteractiveSearchTerminator<B: EvalChessBoard> {
+struct InteractiveSearchTerminator<B: EvalChessBoard + Clone> {
     max_time: Duration,
     max_depth: usize,
     stop_signal: Rc<CmdRx<B>>,
 }
 
-impl<B: EvalChessBoard> SearchTerminator for InteractiveSearchTerminator<B> {
+impl<B: EvalChessBoard + Clone> SearchTerminator for InteractiveSearchTerminator<B> {
     fn should_terminate(&self, ctx: &SearchContext) -> bool {
         ctx.start_time.elapsed() > self.max_time
             || ctx.depth_remaining >= self.max_depth

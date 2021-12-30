@@ -7,22 +7,21 @@ use myopic_board::anyhow::Result;
 use crate::{Board, eval, PieceValues, PositionTables};
 use crate::enumset::EnumSet;
 use crate::eval::{EvalChessBoard, EvalComponent};
-use crate::eval::additional_components::AdditionalEvalComponent;
+use crate::eval::additional_components::EvalComponents;
 use crate::eval::additional_components::opening::OpeningComponent;
 use crate::eval::material::Material;
 
-#[derive(Clone)]
 pub struct EvalBoard<B: ChessBoard> {
     board: B,
     material: Material,
-    cmps: Vec<AdditionalEvalComponent>,
+    cmps: Vec<Box<dyn EvalComponent>>,
 }
 
 pub struct Builder<B: ChessBoard> {
     board: B,
     piece_values: PieceValues,
     position_tables: PositionTables,
-    eval_cmps: Vec<AdditionalEvalComponent>,
+    cmps: Vec<Box<dyn EvalComponent>>,
 }
 
 impl<B: ChessBoard> Builder<B> {
@@ -36,8 +35,8 @@ impl<B: ChessBoard> Builder<B> {
         self
     }
 
-    pub fn add_eval_component(mut self, cmp: AdditionalEvalComponent) -> Builder<B> {
-        self.eval_cmps.push(cmp);
+    pub fn add_eval_component(mut self, cmp: Box<dyn EvalComponent>) -> Builder<B> {
+        self.cmps.push(cmp);
         self
     }
 
@@ -45,7 +44,7 @@ impl<B: ChessBoard> Builder<B> {
         EvalBoard {
             material: Material::new(&self.board, self.piece_values, self.position_tables),
             board: self.board,
-            cmps: self.eval_cmps,
+            cmps: self.cmps,
         }
     }
 }
@@ -54,7 +53,7 @@ impl EvalBoard<Board> {
     pub fn start() -> EvalBoard<Board> {
         EvalBoard::builder_fen(crate::STARTPOS_FEN)
             .unwrap()
-            .add_eval_component(AdditionalEvalComponent::Opening(OpeningComponent::default()))
+            .add_eval_component(Box::new(OpeningComponent::default()))
             .build()
     }
 
@@ -72,7 +71,7 @@ where
             board,
             piece_values: PieceValues::default(),
             position_tables: PositionTables::default(),
-            eval_cmps: Vec::default(),
+            cmps: Vec::default(),
         }
     }
 }
@@ -234,7 +233,7 @@ mod test {
         }
     }
 
-    fn execute_test<B: ChessBoard + Reflectable>(test_case: TestCase<B>) {
+    fn execute_test<B: ChessBoard + Reflectable + Clone>(test_case: TestCase<B>) {
         execute_test_impl(test_case.clone());
         execute_test_impl(test_case.reflect());
     }

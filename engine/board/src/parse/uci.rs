@@ -96,7 +96,7 @@ mod uci_struct_test {
 
 /// Extracts the moves encoded in standard uci format starting at
 /// a custom board position.
-pub fn move_sequence<B: ChessBoard>(start: &B, encoded: &str) -> Result<Vec<Move>> {
+pub fn move_sequence<B: ChessBoard + Clone>(start: &B, encoded: &str) -> Result<Vec<Move>> {
     let (mut mutator_board, mut dest) = (start.clone(), vec![]);
     for evolve in uci_move().find_iter(encoded) {
         match single_move(&mut mutator_board, evolve.as_str()) {

@@ -56,7 +56,7 @@ pub enum FenComponent {
 /// which can be evolved/devolved via (applicable) Move instances,
 /// compute the set of legal moves and queried for a variety of
 /// properties.
-pub trait ChessBoard: Clone {
+pub trait ChessBoard {
     /// Evolves the position by making the given move. If the source hash
     /// of the move does not match the hash of this position (prior to making
     /// the move) then an error will be returned. If the hash matches but
