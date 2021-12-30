@@ -1,12 +1,14 @@
-use crate::search::{search as blocking_search, SearchContext, SearchParameters, SearchTerminator};
-use crate::{EvalChessBoard, SearchOutcome};
-use anyhow::Result;
-use myopic_board::Side;
 use std::cmp::{max, min};
 use std::rc::Rc;
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::time::Duration;
+
+use myopic_board::anyhow::Result;
+use myopic_board::Side;
+
+use crate::{EvalChessBoard, SearchOutcome};
+use crate::search::{search as blocking_search, SearchContext, SearchParameters, SearchTerminator};
 
 const INFINITE_DURATION: Duration = Duration::from_secs(1_000_000);
 const INFINITE_DEPTH: usize = 1_000;

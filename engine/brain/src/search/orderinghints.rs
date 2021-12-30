@@ -1,9 +1,12 @@
-use crate::search::negascout::SearchResponse;
-use crate::EvalChessBoard;
-use itertools::Itertools;
-use myopic_board::{Move, MoveComputeType};
 use std::cmp::Ordering;
 use std::collections::HashMap;
+
+use itertools::Itertools;
+
+use myopic_board::{Move, MoveComputeType};
+
+use crate::EvalChessBoard;
+use crate::search::negascout::SearchResponse;
 
 const SHALLOW_EVAL_BRANCHING: usize = 5;
 

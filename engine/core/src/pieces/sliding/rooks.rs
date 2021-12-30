@@ -1,5 +1,8 @@
 use std::iter::repeat;
 
+use itertools::izip;
+use lazy_static::lazy_static;
+
 use crate::bitboard::BitBoard;
 use crate::square::Square;
 

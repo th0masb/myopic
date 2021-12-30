@@ -1,6 +1,7 @@
-use crate::eval::EvalComponent;
-use crate::{CastleZone, Move, Piece};
 use myopic_board::Square;
+
+use crate::{CastleZone, Move, Piece};
+use crate::eval::EvalComponent;
 
 #[derive(Clone)]
 pub struct OpeningRewards {
@@ -234,11 +235,12 @@ impl EvalComponent for OpeningComponent {
 
 #[cfg(test)]
 mod test {
+    use myopic_board::anyhow::Result;
+    use myopic_board::ChessBoard;
+
+    use crate::{Board, EvalBoard, Reflectable, UciMove};
     use crate::eval::additional_components::opening::{OpeningComponent, OpeningRewards};
     use crate::eval::EvalComponent;
-    use crate::{Board, EvalBoard, Reflectable, UciMove};
-    use anyhow::Result;
-    use myopic_board::ChessBoard;
 
     #[test]
     fn issue_97() -> Result<()> {

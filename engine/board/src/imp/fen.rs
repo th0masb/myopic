@@ -113,7 +113,7 @@ fn piece_to_fen(piece: Piece) -> &'static str {
 
 #[cfg(test)]
 mod test {
-    use anyhow::Result;
+    use myopic_core::anyhow::Result;
 
     use crate::{Board, ChessBoard, FenComponent};
 

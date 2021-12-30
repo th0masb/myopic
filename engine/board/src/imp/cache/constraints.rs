@@ -73,7 +73,7 @@ impl Board {
         match computation_type {
             MoveComputeType::Attacks => self.compute_constraints(computation_type),
             MoveComputeType::AttacksChecks => self.compute_constraints(computation_type),
-            _ => match &self.cache.move_constraints {
+            MoveComputeType::All => match &self.cache.move_constraints {
                 Some(x) => x.clone(),
                 None => {
                     let result = self.compute_constraints(computation_type);

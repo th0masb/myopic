@@ -1,5 +1,6 @@
-use crate::{BitBoard, EvalChessBoard, Piece, Piece::*};
 use myopic_board::{Move, Move::*, Reflectable, Side, Square};
+
+use crate::{BitBoard, EvalChessBoard, Piece, Piece::*};
 
 /// A function which approximately evaluates the quality
 /// of a move within the context of the given position.

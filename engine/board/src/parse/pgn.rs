@@ -1,7 +1,6 @@
-use anyhow::{anyhow, Result};
 use regex::Regex;
 
-use myopic_core::{CastleZone, Piece, Square};
+use myopic_core::{anyhow::{anyhow, Result}, CastleZone, Piece, Square};
 
 use crate::{ChessBoard, Move, MoveComputeType};
 use crate::parse::patterns::*;
@@ -153,9 +152,9 @@ fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
 
 #[cfg(test)]
 mod test {
-    use anyhow::Result;
-
     use crate::{Board, ChessBoard};
+
+    use super::*;
 
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) -> Result<()> {
         let finish = expected_finish.parse::<Board>()?;

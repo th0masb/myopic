@@ -1,9 +1,10 @@
-use crate::search::SearchParameters;
-use crate::EvalBoard;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
+
+use crate::EvalBoard;
+use crate::search::SearchParameters;
 
 #[rustfmt::skip]
 /// Run on system76

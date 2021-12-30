@@ -1,8 +1,9 @@
 use std::cmp;
 
+use lazy_static::lazy_static;
+
 use crate::bitboard::BitBoard;
 use crate::Dir;
-
 use crate::square::Square;
 
 pub fn get_cord(source: Square, target: Square) -> BitBoard {

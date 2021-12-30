@@ -5,6 +5,7 @@ use simple_logger::SimpleLogger;
 
 use lambda_payloads::chessmove::*;
 use myopic_brain::{Board, ChessBoard, EvalBoard, SearchParameters};
+use myopic_brain::anyhow;
 use myopic_brain::negascout::SearchContext;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

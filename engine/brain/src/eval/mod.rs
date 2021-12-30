@@ -1,8 +1,9 @@
-use crate::eval::tables::PositionTables;
-use crate::eval::values::PieceValues;
+use serde_derive::{Deserialize, Serialize};
 
 use myopic_board::{ChessBoard, Move, Piece, Square};
-use serde_derive::{Deserialize, Serialize};
+
+use crate::eval::tables::PositionTables;
+use crate::eval::values::PieceValues;
 
 pub mod additional_components;
 #[cfg(test)]

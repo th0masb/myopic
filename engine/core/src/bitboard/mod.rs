@@ -1,11 +1,11 @@
 use std::{fmt, ops};
+use std::iter::FromIterator;
 
 use itertools::Itertools;
 
+use crate::{Dir, Square};
 use crate::bitboard::iterator::BitBoardIterator;
 use crate::square::Square::H1;
-use crate::{Dir, Square};
-use std::iter::FromIterator;
 
 pub mod constants;
 mod cords;

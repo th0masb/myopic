@@ -1,5 +1,6 @@
-use myopic_board::{Piece, Side};
 use serde_derive::{Deserialize, Serialize};
+
+use myopic_board::{Piece, Side};
 
 /// Values copied from Stockfish: https://github.com/official-stockfish/Stockfish/blob/master/src/types.h
 const DEFAULT_MIDGAME: [i32; 6] = [128, 782, 830, 1289, 2529, 100_000];

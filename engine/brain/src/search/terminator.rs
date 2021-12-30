@@ -1,5 +1,6 @@
-use crate::search::negascout::SearchContext;
 use std::time::Duration;
+
+use crate::search::negascout::SearchContext;
 
 /// Represents some object which can determine whether a search should be
 /// terminated given certain context about the current state. Implementations

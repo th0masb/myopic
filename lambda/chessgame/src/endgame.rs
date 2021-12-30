@@ -1,10 +1,11 @@
 use std::time::Instant;
 
-use anyhow::{anyhow, Error, Result};
-use myopic_brain::ChessBoard;
 use reqwest::blocking;
 use serde_derive::Deserialize;
 use tokio::time::Duration;
+
+use myopic_brain::anyhow::{anyhow, Error, Result};
+use myopic_brain::ChessBoard;
 
 use crate::game::{InitalPosition, LookupService};
 

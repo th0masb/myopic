@@ -1,5 +1,6 @@
-use myopic_board::{Piece, Piece::*, Reflectable, Side, Square};
 use serde_derive::{Deserialize, Serialize};
+
+use myopic_board::{Piece, Piece::*, Reflectable, Side, Square};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq)]
 pub struct PositionTables {
@@ -181,8 +182,9 @@ const PAWN_5_8: [(i32, i32); 32] = [
 
 #[cfg(test)]
 mod test {
-    use crate::PositionTables;
     use myopic_board::{Piece, Reflectable, Square, Square::*};
+
+    use crate::PositionTables;
 
     // Fully connected pawn table
     #[rustfmt::skip]
