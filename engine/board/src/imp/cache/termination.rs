@@ -6,7 +6,7 @@ use crate::MoveComputeType;
 use crate::Termination;
 
 impl Board {
-    pub fn termination_status_impl(&mut self) -> Option<Termination> {
+    pub fn termination_status(&mut self) -> Option<Termination> {
         match &self.cache.termination_status {
             Some(x) => *x,
             None => {
@@ -23,7 +23,7 @@ impl Board {
         }
         let active = self.active;
         let active_king = self.king(active);
-        let passive_control = self.passive_control_impl();
+        let passive_control = self.passive_control();
         let (whites, blacks) = self.sides();
         // If king can move somewhere which is usually the case then not terminal.
         let king_moves = Piece::king(active).moves(active_king, whites, blacks);
@@ -38,7 +38,7 @@ impl Board {
 
     /// Assumes king is in check and cannot move out of it
     fn checked_termination(&mut self) -> Option<Termination> {
-        let constraints = self.constraints_impl(MoveComputeType::All);
+        let constraints = self.move_constraints(MoveComputeType::All);
         let (whites, blacks) = self.sides();
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
         for &piece in qrbnp(self.active) {
@@ -65,7 +65,7 @@ impl Board {
             }
         }
         // Compute constraints as a last resort
-        let constraints = self.constraints_impl(MoveComputeType::All);
+        let constraints = self.move_constraints(MoveComputeType::All);
         let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
         for &piece in qrbnp(self.active) {
             let locations = self.locs(&[piece]) & pin_rays;
@@ -102,8 +102,8 @@ mod test {
 
     fn test(expected: Option<Termination>, fen: &str) {
         let mut board = fen.parse::<Board>().unwrap();
-        assert_eq!(expected, board.termination_status_impl());
-        assert_eq!(expected, board.reflect().termination_status_impl());
+        assert_eq!(expected, board.termination_status());
+        assert_eq!(expected, board.reflect().termination_status());
     }
 
     #[test]

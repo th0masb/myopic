@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use myopic_core::*;
 
 use crate::ChessBoard;
@@ -7,11 +8,11 @@ use crate::imp::cache::rays::RaySet;
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
 
 impl Board {
-    pub fn pinned_set(&mut self) -> RaySet {
+    pub fn pinned_set(&mut self) -> Rc<RaySet> {
         match &self.cache.pinned_set {
             Some(x) => x.clone(),
             None => {
-                let result = self.compute_pinned();
+                let result = Rc::new(self.compute_pinned());
                 self.cache.pinned_set = Some(result.clone());
                 result
             }
