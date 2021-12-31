@@ -3,12 +3,13 @@ use myopic_core::*;
 use crate::imp::Board;
 
 impl Board {
-    pub fn passive_control(&mut self) -> BitBoard {
-        match &self.cache.passive_control {
-            Some(x) => *x,
+    pub fn passive_control(&self) -> BitBoard {
+        let mut cache = self.cache.borrow_mut();
+        match cache.passive_control {
+            Some(x) => x,
             None => {
                 let result = self.compute_passive_control(self.active.reflect());
-                self.cache.passive_control = Some(result);
+                cache.passive_control = Some(result);
                 result
             }
         }

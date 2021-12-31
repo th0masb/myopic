@@ -4,7 +4,7 @@ mod game_stream;
 
 use errors::Errors;
 use game_stream::GameStream;
-use myopic_board::{FenComponent, Move, ChessBoard};
+use myopic_board::{FenPart, Move, ChessBoard};
 use std::{collections::HashMap, error::Error, fs, fs::File, path::PathBuf};
 use structopt::StructOpt;
 
@@ -39,16 +39,16 @@ struct Opt {
     positions_only: bool,
 }
 
-fn parse_fen_components(input: &str) -> Vec<FenComponent> {
+fn parse_fen_components(input: &str) -> Vec<FenPart> {
     input
         .chars()
         .flat_map(|c| match c {
-            'b' => vec![FenComponent::Board],
-            'a' => vec![FenComponent::Active],
-            'c' => vec![FenComponent::CastlingRights],
-            'e' => vec![FenComponent::Enpassant],
-            'h' => vec![FenComponent::HalfMoveCount],
-            'm' => vec![FenComponent::MoveCount],
+            'b' => vec![FenPart::Board],
+            'a' => vec![FenPart::Active],
+            'c' => vec![FenPart::CastlingRights],
+            'e' => vec![FenPart::Enpassant],
+            'h' => vec![FenPart::HalfMoveCount],
+            'm' => vec![FenPart::MoveCount],
             _ => vec![],
         })
         .collect()
@@ -149,7 +149,7 @@ fn path_to_string(path: &PathBuf) -> String {
 }
 
 fn parse_entries(
-    format: &Vec<FenComponent>,
+    format: &Vec<FenPart>,
     offset: usize,
     depth: usize,
     game: &str,
@@ -168,7 +168,7 @@ fn parse_entries(
                 Move::Enpassant { .. } => {}
                 _ => {
                     entries.push(CollectionEntry {
-                        position: board.to_partial_fen(format.as_slice()),
+                        position: board.to_fen_parts(format.as_slice()),
                         mv: mv.uci_format(),
                     });
                 }

@@ -36,7 +36,7 @@ pub trait EvalChessBoard: ChessBoard {
     /// positive score indicates a favorable position for black. If the
     /// state it terminal it must return the LOSS_VALUE or DRAW_VALUE
     /// depending on the type of termination.
-    fn static_eval(&mut self) -> i32;
+    fn static_eval(&self) -> i32;
 
     /// The value each piece is considered to have in the current
     /// state of the game.
