@@ -5,6 +5,7 @@ pub use anyhow;
 pub use enum_map;
 pub use enumset;
 use enumset::EnumSetType;
+use enum_map::Enum;
 
 pub use bitboard::BitBoard;
 pub use bitboard::constants;
@@ -21,7 +22,7 @@ mod reflectable;
 mod square;
 
 /// Represents the two different teams in a game of chess.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Enum)]
 pub enum Side {
     White,
     Black,

@@ -4,10 +4,10 @@ use std::time::Duration;
 
 use regex::Regex;
 
-use crate::{Board, ChessBoard, Move};
 use crate::eval::imp::EvalBoard;
 use crate::eval::WIN_VALUE;
 use crate::search::{search, SearchParameters};
+use crate::{Board, ChessBoard, Move};
 
 #[rustfmt::skip]
 ///

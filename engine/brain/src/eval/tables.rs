@@ -75,19 +75,19 @@ impl PositionTables {
         let table_index = table_index(piece, adjusted_location);
         parity(piece)
             * match piece {
-            WN | BN => f(self.knight[table_index]),
-            WB | BB => f(self.bishop[table_index]),
-            WR | BR => f(self.rook[table_index]),
-            WQ | BQ => f(self.queen[table_index]),
-            WK | BK => f(self.king[table_index]),
-            WP | BP => {
-                if (adjusted_location as usize) < 32 {
-                    f(self.pawn_1_4[table_index])
-                } else {
-                    f(self.pawn_5_8[table_index])
+                WN | BN => f(self.knight[table_index]),
+                WB | BB => f(self.bishop[table_index]),
+                WR | BR => f(self.rook[table_index]),
+                WQ | BQ => f(self.queen[table_index]),
+                WK | BK => f(self.king[table_index]),
+                WP | BP => {
+                    if (adjusted_location as usize) < 32 {
+                        f(self.pawn_1_4[table_index])
+                    } else {
+                        f(self.pawn_5_8[table_index])
+                    }
                 }
             }
-        }
     }
 }
 

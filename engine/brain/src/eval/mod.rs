@@ -9,9 +9,9 @@ use crate::eval::values::PieceValues;
 mod clearcut;
 pub mod imp;
 mod material;
+pub mod opening;
 pub mod tables;
 pub mod values;
-pub mod opening;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;

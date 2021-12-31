@@ -5,8 +5,8 @@ use itertools::Itertools;
 
 use myopic_board::{Move, MoveComputeType};
 
-use crate::EvalChessBoard;
 use crate::search::negascout::SearchResponse;
+use crate::EvalChessBoard;
 
 const SHALLOW_EVAL_BRANCHING: usize = 5;
 
@@ -29,7 +29,12 @@ impl MoveOrderingHints {
         self.populate_impl(root, depth, vec![])
     }
 
-    fn populate_impl<B: EvalChessBoard>(&mut self, root: &mut B, depth: usize, precursors: Vec<Move>) {
+    fn populate_impl<B: EvalChessBoard>(
+        &mut self,
+        root: &mut B,
+        depth: usize,
+        precursors: Vec<Move>,
+    ) {
         let curr_level = self.compute_shallow_eval(root);
         let next_paths = curr_level
             .iter()
@@ -70,7 +75,10 @@ impl MoveOrderingHints {
     pub fn add_pv(&mut self, depth: usize, pv: &Vec<Move>) {
         for (i, mv) in pv.iter().enumerate() {
             let precursors = pv.iter().cloned().take(i).collect_vec();
-            let step = PVMove { mv: mv.clone(), depth };
+            let step = PVMove {
+                mv: mv.clone(),
+                depth,
+            };
             match self.pvs.get_mut(&precursors) {
                 None => {
                     self.pvs.insert(precursors.clone(), vec![step]);
