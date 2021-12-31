@@ -70,15 +70,18 @@ impl MoveConstraints {
 }
 
 impl Board {
-    pub fn move_constraints(&mut self, compute_type: MoveComputeType) -> Rc<MoveConstraints> {
-        self.cache.move_constraints[compute_type].clone().unwrap_or_else(|| {
+    pub fn move_constraints(&self, compute_type: MoveComputeType) -> Rc<MoveConstraints> {
+        let cache = self.cache.borrow();
+        let cached_moves = cache.move_constraints[compute_type].clone();
+        drop(cache);
+        cached_moves.unwrap_or_else(|| {
             let computed = Rc::new(self.compute_move_constraints(compute_type));
-            self.cache.move_constraints[compute_type] = Some(computed.clone());
+            self.cache.borrow_mut().move_constraints[compute_type] = Some(computed.clone());
             computed
         })
     }
 
-    fn compute_move_constraints(&mut self, compute_type: MoveComputeType) -> MoveConstraints {
+    fn compute_move_constraints(&self, compute_type: MoveComputeType) -> MoveConstraints {
         let passive_control = self.passive_control();
         let pinned = self.pinned_set();
         if passive_control.contains(self.king(self.active)) {

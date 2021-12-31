@@ -35,7 +35,7 @@ pub enum MoveComputeType {
 /// then the game is lost, if it is not in check then the game is
 /// drawn.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub enum Termination {
+pub enum TerminalState {
     Draw,
     Loss,
 }
@@ -43,7 +43,7 @@ pub enum Termination {
 /// Represents the individual components which make up a board position
 /// encoded as a FEN string.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub enum FenComponent {
+pub enum FenPart {
     Board,
     Active,
     CastlingRights,
@@ -68,10 +68,22 @@ pub trait ChessBoard {
     /// been made yet then an error is returned.
     fn unmake(&mut self) -> Result<Move>;
 
+    /// Parse the given string as a sequence of pgn encoded moves
+    /// starting from the current position. The moves are then
+    /// made one by one. The sequence of moves which were made
+    /// are returned in a Vec.
+    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>>;
+
+    /// Parse the given string as a sequence of uci encoded moves
+    /// starting from the current position. The moves are then
+    /// made one by one.The sequence of moves which were made
+    /// are returned in a Vec.
+    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>>;
+
     /// Compute a vector of all the legal moves in this position for the
     /// given computation type. Note there is no particular ordering to the
     /// move vector.
-    fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move>;
+    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move>;
 
     /// Compute the termination state of this node. If it is not terminal
     /// nothing is returned, if it is then the manner of termination is
@@ -79,10 +91,10 @@ pub trait ChessBoard {
     /// draw or a loss since a side only loses when it runs out of moves,
     /// i.e. you don't play a winning move, you just fail to have a legal
     /// move.
-    fn termination_status(&mut self) -> Option<Termination>;
+    fn terminal_state(&self) -> Option<TerminalState>;
 
     /// Determines whether the active side is in a state of check.
-    fn in_check(&mut self) -> bool;
+    fn in_check(&self) -> bool;
 
     /// Return the locations of all pieces on the given side.
     fn side(&self, side: Side) -> BitBoard;
@@ -117,37 +129,25 @@ pub trait ChessBoard {
     /// Return the remaining castling rights from this position.
     fn remaining_rights(&self) -> EnumSet<CastleZone>;
 
-    /// Parse the given string as a sequence of pgn encoded moves
-    /// starting from the current position. The moves are then
-    /// made one by one. The sequence of moves which were made
-    /// are returned in a Vec.
-    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>>;
-
-    /// Parse the given string as a sequence of uci encoded moves
-    /// starting from the current position. The moves are then
-    /// made one by one.The sequence of moves which were made
-    /// are returned in a Vec.
-    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>>;
-
     /// Given a uci encoded move this method will attempt to match
     /// it to the unique matching legal move in this position if it
     /// exist. An error is returned if no matching move exists in
     /// this position.
-    fn parse_uci(&mut self, uci_move: &str) -> Result<Move>;
+    fn parse_uci(&self, uci_move: &str) -> Result<Move>;
 
     /// Return the specified components of the FEN encoding of this position
     /// in the given order with components separated by a space.
-    fn to_partial_fen(&self, cmps: &[FenComponent]) -> String;
+    fn to_fen_parts(&self, parts: &[FenPart]) -> String;
 
     /// Return the complete FEN representation of this position.
     fn to_fen(&self) -> String {
-        self.to_partial_fen(&[
-            FenComponent::Board,
-            FenComponent::Active,
-            FenComponent::CastlingRights,
-            FenComponent::Enpassant,
-            FenComponent::HalfMoveCount,
-            FenComponent::MoveCount,
+        self.to_fen_parts(&[
+            FenPart::Board,
+            FenPart::Active,
+            FenPart::CastlingRights,
+            FenPart::Enpassant,
+            FenPart::HalfMoveCount,
+            FenPart::MoveCount,
         ])
     }
 

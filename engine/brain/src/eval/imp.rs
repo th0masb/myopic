@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
 use myopic_board::{
-    BitBoard, CastleZone, ChessBoard, FenComponent, Move, MoveComputeType, Piece,
-    Side, Square, Termination,
+    BitBoard, CastleZone, ChessBoard, FenPart, Move, MoveComputeType, Piece,
+    Side, Square, TerminalState,
 };
 use myopic_board::anyhow::{Error, Result};
 
@@ -116,15 +116,37 @@ impl<B: ChessBoard> ChessBoard for EvalBoard<B> {
         Ok(action)
     }
 
-    fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
+    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let parsed_moves = self.board.play_pgn(moves)?;
+        for mv in parsed_moves.iter() {
+            self.material.make(mv);
+            for cmp in self.cmps.iter_mut() {
+                cmp.make(mv);
+            }
+        }
+        Ok(parsed_moves)
+    }
+
+    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let parsed_moves = self.board.play_uci(moves)?;
+        for mv in parsed_moves.iter() {
+            self.material.make(mv);
+            for cmp in self.cmps.iter_mut() {
+                cmp.make(mv);
+            }
+        }
+        Ok(parsed_moves)
+    }
+
+    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
         self.board.compute_moves(computation_type)
     }
 
-    fn termination_status(&mut self) -> Option<Termination> {
-        self.board.termination_status()
+    fn terminal_state(&self) -> Option<TerminalState> {
+        self.board.terminal_state()
     }
 
-    fn in_check(&mut self) -> bool {
+    fn in_check(&self) -> bool {
         self.board.in_check()
     }
 
@@ -172,42 +194,20 @@ impl<B: ChessBoard> ChessBoard for EvalBoard<B> {
         self.board.remaining_rights()
     }
 
-    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {
-        let parsed_moves = self.board.play_pgn(moves)?;
-        for mv in parsed_moves.iter() {
-            self.material.make(mv);
-            for cmp in self.cmps.iter_mut() {
-                cmp.make(mv);
-            }
-        }
-        Ok(parsed_moves)
-    }
-
-    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
-        let parsed_moves = self.board.play_uci(moves)?;
-        for mv in parsed_moves.iter() {
-            self.material.make(mv);
-            for cmp in self.cmps.iter_mut() {
-                cmp.make(mv);
-            }
-        }
-        Ok(parsed_moves)
-    }
-
-    fn parse_uci(&mut self, uci_move: &str) -> Result<Move> {
+    fn parse_uci(&self, uci_move: &str) -> Result<Move> {
         self.board.parse_uci(uci_move)
     }
 
-    fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {
-        self.board.to_partial_fen(cmps)
+    fn to_fen_parts(&self, cmps: &[FenPart]) -> String {
+        self.board.to_fen_parts(cmps)
     }
 }
 
 impl<B: ChessBoard> EvalChessBoard for EvalBoard<B> {
-    fn static_eval(&mut self) -> i32 {
-        match self.termination_status() {
-            Some(Termination::Draw) => eval::DRAW_VALUE,
-            Some(Termination::Loss) => eval::LOSS_VALUE,
+    fn static_eval(&self) -> i32 {
+        match self.terminal_state() {
+            Some(TerminalState::Draw) => eval::DRAW_VALUE,
+            Some(TerminalState::Loss) => eval::LOSS_VALUE,
             None => {
                 let eval = self.material.static_eval()
                     + self.cmps.iter().map(|cmp| cmp.static_eval()).sum::<i32>();

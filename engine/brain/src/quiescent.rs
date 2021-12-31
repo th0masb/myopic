@@ -1,6 +1,6 @@
 use std::cmp;
 
-use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, Termination};
+use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, TerminalState};
 use myopic_board::anyhow::Result;
 
 use crate::{eval, see};
@@ -19,10 +19,10 @@ pub fn search<B: EvalChessBoard>(
     beta: i32,
     depth: i32,
 ) -> Result<i32> {
-    if depth == Q_DEPTH_CAP || state.termination_status().is_some() {
-        return Ok(match state.termination_status() {
-            Some(Termination::Loss) => eval::LOSS_VALUE,
-            Some(Termination::Draw) => eval::DRAW_VALUE,
+    if depth == Q_DEPTH_CAP || state.terminal_state().is_some() {
+        return Ok(match state.terminal_state() {
+            Some(TerminalState::Loss) => eval::LOSS_VALUE,
+            Some(TerminalState::Draw) => eval::DRAW_VALUE,
             None => state.static_eval(),
         });
     }

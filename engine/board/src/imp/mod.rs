@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::cmp::max;
 use std::str::FromStr;
 
@@ -6,7 +7,7 @@ use myopic_core::anyhow::{anyhow, Error, Result};
 
 use crate::ChessBoard;
 use crate::enumset::EnumSet;
-use crate::FenComponent;
+use crate::FenPart;
 use crate::imp::cache::CalculationCache;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;
@@ -14,7 +15,7 @@ use crate::imp::rights::Rights;
 use crate::MoveComputeType;
 use crate::mv::{Move, parse_op};
 use crate::parse::patterns;
-use crate::Termination;
+use crate::TerminalState;
 
 mod cache;
 mod rights;
@@ -34,7 +35,7 @@ pub struct Board {
     active: Side,
     enpassant: Option<Square>,
     clock: usize,
-    cache: CalculationCache,
+    cache: RefCell<CalculationCache>,
 }
 
 impl FromStr for Board {
@@ -55,7 +56,7 @@ impl FromStr for Board {
                 enpassant: parse_op(space_split[3].as_str())?,
                 clock: space_split[4].parse::<usize>()?,
                 history: History::new(2 * (max(curr_move, 1) - 1) + (active as usize)),
-                cache: CalculationCache::default(),
+                cache: RefCell::new(CalculationCache::default()),
             })
         } else {
             Err(anyhow!("Cannot parse FEN {}", fen))
@@ -188,7 +189,7 @@ impl Reflectable for Board {
             rights,
             active,
             enpassant,
-            cache: CalculationCache::default(),
+            cache: RefCell::new(CalculationCache::default()),
         }
     }
 }
@@ -212,15 +213,33 @@ impl ChessBoard for Board {
         self.unmake()
     }
 
-    fn compute_moves(&mut self, computation_type: MoveComputeType) -> Vec<Move> {
+    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let mut dest = vec![];
+        for mv in crate::parse::pgn::moves(self, moves)? {
+            dest.push(mv.clone());
+            self.make(mv)?;
+        }
+        Ok(dest)
+    }
+
+    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let mut dest = vec![];
+        for mv in crate::parse::uci::move_sequence(self, moves)? {
+            dest.push(mv.clone());
+            self.make(mv)?;
+        }
+        Ok(dest)
+    }
+
+    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
         self.compute_moves(computation_type)
     }
 
-    fn termination_status(&mut self) -> Option<Termination> {
-        self.termination_status()
+    fn terminal_state(&self) -> Option<TerminalState> {
+        self.terminal_state()
     }
 
-    fn in_check(&mut self) -> bool {
+    fn in_check(&self) -> bool {
         self.passive_control().contains(self.king(self.active))
     }
 
@@ -277,29 +296,11 @@ impl ChessBoard for Board {
         self.rights.0
     }
 
-    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {
-        let mut dest = vec![];
-        for mv in crate::parse::pgn::moves(self, moves)? {
-            dest.push(mv.clone());
-            self.make(mv)?;
-        }
-        Ok(dest)
-    }
-
-    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
-        let mut dest = vec![];
-        for mv in crate::parse::uci::move_sequence(self, moves)? {
-            dest.push(mv.clone());
-            self.make(mv)?;
-        }
-        Ok(dest)
-    }
-
-    fn parse_uci(&mut self, uci_move: &str) -> Result<Move, Error> {
+    fn parse_uci(&self, uci_move: &str) -> Result<Move, Error> {
         crate::parse::uci::single_move(self, uci_move)
     }
 
-    fn to_partial_fen(&self, cmps: &[FenComponent]) -> String {
+    fn to_fen_parts(&self, cmps: &[FenPart]) -> String {
         fen::to_fen_impl(self, cmps)
     }
 }

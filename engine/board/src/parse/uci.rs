@@ -110,7 +110,7 @@ pub fn move_sequence<B: ChessBoard + Clone>(start: &B, encoded: &str) -> Result<
     Ok(dest)
 }
 
-pub fn single_move<B: ChessBoard>(start: &mut B, uci_move: &str) -> Result<Move> {
+pub fn single_move<B: ChessBoard>(start: &B, uci_move: &str) -> Result<Move> {
     let (f, d, promoting) = extract_uci_component(uci_move)?;
     start
         .compute_moves(MoveComputeType::All)

@@ -6,7 +6,7 @@ use crate::{BitBoard, EvalChessBoard, Piece, Piece::*};
 /// of a move within the context of the given position.
 /// It can be used to decide the search order of legal
 /// moves for a position.
-pub trait MoveQualityEstimator<B: EvalChessBoard> {
+pub trait BestMoveHeuristic<B: EvalChessBoard> {
     /// Assign a heuristic score to the given move in the
     /// context of the given position. The score is agnostic
     /// of the side to move, i.e. high magnitude positive
@@ -17,9 +17,9 @@ pub trait MoveQualityEstimator<B: EvalChessBoard> {
 
 /// Simplest estimator which simply evaluates all moves
 /// as equal.
-pub struct ConstantEstimator;
+pub struct AllMovesEqualHeuristic;
 
-impl<B: EvalChessBoard> MoveQualityEstimator<B> for ConstantEstimator {
+impl<B: EvalChessBoard> BestMoveHeuristic<B> for AllMovesEqualHeuristic {
     fn estimate(&self, _board: &mut B, _mv: &Move) -> i32 {
         0
     }
@@ -29,7 +29,7 @@ impl<B: EvalChessBoard> MoveQualityEstimator<B> for ConstantEstimator {
 /// it categorises moves into one of four subcategories from
 /// best (good exchanges) to worst (bad exchanges) and then
 /// also orders within those subcategories.
-pub struct EstimatorImpl;
+pub struct MaterialAndPositioningHeuristic;
 
 // Idea is we split the moves into different categories which are ordered
 // so that if category A has more value than category B then all moves in
@@ -52,7 +52,7 @@ pub struct EstimatorImpl;
 // computed by the SEE. Moving to an area of control for a lower value piece
 // is scored according to the delta between the piece values. For now ignore
 // potential pins.
-impl<B: EvalChessBoard> MoveQualityEstimator<B> for EstimatorImpl {
+impl<B: EvalChessBoard> BestMoveHeuristic<B> for MaterialAndPositioningHeuristic {
     fn estimate(&self, board: &mut B, mv: &Move) -> i32 {
         match get_category(board, mv) {
             MoveCategory::GoodExchange(n) => 30_000 + n,
