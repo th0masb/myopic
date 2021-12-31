@@ -3,8 +3,8 @@ use itertools::Itertools;
 use myopic_board::anyhow::Result;
 use myopic_board::ChessBoard;
 
-use crate::EvalBoard;
 use crate::search::SearchParameters;
+use crate::EvalBoard;
 
 #[test]
 fn case_1() -> Result<()> {

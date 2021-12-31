@@ -1,40 +1,104 @@
+use myopic_board::enum_map::{enum_map, Enum, EnumMap};
 use myopic_board::Square;
+use std::borrow::BorrowMut;
 
-use crate::{CastleZone, Move, Piece};
 use crate::eval::EvalComponent;
+use crate::{CastleZone, Move, Piece, Reflectable, Side};
 
-#[derive(Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Enum)]
+enum OpeningPiece {
+    EPawn,
+    DPawn,
+    BKnight,
+    GKnight,
+    CBishop,
+    FBishop,
+}
+
+impl OpeningPiece {
+    fn start(self, side: Side) -> Square {
+        let white_position = match self {
+            OpeningPiece::EPawn => Square::E2,
+            OpeningPiece::DPawn => Square::D2,
+            OpeningPiece::BKnight => Square::B1,
+            OpeningPiece::GKnight => Square::G1,
+            OpeningPiece::CBishop => Square::C1,
+            OpeningPiece::FBishop => Square::F1,
+        };
+        if side == Side::White {
+            white_position
+        } else {
+            white_position.reflect()
+        }
+    }
+
+    fn applicable_for<'a>(p: Piece) -> &'a [OpeningPiece] {
+        match p {
+            Piece::WP | Piece::BP => &[OpeningPiece::DPawn, OpeningPiece::EPawn],
+            Piece::WN | Piece::BN => &[OpeningPiece::BKnight, OpeningPiece::GKnight],
+            Piece::WB | Piece::BB => &[OpeningPiece::CBishop, OpeningPiece::FBishop],
+            _ => &[],
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Enum)]
+enum CastleSide {
+    King,
+    Queen,
+}
+
+#[derive(Debug)]
 pub struct OpeningRewards {
-    pub e_pawn: i32,
-    pub d_pawn: i32,
-    pub b_knight: i32,
-    pub g_knight: i32,
-    pub c_bishop: i32,
-    pub f_bishop: i32,
-    pub k_castle: i32,
-    pub q_castle: i32,
+    pieces: EnumMap<OpeningPiece, i32>,
+    castle: EnumMap<CastleSide, i32>,
+}
+
+impl OpeningRewards {
+    fn parity(side: Side) -> i32 {
+        match side {
+            Side::White => 1,
+            Side::Black => -1,
+        }
+    }
+
+    fn zone(&self, zone: CastleZone) -> i32 {
+        OpeningRewards::parity(zone.side())
+            * match zone {
+                CastleZone::WK | CastleZone::BK => self.castle[CastleSide::King],
+                CastleZone::WQ | CastleZone::BQ => self.castle[CastleSide::Queen],
+            }
+    }
+
+    fn piece(&self, side: Side, piece: OpeningPiece) -> i32 {
+        OpeningRewards::parity(side) * self.pieces[piece]
+    }
 }
 
 impl Default for OpeningRewards {
     fn default() -> Self {
         OpeningRewards {
-            e_pawn: 200,
-            d_pawn: 150,
-            b_knight: 100,
-            g_knight: 150,
-            c_bishop: 100,
-            f_bishop: 150,
-            k_castle: 200,
-            q_castle: 100,
+            pieces: enum_map! {
+                OpeningPiece::EPawn => 200,
+                OpeningPiece::DPawn => 150,
+                OpeningPiece::BKnight => 100,
+                OpeningPiece::GKnight => 150,
+                OpeningPiece::CBishop => 100,
+                OpeningPiece::FBishop => 150,
+            },
+            castle: enum_map! {
+                CastleSide::King => 200,
+                CastleSide::Queen => 100,
+            },
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct OpeningComponent {
     rewards: OpeningRewards,
     score: i32,
-    pieces: DevTracker,
+    development: EnumMap<Side, DevelopmentTracker>,
     move_dist: usize,
 }
 
@@ -47,84 +111,59 @@ impl Default for OpeningComponent {
 impl OpeningComponent {
     pub fn new(rewards: OpeningRewards) -> OpeningComponent {
         OpeningComponent {
+            rewards,
             score: 0,
             move_dist: 0,
-            pieces: DevTracker {
-                w_e_pawn: PieceTracker::new(Square::E2, rewards.e_pawn),
-                w_d_pawn: PieceTracker::new(Square::D2, rewards.d_pawn),
-                w_b_knight: PieceTracker::new(Square::B1, rewards.b_knight),
-                w_g_knight: PieceTracker::new(Square::G1, rewards.g_knight),
-                w_c_bishop: PieceTracker::new(Square::C1, rewards.c_bishop),
-                w_f_bishop: PieceTracker::new(Square::F1, rewards.f_bishop),
-
-                b_e_pawn: PieceTracker::new(Square::E7, -rewards.e_pawn),
-                b_d_pawn: PieceTracker::new(Square::D7, -rewards.d_pawn),
-                b_b_knight: PieceTracker::new(Square::B8, -rewards.b_knight),
-                b_g_knight: PieceTracker::new(Square::G8, -rewards.g_knight),
-                b_c_bishop: PieceTracker::new(Square::C8, -rewards.c_bishop),
-                b_f_bishop: PieceTracker::new(Square::F8, -rewards.f_bishop),
+            development: enum_map! {
+                Side::White => DevelopmentTracker::new(Side::White),
+                Side::Black => DevelopmentTracker::new(Side::Black),
             },
-            rewards,
         }
+    }
+
+    fn borrow_tracker_mut(&mut self, side: Side, piece: OpeningPiece) -> &mut PieceTracker {
+        self.development[side].borrow_mut().pieces[piece].borrow_mut()
     }
 }
 
-#[derive(Debug, Clone)]
-struct DevTracker {
-    // whites
-    w_e_pawn: PieceTracker,
-    w_d_pawn: PieceTracker,
-    w_b_knight: PieceTracker,
-    w_g_knight: PieceTracker,
-    w_c_bishop: PieceTracker,
-    w_f_bishop: PieceTracker,
-    // blacks
-    b_e_pawn: PieceTracker,
-    b_d_pawn: PieceTracker,
-    b_b_knight: PieceTracker,
-    b_g_knight: PieceTracker,
-    b_c_bishop: PieceTracker,
-    b_f_bishop: PieceTracker,
+#[derive(Debug)]
+struct DevelopmentTracker {
+    pieces: EnumMap<OpeningPiece, PieceTracker>,
 }
 
-impl DevTracker {
-    fn get_piece_trackers(&mut self, p: Piece) -> Vec<&mut PieceTracker> {
-        match p {
-            Piece::WP => vec![&mut self.w_d_pawn, &mut self.w_e_pawn],
-            Piece::WN => vec![&mut self.w_b_knight, &mut self.w_g_knight],
-            Piece::WB => vec![&mut self.w_c_bishop, &mut self.w_f_bishop],
-            Piece::BP => vec![&mut self.b_d_pawn, &mut self.b_e_pawn],
-            Piece::BN => vec![&mut self.b_b_knight, &mut self.b_g_knight],
-            Piece::BB => vec![&mut self.b_c_bishop, &mut self.b_f_bishop],
-            _ => vec![],
+impl DevelopmentTracker {
+    fn new(side: Side) -> DevelopmentTracker {
+        let mut pieces: EnumMap<OpeningPiece, PieceTracker> = EnumMap::default();
+        for (piece, value) in pieces.iter_mut() {
+            value.loc = piece.start(side);
         }
+        DevelopmentTracker { pieces }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct PieceTracker {
     /// The most recent location of the piece on the board
     loc: Square,
     /// How many moves this piece has made from it's start
     /// position
     count: usize,
-    /// What reward this tracker is associated with
-    reward: i32,
     /// The move dist at which this piece was removed
     /// from the board. None if still on board.
     capture_dist: Option<usize>,
 }
 
-impl PieceTracker {
-    fn new(start: Square, reward: i32) -> PieceTracker {
+impl Default for PieceTracker {
+    fn default() -> Self {
         PieceTracker {
-            loc: start,
+            loc: Square::A1,
             count: 0,
             capture_dist: None,
-            reward,
         }
     }
+}
 
+impl PieceTracker {
     fn move_forward(&mut self, new_loc: Square) -> usize {
         self.loc = new_loc;
         self.count += 1;
@@ -165,6 +204,7 @@ impl EvalComponent for OpeningComponent {
     fn make(&mut self, mv: &Move) {
         self.move_dist += 1;
         match mv {
+            &Move::Castle { zone, .. } => self.score += self.rewards.zone(zone),
             &Move::Standard {
                 moving,
                 from,
@@ -173,32 +213,33 @@ impl EvalComponent for OpeningComponent {
                 ..
             } => {
                 // Update location of moving piece
-                for pt in self.pieces.get_piece_trackers(moving) {
-                    if pt.matches_on(from) && pt.move_forward(dest) == 1 {
-                        self.score += pt.reward
+                for &opener in OpeningPiece::applicable_for(moving) {
+                    let side = moving.side();
+                    let piece_tracker = self.borrow_tracker_mut(side, opener);
+                    if piece_tracker.matches_on(from) && piece_tracker.move_forward(dest) == 1 {
+                        self.score += self.rewards.piece(side, opener);
                     }
                 }
-                // Remove any captured piece
+                // Record removal of any relevant captured piece
                 if capture.is_some() {
-                    for pt in self.pieces.get_piece_trackers(capture.unwrap()) {
-                        if pt.matches_on(dest) {
-                            pt.remove_piece(self.move_dist);
+                    let captured = capture.unwrap();
+                    for &opener in OpeningPiece::applicable_for(captured) {
+                        let side = captured.side();
+                        let move_dist = self.move_dist;
+                        let piece_tracker = self.borrow_tracker_mut(side, opener);
+                        if piece_tracker.matches_on(dest) {
+                            piece_tracker.remove_piece(move_dist);
                         }
                     }
                 }
             }
-            &Move::Castle { zone, .. } => match zone {
-                CastleZone::WK => self.score += self.rewards.k_castle,
-                CastleZone::WQ => self.score += self.rewards.q_castle,
-                CastleZone::BK => self.score -= self.rewards.k_castle,
-                CastleZone::BQ => self.score -= self.rewards.q_castle,
-            },
             _ => {}
         }
     }
 
     fn unmake(&mut self, mv: &Move) {
         match mv {
+            &Move::Castle { zone, .. } => self.score -= self.rewards.zone(zone),
             &Move::Standard {
                 moving,
                 from,
@@ -207,26 +248,26 @@ impl EvalComponent for OpeningComponent {
                 ..
             } => {
                 // Update location of moving piece
-                for pt in self.pieces.get_piece_trackers(moving) {
-                    if pt.matches_on(dest) && pt.move_backward(from) == 0 {
-                        self.score -= pt.reward
+                for &opener in OpeningPiece::applicable_for(moving) {
+                    let side = moving.side();
+                    let piece_tracker = self.borrow_tracker_mut(side, opener);
+                    if piece_tracker.matches_on(dest) && piece_tracker.move_backward(from) == 0 {
+                        self.score -= self.rewards.piece(side, opener);
                     }
                 }
-                // Replace any captured piece
+                // Record removal of any relevant captured piece
                 if capture.is_some() {
-                    for pt in self.pieces.get_piece_trackers(capture.unwrap()) {
-                        if pt.matches_off(self.move_dist) {
-                            pt.add_piece();
+                    let captured = capture.unwrap();
+                    for &opener in OpeningPiece::applicable_for(captured) {
+                        let side = captured.side();
+                        let move_dist = self.move_dist;
+                        let piece_tracker = self.borrow_tracker_mut(side, opener);
+                        if piece_tracker.matches_off(move_dist) {
+                            piece_tracker.add_piece();
                         }
                     }
                 }
             }
-            &Move::Castle { zone, .. } => match zone {
-                CastleZone::WK => self.score -= self.rewards.k_castle,
-                CastleZone::WQ => self.score -= self.rewards.q_castle,
-                CastleZone::BK => self.score += self.rewards.k_castle,
-                CastleZone::BQ => self.score += self.rewards.q_castle,
-            },
             _ => {}
         };
         self.move_dist -= 1;
@@ -238,9 +279,10 @@ mod test {
     use myopic_board::anyhow::Result;
     use myopic_board::ChessBoard;
 
-    use crate::{Board, EvalBoard, Reflectable, UciMove};
-    use crate::eval::EvalComponent;
+    use super::*;
     use crate::eval::opening::{OpeningComponent, OpeningRewards};
+    use crate::eval::EvalComponent;
+    use crate::{Board, EvalBoard, Reflectable, UciMove};
 
     #[test]
     fn issue_97() -> Result<()> {
@@ -258,14 +300,18 @@ mod test {
 
     fn dummy_rewards() -> OpeningRewards {
         OpeningRewards {
-            d_pawn: 1,
-            e_pawn: 10,
-            g_knight: 100,
-            b_knight: 1000,
-            f_bishop: 10000,
-            c_bishop: 100000,
-            k_castle: 1000000,
-            q_castle: 10000000,
+            castle: enum_map! {
+                CastleSide::King => 1000000,
+                CastleSide::Queen => 10000000,
+            },
+            pieces: enum_map! {
+                OpeningPiece::DPawn => 1,
+                OpeningPiece::EPawn => 10,
+                OpeningPiece::GKnight => 100,
+                OpeningPiece::BKnight => 1000,
+                OpeningPiece::FBishop => 10000,
+                OpeningPiece::CBishop => 100000,
+            },
         }
     }
 

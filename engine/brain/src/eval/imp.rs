@@ -1,16 +1,16 @@
 use std::str::FromStr;
 
-use myopic_board::{
-    BitBoard, CastleZone, ChessBoard, FenPart, Move, MoveComputeType, Piece,
-    Side, Square, TerminalState,
-};
 use myopic_board::anyhow::{Error, Result};
+use myopic_board::{
+    BitBoard, CastleZone, ChessBoard, FenPart, Move, MoveComputeType, Piece, Side, Square,
+    TerminalState,
+};
 
-use crate::{Board, eval, PieceValues, PositionTables};
 use crate::enumset::EnumSet;
-use crate::eval::{EvalChessBoard, EvalComponent};
 use crate::eval::material::Material;
 use crate::eval::opening::OpeningComponent;
+use crate::eval::{EvalChessBoard, EvalComponent};
+use crate::{eval, Board, PieceValues, PositionTables};
 
 pub struct EvalBoard<B: ChessBoard> {
     board: B,
@@ -234,8 +234,8 @@ impl<B: ChessBoard> EvalChessBoard for EvalBoard<B> {
 mod test {
     use myopic_board::{ChessBoard, Reflectable, UciMove};
 
-    use crate::{Board, BoardBuilder, PieceValues, PositionTables};
     use crate::eval::material;
+    use crate::{Board, BoardBuilder, PieceValues, PositionTables};
 
     #[derive(Clone, Eq, PartialEq)]
     struct TestCase<B: ChessBoard> {

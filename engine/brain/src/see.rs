@@ -21,7 +21,7 @@ pub fn exchange_value<B: ChessBoard>(
         target,
         values: piece_values,
     }
-        .exchange_value()
+    .exchange_value()
 }
 
 type BitBoardPair = (BitBoard, BitBoard);
@@ -156,8 +156,8 @@ fn is_slider(piece: Piece) -> bool {
 mod test {
     use myopic_board::{ChessBoard, Reflectable, Square};
 
-    use crate::Board;
     use crate::see::See;
+    use crate::Board;
 
     fn dummy_values() -> [i32; 6] {
         [1, 3, 3, 5, 9, 1000]
