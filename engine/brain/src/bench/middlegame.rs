@@ -3,8 +3,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
 
-use crate::{Board, EvalBoard};
 use crate::search::SearchParameters;
+use crate::{Board, EvalBoard};
 
 #[rustfmt::skip]
 /// Run on system76

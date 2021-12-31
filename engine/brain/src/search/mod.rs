@@ -16,9 +16,9 @@ use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::transpositions::TranspositionTable;
 
 pub mod interactive;
-pub mod negascout;
-mod movequality;
 mod movehints;
+mod movequality;
+pub mod negascout;
 pub mod terminator;
 mod transpositions;
 
@@ -30,14 +30,15 @@ const SHALLOW_EVAL_DEPTH: usize = 1;
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
 pub fn search<B, T>(root: B, parameters: SearchParameters<T>) -> Result<SearchOutcome>
-    where
-        B: EvalChessBoard,
-        T: SearchTerminator,
+where
+    B: EvalChessBoard,
+    T: SearchTerminator,
 {
     Search {
         root,
         terminator: parameters.terminator,
-    }.search(parameters.table_size)
+    }
+    .search(parameters.table_size)
 }
 
 pub struct SearchParameters<T: SearchTerminator> {
@@ -57,8 +58,8 @@ pub struct SearchOutcome {
 
 impl serde::Serialize for SearchOutcome {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         let mut state = serializer.serialize_struct("SearchOutcome", 4)?;
         state.serialize_field("bestMove", &self.best_move.uci_format())?;
@@ -186,16 +187,16 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
             transposition_table,
             board_type: PhantomData,
         }
-            .search(
-                &mut self.root,
-                SearchContext {
-                    depth_remaining: depth,
-                    start_time: search_start,
-                    alpha: -eval::INFTY,
-                    beta: eval::INFTY,
-                    precursors: vec![],
-                },
-            )?;
+        .search(
+            &mut self.root,
+            SearchContext {
+                depth_remaining: depth,
+                start_time: search_start,
+                alpha: -eval::INFTY,
+                beta: eval::INFTY,
+                precursors: vec![],
+            },
+        )?;
 
         // The path returned from the negamax function is ordered deepest move -> shallowest
         // so we reverse as the shallowest move is the one we make in this position.
@@ -223,9 +224,9 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
 mod test {
     use myopic_board::{Board, Reflectable};
 
-    use crate::{eval, EvalBoard, UciMove};
     use crate::eval::EvalChessBoard;
     use crate::search::SearchParameters;
+    use crate::{eval, EvalBoard, UciMove};
 
     const DEPTH: usize = 3;
     const TABLE_SIZE: usize = 10_000;
@@ -252,7 +253,8 @@ mod test {
                 assert!(
                     expected_move_pool
                         .contains(&UciMove::new(outcome.best_move.uci_format().as_str()).unwrap()),
-                    "{}", serde_json::to_string(&outcome).unwrap()
+                    "{}",
+                    serde_json::to_string(&outcome).unwrap()
                 );
                 if is_won {
                     assert_eq!(eval::WIN_VALUE, outcome.eval);

@@ -7,8 +7,8 @@ use std::time::Duration;
 use myopic_board::anyhow::Result;
 use myopic_board::Side;
 
-use crate::{EvalChessBoard, SearchOutcome};
 use crate::search::{search as blocking_search, SearchContext, SearchParameters, SearchTerminator};
+use crate::{EvalChessBoard, SearchOutcome};
 
 const INFINITE_DURATION: Duration = Duration::from_secs(1_000_000);
 const INFINITE_DEPTH: usize = 1_000;
@@ -44,7 +44,8 @@ pub enum SearchCommand<B: EvalChessBoard + Clone> {
 /// via an input channel which accepts a variety of commands and an output channel
 /// which transmits the search results.
 /// TODO How to best handle need for board to be Send + Sync when it uses Rc?
-pub fn search<B: EvalChessBoard + Clone + Send + Sync + 'static>() -> (SearchCommandTx<B>, SearchResultRx) {
+pub fn search<B: EvalChessBoard + Clone + Send + Sync + 'static>(
+) -> (SearchCommandTx<B>, SearchResultRx) {
     let (input_tx, input_rx) = mpsc::channel::<SearchCommand<B>>();
     let (output_tx, output_rx) = mpsc::channel::<Result<SearchOutcome>>();
     std::thread::spawn(move || {
@@ -162,8 +163,8 @@ impl<B: EvalChessBoard + Clone> SearchTerminator for InteractiveSearchTerminator
         ctx.start_time.elapsed() > self.max_time
             || ctx.depth_remaining >= self.max_depth
             || match self.stop_signal.try_recv() {
-            Ok(SearchCommand::Stop) => true,
-            _ => false,
-        }
+                Ok(SearchCommand::Stop) => true,
+                _ => false,
+            }
     }
 }

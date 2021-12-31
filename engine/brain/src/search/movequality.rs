@@ -94,7 +94,7 @@ fn get_category<B: EvalChessBoard>(board: &mut B, mv: &Move) -> MoveCategory {
                         MoveCategory::Positional(
                             parity(moving.side())
                                 * (board.positional_eval(moving, dest)
-                                - board.positional_eval(moving, from)),
+                                    - board.positional_eval(moving, from)),
                         )
                     })
             }

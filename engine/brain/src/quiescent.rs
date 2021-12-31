@@ -1,10 +1,10 @@
 use std::cmp;
 
-use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, TerminalState};
 use myopic_board::anyhow::Result;
+use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, TerminalState};
 
-use crate::{eval, see};
 use crate::eval::EvalChessBoard;
+use crate::{eval, see};
 
 const Q_DEPTH_CAP: i32 = -8;
 const Q_CHECK_CAP: i32 = -2;
