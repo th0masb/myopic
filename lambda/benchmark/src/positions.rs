@@ -5,7 +5,7 @@ use myopic_brain::{Board, EvalBoard};
 pub fn get(n: usize) -> Result<Vec<EvalBoard<Board>>, HandlerError> {
     let mut roots = vec![];
     for &fen in POSITIONS.iter().take(n) {
-        roots.push(EvalBoard::builder_fen(fen).map_err(super::to_handler_err)?.build());
+        roots.push(fen.parse::<EvalBoard<Board>>().map_err(super::to_handler_err)?);
     }
     Ok(roots)
 }

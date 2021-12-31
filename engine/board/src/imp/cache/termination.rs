@@ -3,23 +3,26 @@ use myopic_core::*;
 use crate::Board;
 use crate::ChessBoard;
 use crate::MoveComputeType;
-use crate::Termination;
+use crate::TerminalState;
 
 impl Board {
-    pub fn termination_status(&mut self) -> Option<Termination> {
-        match &self.cache.termination_status {
-            Some(x) => *x,
+    pub fn terminal_state(&self) -> Option<TerminalState> {
+        let cache = self.cache.borrow();
+        let terminal_status = cache.termination_status;
+        drop(cache);
+        match terminal_status {
+            Some(x) => x,
             None => {
-                let result = self.compute_termination();
-                self.cache.termination_status = Some(result);
+                let result = self.compute_terminal_state();
+                self.cache.borrow_mut().termination_status = Some(result);
                 result
             }
         }
     }
 
-    fn compute_termination(&mut self) -> Option<Termination> {
+    fn compute_terminal_state(&self) -> Option<TerminalState> {
         if self.half_move_clock() >= 50 || self.history.has_three_repetitions() {
-            return Some(Termination::Draw);
+            return Some(TerminalState::Draw);
         }
         let active = self.active;
         let active_king = self.king(active);
@@ -37,7 +40,7 @@ impl Board {
     }
 
     /// Assumes king is in check and cannot move out of it
-    fn checked_termination(&mut self) -> Option<Termination> {
+    fn checked_termination(&self) -> Option<TerminalState> {
         let constraints = self.move_constraints(MoveComputeType::All);
         let (whites, blacks) = self.sides();
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
@@ -48,11 +51,11 @@ impl Board {
             }
         }
         // Mated
-        return Some(Termination::Loss);
+        return Some(TerminalState::Loss);
     }
 
     /// Assumes king cannot move but not in check
-    fn unchecked_termination(&mut self) -> Option<Termination> {
+    fn unchecked_termination(&self) -> Option<TerminalState> {
         let king = self.king(self.active);
         let pin_rays = Piece::WQ.control(king, BitBoard::EMPTY, BitBoard::EMPTY);
         let (whites, blacks) = self.sides();
@@ -77,7 +80,7 @@ impl Board {
             }
         }
         // Stalemate
-        return Some(Termination::Draw);
+        return Some(TerminalState::Draw);
     }
 }
 
@@ -97,19 +100,19 @@ mod test {
     #[derive(Clone, Debug)]
     struct TestCase {
         board: Board,
-        expected: Option<Termination>,
+        expected: Option<TerminalState>,
     }
 
-    fn test(expected: Option<Termination>, fen: &str) {
+    fn test(expected: Option<TerminalState>, fen: &str) {
         let mut board = fen.parse::<Board>().unwrap();
-        assert_eq!(expected, board.termination_status());
-        assert_eq!(expected, board.reflect().termination_status());
+        assert_eq!(expected, board.terminal_state());
+        assert_eq!(expected, board.reflect().terminal_state());
     }
 
     #[test]
     fn checkmate() {
         test(
-            Some(Termination::Loss),
+            Some(TerminalState::Loss),
             "5R1k/pp2R2p/8/1b2r3/3p3q/8/PPB3P1/6K1 b - - 0 36",
         )
     }
@@ -130,7 +133,7 @@ mod test {
     #[test]
     fn stalemate() {
         test(
-            Some(Termination::Draw),
+            Some(TerminalState::Draw),
             "6k1/6p1/7p/8/1p6/p1qp4/8/3K4 w - - 0 45",
         );
     }

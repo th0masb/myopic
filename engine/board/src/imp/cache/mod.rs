@@ -6,7 +6,7 @@ use myopic_core::enum_map::EnumMap;
 
 use crate::{Board, MoveComputeType};
 use crate::imp::cache::rays::RaySet;
-use crate::Termination;
+use crate::TerminalState;
 
 mod constraints;
 mod control;
@@ -15,17 +15,18 @@ mod termination;
 
 #[derive(Debug, Clone, Default)]
 pub struct CalculationCache {
-    termination_status: Option<Option<Termination>>,
+    termination_status: Option<Option<TerminalState>>,
     passive_control: Option<BitBoard>,
     pinned_set: Option<Rc<RaySet>>,
     move_constraints: EnumMap<MoveComputeType, Option<Rc<MoveConstraints>>>,
 }
 
 impl Board {
-    pub fn clear_cache(&mut self) {
-        self.cache.termination_status = None;
-        self.cache.passive_control = None;
-        self.cache.pinned_set = None;
-        self.cache.move_constraints = EnumMap::default();
+    pub fn clear_cache(&self) {
+        let mut cache = self.cache.borrow_mut();
+        cache.termination_status = None;
+        cache.passive_control = None;
+        cache.pinned_set = None;
+        cache.move_constraints = EnumMap::default();
     }
 }

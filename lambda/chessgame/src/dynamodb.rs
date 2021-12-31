@@ -5,7 +5,7 @@ use itertools::Itertools;
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 
-use myopic_brain::{ChessBoard, FenComponent};
+use myopic_brain::{ChessBoard, FenPart};
 use myopic_brain::anyhow::{anyhow, Result};
 
 use crate::game::{InitalPosition, LookupService};
@@ -68,10 +68,10 @@ impl LookupService for DynamoDbOpeningService {
             Ok(None)
         } else {
             let query_position = crate::position::get(initial_position, uci_sequence)?
-                .to_partial_fen(&[
-                    FenComponent::Board,
-                    FenComponent::Active,
-                    FenComponent::CastlingRights,
+                .to_fen_parts(&[
+                    FenPart::Board,
+                    FenPart::Active,
+                    FenPart::CastlingRights,
                 ]);
             log::info!(
                 "Querying table {} for position {}",

@@ -4,13 +4,13 @@ use std::time::Instant;
 
 use itertools::Itertools;
 
-use myopic_board::{Move, MoveComputeType, Termination};
+use myopic_board::{Move, MoveComputeType, TerminalState};
 use myopic_board::anyhow::{anyhow, Result};
 
 use crate::{EvalChessBoard, quiescent};
 use crate::search::eval;
 use crate::search::movehints::MoveOrderingHints;
-use crate::search::movequality::{EstimatorImpl, MoveQualityEstimator};
+use crate::search::movequality::{MaterialAndPositioningHeuristic, BestMoveHeuristic};
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{TranspositionTable, TreeNode};
 
@@ -27,7 +27,7 @@ pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse>
         terminator: &depth,
         ordering_hints: &MoveOrderingHints::default(),
         transposition_table: &mut TranspositionTable::new(1)?,
-        move_quality_estimator: EstimatorImpl,
+        move_quality_estimator: MaterialAndPositioningHeuristic,
         board_type: PhantomData,
     }
         .search(
@@ -99,7 +99,7 @@ pub struct Scout<'a, T, B, M>
     where
         T: SearchTerminator,
         B: EvalChessBoard,
-        M: MoveQualityEstimator<B>,
+        M: BestMoveHeuristic<B>,
 {
     /// The terminator is responsible for deciding when the
     /// search is complete
@@ -145,16 +145,16 @@ impl<T, B, M> Scout<'_, T, B, M>
     where
         T: SearchTerminator,
         B: EvalChessBoard,
-        M: MoveQualityEstimator<B>,
+        M: BestMoveHeuristic<B>,
 {
     ///
     pub fn search(&mut self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse> {
         if self.terminator.should_terminate(&ctx) {
             Err(anyhow!("Terminated at depth {}", ctx.depth_remaining))
-        } else if ctx.depth_remaining == 0 || root.termination_status().is_some() {
-            match root.termination_status() {
-                Some(Termination::Loss) => Ok(eval::LOSS_VALUE),
-                Some(Termination::Draw) => Ok(eval::DRAW_VALUE),
+        } else if ctx.depth_remaining == 0 || root.terminal_state().is_some() {
+            match root.terminal_state() {
+                Some(TerminalState::Loss) => Ok(eval::LOSS_VALUE),
+                Some(TerminalState::Draw) => Ok(eval::DRAW_VALUE),
                 None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
             }
                 .map(|eval| SearchResponse { eval, path: vec![] })

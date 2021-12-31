@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use myopic_core::*;
 
 use crate::enumset::EnumSet;
@@ -35,7 +36,7 @@ impl From<TestBoard> for Board {
             active: test_board.active,
             enpassant: test_board.enpassant,
             clock: test_board.clock,
-            cache: CalculationCache::default(),
+            cache: RefCell::new(CalculationCache::default()),
         }
     }
 }

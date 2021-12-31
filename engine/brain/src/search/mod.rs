@@ -11,7 +11,7 @@ use terminator::SearchTerminator;
 
 use crate::eval;
 use crate::eval::EvalChessBoard;
-use crate::search::movequality::EstimatorImpl;
+use crate::search::movequality::MaterialAndPositioningHeuristic;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::transpositions::TranspositionTable;
 
@@ -182,7 +182,7 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
         let SearchResponse { eval, mut path } = Scout {
             terminator: &self.terminator,
             ordering_hints,
-            move_quality_estimator: EstimatorImpl,
+            move_quality_estimator: MaterialAndPositioningHeuristic,
             transposition_table,
             board_type: PhantomData,
         }
