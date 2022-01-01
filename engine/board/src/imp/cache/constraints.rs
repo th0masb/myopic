@@ -1,61 +1,38 @@
 use std::fmt::Debug;
-use std::fmt::Error;
-use std::fmt::Formatter;
-use std::rc::Rc;
 
 use myopic_core::*;
 
 use crate::ChessBoard;
+use crate::enum_map::EnumMap;
 use crate::imp::Board;
 use crate::imp::cache::rays::RaySet;
 use crate::MoveComputeType;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MoveConstraints {
-    data: [BitBoard; 64],
-}
-
-impl PartialEq<MoveConstraints> for MoveConstraints {
-    fn eq(&self, other: &MoveConstraints) -> bool {
-        self.data
-            .iter()
-            .zip(other.data.iter())
-            .all(|(l, r)| *l == *r)
-    }
-}
-
-impl Debug for MoveConstraints {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        self.data.to_vec().fmt(f)
-    }
+    data: EnumMap<Square, BitBoard>,
 }
 
 impl MoveConstraints {
     pub fn get(&self, location: Square) -> BitBoard {
-        self.data[location as usize]
+        self.data[location]
     }
 
     pub fn all_universal() -> MoveConstraints {
-        MoveConstraints {
-            data: [BitBoard::ALL; 64],
-        }
+        MoveConstraints::all(BitBoard::ALL)
     }
 
     pub fn all_empty() -> MoveConstraints {
-        MoveConstraints {
-            data: [BitBoard::EMPTY; 64],
-        }
+        MoveConstraints::all(BitBoard::EMPTY)
     }
 
     pub fn all(bitboard: BitBoard) -> MoveConstraints {
-        MoveConstraints {
-            data: [bitboard; 64],
-        }
+        MoveConstraints { data: EnumMap::from_array([bitboard; 64]) }
     }
 
     fn intersect(&mut self, location: Square, constraint: BitBoard) {
-        let curr = self.data[location as usize];
-        self.data[location as usize] = curr & constraint;
+        let curr = self.data[location];
+        self.data[location] = curr & constraint;
     }
 
     fn intersect_pins(&mut self, pinned: &RaySet) {
@@ -65,17 +42,17 @@ impl MoveConstraints {
     }
 
     fn set(&mut self, location: Square, constraint: BitBoard) {
-        self.data[location as usize] = constraint;
+        self.data[location] = constraint;
     }
 }
 
 impl Board {
-    pub fn move_constraints(&self, compute_type: MoveComputeType) -> Rc<MoveConstraints> {
+    pub fn move_constraints(&self, compute_type: MoveComputeType) -> MoveConstraints {
         let cache = self.cache.borrow();
         let cached_moves = cache.move_constraints[compute_type].clone();
         drop(cache);
         cached_moves.unwrap_or_else(|| {
-            let computed = Rc::new(self.compute_move_constraints(compute_type));
+            let computed = self.compute_move_constraints(compute_type);
             self.cache.borrow_mut().move_constraints[compute_type] = Some(computed.clone());
             computed
         })
