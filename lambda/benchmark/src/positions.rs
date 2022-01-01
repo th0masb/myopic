@@ -1,11 +1,9 @@
-use lambda_runtime::error::HandlerError;
+use myopic_brain::{Board, EvalBoard, anyhow};
 
-use myopic_brain::{Board, EvalBoard};
-
-pub fn get(n: usize) -> Result<Vec<EvalBoard<Board>>, HandlerError> {
+pub fn get(n: usize) -> anyhow::Result<Vec<EvalBoard<Board>>> {
     let mut roots = vec![];
     for &fen in POSITIONS.iter().take(n) {
-        roots.push(fen.parse::<EvalBoard<Board>>().map_err(super::to_handler_err)?);
+        roots.push(fen.parse::<EvalBoard<Board>>()?);
     }
     Ok(roots)
 }
