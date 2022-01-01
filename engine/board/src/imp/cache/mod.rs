@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 pub use constraints::MoveConstraints;
 use myopic_core::BitBoard;
 use myopic_core::enum_map::EnumMap;
@@ -17,8 +15,8 @@ mod termination;
 pub struct CalculationCache {
     termination_status: Option<Option<TerminalState>>,
     passive_control: Option<BitBoard>,
-    pinned_set: Option<Rc<RaySet>>,
-    move_constraints: EnumMap<MoveComputeType, Option<Rc<MoveConstraints>>>,
+    pinned_set: Option<RaySet>,
+    move_constraints: EnumMap<MoveComputeType, Option<MoveConstraints>>,
 }
 
 impl Board {
