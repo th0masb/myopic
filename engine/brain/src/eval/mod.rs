@@ -10,6 +10,7 @@ mod clearcut;
 pub mod imp;
 mod material;
 pub mod opening;
+mod pawns;
 pub mod tables;
 pub mod values;
 

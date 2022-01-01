@@ -7,8 +7,8 @@ use enumset::{enum_set, EnumSet, EnumSetType};
 
 use crate::bitboard::BitBoard;
 use crate::pieces::Piece;
-use crate::Side;
 use crate::square::Square;
+use crate::Side;
 
 /// Represents one of the four different areas on a chessboard where
 /// the special castling move can take place (two for each side).
@@ -62,15 +62,15 @@ impl CastleZone {
     }
 
     /// Create an iterator traversing all zones in order.
-    pub fn iter() -> impl Iterator<Item=CastleZone> {
+    pub fn iter() -> impl Iterator<Item = CastleZone> {
         [
             CastleZone::WK,
             CastleZone::WQ,
             CastleZone::BK,
             CastleZone::BQ,
         ]
-            .iter()
-            .cloned()
+        .iter()
+        .cloned()
     }
 
     /// Returns a set of exactly two squares which denote the required

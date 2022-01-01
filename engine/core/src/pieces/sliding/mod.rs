@@ -1,8 +1,8 @@
 use std::num::Wrapping;
 
 use crate::bitboard::BitBoard;
-use crate::Dir;
 use crate::square::Square;
+use crate::Dir;
 
 pub mod bishops;
 pub mod queens;

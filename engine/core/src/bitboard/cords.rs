@@ -3,8 +3,8 @@ use std::cmp;
 use lazy_static::lazy_static;
 
 use crate::bitboard::BitBoard;
-use crate::Dir;
 use crate::square::Square;
+use crate::Dir;
 
 pub fn get_cord(source: Square, target: Square) -> BitBoard {
     let (min, max) = (cmp::min(source, target), cmp::max(source, target));
@@ -49,11 +49,11 @@ fn compute_cord_impl(source: Square, target: Square) -> BitBoard {
         Dir::W,
         Dir::NW,
     ]
-        .iter()
-        .find(|&d| source.search(*d).contains(target))
-        .map_or(BitBoard::EMPTY, |&d| {
-            takewhile_inc(source, target, d) | source
-        })
+    .iter()
+    .find(|&d| source.search(*d).contains(target))
+    .map_or(BitBoard::EMPTY, |&d| {
+        takewhile_inc(source, target, d) | source
+    })
 }
 
 fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {
