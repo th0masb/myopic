@@ -3,12 +3,12 @@ use std::str::FromStr;
 
 pub use anyhow;
 pub use enum_map;
+use enum_map::Enum;
 pub use enumset;
 use enumset::EnumSetType;
-use enum_map::Enum;
 
-pub use bitboard::BitBoard;
 pub use bitboard::constants;
+pub use bitboard::BitBoard;
 pub use castlezone::CastleZone;
 pub use pieces::Piece;
 pub use reflectable::Reflectable;
@@ -99,22 +99,9 @@ impl Side {
 #[derive(Debug, EnumSetType, Hash, PartialOrd, Ord)]
 #[rustfmt::skip]
 pub enum Dir {
-    N,
-    E,
-    S,
-    W,
-    NE,
-    SE,
-    SW,
-    NW,
-    NNE,
-    NEE,
-    SEE,
-    SSE,
-    SSW,
-    SWW,
-    NWW,
-    NNW,
+    N, E, S, W,
+    NE, SE, SW, NW,
+    NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW,
 }
 
 #[cfg(test)]

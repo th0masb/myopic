@@ -12,7 +12,7 @@ pub trait BestMoveHeuristic<B: EvalChessBoard> {
     /// of the side to move, i.e. high magnitude positive
     /// score is always better and high magnitude negative
     /// score is always worse.
-    fn estimate(&self, board: &mut B, mv: &Move) -> i32;
+    fn estimate(&self, board: &B, mv: &Move) -> i32;
 }
 
 /// Simplest estimator which simply evaluates all moves
@@ -20,7 +20,7 @@ pub trait BestMoveHeuristic<B: EvalChessBoard> {
 pub struct AllMovesEqualHeuristic;
 
 impl<B: EvalChessBoard> BestMoveHeuristic<B> for AllMovesEqualHeuristic {
-    fn estimate(&self, _board: &mut B, _mv: &Move) -> i32 {
+    fn estimate(&self, _board: &B, _mv: &Move) -> i32 {
         0
     }
 }
@@ -53,7 +53,7 @@ pub struct MaterialAndPositioningHeuristic;
 // is scored according to the delta between the piece values. For now ignore
 // potential pins.
 impl<B: EvalChessBoard> BestMoveHeuristic<B> for MaterialAndPositioningHeuristic {
-    fn estimate(&self, board: &mut B, mv: &Move) -> i32 {
+    fn estimate(&self, board: &B, mv: &Move) -> i32 {
         match get_category(board, mv) {
             MoveCategory::GoodExchange(n) => 30_000 + n,
             MoveCategory::Special => 20_000,
@@ -73,7 +73,7 @@ enum MoveCategory {
     BadExchange(i32),
 }
 
-fn get_category<B: EvalChessBoard>(board: &mut B, mv: &Move) -> MoveCategory {
+fn get_category<B: EvalChessBoard>(board: &B, mv: &Move) -> MoveCategory {
     match mv {
         Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
         &Standard {
@@ -102,11 +102,7 @@ fn get_category<B: EvalChessBoard>(board: &mut B, mv: &Move) -> MoveCategory {
     }
 }
 
-fn get_lower_value_delta<B: EvalChessBoard>(
-    board: &mut B,
-    piece: Piece,
-    dst: Square,
-) -> Option<i32> {
+fn get_lower_value_delta<B: EvalChessBoard>(board: &B, piece: Piece, dst: Square) -> Option<i32> {
     let piece_values = board.piece_values().clone();
     let moving_value = piece_values[piece as usize % 6];
     get_lower_value_pieces(piece)
@@ -132,7 +128,7 @@ fn get_lower_value_pieces<'a>(piece: Piece) -> &'a [Piece] {
     }
 }
 
-fn compute_control<B: EvalChessBoard>(board: &mut B, piece: Piece) -> BitBoard {
+fn compute_control<B: EvalChessBoard>(board: &B, piece: Piece) -> BitBoard {
     let (white, black) = board.sides();
     board
         .locs(&[piece])

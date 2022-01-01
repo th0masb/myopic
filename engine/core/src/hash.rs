@@ -4,8 +4,8 @@ use rand_pcg::Mcg128Xsl64;
 
 use crate::castlezone::CastleZone;
 use crate::pieces::Piece;
-use crate::Side;
 use crate::square::Square;
+use crate::Side;
 
 // Total number of hashing features
 const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
