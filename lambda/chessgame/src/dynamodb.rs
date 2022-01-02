@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -5,8 +6,8 @@ use itertools::Itertools;
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 
-use myopic_brain::{ChessBoard, FenPart};
 use myopic_brain::anyhow::{anyhow, Result};
+use myopic_brain::{ChessBoard, FenPart};
 
 use crate::game::{InitalPosition, LookupService};
 
@@ -54,8 +55,9 @@ impl DynamoDbOpeningService {
     }
 }
 
+#[async_trait]
 impl LookupService for DynamoDbOpeningService {
-    fn lookup_move(
+    async fn lookup_move(
         &mut self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
@@ -68,19 +70,15 @@ impl LookupService for DynamoDbOpeningService {
             Ok(None)
         } else {
             let query_position = crate::position::get(initial_position, uci_sequence)?
-                .to_fen_parts(&[
-                    FenPart::Board,
-                    FenPart::Active,
-                    FenPart::CastlingRights,
-                ]);
+                .to_fen_parts(&[FenPart::Board, FenPart::Active, FenPart::CastlingRights]);
             log::info!(
                 "Querying table {} for position {}",
                 self.table_name,
                 query_position
             );
-            let result = tokio::runtime::Runtime::new()
-                .unwrap()
-                .block_on(self.client.get_item(self.create_request(query_position)?))
+            let result = self.client
+                .get_item(self.create_request(query_position)?)
+                .await
                 .map_err(|err| anyhow!("{}", err))
                 .and_then(|response| match response.item {
                     None => {
@@ -106,12 +104,10 @@ impl LookupService for DynamoDbOpeningService {
                         },
                     },
                 });
-
             match result {
                 Err(_) | Ok(None) => self.table_misses += 1,
                 _ => {}
             }
-
             result
         }
     }

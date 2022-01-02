@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use std::time::{Duration, Instant};
 
 use bytes::Bytes;
@@ -14,8 +15,9 @@ pub struct LambdaMoveComputeService {
     pub function_name: String,
 }
 
+#[async_trait]
 impl ComputeService for LambdaMoveComputeService {
-    fn compute_move(
+    async fn compute_move(
         &self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
@@ -24,16 +26,17 @@ impl ComputeService for LambdaMoveComputeService {
         let payload = new_request_payload(initial_position, uci_sequence, time_limit)?;
         log::info!("Request payload {}", payload);
         let timer = Instant::now();
-        let invocation = tokio::runtime::Runtime::new().unwrap().block_on(
-            LambdaClient::new(self.region.clone()).invoke(InvocationRequest {
+        let invocation = LambdaClient::new(self.region.clone())
+            .invoke(InvocationRequest {
                 function_name: self.function_name.clone(),
                 payload: Some(Bytes::from(payload)),
                 client_context: None,
                 invocation_type: None,
                 log_type: None,
                 qualifier: None,
-            }),
-        )?;
+            })
+            .await?;
+
         log::info!("Response status: {:?}", invocation.status_code);
         log::info!("Invocation took {}ms", timer.elapsed().as_millis());
         match invocation.payload {
@@ -51,14 +54,14 @@ impl ComputeService for LambdaMoveComputeService {
 fn new_request_payload(
     initial_position: &InitalPosition,
     sequence: &str,
-    limit: Duration
+    limit: Duration,
 ) -> serde_json::Result<String> {
     serde_json::to_string(&ComputeMoveEvent::UciSequence {
         table_size: Default::default(),
         sequence: sequence.to_string(),
         terminator: SearchTerminator {
             max_depth: Default::default(),
-            timeout_millis: TimeoutMillis(limit.as_millis() as u64)
+            timeout_millis: TimeoutMillis(limit.as_millis() as u64),
         },
         start_fen: match initial_position {
             InitalPosition::Start => None,
