@@ -1,38 +1,37 @@
 use std::time::Duration;
 
-use lambda_runtime::{Context, error::HandlerError, lambda};
+use lambda_runtime::{handler_fn, Context, Error};
 use simple_logger::SimpleLogger;
 
 use lambda_payloads::chessmove::*;
-use myopic_brain::{Board, ChessBoard, EvalBoard, SearchParameters};
 use myopic_brain::anyhow;
 use myopic_brain::negascout::SearchContext;
+use myopic_brain::{Board, ChessBoard, EvalBoard, SearchParameters};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Error> {
     SimpleLogger::new()
         .with_level(log::LevelFilter::Info)
         .without_timestamps()
         .init()?;
-    lambda!(move_compute_handler);
+    lambda_runtime::run(handler_fn(move_compute_handler)).await?;
     Ok(())
 }
 
-fn move_compute_handler(
+async fn move_compute_handler(
     e: ComputeMoveEvent,
     _ctx: Context,
-) -> Result<ComputeMoveOutput, HandlerError> {
+) -> Result<ComputeMoveOutput, Error> {
     log::info!("Received input payload {}", serde_json::to_string(&e)?);
     let terminator = extract_params(&e);
-    let position =
-        extract_position(&e).map_err(|err| HandlerError::from(err.to_string().as_str()))?;
-    let output_payload = myopic_brain::search(position, terminator)
-        .map(|outcome| ComputeMoveOutput {
+    let position = extract_position(&e)?;
+    let output_payload =
+        myopic_brain::search(position, terminator).map(|outcome| ComputeMoveOutput {
             best_move: outcome.best_move.uci_format(),
             depth_searched: outcome.depth,
             eval: outcome.eval,
             search_duration_millis: outcome.time.as_millis() as u64,
-        })
-        .map_err(|err| HandlerError::from(err.to_string().as_str()))?;
+        })?;
     log::info!(
         "Computed output payload {}",
         serde_json::to_string(&output_payload)?
@@ -61,6 +60,7 @@ fn extract_position(e: &ComputeMoveEvent) -> Result<EvalBoard<Board>, anyhow::Er
 }
 
 struct SearchTerminatorWrapper(pub SearchTerminator);
+
 impl myopic_brain::SearchTerminator for SearchTerminatorWrapper {
     fn should_terminate(&self, ctx: &SearchContext) -> bool {
         let timeout = Duration::from_millis(self.0.timeout_millis.0);
@@ -88,4 +88,3 @@ fn extract_params(e: &ComputeMoveEvent) -> SearchParameters<SearchTerminatorWrap
         },
     }
 }
-
