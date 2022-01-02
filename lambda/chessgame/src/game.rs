@@ -1,32 +1,35 @@
+use async_trait::async_trait;
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
 use reqwest::StatusCode;
 
-use myopic_brain::{Board, ChessBoard, EvalBoard, Side};
 use myopic_brain::anyhow::{anyhow, Result};
+use myopic_brain::{Board, ChessBoard, EvalBoard, Side};
 
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::lichess::{LichessChatRoom, LichessService};
 use crate::messages;
-use crate::TimeConstraints;
 use crate::timing::Timing;
+use crate::TimeConstraints;
 
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
 const MOVE_LATENCY_MS: u64 = 200;
 const MIN_COMPUTE_TIME_MS: u64 = 200;
 
+#[async_trait]
 pub trait LookupService {
-    fn lookup_move(
+    async fn lookup_move(
         &mut self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
     ) -> Result<Option<String>>;
 }
 
+#[async_trait]
 pub trait ComputeService {
-    fn compute_move(
+    async fn compute_move(
         &self,
         initial_position: &InitalPosition,
         uci_sequence: &str,
@@ -106,42 +109,48 @@ where
         self.halfmove_count
     }
 
-    pub fn abort(&self) -> Result<StatusCode> {
-        self.lichess_service.abort()
+    pub async fn abort(&self) -> Result<StatusCode> {
+        self.lichess_service.abort().await
     }
 
-    pub fn post_introduction(&self) {
+    pub async fn post_introduction(&self) {
         for chatline in vec![
             messages::INTRO_1,
             messages::INTRO_2,
             messages::INTRO_3,
             messages::INTRO_4,
         ] {
-            self.post_chatline(chatline, LichessChatRoom::Player);
-            self.post_chatline(chatline, LichessChatRoom::Spectator);
+            self.post_chatline(chatline, LichessChatRoom::Player).await;
+            self.post_chatline(chatline, LichessChatRoom::Spectator)
+                .await;
         }
     }
 
-    fn post_chatline(&self, text: &str, room: LichessChatRoom) {
-        match self.lichess_service.post_chatline(text, room) {
+    async fn post_chatline(&self, text: &str, room: LichessChatRoom) {
+        match self.lichess_service.post_chatline(text, room).await {
             Err(err) => {
                 log::warn!("Failed to post chatline {} in {:?}: {}", text, room, err)
-            },
+            }
             Ok(status) => {
-                log::info!("Response status {} for chatline {} in room {:?}", status, text, room)
-            },
+                log::info!(
+                    "Response status {} for chatline {} in room {:?}",
+                    status,
+                    text,
+                    room
+                )
+            }
         }
     }
 
-    pub fn process_event(&mut self, event_json: &str) -> Result<GameExecutionState> {
+    pub async fn process_event(&mut self, event_json: &str) -> Result<GameExecutionState> {
         match serde_json::from_str(event_json) {
             Err(error) => {
                 log::warn!("Error parsing event {}", error);
                 Err(anyhow!("{}", error))
             }
             Ok(event) => match event {
-                GameEvent::GameFull { content } => self.process_game_full(content),
-                GameEvent::State { content } => self.process_game_state(content),
+                GameEvent::GameFull { content } => self.process_game_full(content).await,
+                GameEvent::State { content } => self.process_game_state(content).await,
                 GameEvent::ChatLine { content } => self.process_chat_line(content),
             },
         }
@@ -152,7 +161,7 @@ where
         Ok(GameExecutionState::Running)
     }
 
-    fn process_game_full(&mut self, game_full: GameFull) -> Result<GameExecutionState> {
+    async fn process_game_full(&mut self, game_full: GameFull) -> Result<GameExecutionState> {
         // Track info required for playing future gamestates
         self.inferred_metadata = Some(InferredGameMetadata {
             clock: game_full.clock,
@@ -167,8 +176,8 @@ where
                     "Name not matched, us: {} w: {} b: {}",
                     self.bot_name,
                     game_full.white.name,
-                    game_full.black.name)
-                );
+                    game_full.black.name
+                ));
             },
             initial_position: if game_full.initial_fen.as_str() == "startpos" {
                 InitalPosition::Start
@@ -176,7 +185,7 @@ where
                 InitalPosition::CustomFen(game_full.initial_fen)
             },
         });
-        self.process_game_state(game_full.state)
+        self.process_game_state(game_full.state).await
     }
 
     fn get_game_state(&self, moves: &str) -> Result<(EvalBoard<Board>, u32)> {
@@ -186,7 +195,7 @@ where
         Ok((state, pos_count as u32))
     }
 
-    fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState> {
+    async fn process_game_state(&mut self, state: GameState) -> Result<GameExecutionState> {
         log::info!("Parsing previous game moves: {}", state.moves);
         let (board, n_moves) = self.get_game_state(state.moves.as_str())?;
         self.halfmove_count = n_moves as usize;
@@ -197,15 +206,24 @@ where
                     log::info!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
-                    match self.get_opening_move(&metadata.initial_position, &state.moves) {
-                        Some(mv) => self.lichess_service.post_move(mv),
+                    match self
+                        .get_opening_move(&metadata.initial_position, &state.moves)
+                        .await
+                    {
+                        Some(mv) => self.lichess_service.post_move(mv).await,
                         None => {
-                            match self.get_endgame_move(&metadata.initial_position, &state.moves) {
-                                Some(mv) => self.lichess_service.post_move(mv),
-                                None => self.compute_and_post_move(
-                                    &state.moves,
-                                    self.compute_thinking_time(n_moves, &state)?,
-                                ),
+                            match self
+                                .get_endgame_move(&metadata.initial_position, &state.moves)
+                                .await
+                            {
+                                Some(mv) => self.lichess_service.post_move(mv).await,
+                                None => {
+                                    self.compute_and_post_move(
+                                        &state.moves,
+                                        self.compute_thinking_time(n_moves, &state)?,
+                                    )
+                                    .await
+                                }
                             }
                         }
                     }
@@ -222,7 +240,7 @@ where
         }
     }
 
-    fn get_endgame_move(
+    async fn get_endgame_move(
         &mut self,
         initial_position: &InitalPosition,
         current_sequence: &str,
@@ -230,6 +248,7 @@ where
         match self
             .endgame_service
             .lookup_move(initial_position, current_sequence)
+            .await
         {
             Ok(mv) => mv,
             Err(message) => {
@@ -239,7 +258,7 @@ where
         }
     }
 
-    fn get_opening_move(
+    async fn get_opening_move(
         &mut self,
         initial_position: &InitalPosition,
         current_sequence: &str,
@@ -247,6 +266,7 @@ where
         match self
             .opening_service
             .lookup_move(initial_position, current_sequence)
+            .await
         {
             Ok(mv) => mv,
             Err(message) => {
@@ -256,7 +276,7 @@ where
         }
     }
 
-    fn compute_and_post_move(
+    async fn compute_and_post_move(
         &self,
         moves: &String,
         time: Duration,
@@ -266,18 +286,15 @@ where
             Ok(GameExecutionState::Recurse)
         } else {
             let metadata = self.get_latest_metadata()?;
-            self.compute_service
+            let computed_move = self
+                .compute_service
                 .compute_move(&metadata.initial_position, moves.as_str(), time)
-                .map_err(|e| anyhow!("{}", e))
-                .and_then(|mv| self.lichess_service.post_move(mv))
+                .await?;
+            self.lichess_service.post_move(computed_move).await
         }
     }
 
-    fn compute_thinking_time(
-        &self,
-        moves_played: u32,
-        state: &GameState,
-    ) -> Result<Duration> {
+    fn compute_thinking_time(&self, moves_played: u32, state: &GameState) -> Result<Duration> {
         let metadata = self.get_latest_metadata()?;
         let (remaining, inc) = match metadata.lambda_side {
             Side::White => (

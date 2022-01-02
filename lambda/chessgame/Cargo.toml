@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 myopic-brain = { path = "../../engine/brain" }
 lambda-payloads = { path = "../payloads" }
-lambda_runtime = "0.2.1"
+lambda_runtime = "0.4.1"
 serde_derive = "1.0.115"
 serde = "1.0.115"
 serde_json = "1.0.59"
@@ -18,7 +18,8 @@ log = "0.4.14"
 bytes = "0.5.6"
 rand = "0.5.0"
 itertools = "0.8"
-tokio = { version = "0.2.22", default_features = false, features = ["rt-core"] }
+async-trait = "0.1.52"
+tokio = { version = "1.0" }
 reqwest = { version = "0.10.8", default_features = false, features = ["rustls-tls", "blocking", "json"] }
 rusoto_core = { version = "0.45.0", default_features = false, features = ["rustls"] }
 rusoto_lambda = { version = "0.45.0", default_features = false, features = ["rustls"] }

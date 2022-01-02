@@ -1,11 +1,10 @@
-use std::error::Error;
 use std::io::{BufRead, BufReader};
 use std::ops::Add;
 use std::str::FromStr;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use bytes::Bytes;
-use lambda_runtime::{Context, error::HandlerError, lambda};
+use lambda_runtime::{handler_fn, Context, Error};
 use reqwest::blocking::Response;
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
@@ -45,19 +44,20 @@ impl TimeConstraints {
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Error> {
     SimpleLogger::new()
         .with_level(log::LevelFilter::Info)
         .without_timestamps()
         .init()?;
-    lambda!(game_handler);
+    lambda_runtime::run(handler_fn(game_handler)).await?;
     Ok(())
 }
 
-fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, HandlerError> {
+async fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Error> {
     log::info!("Initializing game loop");
     let mut game = init_game(&e, &ctx)?;
-    game.post_introduction();
+    game.post_introduction().await;
 
     // Enter the game loop
     let (start, wait_duration) = (
@@ -74,7 +74,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
             Ok(event) => {
                 if event.trim().is_empty() {
                     if game.halfmove_count() < 2 && start.elapsed() > wait_duration {
-                        match game.abort() {
+                        match game.abort().await {
                             Err(message) => log::warn!("Failed to abort game: {}", message),
                             Ok(status) => {
                                 if status.is_success() {
@@ -91,10 +91,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
                     }
                 } else {
                     log::info!("Received event: {}", event);
-                    match game
-                        .process_event(event.as_str())
-                        .map_err(|err| HandlerError::from(format!("{}", err).as_str()))?
-                    {
+                    match game.process_event(event.as_str()).await? {
                         GameExecutionState::Running => continue,
                         GameExecutionState::Finished => break,
                         GameExecutionState::Recurse => {
@@ -110,7 +107,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
     // If we got here then there isn't enough time in this lambda to complete the game
     if should_recurse && e.function_depth_remaining > 0 {
         // Async invoke lambda here
-        recurse(&e)
+        recurse(&e).await
     } else {
         Ok(PlayGameOutput {
             message: format!("No recursion required, game execution thread terminated"),
@@ -118,7 +115,7 @@ fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Handle
     }
 }
 
-fn init_game(e: &PlayGameEvent, ctx: &Context) -> Result<GameImpl, HandlerError> {
+fn init_game(e: &PlayGameEvent, ctx: &Context) -> Result<GameImpl, Error> {
     Ok(Game::new(
         GameConfig {
             game_id: e.lichess_game_id.clone(),
@@ -147,8 +144,8 @@ fn init_game(e: &PlayGameEvent, ctx: &Context) -> Result<GameImpl, HandlerError>
     ))
 }
 
-fn parse_region(region: &str) -> Result<Region, HandlerError> {
-    Region::from_str(region).map_err(|err| HandlerError::from(format!("{}", err).as_str()))
+fn parse_region(region: &str) -> Result<Region, Error> {
+    Ok(Region::from_str(region)?)
 }
 
 pub fn timestamp_millis() -> u64 {
@@ -158,35 +155,30 @@ pub fn timestamp_millis() -> u64 {
         .as_millis() as u64
 }
 
-fn open_game_stream(
-    game_id: &String,
-    auth_token: &String,
-) -> Result<BufReader<Response>, HandlerError> {
-    reqwest::blocking::Client::new()
+fn open_game_stream(game_id: &String, auth_token: &String) -> Result<BufReader<Response>, Error> {
+    Ok(reqwest::blocking::Client::new()
         .get(format!("{}/{}", GAME_STREAM_ENDPOINT, game_id).as_str())
         .bearer_auth(auth_token)
         .send()
-        .map(|response| BufReader::new(response))
-        .map_err(|err| HandlerError::from(format!("{}", err).as_str()))
+        .map(|response| BufReader::new(response))?)
 }
 
-fn recurse(source_event: &PlayGameEvent) -> Result<PlayGameOutput, HandlerError> {
+async fn recurse(source_event: &PlayGameEvent) -> Result<PlayGameOutput, Error> {
     // Inject region as part of the PlayGameEvent
     let next_event = increment_depth(source_event);
     let region = parse_region(next_event.function_region.as_str())?;
-    tokio::runtime::Runtime::new()
-        .unwrap()
-        .block_on(LambdaClient::new(region).invoke_async(InvokeAsyncRequest {
+    let response = LambdaClient::new(region)
+        .invoke_async(InvokeAsyncRequest {
             function_name: next_event.function_name.clone(),
             invoke_args: Bytes::from(serde_json::to_string(&next_event)?),
-        }))
-        .map_err(|err| HandlerError::from(err.to_string().as_str()))
-        .map(|response| PlayGameOutput {
-            message: format!(
-                "Recursively invoked lambda at depth {} with status {:?}",
-                next_event.function_depth_remaining, response.status
-            ),
         })
+        .await?;
+    Ok(PlayGameOutput {
+        message: format!(
+            "Recursively invoked lambda at depth {} with status {:?}",
+            next_event.function_depth_remaining, response.status
+        ),
+    })
 }
 
 fn increment_depth(event: &PlayGameEvent) -> PlayGameEvent {
