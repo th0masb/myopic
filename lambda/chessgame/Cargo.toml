@@ -15,12 +15,12 @@ serde = "1.0.115"
 serde_json = "1.0.59"
 simple_logger = "1.16.0"
 log = "0.4.14"
-bytes = "0.5.6"
+bytes = "1.0"
 rand = "0.5.0"
 itertools = "0.8"
 async-trait = "0.1.52"
-tokio = { version = "1.0" }
-reqwest = { version = "0.10.8", default_features = false, features = ["rustls-tls", "blocking", "json"] }
-rusoto_core = { version = "0.45.0", default_features = false, features = ["rustls"] }
-rusoto_lambda = { version = "0.45.0", default_features = false, features = ["rustls"] }
-rusoto_dynamodb = { version = "0.45.0", default_features = false, features = ["rustls"] }
+tokio = "1.0"
+reqwest = { version = "0.11.8", default_features = false, features = ["rustls-tls", "blocking", "json"] }
+rusoto_core = { version = "0.47.0", default_features = false, features = ["rustls"] }
+rusoto_lambda = { version = "0.47.0", default_features = false, features = ["rustls"] }
+rusoto_dynamodb = { version = "0.47.0", default_features = false, features = ["rustls"] }
