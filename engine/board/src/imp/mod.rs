@@ -38,6 +38,12 @@ pub struct Board {
     cache: RefCell<CalculationCache>,
 }
 
+impl Default for Board {
+    fn default() -> Self {
+        crate::START_FEN.parse().unwrap()
+    }
+}
+
 impl FromStr for Board {
     type Err = Error;
 
