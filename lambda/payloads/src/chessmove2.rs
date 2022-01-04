@@ -26,6 +26,8 @@ pub struct OpeningTable {
     pub position_key: String,
     #[serde(rename = "moveKey")]
     pub move_key: String,
+    #[serde(rename = "maxDepth")]
+    pub max_depth: u8,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
