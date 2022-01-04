@@ -5,30 +5,27 @@ use rusoto_core::Region;
 use rusoto_dynamodb::DynamoDbClient;
 use std::rc::Rc;
 use std::sync::Arc;
+use lambda_payloads::chessmove2::OpeningTable;
 
 #[async_trait]
-pub trait LookupMoveService {
-    async fn lookup(
-        &self,
-        position: Arc<dyn ChessBoard + Send + Sync>,
-    ) -> anyhow::Result<Option<Move>>;
+pub trait LookupMoveService<B: ChessBoard + Send> {
+    async fn lookup(&self, position: B) -> anyhow::Result<Option<Move>>;
 }
 
 pub struct DynamoOpeningMoveService {
-    table_name: String,
-    table_region: Region,
-    position_key: String,
-    move_key: String,
-    max_depth: u8,
+    params: OpeningTable,
     client: DynamoDbClient,
 }
 
+impl From<OpeningTable> for DynamoOpeningMoveService {
+    fn from(source: OpeningTable) -> Self {
+        todo!()
+    }
+}
+
 #[async_trait]
-impl LookupMoveService for DynamoOpeningMoveService {
-    async fn lookup(
-        &self,
-        position: Arc<dyn ChessBoard + Send + Sync>,
-    ) -> anyhow::Result<Option<Move>> {
+impl<B: ChessBoard + Send> LookupMoveService<B> for DynamoOpeningMoveService {
+    async fn lookup(&self, position: B) -> anyhow::Result<Option<Move>> {
         let pos_count = position.position_count();
         if pos_count < self.max_depth as usize {
             log::info!(
