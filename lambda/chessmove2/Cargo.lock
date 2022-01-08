@@ -123,6 +123,7 @@ version = "0.0.0"
 dependencies = [
  "async-trait",
  "bytes",
+ "itertools 0.8.2",
  "lambda-payloads",
  "lambda_runtime",
  "log",
