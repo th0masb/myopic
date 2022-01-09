@@ -34,6 +34,12 @@ pub struct OpeningTable {
 pub struct ChooseMoveOutput {
     #[serde(rename = "bestMove")]
     pub best_move: String,
+    #[serde(rename = "searchDetails")]
+    pub search_details: Option<SearchDetails>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct SearchDetails {
     #[serde(rename = "depthSearched")]
     pub depth_searched: usize,
     #[serde(rename = "searchDurationMillis")]

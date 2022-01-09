@@ -10,26 +10,33 @@ use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use crate::LookupMoveService;
 use lambda_payloads::chessmove2::OpeningTable;
 use myopic_brain::anyhow as ah;
+use myopic_brain::enumset::__internal::core_export::fmt::{Display, Formatter};
 use myopic_brain::{ChessBoard, FenPart, Move};
 
-pub struct DynamoOpeningMoveService {
+pub struct DynamoOpeningService {
     params: OpeningTable,
     client: DynamoDbClient,
 }
 
-impl TryFrom<OpeningTable> for DynamoOpeningMoveService {
+impl TryFrom<OpeningTable> for DynamoOpeningService {
     type Error = ah::Error;
 
     fn try_from(value: OpeningTable) -> Result<Self, Self::Error> {
-        Ok(DynamoOpeningMoveService {
+        Ok(DynamoOpeningService {
             client: DynamoDbClient::new(Region::from_str(value.region.as_str())?),
             params: value,
         })
     }
 }
 
+impl Display for DynamoOpeningService {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        f.write_str(self.params.name.as_str())
+    }
+}
+
 #[async_trait]
-impl<B: ChessBoard + Send + 'static> LookupMoveService<B> for DynamoOpeningMoveService {
+impl<B: ChessBoard + Send + 'static> LookupMoveService<B> for DynamoOpeningService {
     async fn lookup(&self, position: B) -> ah::Result<Option<Move>> {
         let pos_count = position.position_count();
         if pos_count > self.params.max_depth as usize {
@@ -59,7 +66,7 @@ impl<B: ChessBoard + Send + 'static> LookupMoveService<B> for DynamoOpeningMoveS
         }
     }
 }
-impl DynamoOpeningMoveService {
+impl DynamoOpeningService {
     fn create_request(&self, query_position: String) -> GetItemInput {
         // Create key
         let mut av = AttributeValue::default();
