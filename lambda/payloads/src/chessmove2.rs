@@ -14,8 +14,8 @@ pub struct ChooseMoveEvent {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct Clock {
-    increment: u64,
-    remaining: u64,
+    pub increment: u64,
+    pub remaining: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]

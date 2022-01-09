@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use async_trait::async_trait;
@@ -10,7 +11,6 @@ use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use crate::LookupMoveService;
 use lambda_payloads::chessmove2::OpeningTable;
 use myopic_brain::anyhow as ah;
-use myopic_brain::enumset::__internal::core_export::fmt::{Display, Formatter};
 use myopic_brain::{ChessBoard, FenPart, Move};
 
 pub struct DynamoOpeningService {
