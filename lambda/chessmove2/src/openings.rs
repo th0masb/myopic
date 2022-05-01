@@ -13,7 +13,7 @@ use crate::LookupMoveService;
 use myopic_brain::anyhow as ah;
 use myopic_brain::{ChessBoard, FenPart, Move};
 
-const TABLE_ENV_KEY: &'static str = "OPENING_TABLE";
+const TABLE_ENV_KEY: &'static str = "APP_CONFIG";
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 struct OpeningTable {
