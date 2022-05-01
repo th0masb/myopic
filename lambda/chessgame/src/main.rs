@@ -1,18 +1,18 @@
 use std::io::{BufRead, BufReader};
-use std::ops::Add;
-use std::str::FromStr;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use bytes::Bytes;
+use std::str::FromStr;
+use std::time::{Duration, Instant};
+
+
 use lambda_runtime::{handler_fn, Context, Error};
 use reqwest::blocking::Response;
 use rusoto_core::Region;
-use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
+
 use simple_logger::SimpleLogger;
 
 use game::Game;
 use lambda_payloads::chessgame::*;
-use myopic_brain::anyhow::anyhow;
+
 
 use crate::compute::MoveLambdaClient;
 use crate::game::{GameConfig, GameExecutionState};
