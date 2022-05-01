@@ -3,8 +3,8 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::payload::PlayGameEvent;
 
-const LICHESS_AUTH_TOKEN_VAR: &'static str = "MYOPIC_LICHESS_AUTH_TOKEN";
-const CONFIG_VAR: &'static str = "MYOPIC_CONFIG";
+const LICHESS_AUTH_TOKEN_VAR: &'static str = "LICHESS_AUTH_TOKEN";
+const CONFIG_VAR: &'static str = "APP_CONFIG";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -12,8 +12,6 @@ pub struct AppConfig {
     pub game_function: GameFunctionConfig,
     #[serde(rename = "moveFunction")]
     pub move_function: AwsResourceId,
-    #[serde(rename = "openingTable")]
-    pub opening_table: OpeningTableConfig,
     #[serde(rename = "lichessBot")]
     pub lichess_bot: LichessConfig,
     #[serde(rename = "timeConstraints", default)]
@@ -47,19 +45,8 @@ pub struct EventLoopConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameFunctionConfig {
     pub id: AwsResourceId,
-    #[serde(rename = "maxDepth")]
-    pub max_depth: u8,
     #[serde(rename = "abortAfterSecs")]
     pub abort_after_secs: u8,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OpeningTableConfig {
-    pub id: AwsResourceId,
-    #[serde(rename = "positionKey", default = "default_position_key")]
-    pub position_key: String,
-    #[serde(rename = "moveKey", default = "default_moves_key")]
-    pub move_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -130,18 +117,10 @@ fn default_region() -> String {
     "eu-west-2".to_string()
 }
 
-fn default_position_key() -> String {
-    "PositionFEN".to_string()
-}
-
 fn default_user_matchers() -> Vec<StringMatcher> {
     vec![
         StringMatcher{ include: true, pattern: Regex::new(r".*").unwrap() }
     ]
-}
-
-fn default_moves_key() -> String {
-    "Moves".to_string()
 }
 
 fn get_env_var(key: &str) -> String {
@@ -150,18 +129,11 @@ fn get_env_var(key: &str) -> String {
 
 pub fn extract_game_lambda_payload(config: &AppConfig, game_id: &str) -> String {
     serde_json::to_string(&PlayGameEvent {
-        function_depth_remaining: config.game_function.max_depth,
-        function_name: config.game_function.id.name.clone(),
-        function_region: config.game_function.id.region.clone(),
         move_function_name: config.move_function.name.clone(),
         move_function_region: config.move_function.region.clone(),
         lichess_game_id: game_id.to_string(),
         lichess_auth_token: config.lichess_bot.auth_token.clone(),
         lichess_bot_id: config.lichess_bot.bot_id.clone(),
-        opening_table_name: config.opening_table.id.name.clone(),
-        opening_table_region: config.opening_table.id.region.clone(),
-        opening_table_position_key: config.opening_table.position_key.clone(),
-        opening_table_move_key: config.opening_table.move_key.clone(),
         abort_after_secs: config.game_function.abort_after_secs,
     }).unwrap()
 }
