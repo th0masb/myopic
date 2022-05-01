@@ -12,37 +12,18 @@ use simple_logger::SimpleLogger;
 
 use game::Game;
 use lambda_payloads::chessgame::*;
+use myopic_brain::anyhow::anyhow;
 
-use crate::compute::LambdaMoveComputeService;
-use crate::dynamodb::{DynamoDbOpeningService, DynamoDbOpeningServiceConfig};
-use crate::endgame::EndgameService;
+use crate::compute::MoveLambdaClient;
 use crate::game::{GameConfig, GameExecutionState};
 
 mod compute;
-mod dynamodb;
-mod endgame;
 mod events;
 mod game;
 mod lichess;
 mod messages;
-pub mod position;
-mod timing;
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
-
-type GameImpl = Game<DynamoDbOpeningService, LambdaMoveComputeService, EndgameService>;
-
-#[derive(Debug, Copy, Clone)]
-pub struct TimeConstraints {
-    start_time: Instant,
-    max_execution_duration: Duration,
-}
-
-impl TimeConstraints {
-    pub fn lambda_end_instant(&self) -> Instant {
-        self.start_time.add(self.max_execution_duration)
-    }
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -54,28 +35,28 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, Error> {
+async fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput, Error> {
     log::info!("Initializing game loop");
-    let mut game = init_game(&e, &ctx)?;
+    let mut game = init_game(&e)?;
     game.post_introduction().await;
-
-    // Enter the game loop
     let (start, wait_duration) = (
         Instant::now(),
         Duration::from_secs(e.abort_after_secs as u64),
     );
-    let mut should_recurse = false;
     for read_result in open_game_stream(&e.lichess_game_id, &e.lichess_auth_token)?.lines() {
         match read_result {
             Err(error) => {
-                log::warn!("Problem reading from game stream {}", error);
-                break;
+                log::error!("Problem reading from game stream {}", error);
+                return Err(Box::new(error))
             }
             Ok(event) => {
                 if event.trim().is_empty() {
                     if game.halfmove_count() < 2 && start.elapsed() > wait_duration {
                         match game.abort().await {
-                            Err(message) => log::warn!("Failed to abort game: {}", message),
+                            Err(error) => {
+                                log::error!("Failed to abort game: {}", error);
+                                return Err(Box::new(error))
+                            }
                             Ok(status) => {
                                 if status.is_success() {
                                     log::info!("Successfully aborted game due to inactivity!");
@@ -85,74 +66,28 @@ async fn game_handler(e: PlayGameEvent, ctx: Context) -> Result<PlayGameOutput, 
                                 }
                             }
                         }
-                    } else if Instant::now() >= game.time_constraints().lambda_end_instant() {
-                        should_recurse = true;
-                        break;
                     }
                 } else {
                     log::info!("Received event: {}", event);
                     match game.process_event(event.as_str()).await? {
                         GameExecutionState::Running => continue,
                         GameExecutionState::Finished => break,
-                        GameExecutionState::Recurse => {
-                            should_recurse = true;
-                            break;
-                        }
                     }
                 }
             }
         }
     }
-
-    // If we got here then there isn't enough time in this lambda to complete the game
-    if should_recurse && e.function_depth_remaining > 0 {
-        // Async invoke lambda here
-        recurse(&e).await
-    } else {
-        Ok(PlayGameOutput {
-            message: format!("No recursion required, game execution thread terminated"),
-        })
-    }
+    Ok(PlayGameOutput { message: format!("Game {} completed", e.lichess_game_id) })
 }
 
-fn init_game(e: &PlayGameEvent, ctx: &Context) -> Result<GameImpl, Error> {
-    Ok(Game::new(
-        GameConfig {
-            game_id: e.lichess_game_id.clone(),
-            bot_name: e.lichess_bot_id.clone(),
-            lichess_auth_token: e.lichess_auth_token.clone(),
-            time_constraints: TimeConstraints {
-                start_time: Instant::now(),
-                // Reduce the actual max duration by a constant fraction
-                // to allow a buffer of time to invoke new lambda
-                max_execution_duration: (4 * Duration::from_millis(
-                    ctx.deadline as u64 - timestamp_millis(),
-                )) / 5,
-            },
-        },
-        DynamoDbOpeningService::new(DynamoDbOpeningServiceConfig {
-            table_name: e.opening_table_name.clone(),
-            position_key: e.opening_table_position_key.clone(),
-            move_key: e.opening_table_move_key.clone(),
-            table_region: parse_region(e.opening_table_region.as_str())?,
-        }),
-        LambdaMoveComputeService {
-            function_name: e.move_function_name.clone(),
-            region: parse_region(e.move_function_region.as_str())?,
-        },
-        EndgameService::default(),
-    ))
-}
-
-fn parse_region(region: &str) -> Result<Region, Error> {
-    Ok(Region::from_str(region)?)
-}
-
-pub fn timestamp_millis() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
-        .as_millis() as u64
+fn init_game(e: &PlayGameEvent) -> Result<Game, Error> {
+    Ok(GameConfig {
+        game_id: e.lichess_game_id.clone(),
+        bot_name: e.lichess_bot_id.clone(),
+        lichess_auth_token: e.lichess_auth_token.clone(),
+        move_region: Region::from_str(e.move_function_region.as_str())?,
+        move_function_name: e.move_function_name.clone(),
+    }.into())
 }
 
 fn open_game_stream(game_id: &String, auth_token: &String) -> Result<BufReader<Response>, Error> {
@@ -161,28 +96,4 @@ fn open_game_stream(game_id: &String, auth_token: &String) -> Result<BufReader<R
         .bearer_auth(auth_token)
         .send()
         .map(|response| BufReader::new(response))?)
-}
-
-async fn recurse(source_event: &PlayGameEvent) -> Result<PlayGameOutput, Error> {
-    // Inject region as part of the PlayGameEvent
-    let next_event = increment_depth(source_event);
-    let region = parse_region(next_event.function_region.as_str())?;
-    let response = LambdaClient::new(region)
-        .invoke_async(InvokeAsyncRequest {
-            function_name: next_event.function_name.clone(),
-            invoke_args: Bytes::from(serde_json::to_string(&next_event)?),
-        })
-        .await?;
-    Ok(PlayGameOutput {
-        message: format!(
-            "Recursively invoked lambda at depth {} with status {:?}",
-            next_event.function_depth_remaining, response.status
-        ),
-    })
-}
-
-fn increment_depth(event: &PlayGameEvent) -> PlayGameEvent {
-    let mut new_event = event.clone();
-    new_event.function_depth_remaining = event.function_depth_remaining - 1;
-    new_event
 }

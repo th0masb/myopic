@@ -40,7 +40,7 @@ impl LichessService {
             .map(|response| response.status())
     }
 
-    pub async fn post_move(&self, mv: String) -> Result<GameExecutionState> {
+    pub async fn post_move(&self, mv: String) -> Result<()> {
         // Add timeout and retry logic
         self.client
             .post(format!("{}/{}/move/{}", GAME_ENDPOINT, self.game_id, mv).as_str())
@@ -50,7 +50,7 @@ impl LichessService {
             .map_err(|error| anyhow!("Error posting move: {}", error))
             .and_then(|response| {
                 if response.status().is_success() {
-                    Ok(GameExecutionState::Running)
+                    Ok(())
                 } else {
                     Err(anyhow!(
                         "Lichess api responded with error {} during move post",
