@@ -40,7 +40,7 @@ async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOu
     let mut board = Board::default();
     board.play_uci(event.moves_played.as_str())?;
 
-    let lookup_services = load_lookup_services(&event)?;
+    let lookup_services = load_lookup_services()?;
     match perform_lookups(board.clone(), lookup_services).await {
         Some(mv) => Ok(ChooseMoveOutput {
             best_move: mv.uci_format(),
@@ -72,14 +72,12 @@ async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOu
     }
 }
 
-fn load_lookup_services<B>(
-    event: &ChooseMoveEvent,
-) -> anyhow::Result<Vec<Box<dyn LookupMoveService<B>>>>
+fn load_lookup_services<B>() -> anyhow::Result<Vec<Box<dyn LookupMoveService<B>>>>
 where
     B: 'static + ChessBoard + Clone + Send,
 {
     Ok(vec![
-        Box::new(DynamoOpeningService::try_from(event.opening_table.clone())?),
+        Box::new(DynamoOpeningService::default()),
         Box::new(LichessEndgameService::default()),
     ])
 }
