@@ -1,16 +1,16 @@
 import * as cdk from '@aws-cdk/core';
 import * as db from '@aws-cdk/aws-dynamodb';
 
-export interface OpeningDatabaseStackProps extends cdk.StackProps {
+export interface OpeningDatabaseProps extends cdk.StackProps {
   readonly openingsTableName: string,
   readonly positionAttributeName: string
   readonly readCapacity: number
   readonly writeCapacity: number
 }
 
-export class MyopicDatabaseStack extends cdk.Stack {
+export class OpeningDatabase extends cdk.Stack {
 
-  constructor(scope: cdk.Construct, id: string, props: OpeningDatabaseStackProps) {
+  constructor(scope: cdk.Construct, id: string, props: OpeningDatabaseProps) {
     super(scope, id, props);
 
     new db.Table(this, `${id}-Openings`, {
