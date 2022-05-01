@@ -4,7 +4,7 @@ use reqwest::{Client, StatusCode};
 
 use myopic_brain::anyhow::{anyhow, Result};
 
-use crate::game::GameExecutionState;
+
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 

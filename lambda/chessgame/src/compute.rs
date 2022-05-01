@@ -1,5 +1,5 @@
-use async_trait::async_trait;
-use std::time::{Duration, Instant};
+
+use std::time::{Instant};
 
 use bytes::Bytes;
 use rusoto_core::Region;
