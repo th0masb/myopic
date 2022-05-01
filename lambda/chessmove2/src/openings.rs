@@ -1,3 +1,4 @@
+use serde_derive::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
@@ -9,23 +10,40 @@ use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 
 use crate::LookupMoveService;
-use lambda_payloads::chessmove2::OpeningTable;
 use myopic_brain::anyhow as ah;
 use myopic_brain::{ChessBoard, FenPart, Move};
+
+const TABLE_ENV_KEY: &'static str = "OPENING_TABLE";
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+struct OpeningTable {
+    pub name: String,
+    pub region: String,
+    #[serde(rename = "positionKey")]
+    pub position_key: String,
+    #[serde(rename = "moveKey")]
+    pub move_key: String,
+    #[serde(rename = "maxDepth")]
+    pub max_depth: u8,
+}
 
 pub struct DynamoOpeningService {
     params: OpeningTable,
     client: DynamoDbClient,
 }
 
-impl TryFrom<OpeningTable> for DynamoOpeningService {
-    type Error = ah::Error;
-
-    fn try_from(value: OpeningTable) -> Result<Self, Self::Error> {
-        Ok(DynamoOpeningService {
-            client: DynamoDbClient::new(Region::from_str(value.region.as_str())?),
-            params: value,
-        })
+impl Default for DynamoOpeningService {
+    fn default() -> Self {
+        let table_var = std::env::var(TABLE_ENV_KEY)
+            .expect(format!("No value found for env var {}", TABLE_ENV_KEY).as_str());
+        let table = serde_json::from_str::<OpeningTable>(table_var.as_str())
+            .expect(format!("Could not parse table config {}", table_var).as_str());
+        let region = Region::from_str(table.region.as_str())
+            .expect(format!("Could not parse {} as region", table.region).as_str());
+        DynamoOpeningService {
+            params: table,
+            client: DynamoDbClient::new(region),
+        }
     }
 }
 
