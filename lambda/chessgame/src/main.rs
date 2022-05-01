@@ -55,7 +55,7 @@ async fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput,
                         match game.abort().await {
                             Err(error) => {
                                 log::error!("Failed to abort game: {}", error);
-                                return Err(Box::new(error))
+                                return Err(error.into())
                             }
                             Ok(status) => {
                                 if status.is_success() {
