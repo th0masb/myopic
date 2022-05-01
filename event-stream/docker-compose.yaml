@@ -1,6 +1,6 @@
 version: "3"
 services:
-  myopic-bot-event-stream:
+  myopic:
     image: "ghcr.io/th0masb/myopic/event-stream:latest"
     ports:
       - "8080:8080"
@@ -9,22 +9,42 @@ services:
       - ~/.myopic:/root/.aws:ro
     environment:
       # Pull auth token from the host environment
-      MYOPIC_LICHESS_AUTH_TOKEN:
+      LICHESS_AUTH_TOKEN: "${MYOPIC_LICHESS_AUTH_TOKEN}"
       # Configure the bot parameters
-      MYOPIC_CONFIG: >-
+      APP_CONFIG: >-
         {
           "gameFunction": {
-            "id": { "name": "MyopicGameHandler" },
-            "maxDepth": 10,
+            "id": { "name": "LichessGameHandler" },
             "abortAfterSecs": 30
           },
-          "openingTable": {
-            "id": { "name": "MyopicOpenings" }
-          },
           "moveFunction": {
-            "name": "MyopicMove"
+            "name": "Myopic-Move"
           },
           "lichessBot": {
             "botId": "myopic-bot"
+          }
+        }
+  hyperopic:
+    image: "ghcr.io/th0masb/myopic/event-stream:latest"
+    ports:
+      - "8081:8080"
+    volumes:
+      # Mount AWS credentials on host machine into the container
+      - ~/.myopic:/root/.aws:ro
+    environment:
+      # Pull auth token from the host environment
+      LICHESS_AUTH_TOKEN: "${HYPEROPIC_LICHESS_AUTH_TOKEN}"
+      # Configure the bot parameters
+      APP_CONFIG: >-
+        {
+          "gameFunction": {
+            "id": { "name": "LichessGameHandler" },
+            "abortAfterSecs": 30
+          },
+          "moveFunction": {
+            "name": "Hyperopic-Move"
+          },
+          "lichessBot": {
+            "botId": "Hyperopic"
           }
         }
