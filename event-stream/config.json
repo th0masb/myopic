@@ -1,0 +1,20 @@
+{
+  "gameFunction": {
+    "id": {
+      "name": "LichessGameLambda"
+    },
+    "abortAfterSecs": 30
+  },
+  "moveFunction": {
+    "name": "Hyperopic-Move"
+  },
+  "lichessBot": {
+    "botId": "Hyperopic",
+    "userMatchers": [
+      {
+        "include": true,
+        "pattern": "^th0masb$"
+      }
+    ]
+  }
+}
