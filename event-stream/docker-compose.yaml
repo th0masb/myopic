@@ -15,7 +15,7 @@ services:
       APP_CONFIG: >-
         {
           "gameFunction": {
-            "id": { "name": "LichessGameHandler" },
+            "id": { "name": "LichessGameLambda" },
             "abortAfterSecs": 30
           },
           "moveFunction": {
@@ -40,7 +40,7 @@ services:
       APP_CONFIG: >-
         {
           "gameFunction": {
-            "id": { "name": "LichessGameHandler" },
+            "id": { "name": "LichessGameLambda" },
             "abortAfterSecs": 30
           },
           "moveFunction": {
@@ -52,7 +52,7 @@ services:
           "userMatchers": [
             {
               "include": true,
-              "pattern": "^th0masb$"
+              "pattern": "^th0masb$$"
             }
           ]
         }
