@@ -27,8 +27,8 @@ export const CARGO_LAMBDAS: Map<LambdaType, CargoIdentifier> = new Map([
     [
         LambdaType.Move,
         {
-            cargoDir: "lambda/chessmove2",
-            cargoName: "chessmove2",
+            cargoDir: "lambda/chessmove",
+            cargoName: "chessmove",
         },
     ],
     [

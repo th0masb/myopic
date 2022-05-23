@@ -10,6 +10,7 @@ services:
     environment:
       # Pull auth token from the host environment
       LICHESS_AUTH_TOKEN: "${MYOPIC_LICHESS_AUTH_TOKEN}"
+      RUST_BACKTRACE: "1"
       # Configure the bot parameters
       APP_CONFIG: >-
         {
@@ -34,6 +35,7 @@ services:
     environment:
       # Pull auth token from the host environment
       LICHESS_AUTH_TOKEN: "${HYPEROPIC_LICHESS_AUTH_TOKEN}"
+      RUST_BACKTRACE: "1"
       # Configure the bot parameters
       APP_CONFIG: >-
         {
@@ -46,5 +48,11 @@ services:
           },
           "lichessBot": {
             "botId": "Hyperopic"
-          }
+          },
+          "userMatchers": [
+            {
+              "include": true,
+              "pattern": "^th0masb$"
+            }
+          ]
         }

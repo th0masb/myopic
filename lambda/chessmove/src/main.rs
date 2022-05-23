@@ -1,12 +1,28 @@
-use std::time::Duration;
+use std::fmt::Display;
+use std::time::{Duration, Instant};
 
+use async_trait::async_trait;
 use lambda_runtime::{handler_fn, Context, Error};
+use log;
 use simple_logger::SimpleLogger;
 
-use lambda_payloads::chessmove::*;
-use myopic_brain::anyhow;
-use myopic_brain::negascout::SearchContext;
-use myopic_brain::{Board, ChessBoard, EvalBoard, SearchParameters};
+use lambda_payloads::chessmove2::*;
+use myopic_brain::{anyhow, Board, ChessBoard, EvalBoard, Move, SearchParameters};
+
+use crate::endings::LichessEndgameService;
+use crate::openings::DynamoOpeningService;
+use crate::timing::TimeAllocator;
+
+mod endings;
+mod openings;
+mod timing;
+
+const TABLE_SIZE: usize = 10000;
+
+#[async_trait]
+pub trait LookupMoveService<B: ChessBoard + Send>: Display {
+    async fn lookup(&self, position: B) -> anyhow::Result<Option<Move>>;
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -14,77 +30,79 @@ async fn main() -> Result<(), Error> {
         .with_level(log::LevelFilter::Info)
         .without_timestamps()
         .init()?;
-    lambda_runtime::run(handler_fn(move_compute_handler)).await?;
+    lambda_runtime::run(handler_fn(move_handler)).await?;
     Ok(())
 }
 
-async fn move_compute_handler(
-    e: ComputeMoveEvent,
-    _ctx: Context,
-) -> Result<ComputeMoveOutput, Error> {
-    log::info!("Received input payload {}", serde_json::to_string(&e)?);
-    let terminator = extract_params(&e);
-    let position = extract_position(&e)?;
-    let output_payload =
-        myopic_brain::search(position, terminator).map(|outcome| ComputeMoveOutput {
-            best_move: outcome.best_move.uci_format(),
-            depth_searched: outcome.depth,
-            eval: outcome.eval,
-            search_duration_millis: outcome.time.as_millis() as u64,
-        })?;
-    log::info!(
-        "Computed output payload {}",
-        serde_json::to_string(&output_payload)?
-    );
-    Ok(output_payload)
-}
+async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOutput, Error> {
+    let start = Instant::now();
+    // Setup the current game position
+    let mut board = Board::default();
+    board.play_uci(event.moves_played.as_str())?;
 
-fn extract_position(e: &ComputeMoveEvent) -> Result<EvalBoard<Board>, anyhow::Error> {
-    match e {
-        ComputeMoveEvent::Fen { position, .. } => position.as_str().parse(),
-        ComputeMoveEvent::UciSequence {
-            sequence,
-            start_fen,
-            ..
-        } => {
-            let mut state = start_fen
-                .as_ref()
-                .map(|s| s.as_str())
-                .unwrap_or(myopic_brain::START_FEN)
-                .parse::<EvalBoard<Board>>()?;
-            state.play_uci(sequence.as_str())?;
-            log::info!("Constructed state from {:?} then {}", start_fen, sequence);
-            Ok(state)
+    let lookup_services = load_lookup_services()?;
+    match perform_lookups(board.clone(), lookup_services).await {
+        Some(mv) => Ok(ChooseMoveOutput {
+            best_move: mv.uci_format(),
+            search_details: None,
+        }),
+        None => {
+            let lookup_duration = start.elapsed();
+            let search_time = TimeAllocator::default().allocate(
+                board.position_count(),
+                Duration::from_millis(event.clock_millis.remaining) - lookup_duration,
+                Duration::from_millis(event.clock_millis.increment),
+            );
+            let search_outcome = myopic_brain::search(
+                EvalBoard::from(board),
+                SearchParameters {
+                    terminator: search_time,
+                    table_size: TABLE_SIZE,
+                },
+            )?;
+            Ok(ChooseMoveOutput {
+                best_move: search_outcome.best_move.uci_format(),
+                search_details: Some(SearchDetails {
+                    depth_searched: search_outcome.depth,
+                    search_duration_millis: search_outcome.time.as_millis() as u64,
+                    eval: search_outcome.eval,
+                }),
+            })
         }
     }
 }
 
-struct SearchTerminatorWrapper(pub SearchTerminator);
-
-impl myopic_brain::SearchTerminator for SearchTerminatorWrapper {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        let timeout = Duration::from_millis(self.0.timeout_millis.0);
-        (timeout, self.0.max_depth.0 as usize).should_terminate(ctx)
-    }
+fn load_lookup_services<B>() -> anyhow::Result<Vec<Box<dyn LookupMoveService<B>>>>
+where
+    B: 'static + ChessBoard + Clone + Send,
+{
+    Ok(vec![
+        Box::new(DynamoOpeningService::default()),
+        Box::new(LichessEndgameService::default()),
+    ])
 }
 
-fn extract_params(e: &ComputeMoveEvent) -> SearchParameters<SearchTerminatorWrapper> {
-    match e {
-        &ComputeMoveEvent::Fen {
-            terminator,
-            table_size,
-            ..
-        } => SearchParameters {
-            terminator: SearchTerminatorWrapper(terminator),
-            table_size: table_size.0 as usize,
-        },
-        &ComputeMoveEvent::UciSequence {
-            terminator,
-            table_size,
-            ..
-        } => SearchParameters {
-            terminator: SearchTerminatorWrapper(terminator),
-            table_size: table_size.0 as usize,
-        },
+/// Attempt to lookup precomputed moves from various sources
+async fn perform_lookups<B>(
+    position: B,
+    services: Vec<Box<dyn LookupMoveService<B>>>,
+) -> Option<Move>
+where
+    B: 'static + ChessBoard + Clone + Send,
+{
+    for service in services.iter() {
+        match service.lookup(position.clone()).await {
+            Ok(None) => {
+                log::info!("{} could not find a move for this position", service);
+            }
+            Err(e) => {
+                log::error!("Error during lookup for {}: {}", service, e);
+            }
+            Ok(Some(mv)) => {
+                log::info!("{} retrieved {}", service, mv);
+                return Some(mv);
+            }
+        }
     }
+    None
 }

@@ -17,18 +17,17 @@ function map_target {
   esac
 }
 
-start_dir="$(pwd)"
 build_context="/tmp/$(date +%s)"
 mkdir -p "$build_context"
 cp "$DOCKERFILE" "$build_context/Dockerfile"
-cd $APPLICATION_DIR
+cd "$APPLICATION_DIR"
 manifest_amendments=""
 image_name="ghcr.io/th0masb/myopic/$APPLICATION_DIR"
 
 for target in $TARGETS; do
   mapped_target=$(map_target "$target")
   echo "Building container for $mapped_target"
-  cross build --release --target=$target
+  cross build --release --target="$target"
   cp "target/$target/release/$APPLICATION_DIR" "$build_context/app"
   image_tag="$image_name:$VERSION-$mapped_target"
   push=""
@@ -44,8 +43,8 @@ for target in $TARGETS; do
 done
 
 if [ "$DRYRUN" != "1" ]; then
-  docker manifest create "$image_name:$VERSION" $manifest_amendments
-  docker manifest push "$image_name:$VERSION"
-  docker manifest create "$image_name:latest" $manifest_amendments
-  docker manifest push "$image_name:latest"
+  for version in "$VERSION" "latest"; do
+    docker manifest create "$image_name:$version" "$manifest_amendments"
+    docker manifest push "$image_name:$version"
+  done
 fi
