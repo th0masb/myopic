@@ -44,7 +44,8 @@ done
 
 if [ "$DRYRUN" != "1" ]; then
   for version in "$VERSION" "latest"; do
-    docker manifest create "$image_name:$version" "$manifest_amendments"
+    # shellcheck disable=SC2086
+    docker manifest create "$image_name:$version" $manifest_amendments
     docker manifest push "$image_name:$version"
   done
 fi
