@@ -23,13 +23,13 @@ using
 
 ```shell
 curl https://raw.githubusercontent.com/th0masb/myopic/master/event-stream/docker-compose.yaml \
-    -o event-stream-deploy.yaml
+    -o event-stream.yaml
 ```
 
 and then start the application with
 
 ```shell
-docker-compose -f event-stream-deploy.yaml up -d
+docker-compose -f event-stream.yaml up -d
 ```
 
 Note that `~/myopic/credentials` must be present on the
