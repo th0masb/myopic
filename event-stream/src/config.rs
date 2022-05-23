@@ -1,7 +1,7 @@
 use regex::Regex;
 use serde_derive::{Deserialize, Serialize};
-use std::path::Path;
-use anyhow::anyhow;
+
+
 
 use crate::payload::PlayGameEvent;
 
@@ -82,7 +82,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         let config = get_env_var(CONFIG_VAR);
         serde_json::from_str(config.as_str())
-            .or_else(|e| {
+            .or_else(|_e| {
                 std::fs::read_to_string(config.as_str())
                     .map_err(anyhow::Error::from)
                     .and_then(|s| {
