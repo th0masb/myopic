@@ -6,12 +6,24 @@ pub struct ChooseMoveEvent {
     pub moves_played: String,
     #[serde(rename = "clockMillis")]
     pub clock_millis: ChooseMoveEventClock,
+    #[serde(default = "default_features")]
+    pub features: Vec<ChooseMoveFeature>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct ChooseMoveEventClock {
     pub increment: u64,
     pub remaining: u64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+pub enum ChooseMoveFeature {
+    DisableOpeningsLookup,
+    DisableEndgameLookup,
+}
+
+fn default_features() -> Vec<ChooseMoveFeature> {
+    vec![]
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
