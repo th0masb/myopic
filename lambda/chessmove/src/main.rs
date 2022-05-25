@@ -40,7 +40,7 @@ async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOu
     let mut board = Board::default();
     board.play_uci(event.moves_played.as_str())?;
 
-    let lookup_services = load_lookup_services()?;
+    let lookup_services = load_lookup_services(&event.features);
     match perform_lookups(board.clone(), lookup_services).await {
         Some(mv) => Ok(ChooseMoveOutput {
             best_move: mv.uci_format(),
@@ -72,14 +72,20 @@ async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOu
     }
 }
 
-fn load_lookup_services<B>() -> anyhow::Result<Vec<Box<dyn LookupMoveService<B>>>>
+fn load_lookup_services<B>(
+    features: &Vec<ChooseMoveFeature>
+) -> Vec<Box<dyn LookupMoveService<B>>>
 where
     B: 'static + ChessBoard + Clone + Send,
 {
-    Ok(vec![
-        Box::new(DynamoOpeningService::default()),
-        Box::new(LichessEndgameService::default()),
-    ])
+    let mut services: Vec<Box<dyn LookupMoveService<B>>> = vec![];
+    if !features.contains(&ChooseMoveFeature::DisableOpeningsLookup) {
+        services.push(Box::new(DynamoOpeningService::default()));
+    }
+    if !features.contains(&ChooseMoveFeature::DisableEndgameLookup) {
+        services.push(Box::new(LichessEndgameService::default()));
+    }
+    services
 }
 
 /// Attempt to lookup precomputed moves from various sources

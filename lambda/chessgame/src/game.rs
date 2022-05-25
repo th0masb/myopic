@@ -173,7 +173,8 @@ impl Game {
                             increment,
                             // Take into account the network latency for calling the lambda
                             remaining: max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS)
-                        }
+                        },
+                        features: vec![]
                     }).await?;
                     self.lichess_service.post_move(computed_move).await?;
                     Ok(GameExecutionState::Running)
