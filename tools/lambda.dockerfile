@@ -8,7 +8,6 @@ RUN cargo build --release --manifest-path "$APP_DIR/Cargo.toml"
 FROM amazonlinux:2
 
 WORKDIR /app
-ARG APP_DIR
 ARG APP_NAME
 ARG APP_CONFIG
 ENV APP_CONFIG="$APP_CONFIG"
