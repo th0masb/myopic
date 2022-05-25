@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "engine/board",
+    "engine/brain",
+    "engine/core",
+    "event-stream",
+    "lambda/benchmark",
+    "lambda/chessgame",
+    "lambda/chessmove",
+    "lambda/payloads",
+    "openings/dynamodb-uploader",
+    "openings/pgn-extractor"
+]
+exclude = [
+    "uci-client"
+]

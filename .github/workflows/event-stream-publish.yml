@@ -10,7 +10,7 @@ jobs:
   publish-event-stream:
     runs-on: ubuntu-20.04
     env:
-      APPLICATION_DIR: "event-stream"
+      APP_NAME: "event-stream"
       TARGETS: "aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu"
       DOCKERFILE: "tools/event-stream.dockerfile"
     steps:
