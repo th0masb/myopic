@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -u -o pipefail
 
 function map_target {
   case $1 in
@@ -17,18 +17,21 @@ function map_target {
   esac
 }
 
+MANIFEST_PATH=${MANIFEST_PATH:-"$APP_NAME/Cargo.toml"}
+VERSION=${VERSION:-"$(git rev-parse HEAD)"}
+DRYRUN=${DRYRUN:-"0"}
+
 build_context="/tmp/$(date +%s)"
 mkdir -p "$build_context"
 cp "$DOCKERFILE" "$build_context/Dockerfile"
-cd "$APPLICATION_DIR"
 manifest_amendments=""
-image_name="ghcr.io/th0masb/myopic/$APPLICATION_DIR"
+image_name="ghcr.io/th0masb/myopic/$APP_NAME"
 
 for target in $TARGETS; do
   mapped_target=$(map_target "$target")
   echo "Building container for $mapped_target"
-  cross build --release --target="$target"
-  cp "target/$target/release/$APPLICATION_DIR" "$build_context/app"
+  cross build --release --target="$target" --manifest-path="$MANIFEST_PATH"
+  cp "target/$target/release/$APP_NAME" "$build_context/app"
   image_tag="$image_name:$VERSION-$mapped_target"
   push=""
   if [ "$DRYRUN" != "1" ]; then

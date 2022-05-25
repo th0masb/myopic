@@ -12,5 +12,5 @@ ARG APP_DIR
 ARG APP_NAME
 ARG APP_CONFIG
 ENV APP_CONFIG="$APP_CONFIG"
-COPY --from=builder "/build/$APP_DIR/target/release/$APP_NAME" "bootstrap"
+COPY --from=builder "/build/target/release/$APP_NAME" "bootstrap"
 ENTRYPOINT ["/app/bootstrap"]
