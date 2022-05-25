@@ -5,7 +5,7 @@ use std::cmp::max;
 
 use reqwest::StatusCode;
 use rusoto_core::Region;
-use lambda_payloads::chessmove2::{ChooseMoveEvent, ChooseMoveEventClock};
+use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveEventClock};
 
 use myopic_brain::anyhow::{anyhow, Result};
 use myopic_brain::{Board, ChessBoard, EvalBoard, Side};

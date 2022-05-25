@@ -6,7 +6,7 @@ use lambda_runtime::{handler_fn, Context, Error};
 use log;
 use simple_logger::SimpleLogger;
 
-use lambda_payloads::chessmove2::*;
+use lambda_payloads::chessmove::*;
 use myopic_brain::{anyhow, Board, ChessBoard, EvalBoard, Move, SearchParameters};
 
 use crate::endings::LichessEndgameService;
