@@ -15,6 +15,7 @@ use warp::Filter;
 use crate::forwarding::ChallengeRequest;
 use crate::lichess::LichessClient;
 use std::net::SocketAddr;
+use tokio::try_join;
 
 use crate::config::AppConfig;
 
@@ -33,6 +34,7 @@ mod userstatus;
 async fn main() {
     dotenv::dotenv().ok();
     SimpleLogger::new()
+        .with_utc_timestamps()
         .with_level(log::LevelFilter::Info)
         .init()
         .unwrap_or_else(|e| panic!("Unable to init logger: {}", e));
@@ -56,11 +58,15 @@ async fn main() {
             async move { forwarding::challenge(c.as_ref(), user, req).await }
         });
 
-    // Event loop polling for the bot managed by this service
-    tokio::task::spawn(async move { streamloop::stream(params).await });
-
-    // Start the http server and listen for requests
-    warp::serve(challenge_forwarding)
-        .run(server_addr.parse::<SocketAddr>().unwrap())
-        .await;
+    // Concurrently run both the event stream loop and the challenge web server terminating the
+    // entire program if either task panics.
+    try_join!(
+        tokio::task::spawn(async move { streamloop::stream(params).await }),
+        tokio::task::spawn(async move {
+            warp::serve(challenge_forwarding)
+                .run(server_addr.parse::<SocketAddr>().unwrap())
+                .await
+        })
+    )
+    .unwrap();
 }
