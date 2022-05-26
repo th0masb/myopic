@@ -30,24 +30,21 @@ impl TimeAllocator {
         remaining_time: Duration,
         increment: Duration,
     ) -> Duration {
-        let estimated = if increment.as_secs() > 0 && remaining_time < self.inc_switch_buffer() {
-            info!(
-                "Remaining time {}ms is not enough to allocate anything above the increment",
-                remaining_time.as_millis()
-            );
-            increment - self.latency
+        let remaining_including_latency = if remaining_time < self.latency {
+            Duration::from_millis(0)
         } else {
-            // Divide by two because we need to think for half of the remaining moves
-            let exp_remaining = (self.half_moves_remaining)(half_moves_played) / 2f64;
-            info!(
-                "We have played {} half moves and expect to play {} more",
-                half_moves_played / 2,
-                exp_remaining
-            );
-            let allocated = ((remaining_time.as_millis() as f64) / exp_remaining).round() as u64;
-            Duration::from_millis(allocated) + increment - self.latency
+            remaining_time - self.latency
         };
-
+        // Divide by two because we need to think for half of the remaining moves
+        let exp_remaining = (self.half_moves_remaining)(half_moves_played) / 2f64;
+        info!(
+            "Played {} half moves and expect {} more",
+            half_moves_played / 2,
+            exp_remaining
+        );
+        let estimated_no_inc =
+            ((remaining_including_latency.as_millis() as f64) / exp_remaining).round() as u64;
+        let estimated = Duration::from_millis(estimated_no_inc) + increment;
         if estimated > self.min_compute_time {
             info!("Spending {}ms thinking", estimated.as_millis());
             estimated
@@ -59,10 +56,6 @@ impl TimeAllocator {
             );
             self.min_compute_time
         }
-    }
-
-    fn inc_switch_buffer(&self) -> Duration {
-        5 * (self.min_compute_time + self.latency)
     }
 }
 
@@ -83,7 +76,20 @@ mod test {
     }
 
     #[test]
-    fn sub_1sec_inc_estimated_greater_than_min_returns_estimate_minus_latency() {
+    fn remaining_less_than_latency() {
+        let timing = TimeAllocator {
+            half_moves_remaining: dummy_half_moves_remaining,
+            min_compute_time: Duration::from_millis(1100),
+            latency: Duration::from_millis(200),
+        };
+        assert_eq!(
+            Duration::from_millis(1100),
+            timing.allocate(20, Duration::from_millis(100), Duration::from_millis(0))
+        )
+    }
+
+    #[test]
+    fn estimated_greater_than_min() {
         let timing = TimeAllocator {
             half_moves_remaining: dummy_half_moves_remaining,
             min_compute_time: Duration::from_millis(1100),
@@ -91,13 +97,13 @@ mod test {
         };
 
         assert_eq!(
-            Duration::from_millis(4799),
-            timing.allocate(20, Duration::from_secs(40), Duration::from_millis(999))
+            Duration::from_millis(4979),
+            timing.allocate(20, Duration::from_millis(40000), Duration::from_millis(999))
         );
     }
 
     #[test]
-    fn sub_1sec_inc_estimated_less_than_min_returns_min() {
+    fn estimated_less_than_min() {
         let timing = TimeAllocator {
             half_moves_remaining: dummy_half_moves_remaining,
             min_compute_time: Duration::from_millis(1100),
@@ -107,62 +113,6 @@ mod test {
         assert_eq!(
             Duration::from_millis(1100),
             timing.allocate(200, Duration::from_secs(10), Duration::from_millis(999))
-        );
-    }
-
-    #[test]
-    fn sub_1sec_inc_time_remaining_less_than_inc_buffer_returns_estimate_minus_latency() {
-        let timing = TimeAllocator {
-            half_moves_remaining: dummy_half_moves_remaining,
-            min_compute_time: Duration::from_millis(100),
-            latency: Duration::from_millis(200),
-        };
-
-        assert_eq!(
-            Duration::from_millis(809),
-            timing.allocate(200, Duration::from_secs(1), Duration::from_millis(999))
-        );
-    }
-
-    #[test]
-    fn eq_1sec_inc_estimated_greater_than_min_returns_estimate_minus_latency() {
-        let timing = TimeAllocator {
-            half_moves_remaining: dummy_half_moves_remaining,
-            min_compute_time: Duration::from_millis(1100),
-            latency: Duration::from_millis(200),
-        };
-
-        assert_eq!(
-            Duration::from_millis(4800),
-            timing.allocate(20, Duration::from_secs(40), Duration::from_millis(1000))
-        );
-    }
-
-    #[test]
-    fn eq_1sec_inc_estimated_less_than_min_returns_min() {
-        let timing = TimeAllocator {
-            half_moves_remaining: dummy_half_moves_remaining,
-            min_compute_time: Duration::from_millis(1100),
-            latency: Duration::from_millis(200),
-        };
-
-        assert_eq!(
-            Duration::from_millis(1100),
-            timing.allocate(200, Duration::from_secs(10), Duration::from_millis(1000))
-        );
-    }
-
-    #[test]
-    fn eq_1sec_inc_time_remaining_less_than_inc_buffer_returns_inc_minus_latency() {
-        let timing = TimeAllocator {
-            half_moves_remaining: dummy_half_moves_remaining,
-            min_compute_time: Duration::from_millis(100),
-            latency: Duration::from_millis(200),
-        };
-
-        assert_eq!(
-            Duration::from_millis(800),
-            timing.allocate(200, Duration::from_secs(1), Duration::from_millis(1000))
         );
     }
 }
