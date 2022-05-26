@@ -1,12 +1,12 @@
-use std::cell::RefCell;
 use myopic_core::*;
+use std::cell::RefCell;
 
 use crate::enumset::EnumSet;
-use crate::imp::Board;
 use crate::imp::cache::CalculationCache;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;
 use crate::imp::rights::Rights;
+use crate::imp::Board;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {

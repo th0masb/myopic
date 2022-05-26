@@ -5,10 +5,10 @@ use itertools::Itertools;
 
 use myopic_core::*;
 
-use crate::ChessBoard;
 use crate::imp::Board;
-use crate::MoveComputeType;
 use crate::mv::Move;
+use crate::ChessBoard;
+use crate::MoveComputeType;
 
 type MoveSet = BTreeSet<Move>;
 

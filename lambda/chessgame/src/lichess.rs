@@ -4,8 +4,6 @@ use reqwest::{Client, StatusCode};
 
 use myopic_brain::anyhow::{anyhow, Result};
 
-
-
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]

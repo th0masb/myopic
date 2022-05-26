@@ -1,10 +1,10 @@
 use myopic_core::*;
 
-use crate::ChessBoard;
-use crate::imp::Board;
 use crate::imp::cache::MoveConstraints;
-use crate::MoveComputeType;
+use crate::imp::Board;
 use crate::mv::Move;
+use crate::ChessBoard;
+use crate::MoveComputeType;
 
 #[cfg(test)]
 mod test;
@@ -138,9 +138,9 @@ impl Board {
     }
 
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
-        let enpassant_source = self.enpassant.map_or(BitBoard::EMPTY, |sq| {
-            enpassantsrc::squares(self.active, sq)
-        });
+        let enpassant_source = self
+            .enpassant
+            .map_or(BitBoard::EMPTY, |sq| enpassantsrc::squares(self.active, sq));
         let promotion_rank = self.active.pawn_promoting_from_rank();
         let pawn_locs = self.locs(&[Piece::pawn(self.active)]);
         (

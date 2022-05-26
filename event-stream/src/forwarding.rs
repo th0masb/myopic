@@ -33,11 +33,14 @@ impl Default for ColourOption {
 pub async fn challenge(
     client: &LichessClient,
     user: String,
-    params: ChallengeRequest
+    params: ChallengeRequest,
 ) -> Result<impl warp::Reply, Infallible> {
-    log::info!("Challenging {} with game params {}", user, serde_json::to_string(&params).unwrap());
-    let forward_response =
-        client.post_challenge(user.as_str(), &params).await;
+    log::info!(
+        "Challenging {} with game params {}",
+        user,
+        serde_json::to_string(&params).unwrap()
+    );
+    let forward_response = client.post_challenge(user.as_str(), &params).await;
     let response = match forward_response {
         Ok((code, body)) => {
             log::info!("Received Lichess response code:{}, body:{}", code, body);
@@ -47,7 +50,7 @@ pub async fn challenge(
             log::error!("Error trying to contact Lichess: {}", e);
             warp::reply::with_status(
                 format!("{{\"error\"}}:\"{}\"", e),
-                StatusCode::INTERNAL_SERVER_ERROR
+                StatusCode::INTERNAL_SERVER_ERROR,
             )
         }
     };

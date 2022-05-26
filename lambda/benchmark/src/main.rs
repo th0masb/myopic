@@ -1,8 +1,8 @@
 use std::time::Instant;
 
 use itertools::Itertools;
-use simple_logger::SimpleLogger;
 use lambda_runtime::{handler_fn, Context, Error};
+use simple_logger::SimpleLogger;
 
 use lambda_payloads::benchmark::*;
 use myopic_brain::SearchParameters;
@@ -28,12 +28,19 @@ async fn handler(e: BenchStartEvent, ctx: Context) -> Result<BenchOutput, Error>
     let mut moves = vec![];
     for (i, root) in roots.into_iter().enumerate() {
         if i % LOG_GAP == 0 {
-            log::info!("[Position {}, Elapsed {}ms]", i, start.elapsed().as_millis());
+            log::info!(
+                "[Position {}, Elapsed {}ms]",
+                i,
+                start.elapsed().as_millis()
+            );
         }
-        moves.push(myopic_brain::search(root, SearchParameters {
-            terminator: e.depth,
-            table_size: e.table_size,
-        })?);
+        moves.push(myopic_brain::search(
+            root,
+            SearchParameters {
+                terminator: e.depth,
+                table_size: e.table_size,
+            },
+        )?);
     }
 
     let execution_times = moves

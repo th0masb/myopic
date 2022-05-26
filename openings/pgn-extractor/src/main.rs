@@ -4,7 +4,7 @@ mod game_stream;
 
 use errors::Errors;
 use game_stream::GameStream;
-use myopic_board::{FenPart, Move, ChessBoard};
+use myopic_board::{ChessBoard, FenPart, Move};
 use std::{collections::HashMap, error::Error, fs, fs::File, path::PathBuf};
 use structopt::StructOpt;
 
@@ -155,7 +155,8 @@ fn parse_entries(
     game: &str,
 ) -> Result<Vec<CollectionEntry>, anyhow::Error> {
     let mut board = myopic_board::start();
-    let moves: Vec<Move> = board.play_pgn(game)?
+    let moves: Vec<Move> = board
+        .play_pgn(game)?
         .into_iter()
         .take(offset + depth)
         .collect();

@@ -16,13 +16,17 @@ impl ChallengeService {
             validity_checks: vec![
                 Box::new(parameters.time_constraints.clone()),
                 Box::new(VariantCheck),
-                Box::new(parameters.lichess_bot.user_matchers.clone())
-            ]
+                Box::new(parameters.lichess_bot.user_matchers.clone()),
+            ],
         }
     }
 
     pub async fn process_challenge(&self, challenge: Challenge) -> Result<String> {
-        if self.validity_checks.iter().all(|check| check.accepts(&challenge)) {
+        if self
+            .validity_checks
+            .iter()
+            .all(|check| check.accepts(&challenge))
+        {
             log::info!("Challenge is valid, posting accept response");
             self.client
                 .post_challenge_response(&challenge, "accept")

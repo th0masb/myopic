@@ -1,7 +1,10 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use myopic_core::{anyhow::{Error, Result}, Reflectable, Side};
+use myopic_core::{
+    anyhow::{Error, Result},
+    Reflectable, Side,
+};
 
 use crate::{CastleZone, Piece, Square};
 
@@ -127,8 +130,8 @@ fn slice(s: &str, skip: usize, take: usize) -> String {
 }
 
 pub fn parse_op<F>(s: &str) -> Result<Option<F>>
-    where
-        F: FromStr<Err=Error>,
+where
+    F: FromStr<Err = Error>,
 {
     match s {
         "-" => Ok(None),
@@ -138,8 +141,8 @@ pub fn parse_op<F>(s: &str) -> Result<Option<F>>
 
 #[cfg(test)]
 mod test {
-    use crate::{CastleZone, Piece, Square};
     use crate::mv::Move;
+    use crate::{CastleZone, Piece, Square};
 
     use super::*;
 

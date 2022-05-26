@@ -2,10 +2,10 @@ use anyhow::{anyhow, Result};
 
 use myopic_core::*;
 
-use crate::{ChessBoard, Move};
-use crate::imp::Board;
 use crate::imp::history::Discards;
+use crate::imp::Board;
 use crate::mv::Move::*;
+use crate::{ChessBoard, Move};
 
 #[cfg(test)]
 mod test;
@@ -64,7 +64,13 @@ impl Board {
         Ok(())
     }
 
-    fn make_standard(&mut self, moving: Piece, source: Square, target: Square, captured: Option<Piece>) {
+    fn make_standard(
+        &mut self,
+        moving: Piece,
+        source: Square,
+        target: Square,
+        captured: Option<Piece>,
+    ) {
         self.pieces.toggle_piece(moving, &[source, target]);
         match captured {
             None => {}
@@ -92,7 +98,13 @@ impl Board {
         self.clock = 0;
     }
 
-    fn make_promotion(&mut self, from: Square, dest: Square, promoted: Piece, captured: Option<Piece>) {
+    fn make_promotion(
+        &mut self,
+        from: Square,
+        dest: Square,
+        promoted: Piece,
+        captured: Option<Piece>,
+    ) {
         let moved = Piece::pawn(promoted.side());
         self.pieces.toggle_piece(moved, &[from]);
         self.pieces.toggle_piece(promoted, &[dest]);
@@ -143,7 +155,13 @@ impl Board {
         Ok(mv)
     }
 
-    fn unmake_standard(&mut self, piece: Piece, source: Square, target: Square, captured: Option<Piece>) {
+    fn unmake_standard(
+        &mut self,
+        piece: Piece,
+        source: Square,
+        target: Square,
+        captured: Option<Piece>,
+    ) {
         self.pieces.toggle_piece(piece, &[target, source]);
         match captured {
             None => {}
@@ -159,7 +177,13 @@ impl Board {
         self.toggle_enpassant_pieces(side, from, dest, capture);
     }
 
-    fn unmake_promotion(&mut self, from: Square, dest: Square, promoted: Piece, captured: Option<Piece>) {
+    fn unmake_promotion(
+        &mut self,
+        from: Square,
+        dest: Square,
+        promoted: Piece,
+        captured: Option<Piece>,
+    ) {
         let moved_pawn = Piece::pawn(promoted.side());
         self.pieces.toggle_piece(moved_pawn, &[from]);
         self.pieces.toggle_piece(promoted, &[dest]);

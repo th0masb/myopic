@@ -1,8 +1,6 @@
 use regex::Regex;
 use serde_derive::{Deserialize, Serialize};
 
-
-
 use crate::payload::PlayGameEvent;
 
 const LICHESS_AUTH_TOKEN_VAR: &'static str = "LICHESS_AUTH_TOKEN";
@@ -77,7 +75,6 @@ pub struct StringMatcher {
     pub pattern: Regex,
 }
 
-
 impl Default for AppConfig {
     fn default() -> Self {
         let config = get_env_var(CONFIG_VAR);
@@ -86,10 +83,10 @@ impl Default for AppConfig {
                 std::fs::read_to_string(config.as_str())
                     .map_err(anyhow::Error::from)
                     .and_then(|s| {
-                        serde_json::from_str::<AppConfig>(s.as_str())
-                            .map_err(anyhow::Error::from)
+                        serde_json::from_str::<AppConfig>(s.as_str()).map_err(anyhow::Error::from)
                     })
-            }).expect(format!("Could not parse config from {}", config).as_str())
+            })
+            .expect(format!("Could not parse config from {}", config).as_str())
     }
 }
 
@@ -127,9 +124,10 @@ fn default_region() -> String {
 }
 
 fn default_user_matchers() -> Vec<StringMatcher> {
-    vec![
-        StringMatcher{ include: true, pattern: Regex::new(r".*").unwrap() }
-    ]
+    vec![StringMatcher {
+        include: true,
+        pattern: Regex::new(r".*").unwrap(),
+    }]
 }
 
 fn get_env_var(key: &str) -> String {
@@ -144,5 +142,6 @@ pub fn extract_game_lambda_payload(config: &AppConfig, game_id: &str) -> String 
         lichess_auth_token: config.lichess_bot.auth_token.clone(),
         lichess_bot_id: config.lichess_bot.bot_id.clone(),
         abort_after_secs: config.game_function.abort_after_secs,
-    }).unwrap()
+    })
+    .unwrap()
 }

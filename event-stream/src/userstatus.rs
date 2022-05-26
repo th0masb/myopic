@@ -1,8 +1,8 @@
 use std::time::Instant;
 
+use crate::config::AppConfig;
 use anyhow::{anyhow, Error, Result};
 use tokio::time::Duration;
-use crate::config::AppConfig;
 
 const STATUS_ENDPOINT: &'static str = "https://lichess.org/api/users/status";
 

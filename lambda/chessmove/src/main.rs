@@ -72,9 +72,7 @@ async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOu
     }
 }
 
-fn load_lookup_services<B>(
-    features: &Vec<ChooseMoveFeature>
-) -> Vec<Box<dyn LookupMoveService<B>>>
+fn load_lookup_services<B>(features: &Vec<ChooseMoveFeature>) -> Vec<Box<dyn LookupMoveService<B>>>
 where
     B: 'static + ChessBoard + Clone + Send,
 {

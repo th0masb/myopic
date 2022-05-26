@@ -1,8 +1,8 @@
 use myopic_core::*;
 
-use crate::ChessBoard;
-use crate::imp::Board;
 use crate::imp::cache::rays::RaySet;
+use crate::imp::Board;
+use crate::ChessBoard;
 
 use super::{BLACK_SLIDERS, WHITE_SLIDERS};
 
@@ -34,7 +34,8 @@ impl Board {
             .map(|cord| {
                 let pinned_loc = ((cord & active) - king_loc).first().unwrap();
                 (pinned_loc, cord)
-            }).collect()
+            })
+            .collect()
     }
 
     fn compute_potential_pinners(&self, king_loc: Square) -> BitBoard {
@@ -69,7 +70,9 @@ mod test {
             (Square::E4, D4 | E4 | F4 | G4),
             (Square::C5, B6 | C5 | D4),
             (Square::D5, D4 | D5 | D6 | D7 | D8),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         execute_test(fen, expected_pinned);
     }

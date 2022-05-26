@@ -2,28 +2,28 @@ use std::cell::RefCell;
 use std::cmp::max;
 use std::str::FromStr;
 
-use myopic_core::*;
 use myopic_core::anyhow::{anyhow, Error, Result};
+use myopic_core::*;
 
-use crate::ChessBoard;
 use crate::enumset::EnumSet;
-use crate::FenPart;
 use crate::imp::cache::CalculationCache;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;
 use crate::imp::rights::Rights;
-use crate::MoveComputeType;
-use crate::mv::{Move, parse_op};
+use crate::mv::{parse_op, Move};
 use crate::parse::patterns;
+use crate::ChessBoard;
+use crate::FenPart;
+use crate::MoveComputeType;
 use crate::TerminalState;
 
 mod cache;
-mod rights;
 mod evolve;
 mod fen;
 mod history;
 mod moves;
 mod positions;
+mod rights;
 #[cfg(test)]
 mod test;
 
@@ -79,10 +79,10 @@ fn hash(pos: &Positions, rights: Rights, active: Side, ep: Option<Square>) -> u6
 
 #[cfg(test)]
 mod fen_test {
-    use crate::{CastleZone, constants::*, Side, Square};
-    use crate::Board;
     use crate::enumset::EnumSet;
     use crate::imp::test::TestBoard;
+    use crate::Board;
+    use crate::{constants::*, CastleZone, Side, Square};
 
     use super::*;
 

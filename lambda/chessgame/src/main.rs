@@ -3,7 +3,6 @@ use std::io::{BufRead, BufReader};
 use std::str::FromStr;
 use std::time::{Duration, Instant};
 
-
 use lambda_runtime::{handler_fn, Context, Error};
 use reqwest::blocking::Response;
 use rusoto_core::Region;
@@ -12,7 +11,6 @@ use simple_logger::SimpleLogger;
 
 use game::Game;
 use lambda_payloads::chessgame::*;
-
 
 use crate::compute::MoveLambdaClient;
 use crate::game::{GameConfig, GameExecutionState};
@@ -47,7 +45,7 @@ async fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput,
         match read_result {
             Err(error) => {
                 log::error!("Problem reading from game stream {}", error);
-                return Err(Box::new(error))
+                return Err(Box::new(error));
             }
             Ok(event) => {
                 if event.trim().is_empty() {
@@ -55,7 +53,7 @@ async fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput,
                         match game.abort().await {
                             Err(error) => {
                                 log::error!("Failed to abort game: {}", error);
-                                return Err(error.into())
+                                return Err(error.into());
                             }
                             Ok(status) => {
                                 if status.is_success() {
@@ -77,7 +75,9 @@ async fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput,
             }
         }
     }
-    Ok(PlayGameOutput { message: format!("Game {} completed", e.lichess_game_id) })
+    Ok(PlayGameOutput {
+        message: format!("Game {} completed", e.lichess_game_id),
+    })
 }
 
 fn init_game(e: &PlayGameEvent) -> Result<Game, Error> {
@@ -87,7 +87,8 @@ fn init_game(e: &PlayGameEvent) -> Result<Game, Error> {
         lichess_auth_token: e.lichess_auth_token.clone(),
         move_region: Region::from_str(e.move_function_region.as_str())?,
         move_function_name: e.move_function_name.clone(),
-    }.into())
+    }
+    .into())
 }
 
 fn open_game_stream(game_id: &String, auth_token: &String) -> Result<BufReader<Response>, Error> {
