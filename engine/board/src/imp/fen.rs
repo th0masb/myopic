@@ -231,10 +231,7 @@ mod test {
 
     #[test]
     fn position_1_castling_rights() {
-        assert_eq!(
-            "Qq",
-            to_fen_impl(&position_1(), &[FenPart::CastlingRights])
-        )
+        assert_eq!("Qq", to_fen_impl(&position_1(), &[FenPart::CastlingRights]))
     }
 
     #[test]
@@ -244,10 +241,7 @@ mod test {
 
     #[test]
     fn position_1_half_move_count() {
-        assert_eq!(
-            "0",
-            to_fen_impl(&position_1(), &[FenPart::HalfMoveCount])
-        )
+        assert_eq!("0", to_fen_impl(&position_1(), &[FenPart::HalfMoveCount]))
     }
 
     #[test]
@@ -298,10 +292,7 @@ mod test {
 
     #[test]
     fn position_2_castling_rights() {
-        assert_eq!(
-            "-",
-            to_fen_impl(&position_2(), &[FenPart::CastlingRights])
-        )
+        assert_eq!("-", to_fen_impl(&position_2(), &[FenPart::CastlingRights]))
     }
 
     #[test]
@@ -311,10 +302,7 @@ mod test {
 
     #[test]
     fn position_2_half_move_count() {
-        assert_eq!(
-            "3",
-            to_fen_impl(&position_2(), &[FenPart::HalfMoveCount])
-        )
+        assert_eq!("3", to_fen_impl(&position_2(), &[FenPart::HalfMoveCount]))
     }
 
     #[test]

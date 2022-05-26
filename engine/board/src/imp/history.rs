@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
-use myopic_core::{Reflectable, Square};
 use myopic_core::anyhow::{anyhow, Result};
+use myopic_core::{Reflectable, Square};
 
 use crate::imp::rights::Rights;
 use crate::Move;

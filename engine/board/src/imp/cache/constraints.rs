@@ -2,10 +2,10 @@ use std::fmt::Debug;
 
 use myopic_core::*;
 
-use crate::ChessBoard;
 use crate::enum_map::EnumMap;
-use crate::imp::Board;
 use crate::imp::cache::rays::RaySet;
+use crate::imp::Board;
+use crate::ChessBoard;
 use crate::MoveComputeType;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -27,7 +27,9 @@ impl MoveConstraints {
     }
 
     pub fn all(bitboard: BitBoard) -> MoveConstraints {
-        MoveConstraints { data: EnumMap::from_array([bitboard; 64]) }
+        MoveConstraints {
+            data: EnumMap::from_array([bitboard; 64]),
+        }
     }
 
     fn intersect(&mut self, location: Square, constraint: BitBoard) {

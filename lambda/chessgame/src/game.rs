@@ -1,18 +1,15 @@
 use std::cmp::max;
 
-
-
-
+use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveEventClock};
 use reqwest::StatusCode;
 use rusoto_core::Region;
-use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveEventClock};
 
 use myopic_brain::anyhow::{anyhow, Result};
 use myopic_brain::{Board, ChessBoard, EvalBoard, Side};
 
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::lichess::{LichessChatRoom, LichessService};
-use crate::{MoveLambdaClient, messages};
+use crate::{messages, MoveLambdaClient};
 
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
@@ -61,7 +58,6 @@ impl From<GameConfig> for Game {
 }
 
 impl Game {
-
     pub fn halfmove_count(&self) -> usize {
         self.halfmove_count
     }
@@ -119,7 +115,7 @@ impl Game {
 
     async fn process_game(&mut self, game: GameFull) -> Result<GameExecutionState> {
         if game.initial_fen.as_str() != "startpos" {
-            return Err(anyhow!("Custom start positions not currently supported"))
+            return Err(anyhow!("Custom start positions not currently supported"));
         }
         // Track info required for playing future gamestates
         self.inferred_metadata = Some(InferredGameMetadata {
@@ -167,15 +163,18 @@ impl Game {
                         Side::White => (state.wtime, state.winc),
                         Side::Black => (state.btime, state.binc),
                     };
-                    let computed_move = self.move_client.compute_move(ChooseMoveEvent {
-                        moves_played: state.moves.clone(),
-                        clock_millis: ChooseMoveEventClock {
-                            increment,
-                            // Take into account the network latency for calling the lambda
-                            remaining: max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS)
-                        },
-                        features: vec![]
-                    }).await?;
+                    let computed_move = self
+                        .move_client
+                        .compute_move(ChooseMoveEvent {
+                            moves_played: state.moves.clone(),
+                            clock_millis: ChooseMoveEventClock {
+                                increment,
+                                // Take into account the network latency for calling the lambda
+                                remaining: max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS),
+                            },
+                            features: vec![],
+                        })
+                        .await?;
                     self.lichess_service.post_move(computed_move).await?;
                     Ok(GameExecutionState::Running)
                 }

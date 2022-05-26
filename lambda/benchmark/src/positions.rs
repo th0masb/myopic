@@ -1,4 +1,4 @@
-use myopic_brain::{Board, EvalBoard, anyhow};
+use myopic_brain::{anyhow, Board, EvalBoard};
 
 pub fn get(n: usize) -> anyhow::Result<Vec<EvalBoard<Board>>> {
     let mut roots = vec![];

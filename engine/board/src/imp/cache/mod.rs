@@ -1,10 +1,10 @@
 pub use constraints::MoveConstraints;
-use myopic_core::BitBoard;
 use myopic_core::enum_map::EnumMap;
+use myopic_core::BitBoard;
 
-use crate::{Board, MoveComputeType};
 use crate::imp::cache::rays::RaySet;
 use crate::TerminalState;
+use crate::{Board, MoveComputeType};
 
 mod constraints;
 mod control;

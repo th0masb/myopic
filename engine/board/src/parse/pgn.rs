@@ -1,9 +1,12 @@
 use regex::Regex;
 
-use myopic_core::{anyhow::{anyhow, Result}, CastleZone, Piece, Square};
+use myopic_core::{
+    anyhow::{anyhow, Result},
+    CastleZone, Piece, Square,
+};
 
-use crate::{ChessBoard, Move, MoveComputeType};
 use crate::parse::patterns::*;
+use crate::{ChessBoard, Move, MoveComputeType};
 
 /// Extracts the moves encoded in standard pgn format starting at
 /// a custom board position.

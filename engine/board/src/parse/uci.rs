@@ -1,10 +1,10 @@
 use std::fmt::{Display, Formatter};
 
-use myopic_core::{Piece, Square};
 use myopic_core::anyhow::{anyhow, Result};
+use myopic_core::{Piece, Square};
 
-use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
 use crate::parse::patterns::uci_move;
+use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
 
 /// String wrapper representing a chess move formatted
 /// using the uci standard. We can use this to reflect
@@ -131,8 +131,8 @@ pub fn single_move<B: ChessBoard>(start: &B, uci_move: &str) -> Result<Move> {
                 from == f
                     && dest == d
                     && promoting
-                    .map(|c| piece_char(promoted) == c)
-                    .unwrap_or(false)
+                        .map(|c| piece_char(promoted) == c)
+                        .unwrap_or(false)
             }
         })
         .ok_or(anyhow!("No moves matching {}", uci_move))

@@ -1,7 +1,7 @@
 pub use mv::Move;
-pub use myopic_core::*;
 use myopic_core::anyhow::Result;
 use myopic_core::enum_map::Enum;
+pub use myopic_core::*;
 pub use parse::uci::UciMove;
 
 use crate::enumset::EnumSet;
@@ -175,7 +175,7 @@ mod uci_conversion_test {
                 dest: Square::E4,
                 capture: None,
             }
-                .uci_format()
+            .uci_format()
         );
     }
 
@@ -190,7 +190,7 @@ mod uci_conversion_test {
                 dest: Square::H7,
                 capture: Some(Piece::WQ),
             }
-                .uci_format()
+            .uci_format()
         );
     }
 
@@ -202,7 +202,7 @@ mod uci_conversion_test {
                 source: 1u64,
                 zone: CastleZone::WK,
             }
-                .uci_format()
+            .uci_format()
         );
         assert_eq!(
             "e1c1",
@@ -210,7 +210,7 @@ mod uci_conversion_test {
                 source: 1u64,
                 zone: CastleZone::WQ,
             }
-                .uci_format()
+            .uci_format()
         );
         assert_eq!(
             "e8g8",
@@ -218,7 +218,7 @@ mod uci_conversion_test {
                 source: 8u64,
                 zone: CastleZone::BK,
             }
-                .uci_format()
+            .uci_format()
         );
         assert_eq!(
             "e8c8",
@@ -226,7 +226,7 @@ mod uci_conversion_test {
                 source: 8u64,
                 zone: CastleZone::BQ,
             }
-                .uci_format()
+            .uci_format()
         );
     }
 
@@ -241,7 +241,7 @@ mod uci_conversion_test {
                 promoted: Piece::WQ,
                 capture: Some(Piece::BB),
             }
-                .uci_format()
+            .uci_format()
         )
     }
 
@@ -256,7 +256,7 @@ mod uci_conversion_test {
                 dest: Square::D6,
                 capture: Square::D5,
             }
-                .uci_format()
+            .uci_format()
         )
     }
 }

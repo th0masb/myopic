@@ -1,8 +1,8 @@
 use anyhow::{Error, Result};
 use reqwest::StatusCode;
 
+use crate::events::Challenge;
 use crate::ChallengeRequest;
-use crate::events::{Challenge};
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
@@ -33,9 +33,10 @@ impl LichessClient {
     pub async fn post_challenge(
         &self,
         username: &str,
-        challenge_params: &ChallengeRequest
+        challenge_params: &ChallengeRequest,
     ) -> Result<(StatusCode, String)> {
-        let response = self.client
+        let response = self
+            .client
             .post(format!("{}/{}", CHALLENGE_ENDPOINT, username))
             .bearer_auth(&self.auth_token)
             .form(challenge_params)

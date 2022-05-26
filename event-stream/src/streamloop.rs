@@ -26,7 +26,8 @@ pub async fn stream(params: AppConfig) {
 
         log::info!("Opening event stream");
         let start = Instant::now();
-        let max_stream_duration = Duration::from_secs((params.event_loop.max_stream_life_mins * 60) as u64);
+        let max_stream_duration =
+            Duration::from_secs((params.event_loop.max_stream_life_mins * 60) as u64);
 
         match open_event_stream(&params.lichess_bot.auth_token).await {
             Err(e) => log::warn!("Cannot connect to event stream {}", e),
@@ -55,7 +56,10 @@ pub async fn stream(params: AppConfig) {
             }
         }
 
-        log::info!("Sleeping for {} seconds", params.event_loop.retry_wait_duration_secs);
+        log::info!(
+            "Sleeping for {} seconds",
+            params.event_loop.retry_wait_duration_secs
+        );
         let sleep_duration = Duration::from_secs(params.event_loop.retry_wait_duration_secs as u64);
         tokio::time::sleep(sleep_duration).await;
     }

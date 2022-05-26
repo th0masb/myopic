@@ -1,8 +1,7 @@
 /// TODO Duplicated from "payloads" crate which cannot be added
 /// TODO as a dependency due to issue with cross compilation
 /// TODO when depending on local crate.
-
-use serde_derive::{Serialize, Deserialize};
+use serde_derive::{Deserialize, Serialize};
 
 /// The input payload of this lambda
 #[derive(Serialize, Deserialize, Clone)]

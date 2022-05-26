@@ -1,12 +1,12 @@
 use anyhow::Result;
 
-use myopic_core::*;
 use myopic_core::constants::*;
+use myopic_core::*;
 
-use crate::{ChessBoard, Move};
 use crate::enumset::EnumSet;
-use crate::imp::Board;
 use crate::imp::test::TestBoard;
+use crate::imp::Board;
+use crate::{ChessBoard, Move};
 
 #[derive(Debug, Clone)]
 struct TestCase {

@@ -1,7 +1,7 @@
 use myopic_core::*;
 
-use crate::{Board, ChessBoard};
 use crate::imp::cache::rays::RaySet;
+use crate::{Board, ChessBoard};
 
 impl Board {
     pub fn compute_discoveries(&self) -> RaySet {
@@ -16,7 +16,8 @@ impl Board {
             .map(|(xrayer, cord)| {
                 let discov_loc = ((cord & active) - xrayer).first().unwrap();
                 (discov_loc, cord)
-            }).collect()
+            })
+            .collect()
     }
 
     fn compute_xrayers(&self, king_loc: Square) -> BitBoard {
@@ -53,7 +54,9 @@ mod test {
         let expected_pinned = vec![
             (Square::E4, C2 | D3 | E4 | F5 | G6 | H7),
             (Square::H2, H1 | H2 | H3 | H4 | H5 | H6 | H7),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         execute_test(fen, expected_pinned);
     }

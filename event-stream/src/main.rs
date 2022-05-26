@@ -19,15 +19,15 @@ use std::net::SocketAddr;
 use crate::config::AppConfig;
 
 mod challenge;
+mod config;
 mod eventprocessor;
 mod events;
+mod forwarding;
 mod gamestart;
 mod lichess;
+mod payload;
 mod streamloop;
 mod userstatus;
-mod forwarding;
-mod config;
-mod payload;
 
 #[tokio::main]
 async fn main() {
@@ -53,9 +53,7 @@ async fn main() {
         .and(warp::body::json())
         .and_then(move |user: String, req: ChallengeRequest| {
             let c = client.clone();
-            async move {
-                forwarding::challenge(c.as_ref(), user, req).await
-            }
+            async move { forwarding::challenge(c.as_ref(), user, req).await }
         });
 
     // Event loop polling for the bot managed by this service
