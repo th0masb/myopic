@@ -1,8 +1,9 @@
 [workspace]
 members = [
-    "engine/board",
-    "engine/brain",
-    "engine/core",
+    "lib/engine/board",
+    "lib/engine/brain",
+    "lib/engine/core",
+    "lib/game",
     "event-stream",
     "lambda/benchmark",
     "lambda/chessgame",

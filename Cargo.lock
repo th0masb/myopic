@@ -185,6 +185,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chessgame"
+version = "0.0.0"
+dependencies = [
+ "async-trait",
+ "bytes 1.1.0",
+ "itertools 0.8.2",
+ "log",
+ "myopic-brain",
+ "rand 0.5.6",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "simple_logger",
+ "tokio 1.18.2",
+]
+
+[[package]]
 name = "chessmove"
 version = "0.0.0"
 dependencies = [
