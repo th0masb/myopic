@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import "source-map-support/register";
-import * as cdk from "@aws-cdk/core";
+import { App, Duration } from 'aws-cdk-lib';
 import { OpeningDatabase } from "../lib/opening-db";
 import {Bot, OpeningTableConfig} from "../lib/bot";
 import * as process from "process";
@@ -8,7 +8,7 @@ import {GameLambda} from "../lib/game-lambda";
 
 require("dotenv").config();
 
-const app = new cdk.App();
+const app = new App();
 const envConfig = {
   region: process.env.MYOPIC_AWS_REGION!,
   account: process.env.MYOPIC_AWS_ACCOUNT!,
@@ -36,7 +36,7 @@ const bots = ["Myopic", "Hyperopic"]
       openingTable: tableConfig,
       lambdaParams: {
         memory: 1792,
-        timeout: cdk.Duration.minutes(10),
+        timeout: Duration.minutes(10),
       },
     }))
 
@@ -44,7 +44,7 @@ new GameLambda(app, "LichessGameLambda", {
   env: envConfig,
   lambdaParams: {
     memory: 128,
-    timeout: cdk.Duration.minutes(15)
+    timeout: Duration.minutes(15)
   },
   botFunctions: bots.map((bot) => bot.moveLambdaName)
 })

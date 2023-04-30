@@ -1,16 +1,17 @@
-import * as cdk from '@aws-cdk/core';
 import {CARGO_LAMBDAS, LambdaParameters, LambdaType} from "./common";
-import * as lambda from "@aws-cdk/aws-lambda";
-import * as iam from "@aws-cdk/aws-iam";
 import * as path from "path";
+import { Stack, StackProps } from "aws-cdk-lib";
+import { aws_lambda as lambda } from "aws-cdk-lib";
+import { aws_iam as iam } from "aws-cdk-lib";
+import { Construct } from "constructs";
 
-export interface GameLambdaConfig extends cdk.StackProps {
+export interface GameLambdaConfig extends StackProps {
     readonly lambdaParams: LambdaParameters,
     readonly botFunctions: string[]
 }
 
-export class GameLambda extends cdk.Stack {
-    constructor(scope: cdk.Construct, id: string, props: GameLambdaConfig) {
+export class GameLambda extends Stack {
+    constructor(scope: Construct, id: string, props: GameLambdaConfig) {
         super(scope, id, props);
         const cargoConfig = CARGO_LAMBDAS.get(LambdaType.LichessGame)!
         const fn = new lambda.DockerImageFunction(this, id, {

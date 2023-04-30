@@ -1,8 +1,8 @@
-import * as cdk from "@aws-cdk/core";
+import { Duration } from "aws-cdk-lib";
 
 export interface LambdaParameters {
     readonly memory: number;
-    readonly timeout: cdk.Duration;
+    readonly timeout: Duration;
 }
 
 export enum LambdaType {

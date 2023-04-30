@@ -1,16 +1,17 @@
-import * as cdk from '@aws-cdk/core';
-import * as db from '@aws-cdk/aws-dynamodb';
+import { aws_dynamodb as db } from "aws-cdk-lib";
+import { Stack, StackProps, RemovalPolicy } from "aws-cdk-lib";
+import { Construct } from "constructs";
 
-export interface OpeningDatabaseProps extends cdk.StackProps {
+export interface OpeningDatabaseProps extends StackProps {
   readonly openingsTableName: string,
   readonly positionAttributeName: string
   readonly readCapacity: number
   readonly writeCapacity: number
 }
 
-export class OpeningDatabase extends cdk.Stack {
+export class OpeningDatabase extends Stack {
 
-  constructor(scope: cdk.Construct, id: string, props: OpeningDatabaseProps) {
+  constructor(scope: Construct, id: string, props: OpeningDatabaseProps) {
     super(scope, id, props);
 
     new db.Table(this, `${id}-Openings`, {
@@ -18,7 +19,7 @@ export class OpeningDatabase extends cdk.Stack {
       billingMode: db.BillingMode.PROVISIONED,
       readCapacity: props.readCapacity,
       writeCapacity: props.writeCapacity,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.DESTROY,
       partitionKey: {
         name: props.positionAttributeName,
         type: db.AttributeType.STRING,

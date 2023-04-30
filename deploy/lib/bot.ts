@@ -1,8 +1,9 @@
-import * as cdk from "@aws-cdk/core";
 import * as path from "path";
-import * as lambda from "@aws-cdk/aws-lambda";
 import {CARGO_LAMBDAS, LambdaParameters, LambdaType} from "./common";
-import * as iam from "@aws-cdk/aws-iam";
+import { Stack, StackProps } from "aws-cdk-lib";
+import { aws_lambda as lambda } from "aws-cdk-lib";
+import { aws_iam as iam } from "aws-cdk-lib";
+import { Construct } from "constructs";
 
 export interface OpeningTableConfig {
   readonly name: string,
@@ -12,16 +13,16 @@ export interface OpeningTableConfig {
   readonly maxDepth: number,
 }
 
-export interface BotConfig extends cdk.StackProps {
+export interface BotConfig extends StackProps {
   readonly lambdaParams: LambdaParameters,
   readonly openingTable: OpeningTableConfig,
 }
 
-export class Bot extends cdk.Stack {
+export class Bot extends Stack {
   readonly moveLambdaName: string;
   private readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: BotConfig) {
+  constructor(scope: Construct, id: string, props: BotConfig) {
     super(scope, id, props);
     this.id = id;
     this.moveLambdaName = this.functionName(LambdaType.Move)
