@@ -11,6 +11,8 @@ export interface GameLambdaConfig extends StackProps {
 }
 
 export class GameLambda extends Stack {
+    readonly functionArn: string
+
     constructor(scope: Construct, id: string, props: GameLambdaConfig) {
         super(scope, id, props);
         const cargoConfig = CARGO_LAMBDAS.get(LambdaType.LichessGame)!
@@ -37,5 +39,6 @@ export class GameLambda extends Stack {
         const fnPrefix = `arn:aws:lambda:${region}:${account}:function`;
         ps.addResources(...props.botFunctions.map((bot) => `${fnPrefix}:${bot}`))
         fn.addToRolePolicy(ps);
+        this.functionArn = fn.functionArn
     }
 }
