@@ -5,6 +5,7 @@ import { OpeningDatabase } from "../lib/opening-db";
 import {Bot, OpeningTableConfig} from "../lib/bot";
 import * as process from "process";
 import {GameLambda} from "../lib/game-lambda";
+import {Cluster} from "../lib/cluster";
 
 require("dotenv").config();
 
@@ -30,21 +31,25 @@ new OpeningDatabase(app, "MyopicDatabaseStack", {
   env: envConfig,
 });
 
-const bots = ["Myopic", "Hyperopic"]
-    .map((name) => new Bot(app, name, {
-      env: envConfig,
-      openingTable: tableConfig,
-      lambdaParams: {
+const bots = ["Myopic", "Hyperopic"].map((name) => new Bot(app, name, {
+    env: envConfig,
+    openingTable: tableConfig,
+    lambdaParams: {
         memory: 1792,
         timeout: Duration.minutes(10),
-      },
-    }))
+    },
+}))
 
-new GameLambda(app, "LichessGameLambda", {
+const gameFunction = new GameLambda(app, "LichessGameLambda", {
   env: envConfig,
   lambdaParams: {
     memory: 128,
     timeout: Duration.minutes(15)
   },
   botFunctions: bots.map((bot) => bot.moveLambdaName)
+})
+
+new Cluster(app, "Cluster", {
+    env: envConfig,
+    gameFunctionArn: gameFunction.functionArn
 })
