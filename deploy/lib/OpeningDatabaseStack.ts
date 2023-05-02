@@ -2,7 +2,7 @@ import {aws_dynamodb as db, RemovalPolicy, Stack} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {AccountAndRegion, AccountAndRegionValues, OpeningTableConfig} from "../config";
 
-export class OpeningDatabase extends Stack {
+export class OpeningDatabaseStack extends Stack {
   constructor(
       scope: Construct,
       id: string,

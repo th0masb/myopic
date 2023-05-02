@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 import "source-map-support/register";
 import {App} from 'aws-cdk-lib';
-import {OpeningDatabase} from "../lib/opening-db";
-import {Bot} from "../lib/bot";
-import {GameLambda} from "../lib/game-lambda";
-import {Cluster} from "../lib/cluster";
+import {OpeningDatabaseStack} from "../lib/OpeningDatabaseStack";
+import {BotStack} from "../lib/BotStack";
+import {GameLambdaStack} from "../lib/GameLambdaStack";
+import {ClusterStack} from "../lib/ClusterStack";
 import {
     AccountAndRegionValues,
-    BotLambdaConfigValues, EventStreamConfigValues,
+    BotLambdaConfigValues,
+    EventStreamConfigValues,
     GameLambdaConfigValues,
     OpeningTableConfigValues
 } from "../config";
+import {EventStreamStack} from "../lib/EventStreamStack";
 
 const app = new App();
 
-new OpeningDatabase(
+new OpeningDatabaseStack(
     app,
     "MyopicDatabaseStack",
     AccountAndRegionValues,
@@ -22,7 +24,7 @@ new OpeningDatabase(
 );
 
 const bots = ["Myopic", "Hyperopic"].map((name) =>
-    new Bot(
+    new BotStack(
         app,
         name,
         AccountAndRegionValues,
@@ -31,7 +33,7 @@ const bots = ["Myopic", "Hyperopic"].map((name) =>
     )
 )
 
-const gameFunction = new GameLambda(
+const gameFunction = new GameLambdaStack(
     app,
     "LichessGameLambda",
     AccountAndRegionValues,
@@ -39,10 +41,19 @@ const gameFunction = new GameLambda(
     bots.map((bot) => bot.moveLambdaName)
 )
 
-new Cluster(
+const cluster = new ClusterStack(
     app,
     "Cluster",
     AccountAndRegionValues,
-    gameFunction.functionArn,
-    EventStreamConfigValues,
+)
+
+EventStreamConfigValues.forEach((config) =>
+    new EventStreamStack(
+        app,
+        `${config.name}EventStream`,
+        AccountAndRegionValues,
+        cluster.cluster,
+        gameFunction.functionArn,
+        config,
+    )
 )

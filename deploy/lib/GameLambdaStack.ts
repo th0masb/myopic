@@ -4,7 +4,8 @@ import {aws_iam as iam, aws_lambda as lambda, Stack} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {AccountAndRegion, LambdaConfig} from "../config";
 
-export class GameLambda extends Stack {
+export class GameLambdaStack extends Stack {
+
     readonly functionArn: string
 
     constructor(
