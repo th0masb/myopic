@@ -3,14 +3,15 @@ import {Construct} from "constructs";
 import {InstanceClass, InstanceSize, InstanceType} from "aws-cdk-lib/aws-ec2";
 import {DockerImageAsset} from "aws-cdk-lib/aws-ecr-assets";
 import * as path from "path";
-import {AccountAndRegion} from "../config";
+import {AccountAndRegion, EventStreamConfig} from "../config";
 
 export class Cluster extends Stack {
     constructor(
         scope: Construct,
         id: string,
         accountAndRegion: AccountAndRegion,
-        gameLambdaArn: string
+        gameLambdaArn: string,
+        eventStreamConfig: EventStreamConfig[]
     ) {
         super(scope, id, {env: accountAndRegion});
         const cluster = new ecs.Cluster(this, "ClusterNodes", {
@@ -31,12 +32,12 @@ export class Cluster extends Stack {
         })
         taskDefinition.addToTaskRolePolicy(this.createLambdaInvokePolicy(gameLambdaArn))
         const eventStreamImage = this.eventStreamImage()
-        for (const bot of EVENT_STREAM_CONFIG) {
+        for (const bot of eventStreamConfig) {
             taskDefinition.addContainer(bot.name, {
                 image: eventStreamImage,
                 memoryLimitMiB: 210,
                 environment: {
-                    LICHESS_AUTH_TOKEN: process.env[bot.authVar]!,
+                    LICHESS_AUTH_TOKEN: process.env[bot.authTokenVar]!,
                     APP_CONFIG: JSON.stringify(bot.config)
                 },
                 logging: ecs.LogDrivers.awsLogs({
@@ -75,50 +76,3 @@ export class Cluster extends Stack {
         )
     }
 }
-
-const EVENT_STREAM_CONFIG = [
-    {
-        name: "Hyperopic",
-        authVar: "HYPEROPIC_TOKEN",
-        config: {
-            "gameFunction": {
-                "id": {"name": "LichessGameLambda"},
-                "abortAfterSecs": 30
-            },
-            "moveFunction": {
-                "name": "Hyperopic-Move"
-            },
-            "lichessBot": {
-                "botId": "Hyperopic",
-                "userMatchers": [
-                    {
-                        "include": true,
-                        "pattern": "^th0masb$"
-                    }
-                ]
-            }
-        }
-    },
-    {
-        name: "Myopic",
-        authVar: "MYOPIC_TOKEN",
-        config: {
-            "gameFunction": {
-                "id": {"name": "LichessGameLambda"},
-                "abortAfterSecs": 30
-            },
-            "moveFunction": {
-                "name": "Myopic-Move"
-            },
-            "lichessBot": {
-                "botId": "myopic-bot",
-                "userMatchers": [
-                    {
-                        "include": true,
-                        "pattern": "^th0masb$"
-                    }
-                ]
-            }
-        }
-    }
-]

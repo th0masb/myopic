@@ -2,8 +2,8 @@ import { Duration } from "aws-cdk-lib";
 import * as process from "process";
 
 export type LambdaConfig = {
-    readonly timeout: Duration
-    readonly memoryMB: number
+    timeout: Duration
+    memoryMB: number
 }
 
 export const GameLambdaConfigValues: LambdaConfig = {
@@ -17,12 +17,12 @@ export const BotLambdaConfigValues: LambdaConfig = {
 }
 
 export type OpeningTableConfig = {
-    readonly tableName: string
-    readonly positionAttributeName: string
-    readonly readCapacity: number
-    readonly writeCapacity: number
-    readonly movesAttributeName: string
-    readonly maxDepth: number
+    tableName: string
+    positionAttributeName: string
+    readCapacity: number
+    writeCapacity: number
+    movesAttributeName: string
+    maxDepth: number
 }
 
 export const OpeningTableConfigValues: OpeningTableConfig = {
@@ -35,12 +35,78 @@ export const OpeningTableConfigValues: OpeningTableConfig = {
 }
 
 export type AccountAndRegion = {
-    readonly account: string
-    readonly region: string
+    account: string
+    region: string
 }
 
 export const AccountAndRegionValues: AccountAndRegion = {
     region: process.env.MYOPIC_AWS_REGION!,
     account: process.env.MYOPIC_AWS_ACCOUNT!,
 }
+
+export type EventStreamConfig = {
+    name: string
+    authTokenVar: string
+    config: {
+        gameFunction: {
+            id: { name: string }
+            abortAfterSecs: number
+        }
+        moveFunction: { name: string }
+        lichessBot: {
+            botId: string
+            userMatchers: {
+                include: boolean
+                pattern: string
+            }[]
+        }
+    }
+}
+
+export const EventStreamConfigValues: EventStreamConfig[] = [
+    {
+        name: "Hyperopic",
+        authTokenVar: "HYPEROPIC_TOKEN",
+        config: {
+            "gameFunction": {
+                "id": {"name": "LichessGameLambda"},
+                "abortAfterSecs": 30
+            },
+            "moveFunction": {
+                "name": "Hyperopic-Move"
+            },
+            "lichessBot": {
+                "botId": "Hyperopic",
+                "userMatchers": [
+                    {
+                        "include": true,
+                        "pattern": "^th0masb$"
+                    }
+                ]
+            }
+        }
+    },
+    {
+        name: "Myopic",
+        authTokenVar: "MYOPIC_TOKEN",
+        config: {
+            "gameFunction": {
+                "id": {"name": "LichessGameLambda"},
+                "abortAfterSecs": 30
+            },
+            "moveFunction": {
+                "name": "Myopic-Move"
+            },
+            "lichessBot": {
+                "botId": "myopic-bot",
+                "userMatchers": [
+                    {
+                        "include": true,
+                        "pattern": "^th0masb$"
+                    }
+                ]
+            }
+        }
+    }
+]
 

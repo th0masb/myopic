@@ -7,7 +7,7 @@ import {GameLambda} from "../lib/game-lambda";
 import {Cluster} from "../lib/cluster";
 import {
     AccountAndRegionValues,
-    BotLambdaConfigValues,
+    BotLambdaConfigValues, EventStreamConfigValues,
     GameLambdaConfigValues,
     OpeningTableConfigValues
 } from "../config";
@@ -43,5 +43,6 @@ new Cluster(
     app,
     "Cluster",
     AccountAndRegionValues,
-    gameFunction.functionArn
+    gameFunction.functionArn,
+    EventStreamConfigValues,
 )
