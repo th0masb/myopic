@@ -1,10 +1,3 @@
-import { Duration } from "aws-cdk-lib";
-
-export interface LambdaParameters {
-    readonly memory: number;
-    readonly timeout: Duration;
-}
-
 export enum LambdaType {
     Benchmark,
     Move,

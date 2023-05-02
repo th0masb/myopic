@@ -1,17 +1,18 @@
-import {aws_iam as iam, Stack, StackProps} from "aws-cdk-lib";
+import {aws_ec2 as ec2, aws_ecs as ecs, aws_iam as iam, Stack} from "aws-cdk-lib";
 import {Construct} from "constructs";
 import {InstanceClass, InstanceSize, InstanceType} from "aws-cdk-lib/aws-ec2";
-import {aws_ecs as ecs, aws_ec2 as ec2} from "aws-cdk-lib";
-import { DockerImageAsset } from "aws-cdk-lib/aws-ecr-assets";
+import {DockerImageAsset} from "aws-cdk-lib/aws-ecr-assets";
 import * as path from "path";
-
-export interface ClusterProps extends StackProps {
-    readonly gameFunctionArn: string
-}
+import {AccountAndRegion} from "../config";
 
 export class Cluster extends Stack {
-    constructor(scope: Construct, id: string, props: ClusterProps) {
-        super(scope, id, props);
+    constructor(
+        scope: Construct,
+        id: string,
+        accountAndRegion: AccountAndRegion,
+        gameLambdaArn: string
+    ) {
+        super(scope, id, {env: accountAndRegion});
         const cluster = new ecs.Cluster(this, "ClusterNodes", {
             clusterName: "Myopic",
             vpc: new ec2.Vpc(this, "Vpc", {
@@ -28,7 +29,7 @@ export class Cluster extends Stack {
         const taskDefinition = new ecs.TaskDefinition(this, "EventStreamTaskDefinition", {
             compatibility: ecs.Compatibility.EC2,
         })
-        taskDefinition.addToTaskRolePolicy(this.createLambdaInvokePolicy(props))
+        taskDefinition.addToTaskRolePolicy(this.createLambdaInvokePolicy(gameLambdaArn))
         const eventStreamImage = this.eventStreamImage()
         for (const bot of EVENT_STREAM_CONFIG) {
             taskDefinition.addContainer(bot.name, {
@@ -54,11 +55,10 @@ export class Cluster extends Stack {
         })
     }
 
-    private createLambdaInvokePolicy(props: ClusterProps) {
+    private createLambdaInvokePolicy(functionArn: string) {
         const ps = new iam.PolicyStatement();
         ps.addActions("lambda:InvokeFunction");
-        //ps.addResources(props.gameFunctionArn)
-        ps.addResources("arn:aws:lambda:eu-west-2:918538493915:function:LichessGameLambda")
+        ps.addResources(functionArn)
         return ps
     }
 
