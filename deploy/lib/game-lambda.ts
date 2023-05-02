@@ -1,26 +1,26 @@
-import {CARGO_LAMBDAS, LambdaParameters, LambdaType} from "./common";
+import {CARGO_LAMBDAS, LambdaType} from "./cargo";
 import * as path from "path";
-import { Stack, StackProps } from "aws-cdk-lib";
-import { aws_lambda as lambda } from "aws-cdk-lib";
-import { aws_iam as iam } from "aws-cdk-lib";
-import { Construct } from "constructs";
-
-export interface GameLambdaConfig extends StackProps {
-    readonly lambdaParams: LambdaParameters,
-    readonly botFunctions: string[]
-}
+import {aws_iam as iam, aws_lambda as lambda, Stack} from "aws-cdk-lib";
+import {Construct} from "constructs";
+import {AccountAndRegion, LambdaConfig} from "../config";
 
 export class GameLambda extends Stack {
     readonly functionArn: string
 
-    constructor(scope: Construct, id: string, props: GameLambdaConfig) {
-        super(scope, id, props);
+    constructor(
+        scope: Construct,
+        id: string,
+        accountAndRegion: AccountAndRegion,
+        lambdaConfig: LambdaConfig,
+        botFunctionNames: string[]
+    ) {
+        super(scope, id, {env: accountAndRegion});
         const cargoConfig = CARGO_LAMBDAS.get(LambdaType.LichessGame)!
         const fn = new lambda.DockerImageFunction(this, id, {
             functionName: id,
             retryAttempts: 0,
-            memorySize: props.lambdaParams.memory,
-            timeout: props.lambdaParams.timeout,
+            memorySize: lambdaConfig.memoryMB,
+            timeout: lambdaConfig.timeout,
             code: lambda.DockerImageCode.fromImageAsset(
                 path.join(__dirname, "..", ".."),
                 {
@@ -35,9 +35,9 @@ export class GameLambda extends Stack {
         });
         const ps = new iam.PolicyStatement();
         ps.addActions("lambda:InvokeFunction");
-        const [region, account] = [props.env!.region, props.env!.account];
+        const {region, account} = accountAndRegion;
         const fnPrefix = `arn:aws:lambda:${region}:${account}:function`;
-        ps.addResources(...props.botFunctions.map((bot) => `${fnPrefix}:${bot}`))
+        ps.addResources(...botFunctionNames.map((bot) => `${fnPrefix}:${bot}`))
         fn.addToRolePolicy(ps);
         this.functionArn = fn.functionArn
     }

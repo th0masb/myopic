@@ -1,29 +1,23 @@
 import * as path from "path";
-import {CARGO_LAMBDAS, LambdaParameters, LambdaType} from "./common";
-import { Stack, StackProps } from "aws-cdk-lib";
+import {CARGO_LAMBDAS, LambdaType} from "./cargo";
+import { Stack } from "aws-cdk-lib";
 import { aws_lambda as lambda } from "aws-cdk-lib";
 import { aws_iam as iam } from "aws-cdk-lib";
 import { Construct } from "constructs";
-
-export interface OpeningTableConfig {
-  readonly name: string,
-  readonly region: string,
-  readonly positionKey: string,
-  readonly moveKey: string,
-  readonly maxDepth: number,
-}
-
-export interface BotConfig extends StackProps {
-  readonly lambdaParams: LambdaParameters,
-  readonly openingTable: OpeningTableConfig,
-}
+import {AccountAndRegion, LambdaConfig, OpeningTableConfig} from "../config";
 
 export class Bot extends Stack {
   readonly moveLambdaName: string;
   private readonly id: string;
 
-  constructor(scope: Construct, id: string, props: BotConfig) {
-    super(scope, id, props);
+  constructor(
+      scope: Construct,
+      id: string,
+      accountAndRegion: AccountAndRegion,
+      lambdaConfig: LambdaConfig,
+      openingTableConfig: OpeningTableConfig,
+  ) {
+    super(scope, id, {env: accountAndRegion});
     this.id = id;
     this.moveLambdaName = this.functionName(LambdaType.Move)
     for (const type of [LambdaType.Move, LambdaType.Benchmark]) {
@@ -32,8 +26,8 @@ export class Bot extends Stack {
       const fn = new lambda.DockerImageFunction(this, name, {
         functionName: name,
         retryAttempts: 0,
-        memorySize: props.lambdaParams.memory,
-        timeout: props.lambdaParams.timeout,
+        memorySize: lambdaConfig.memoryMB,
+        timeout: lambdaConfig.timeout,
         code: lambda.DockerImageCode.fromImageAsset(
           path.join(__dirname, "..", ".."),
           {
@@ -41,15 +35,21 @@ export class Bot extends Stack {
             buildArgs: {
               APP_DIR: cargoConfig.cargoDir,
               APP_NAME: cargoConfig.cargoName,
-              APP_CONFIG: JSON.stringify(props.openingTable)
+              APP_CONFIG: JSON.stringify({
+                name: openingTableConfig.tableName,
+                region: accountAndRegion.region,
+                positionKey: openingTableConfig.positionAttributeName,
+                moveKey: openingTableConfig.movesAttributeName,
+                maxDepth: openingTableConfig.maxDepth,
+              })
             },
           }
         ),
       });
       const ps = new iam.PolicyStatement();
       ps.addActions("dynamodb:GetItem");
-      const [region, account] = [props.env!.region, props.env!.account];
-      ps.addResources(`arn:aws:dynamodb:${region}:${account}:table/${props.openingTable.name}`);
+      const {region, account} = accountAndRegion;
+      ps.addResources(`arn:aws:dynamodb:${region}:${account}:table/${openingTableConfig.tableName}`);
       fn.addToRolePolicy(ps);
     }
   }
