@@ -6,7 +6,7 @@ import { aws_iam as iam } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import {AccountAndRegion, LambdaConfig, OpeningTableConfig} from "../config";
 
-export class Bot extends Stack {
+export class BotStack extends Stack {
   readonly moveLambdaName: string;
   private readonly id: string;
 
