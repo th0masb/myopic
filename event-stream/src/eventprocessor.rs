@@ -43,7 +43,7 @@ impl EventProcessor {
         }
     }
 
-    async fn handle_event(&self, event: LichessEvent) {
+    async fn handle_event(&mut self, event: LichessEvent) {
         match event {
             LichessEvent::Challenge { challenge } => {
                 match self.challenge_service.process_challenge(challenge).await {
