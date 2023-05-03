@@ -1,5 +1,5 @@
 import * as path from "path";
-import {CARGO_LAMBDAS, LambdaType} from "./cargo";
+import {CargoBinNames, LambdaType} from "./cargo";
 import { Stack } from "aws-cdk-lib";
 import { aws_lambda as lambda } from "aws-cdk-lib";
 import { aws_iam as iam } from "aws-cdk-lib";
@@ -21,7 +21,7 @@ export class BotStack extends Stack {
     this.id = id;
     this.moveLambdaName = this.functionName(LambdaType.Move)
     for (const type of [LambdaType.Move, LambdaType.Benchmark]) {
-      const cargoConfig = CARGO_LAMBDAS.get(type)!
+      const cargoBinName = CargoBinNames.get(type)!
       const name = this.functionName(type);
       const fn = new lambda.DockerImageFunction(this, name, {
         functionName: name,
@@ -31,10 +31,9 @@ export class BotStack extends Stack {
         code: lambda.DockerImageCode.fromImageAsset(
           path.join(__dirname, "..", ".."),
           {
-            file: path.join("tools", "lambda.dockerfile"),
+            file: path.join("tools", "workspace.dockerfile"),
             buildArgs: {
-              APP_DIR: cargoConfig.cargoDir,
-              APP_NAME: cargoConfig.cargoName,
+              APP_NAME: cargoBinName,
               APP_CONFIG: JSON.stringify({
                 name: openingTableConfig.tableName,
                 region: accountAndRegion.region,

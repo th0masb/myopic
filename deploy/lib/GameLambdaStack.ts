@@ -1,4 +1,4 @@
-import {CARGO_LAMBDAS, LambdaType} from "./cargo";
+import {CargoBinNames, LambdaType} from "./cargo";
 import * as path from "path";
 import {aws_iam as iam, aws_lambda as lambda, Stack} from "aws-cdk-lib";
 import {Construct} from "constructs";
@@ -16,7 +16,7 @@ export class GameLambdaStack extends Stack {
         botFunctionNames: string[]
     ) {
         super(scope, id, {env: accountAndRegion});
-        const cargoConfig = CARGO_LAMBDAS.get(LambdaType.LichessGame)!
+        const cargoBinName = CargoBinNames.get(LambdaType.LichessGame)!
         const fn = new lambda.DockerImageFunction(this, id, {
             functionName: id,
             retryAttempts: 0,
@@ -25,10 +25,9 @@ export class GameLambdaStack extends Stack {
             code: lambda.DockerImageCode.fromImageAsset(
                 path.join(__dirname, "..", ".."),
                 {
-                    file: path.join("tools", "lambda.dockerfile"),
+                    file: path.join("tools", "workspace.dockerfile"),
                     buildArgs: {
-                        APP_DIR: cargoConfig.cargoDir,
-                        APP_NAME: cargoConfig.cargoName,
+                        APP_NAME: cargoBinName,
                         APP_CONFIG: ""
                     },
                 }
