@@ -7,17 +7,16 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio;
 
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 use simple_logger::SimpleLogger;
+use tokio::try_join;
 use warp::Filter;
 
+use crate::config::AppConfig;
 use crate::forwarding::ChallengeRequest;
 use crate::lichess::LichessClient;
-use std::net::SocketAddr;
-use tokio::try_join;
-
-use crate::config::AppConfig;
 
 mod challenge;
 mod config;
