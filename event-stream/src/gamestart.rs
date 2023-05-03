@@ -5,8 +5,8 @@ use anyhow::{anyhow, Error, Result};
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
 use std::collections::HashMap;
-use std::time::{Instant, Duration};
 use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
 use crate::events::GameStart;
 use crate::lichess::LichessClient;
@@ -33,26 +33,26 @@ impl GameStartService {
         if self.should_trigger_game_lambda(id) {
             match self.invoker.trigger_lambda(id).await {
                 Err(e) => Err(anyhow!(
-                "Unable to trigger lambda: {}, abort status: {:?}",
-                e,
-                self.client.abort_game(id).await
-            )),
-                Ok(status) => match status {
-                    None => Err(anyhow!(
-                    "No status for lambda invocation for {}, abort status: {:?}",
-                    id,
+                    "Unable to trigger lambda: {}, abort status: {:?}",
+                    e,
                     self.client.abort_game(id).await
                 )),
+                Ok(status) => match status {
+                    None => Err(anyhow!(
+                        "No status for lambda invocation for {}, abort status: {:?}",
+                        id,
+                        self.client.abort_game(id).await
+                    )),
                     Some(n) => {
                         if n == 202 {
                             Ok(format!("Lambda successfully queued for game {}", id))
                         } else {
                             Err(anyhow!(
-                            "{} status for lambda invocation for {}, abort status: {:?}",
-                            n,
-                            id,
-                            self.client.abort_game(id).await
-                        ))
+                                "{} status for lambda invocation for {}, abort status: {:?}",
+                                n,
+                                id,
+                                self.client.abort_game(id).await
+                            ))
                         }
                     }
                 },
@@ -65,7 +65,7 @@ impl GameStartService {
     fn should_trigger_game_lambda(&mut self, id: &str) -> bool {
         let mut cache = self.game_id_cache.lock().unwrap();
         let now = Instant::now();
-        cache.retain(|_, v| { now.duration_since(*v) > self.cache_expiry });
+        cache.retain(|_, v| now.duration_since(*v) < self.cache_expiry);
         cache.insert(id.to_owned(), now) == None
     }
 }

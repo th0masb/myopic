@@ -17,7 +17,7 @@ impl StatusService {
     pub fn new(parameters: &AppConfig) -> StatusService {
         StatusService {
             client: StatusClient::default(),
-            status_poll_gap: Duration::from_secs(parameters.event_loop.status_poll_gap_secs as u64),
+            status_poll_gap: parameters.event_loop.status_pool_gap(),
             status_checkpoint: Instant::now(),
             user_id: parameters.lichess_bot.bot_id.to_string(),
         }
