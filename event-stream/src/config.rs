@@ -1,5 +1,6 @@
 use regex::Regex;
 use serde_derive::{Deserialize, Serialize};
+use std::time::Duration;
 
 use crate::payload::PlayGameEvent;
 
@@ -97,6 +98,20 @@ impl Default for EventLoopConfig {
             status_poll_gap_secs: 60,
             max_stream_life_mins: 300,
         }
+    }
+}
+
+impl EventLoopConfig {
+    pub fn max_stream_life(&self) -> Duration {
+        Duration::from_secs((self.max_stream_life_mins * 60) as u64)
+    }
+
+    pub fn stream_retry_wait(&self) -> Duration {
+        Duration::from_secs(self.retry_wait_duration_secs as u64)
+    }
+
+    pub fn status_pool_gap(&self) -> Duration {
+        Duration::from_secs(self.status_poll_gap_secs as u64)
     }
 }
 

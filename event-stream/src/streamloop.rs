@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use anyhow::{Error, Result};
 use futures_util::StreamExt;
@@ -17,17 +17,15 @@ pub enum LoopAction {
 }
 
 pub async fn stream(params: AppConfig) {
+    let mut event_processor = EventProcessor {
+        challenge_service: ChallengeService::new(&params),
+        gamestart_service: GameStartService::new(&params),
+        status_service: StatusService::new(&params),
+    };
     loop {
-        let mut event_processor = EventProcessor {
-            challenge_service: ChallengeService::new(&params),
-            gamestart_service: GameStartService::new(&params),
-            status_service: StatusService::new(&params),
-        };
-
         log::info!("Opening event stream");
         let start = Instant::now();
-        let max_stream_duration =
-            Duration::from_secs((params.event_loop.max_stream_life_mins * 60) as u64);
+        let max_stream_duration = params.event_loop.max_stream_life();
 
         match open_event_stream(&params.lichess_bot.auth_token).await {
             Err(e) => log::warn!("Cannot connect to event stream {}", e),
@@ -56,12 +54,9 @@ pub async fn stream(params: AppConfig) {
             }
         }
 
-        log::info!(
-            "Sleeping for {} seconds",
-            params.event_loop.retry_wait_duration_secs
-        );
-        let sleep_duration = Duration::from_secs(params.event_loop.retry_wait_duration_secs as u64);
-        tokio::time::sleep(sleep_duration).await;
+        let wait = params.event_loop.stream_retry_wait();
+        log::info!("Sleeping for {} seconds", wait.as_secs());
+        tokio::time::sleep(wait).await;
     }
 }
 
