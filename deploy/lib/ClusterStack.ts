@@ -67,7 +67,7 @@ export class ClusterStack extends Stack {
         return ecs.ContainerImage.fromDockerImageAsset(
             new DockerImageAsset(this, "EventStreamImage", {
                 directory: path.join(__dirname, "..", ".."),
-                file: path.join("tools", "lambda.dockerfile"),
+                file: path.join("tools", "workspace.dockerfile"),
                 buildArgs: {
                     APP_DIR: "event-stream",
                     APP_NAME: "event-stream",
