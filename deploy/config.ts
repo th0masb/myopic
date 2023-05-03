@@ -60,6 +60,11 @@ export type EventStreamConfig = {
                 pattern: string
             }[]
         }
+        eventLoop?: {
+            retryWaitDurationSecs: number
+            statusPollGapSecs: number
+            maxStreamLifeMins: number
+        }
     }
 }
 
@@ -68,41 +73,46 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
         name: "Hyperopic",
         authTokenVar: "HYPEROPIC_TOKEN",
         config: {
-            "gameFunction": {
-                "id": {"name": "LichessGameLambda"},
-                "abortAfterSecs": 30
+            gameFunction: {
+                id: { name: "LichessGameLambda" },
+                abortAfterSecs: 30
             },
-            "moveFunction": {
-                "name": "Hyperopic-Move"
+            moveFunction: {
+                name: "Hyperopic-Move"
             },
-            "lichessBot": {
-                "botId": "Hyperopic",
-                "userMatchers": [
+            lichessBot: {
+                botId: "Hyperopic",
+                userMatchers: [
                     {
-                        "include": true,
-                        "pattern": "^th0masb$"
+                        include: true,
+                        pattern: "^th0masb$"
                     }
                 ]
-            }
+            },
+            eventLoop: {
+                maxStreamLifeMins: 60,
+                retryWaitDurationSecs: 5,
+                statusPollGapSecs: 60,
+            },
         }
     },
     {
         name: "Myopic",
         authTokenVar: "MYOPIC_TOKEN",
         config: {
-            "gameFunction": {
-                "id": {"name": "LichessGameLambda"},
-                "abortAfterSecs": 30
+            gameFunction: {
+                id: { name: "LichessGameLambda" },
+                abortAfterSecs: 30
             },
-            "moveFunction": {
-                "name": "Myopic-Move"
+            moveFunction: {
+                name: "Myopic-Move"
             },
-            "lichessBot": {
-                "botId": "myopic-bot",
-                "userMatchers": [
+            lichessBot: {
+                botId: "myopic-bot",
+                userMatchers: [
                     {
-                        "include": true,
-                        "pattern": "^th0masb$"
+                        include: true,
+                        pattern: "^th0masb$"
                     }
                 ]
             }
