@@ -12,10 +12,8 @@ export class OpeningDatabaseStack extends Stack {
     super(scope, id, {env: AccountAndRegionValues});
     new db.Table(this, `${id}-Openings`, {
       tableName: tableConfig.tableName,
-      billingMode: db.BillingMode.PROVISIONED,
-      readCapacity: tableConfig.readCapacity,
-      writeCapacity: tableConfig.writeCapacity,
-      removalPolicy: RemovalPolicy.DESTROY,
+      billingMode: db.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
       partitionKey: {
         name: tableConfig.positionAttributeName,
         type: db.AttributeType.STRING,
