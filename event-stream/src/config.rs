@@ -21,6 +21,8 @@ pub struct AppConfig {
     pub event_loop: EventLoopConfig,
     #[serde(rename = "challengeServerAddress", default = "default_server_address")]
     pub challenge_server_address: String,
+    #[serde(rename = "challengeTable")]
+    pub challenge_table: ChallengeTable,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,6 +76,19 @@ pub struct StringMatcher {
     pub include: bool,
     #[serde(with = "serde_regex")]
     pub pattern: Regex,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChallengeTable {
+    pub id: AwsResourceId,
+    #[serde(rename = "challengerAttribute")]
+    pub challenger_attribute: String,
+    #[serde(rename = "challengeIdAttribute")]
+    pub challenge_id_attribute: String,
+    #[serde(rename = "challengeDayAttribute")]
+    pub challenge_day_attribute: String,
+    #[serde(rename = "gameStartedAttribute")]
+    pub game_started_attribute: String,
 }
 
 impl Default for AppConfig {

@@ -596,6 +596,7 @@ dependencies = [
  "regex",
  "reqwest",
  "rusoto_core 0.46.0",
+ "rusoto_dynamodb 0.47.0",
  "rusoto_lambda 0.46.0",
  "serde",
  "serde_derive",
