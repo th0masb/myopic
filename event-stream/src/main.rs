@@ -19,6 +19,7 @@ use crate::forwarding::ChallengeRequest;
 use crate::lichess::LichessClient;
 
 mod challenge;
+mod challenge_table;
 mod config;
 mod eventprocessor;
 mod events;

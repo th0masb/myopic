@@ -22,7 +22,7 @@ pub struct AppConfig {
     #[serde(rename = "challengeServerAddress", default = "default_server_address")]
     pub challenge_server_address: String,
     #[serde(rename = "challengeTable")]
-    pub challenge_table: ChallengeTable,
+    pub challenge_table: ChallengeTableConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,7 +79,7 @@ pub struct StringMatcher {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChallengeTable {
+pub struct ChallengeTableConfig {
     pub id: AwsResourceId,
     #[serde(rename = "challengerAttribute")]
     pub challenger_attribute: String,
@@ -89,6 +89,8 @@ pub struct ChallengeTable {
     pub challenge_day_attribute: String,
     #[serde(rename = "gameStartedAttribute")]
     pub game_started_attribute: String,
+    #[serde(rename = "challengeDayIndexName")]
+    pub challenge_day_index_name: String,
 }
 
 impl Default for AppConfig {
