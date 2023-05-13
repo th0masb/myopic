@@ -13,6 +13,7 @@ import {
     OpeningTableConfigValues
 } from "../config";
 import {EventStreamStack} from "../lib/EventStreamStack";
+import {ChallengesTableStack} from "../lib/ChallengesTableStack";
 
 const app = new App();
 
@@ -47,7 +48,13 @@ const cluster = new ClusterStack(
     AccountAndRegionValues,
 )
 
-EventStreamConfigValues.forEach((config) =>
+
+EventStreamConfigValues.forEach((config) => {
+    new ChallengesTableStack(
+        app,
+        `${config.name}Challenges`,
+        AccountAndRegionValues,
+    )
     new EventStreamStack(
         app,
         `${config.name}EventStream`,
@@ -56,4 +63,4 @@ EventStreamConfigValues.forEach((config) =>
         gameFunction.functionArn,
         config,
     )
-)
+})
