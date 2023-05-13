@@ -64,7 +64,7 @@ impl ChallengeTableClient {
                 dest.insert(
                     attribute_keys::EXPIRY.to_owned(),
                     init(|a: &mut AttributeValue| {
-                        a.n = Some((epoch_secs() + SECS_IN_DAY).to_string())
+                        a.n = Some((epoch_secs() + 2 * SECS_IN_DAY).to_string())
                     }),
                 );
             });
@@ -84,11 +84,11 @@ impl ChallengeTableClient {
             r.table_name = self.params.id.name.clone();
             r.key = init(|k: &mut HashMap<String, AttributeValue>| {
                 k.insert(
-                    "ChallengerID".to_owned(),
+                    attribute_keys::CHALLENGER.to_owned(),
                     init(|a: &mut AttributeValue| { a.s = Some(challenger) })
                 );
                 k.insert(
-                    "ChallengeID".to_owned(),
+                    attribute_keys::CHALLENGE.to_owned(),
                     init(|a: &mut AttributeValue| { a.s = Some(challenge) })
                 );
             });
@@ -140,11 +140,26 @@ impl ChallengeTableClient {
         for attr in attributes {
             dest.push(
                 ChallengeTableEntry {
-                    challenger: extract_attribute(attr, "ChallengerID", |a| a.s.clone())?,
-                    challenge_id: extract_attribute(attr, "ChallengeID", |a| a.s.clone())?,
-                    challenge_epoch_day: extract_attribute(attr, "EpochDay", |a| a.n.clone())
-                        .and_then(|v| v.parse::<u64>().map_err(|e| anyhow!(e)))?,
-                    game_started: extract_attribute(attr, "GameStarted", |a| a.bool)?,
+                    challenger: extract_attribute(
+                        attr,
+                        attribute_keys::CHALLENGER,
+                        |a| a.s.clone()
+                    )?,
+                    challenge_id: extract_attribute(
+                        attr,
+                        attribute_keys::CHALLENGE,
+                        |a| a.s.clone()
+                    )?,
+                    game_started: extract_attribute(
+                        attr,
+                        attribute_keys::STARTED,
+                        |a| a.bool
+                    )?,
+                    challenge_epoch_day: extract_attribute(
+                        attr,
+                        attribute_keys::EPOCH_DAY,
+                        |a| a.n.clone()
+                    ).and_then(|v| v.parse::<u64>().map_err(|e| anyhow!(e)))?,
                 }
             )
         }
