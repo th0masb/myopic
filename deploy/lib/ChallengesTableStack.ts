@@ -12,6 +12,7 @@ export class ChallengesTableStack extends Stack {
             billingMode: BillingMode.PAY_PER_REQUEST,
             tableName: `${id}-Table`,
             removalPolicy: RemovalPolicy.DESTROY,
+            timeToLiveAttribute: "Expiry",
             partitionKey: {
                 name: "ChallengerID",
                 type: db.AttributeType.STRING
