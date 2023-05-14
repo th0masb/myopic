@@ -55,7 +55,7 @@ export type EventStreamConfig = {
         moveFunction: { name: string }
         lichessBot: {
             botId: string
-            userMatchers: {
+            userMatchers?: {
                 include: boolean
                 pattern: string
             }[]
@@ -65,7 +65,11 @@ export type EventStreamConfig = {
             statusPollGapSecs: number
             maxStreamLifeMins: number
         }
-        challengeTable: { name: string }
+        rateLimits: {
+            challengeTable: { name: string }
+            maxDailyChallenges: number
+            maxDailyUserChallenges: number
+        }
     }
 }
 
@@ -95,7 +99,11 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
                 retryWaitDurationSecs: 5,
                 statusPollGapSecs: 60,
             },
-            challengeTable: { name: "HyperopicChallenges" }
+            rateLimits: {
+                challengeTable: { name: "HyperopicChallenges" },
+                maxDailyChallenges: 100,
+                maxDailyUserChallenges: 100,
+            }
         }
     },
     {
@@ -111,14 +119,12 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
             },
             lichessBot: {
                 botId: "myopic-bot",
-                userMatchers: [
-                    {
-                        include: true,
-                        pattern: "^th0masb$"
-                    }
-                ]
             },
-            challengeTable: { name: "MyopicChallenges" }
+            rateLimits: {
+                challengeTable: { name: "MyopicChallenges" },
+                maxDailyChallenges: 100,
+                maxDailyUserChallenges: 5,
+            }
         }
     }
 ]
