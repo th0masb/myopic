@@ -1,12 +1,8 @@
-use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::Mutex;
-use std::time::{Duration, Instant};
 
 use anyhow::{anyhow, Error, Result};
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
-use serde_json::to_string;
 
 use crate::challenge_table::ChallengeTableClient;
 use crate::config::AppConfig;

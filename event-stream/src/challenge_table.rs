@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
+use crate::config::AwsResourceId;
 use anyhow::{anyhow, Result};
 use rusoto_core::Region;
 use rusoto_dynamodb::QueryInput;
 use rusoto_dynamodb::{
-    AttributeValue, AttributeValueUpdate, DynamoDb, DynamoDbClient, GetItemInput, PutItemInput,
-    UpdateItemInput,
+    AttributeValue, AttributeValueUpdate, DynamoDb, DynamoDbClient, PutItemInput, UpdateItemInput,
 };
-use crate::config::AwsResourceId;
 
 const SECS_IN_DAY: u64 = 24 * 60 * 60;
 const EPOCH_DAY_INDEX_NAME: &str = "EpochDayIndex";
