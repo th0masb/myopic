@@ -1,4 +1,4 @@
-use crate::challenge_table::{ChallengeTableClient, FetchEntriesRequest};
+use crate::challenge_table::ChallengeTableClient;
 use anyhow::Result;
 
 use crate::config::{AppConfig, StringMatcher, TimeConstraints};
@@ -59,10 +59,7 @@ impl ChallengeService {
     }
 
     async fn passes_table_checks(&self, challenge: &Challenge) -> Result<bool> {
-        let all_challenges_today = self
-            .challenge_table
-            .fetch_entries(FetchEntriesRequest::EpochDay(None))
-            .await?;
+        let all_challenges_today = self.challenge_table.fetch_challenges_today().await?;
 
         Ok(all_challenges_today.len() <= 50
             // Rate limit users per day
