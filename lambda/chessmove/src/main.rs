@@ -37,11 +37,11 @@ async fn main() -> Result<(), Error> {
 async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOutput, Error> {
     let start = Instant::now();
     // Setup the current game position
-    let mut board = Board::default();
+    let mut board = EvalBoard::default();
     board.play_uci(event.moves_played.as_str())?;
 
     let lookup_services = load_lookup_services(&event.features);
-    match perform_lookups(board.clone(), lookup_services).await {
+    match perform_lookups(board.clone_position(), lookup_services).await {
         Some(mv) => Ok(ChooseMoveOutput {
             best_move: mv.uci_format(),
             search_details: None,
@@ -54,7 +54,7 @@ async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOu
                 Duration::from_millis(event.clock_millis.increment),
             );
             let search_outcome = myopic_brain::search(
-                EvalBoard::from(board),
+                board,
                 SearchParameters {
                     terminator: search_time,
                     table_size: TABLE_SIZE,
