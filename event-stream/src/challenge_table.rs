@@ -34,12 +34,6 @@ pub struct ChallengeTableEntry {
     pub game_started: bool,
 }
 
-#[derive(Clone, Debug)]
-pub enum FetchEntriesRequest {
-    Challenger(String),
-    EpochDay(Option<u64>),
-}
-
 impl ChallengeTableClient {
     pub fn new(config: &AwsResourceId) -> ChallengeTableClient {
         ChallengeTableClient {
@@ -51,17 +45,18 @@ impl ChallengeTableClient {
         }
     }
 
-    pub async fn insert_challenge(&self, challenger: &str, challenge: &str) -> Result<()> {
+    pub async fn insert_challenge(&self, challenger_id: &str, challenge_id: &str) -> Result<()> {
+        log::info!("Inserting challenge for {}/{}", challenger_id, challenge_id);
         let request = init(|r: &mut PutItemInput| {
             r.table_name = self.table_name.clone();
             r.item = init(|dest: &mut HashMap<String, AttributeValue>| {
                 dest.insert(
                     attribute_keys::CHALLENGER.to_owned(),
-                    init(|a: &mut AttributeValue| a.s = Some(challenger.to_owned())),
+                    init(|a: &mut AttributeValue| a.s = Some(challenger_id.to_owned())),
                 );
                 dest.insert(
                     attribute_keys::CHALLENGE.to_owned(),
-                    init(|a: &mut AttributeValue| a.s = Some(challenge.to_owned())),
+                    init(|a: &mut AttributeValue| a.s = Some(challenge_id.to_owned())),
                 );
                 dest.insert(
                     attribute_keys::STARTED.to_owned(),
@@ -86,25 +81,26 @@ impl ChallengeTableClient {
             .map_err(|e| anyhow!(e))
     }
 
-    pub async fn update_game_started(&self, challenger: &str, challenge: &str) -> Result<bool> {
+    pub async fn set_started(&self, challenger_id: &str, challenge_id: &str) -> Result<bool> {
+        log::info!("Toggling started for {}/{}", challenger_id, challenge_id);
         let request = init(|r: &mut UpdateItemInput| {
             r.table_name = self.table_name.clone();
             r.return_values = Some("ALL_OLD".to_owned());
             r.key = init(|k: &mut HashMap<String, AttributeValue>| {
                 k.insert(
                     attribute_keys::CHALLENGER.to_owned(),
-                    init(|a: &mut AttributeValue| a.s = Some(challenger.to_owned())),
+                    init(|a: &mut AttributeValue| a.s = Some(challenger_id.to_owned())),
                 );
                 k.insert(
                     attribute_keys::CHALLENGE.to_owned(),
-                    init(|a: &mut AttributeValue| a.s = Some(challenge.to_owned())),
+                    init(|a: &mut AttributeValue| a.s = Some(challenge_id.to_owned())),
                 );
             });
             r.attribute_updates = Some(init(|dest: &mut HashMap<String, AttributeValueUpdate>| {
                 dest.insert(
                     attribute_keys::STARTED.to_owned(),
                     init(|update: &mut AttributeValueUpdate| {
-                        update.action = Some("SET".to_owned());
+                        update.action = Some("PUT".to_owned());
                         update.value = Some(init(|a: &mut AttributeValue| a.bool = Some(true)))
                     }),
                 );
@@ -120,19 +116,17 @@ impl ChallengeTableClient {
                     .and_then(|attr| attr.get(attribute_keys::STARTED).cloned())
                     .and_then(|started| started.bool)
                     .expect(
-                        format!("Unknown flag change for {}-{}", challenger, challenge).as_str(),
+                        format!("Unknown flag change for {}-{}", challenger_id, challenge_id)
+                            .as_str(),
                     )
             })
     }
 
-    pub async fn fetch_entries(
-        &self,
-        request: FetchEntriesRequest,
-    ) -> Result<Vec<ChallengeTableEntry>> {
+    pub async fn fetch_challenges_today(&self) -> Result<Vec<ChallengeTableEntry>> {
         let mut dest = Vec::new();
         let mut last_evaluated_key = None;
         loop {
-            let query = self.build_query(request.clone(), last_evaluated_key.clone());
+            let query = self.build_challenges_query(last_evaluated_key.clone());
             let output = self.client.query(query).await?;
             if let Some(items) = output.items {
                 dest.extend(self.extract_attributes(&items)?);
@@ -143,6 +137,25 @@ impl ChallengeTableClient {
             }
         }
         Ok(dest)
+    }
+
+    fn build_challenges_query(
+        &self,
+        last_evaluated_key: Option<HashMap<String, AttributeValue>>,
+    ) -> QueryInput {
+        init(|query: &mut QueryInput| {
+            query.table_name = self.table_name.clone();
+            query.exclusive_start_key = last_evaluated_key;
+            query.index_name = Some(EPOCH_DAY_INDEX_NAME.to_owned());
+            query.key_condition_expression = Some(format!("{} = :x", attribute_keys::EPOCH_DAY));
+            query.expression_attribute_values =
+                Some(init(|dest: &mut HashMap<String, AttributeValue>| {
+                    dest.insert(
+                        ":x".to_owned(),
+                        init(|a: &mut AttributeValue| a.n = Some(epoch_day().to_string())),
+                    );
+                }));
+        })
     }
 
     fn extract_attributes(
@@ -162,31 +175,6 @@ impl ChallengeTableClient {
             })
         }
         Ok(dest)
-    }
-
-    fn build_query(
-        &self,
-        request: FetchEntriesRequest,
-        last_evaluated_key: Option<HashMap<String, AttributeValue>>,
-    ) -> QueryInput {
-        init(|query: &mut QueryInput| {
-            query.table_name = self.table_name.clone();
-            query.exclusive_start_key = last_evaluated_key;
-            query.index_name = match request {
-                FetchEntriesRequest::Challenger(_) => None,
-                FetchEntriesRequest::EpochDay(_) => Some(EPOCH_DAY_INDEX_NAME.to_owned()),
-            };
-            query.key_condition_expression = match request {
-                FetchEntriesRequest::Challenger(id) => {
-                    Some(format!("{} = :{}", attribute_keys::CHALLENGER, id))
-                }
-                FetchEntriesRequest::EpochDay(epoch_day_override) => Some(format!(
-                    "{} = :{}",
-                    attribute_keys::EPOCH_DAY,
-                    epoch_day_override.unwrap_or(epoch_day())
-                )),
-            };
-        })
     }
 }
 

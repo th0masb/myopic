@@ -28,9 +28,10 @@ impl GameStartService {
         let (game_id, opponent_id) = (event.id.as_str(), event.opponent.id.as_str());
         if self
             .challenge_table
-            .update_game_started(opponent_id, game_id)
+            .set_started(opponent_id, game_id)
             .await?
         {
+            log::info!("Lambda for {}/{} should be invoked", opponent_id, game_id);
             match self.invoker.trigger_lambda(game_id).await {
                 Err(e) => Err(anyhow!(
                     "Unable to trigger lambda: {}, abort status: {:?}",
@@ -58,7 +59,10 @@ impl GameStartService {
                 },
             }
         } else {
-            Ok(format!("Lambda already trigger for game {}", game_id))
+            Ok(format!(
+                "Lambda for {}/{} was already invoked",
+                opponent_id, game_id
+            ))
         }
     }
 }
