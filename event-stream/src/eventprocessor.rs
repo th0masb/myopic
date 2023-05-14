@@ -52,7 +52,7 @@ impl EventProcessor {
                 }
             }
             LichessEvent::GameStart { game } => {
-                match self.gamestart_service.process_gamestart(game).await {
+                match self.gamestart_service.process_event(game).await {
                     Ok(message) => log::info!("Processed gamestart with message: {}", message),
                     Err(error) => log::warn!("Error processing gamestart: {}", error),
                 }
