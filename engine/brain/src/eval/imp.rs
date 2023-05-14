@@ -40,10 +40,14 @@ impl<B: ChessBoard> From<B> for EvalBoard<B> {
 impl<B: ChessBoard> From<B> for BoardBuilder<B> {
     fn from(board: B) -> Self {
         BoardBuilder {
-            board,
             position_tables: PositionTables::default(),
             piece_values: PieceValues::default(),
-            cmps: Vec::default(),
+            cmps: if board.to_fen().as_str() == crate::START_FEN {
+                vec![Box::new(OpeningComponent::default())]
+            } else {
+                vec![]
+            },
+            board,
         }
     }
 }
@@ -52,16 +56,7 @@ impl FromStr for BoardBuilder<Board> {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(BoardBuilder {
-            board: s.parse::<Board>()?,
-            piece_values: PieceValues::default(),
-            position_tables: PositionTables::default(),
-            cmps: if s == crate::START_FEN {
-                vec![Box::new(OpeningComponent::default())]
-            } else {
-                vec![]
-            },
-        })
+        Ok(BoardBuilder::from(s.parse::<Board>()?))
     }
 }
 
@@ -227,6 +222,12 @@ impl<B: ChessBoard> EvalChessBoard for EvalBoard<B> {
     // TODO For now we just use midgame values, should take into account phase
     fn positional_eval(&self, piece: Piece, location: Square) -> i32 {
         self.material.tables().midgame(piece, location)
+    }
+}
+
+impl<B: ChessBoard + Clone> EvalBoard<B> {
+    pub fn clone_position(&self) -> B {
+        self.board.clone()
     }
 }
 
