@@ -1,16 +1,21 @@
 import {aws_dynamodb as db, RemovalPolicy, Stack} from "aws-cdk-lib";
 import {Construct} from "constructs";
-import {AccountAndRegion} from "../config";
+import {AccountAndRegion, EventStreamConfig} from "../config";
 import {BillingMode} from "aws-cdk-lib/aws-dynamodb";
 
 export class ChallengesTableStack extends Stack {
     readonly tableArn: string
 
-    constructor(scope: Construct, id: string, accountAndRegion: AccountAndRegion) {
+    constructor(
+        scope: Construct,
+        id: string,
+        accountAndRegion: AccountAndRegion,
+        eventStreamConfig: EventStreamConfig,
+    ) {
         super(scope, id, {env: accountAndRegion});
         const table = new db.Table(this, `${id}-Table`, {
             billingMode: BillingMode.PAY_PER_REQUEST,
-            tableName: `${id}-Table`,
+            tableName: eventStreamConfig.config.challengeTable.name,
             removalPolicy: RemovalPolicy.DESTROY,
             timeToLiveAttribute: "Expiry",
             partitionKey: {
@@ -25,7 +30,7 @@ export class ChallengesTableStack extends Stack {
         this.tableArn = table.tableArn
         // The secondary index allows us to efficiently query the challenges of any particular day
         table.addGlobalSecondaryIndex({
-            indexName: `${id}-DayIndex`,
+            indexName: "EpochDayIndex",
             partitionKey: {
                 name: "ChallengeDay",
                 type: db.AttributeType.NUMBER,
