@@ -20,7 +20,7 @@ impl GameStartService {
         GameStartService {
             client: LichessClient::new(parameters.lichess_bot.auth_token.clone()),
             invoker: LambdaInvoker::new(parameters.clone()),
-            challenge_table: ChallengeTableClient::new(&parameters.challenge_table),
+            challenge_table: ChallengeTableClient::new(&parameters.rate_limits.challenge_table),
         }
     }
 
