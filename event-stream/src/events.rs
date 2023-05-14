@@ -19,7 +19,7 @@ pub struct Challenge {
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Challenger {
-    pub name: String,
+    pub id: String,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -153,7 +153,7 @@ mod test {
                             key: "standard".to_owned()
                         },
                         challenger: Challenger {
-                            name: "th0masb".to_string()
+                            id: "th0masb".to_string()
                         },
                         time_control: TimeControl::Unlimited,
                     },
@@ -219,7 +219,7 @@ mod test {
                             key: "standard".to_owned()
                         },
                         challenger: Challenger {
-                            name: "th0masb".to_string()
+                            id: "th0masb".to_string()
                         },
                         time_control: TimeControl::Correspondence { days_per_turn: 2 },
                     },
@@ -287,7 +287,7 @@ mod test {
                             key: "standard".to_owned()
                         },
                         challenger: Challenger {
-                            name: "th0masb".to_string()
+                            id: "th0masb".to_string()
                         },
                         time_control: TimeControl::Clock {
                             clock: ClockTimeControl {

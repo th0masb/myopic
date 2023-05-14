@@ -21,8 +21,8 @@ pub struct AppConfig {
     pub event_loop: EventLoopConfig,
     #[serde(rename = "challengeServerAddress", default = "default_server_address")]
     pub challenge_server_address: String,
-    #[serde(rename = "challengeTable")]
-    pub challenge_table: AwsResourceId,
+    #[serde(rename = "rateLimits")]
+    pub rate_limits: RateLimitConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -78,20 +78,15 @@ pub struct StringMatcher {
     pub pattern: Regex,
 }
 
-//#[derive(Debug, Clone, Serialize, Deserialize)]
-//pub struct ChallengeTableConfig {
-//    pub id: AwsResourceId,
-//    //#[serde(rename = "challengerAttribute")]
-//    //pub challenger_attribute: String,
-//    //#[serde(rename = "challengeIdAttribute")]
-//    //pub challenge_id_attribute: String,
-//    //#[serde(rename = "challengeDayAttribute")]
-//    //pub challenge_day_attribute: String,
-//    //#[serde(rename = "gameStartedAttribute")]
-//    //pub game_started_attribute: String,
-//    //#[serde(rename = "challengeDayIndexName")]
-//    //pub challenge_day_index_name: String,
-//}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RateLimitConfig {
+    #[serde(rename = "challengeTable")]
+    pub challenge_table: AwsResourceId,
+    #[serde(rename = "maxDailyChallenges")]
+    pub max_daily_challenges: usize,
+    #[serde(rename = "maxDailyUserChallenges")]
+    pub max_daily_user_challenges: usize,
+}
 
 impl Default for AppConfig {
     fn default() -> Self {

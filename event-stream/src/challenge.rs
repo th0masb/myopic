@@ -9,13 +9,17 @@ pub struct ChallengeService {
     lichess: LichessClient,
     challenge_table: ChallengeTableClient,
     validity_checks: Vec<Box<dyn ValidityCheck + Send + Sync>>,
+    max_daily_challenges: usize,
+    max_daily_user_challenges: usize,
 }
 
 impl ChallengeService {
     pub fn new(parameters: &AppConfig) -> ChallengeService {
         ChallengeService {
             lichess: LichessClient::new(parameters.lichess_bot.auth_token.clone()),
-            challenge_table: ChallengeTableClient::new(&parameters.challenge_table),
+            challenge_table: ChallengeTableClient::new(&parameters.rate_limits.challenge_table),
+            max_daily_challenges: parameters.rate_limits.max_daily_challenges,
+            max_daily_user_challenges: parameters.rate_limits.max_daily_user_challenges,
             validity_checks: vec![
                 Box::new(parameters.time_constraints.clone()),
                 Box::new(VariantCheck),
@@ -31,9 +35,8 @@ impl ChallengeService {
             .all(|check| check.accepts(&challenge));
 
         if passes_static_checks && self.passes_table_checks(&challenge).await? {
-            log::info!("Persisting challenge {}", challenge.id);
             self.challenge_table
-                .insert_challenge(challenge.challenger.name.as_str(), challenge.id.as_str())
+                .insert_challenge(challenge.challenger.id.as_str(), challenge.id.as_str())
                 .await?;
             self.post_challenge_response(&challenge, "accept").await
         } else {
@@ -60,18 +63,24 @@ impl ChallengeService {
 
     async fn passes_table_checks(&self, challenge: &Challenge) -> Result<bool> {
         let all_challenges_today = self.challenge_table.fetch_challenges_today().await?;
+        let user_id = challenge.challenger.id.as_str();
+        let user_challenges_today = all_challenges_today
+            .iter()
+            .filter(|c| c.challenger == user_id)
+            .count();
 
-        Ok(all_challenges_today.len() <= 50
+        log::info!(
+            "{} challenges today, {} from {}",
+            all_challenges_today.len(),
+            user_challenges_today,
+            user_id
+        );
+
+        Ok(all_challenges_today.len() < self.max_daily_challenges
             // Rate limit users per day
-            && all_challenges_today
-                .iter()
-                .filter(|c| c.challenger == challenge.challenger.name)
-                .count()
-                < 6
+            && user_challenges_today < self.max_daily_user_challenges
             // Don't accept duplicated challenge ids
-            && !all_challenges_today
-                .iter()
-                .any(|c| c.challenge_id == challenge.id))
+            && !all_challenges_today.iter().any(|c| c.challenge_id == challenge.id))
     }
 }
 
@@ -106,7 +115,7 @@ impl ValidityCheck for TimeConstraints {
 
 impl ValidityCheck for Vec<StringMatcher> {
     fn accepts(&self, challenge: &Challenge) -> bool {
-        let name = challenge.challenger.name.as_str();
+        let name = challenge.challenger.id.as_str();
         self.iter()
             .find(|&matcher| matcher.pattern.is_match(name))
             .map(|matcher| matcher.include)
