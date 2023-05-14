@@ -15,7 +15,7 @@ export class ChallengesTableStack extends Stack {
         super(scope, id, {env: accountAndRegion});
         const table = new db.Table(this, `${id}-Table`, {
             billingMode: BillingMode.PAY_PER_REQUEST,
-            tableName: eventStreamConfig.config.challengeTable.name,
+            tableName: eventStreamConfig.config.rateLimits.challengeTable.name,
             removalPolicy: RemovalPolicy.DESTROY,
             timeToLiveAttribute: "Expiry",
             partitionKey: {
