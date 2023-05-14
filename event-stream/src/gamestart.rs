@@ -1,21 +1,22 @@
-use std::str::FromStr;
-
-use crate::config::AppConfig;
-use anyhow::{anyhow, Error, Result};
-use rusoto_core::Region;
-use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
+use anyhow::{anyhow, Error, Result};
+use rusoto_core::Region;
+use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
+use serde_json::to_string;
+
+use crate::challenge_table::ChallengeTableClient;
+use crate::config::AppConfig;
 use crate::events::GameStart;
 use crate::lichess::LichessClient;
 
 pub struct GameStartService {
     client: LichessClient,
     invoker: LambdaInvoker,
-    game_id_cache: Mutex<HashMap<String, Instant>>,
-    cache_expiry: Duration,
+    challenge_table: ChallengeTableClient,
 }
 
 impl GameStartService {
@@ -23,50 +24,46 @@ impl GameStartService {
         GameStartService {
             client: LichessClient::new(parameters.lichess_bot.auth_token.clone()),
             invoker: LambdaInvoker::new(parameters.clone()),
-            game_id_cache: Mutex::new(HashMap::new()),
-            cache_expiry: Duration::from_secs(7200),
+            challenge_table: ChallengeTableClient::new(&parameters.challenge_table),
         }
     }
 
-    pub async fn process_gamestart(&mut self, game_start: GameStart) -> Result<String> {
-        let id = game_start.id.as_str();
-        if self.should_trigger_game_lambda(id) {
-            match self.invoker.trigger_lambda(id).await {
+    pub async fn process_event(&mut self, event: GameStart) -> Result<String> {
+        let (game_id, opponent_id) = (event.id.as_str(), event.opponent.id.as_str());
+        if self
+            .challenge_table
+            .update_game_started(opponent_id, game_id)
+            .await?
+        {
+            match self.invoker.trigger_lambda(game_id).await {
                 Err(e) => Err(anyhow!(
                     "Unable to trigger lambda: {}, abort status: {:?}",
                     e,
-                    self.client.abort_game(id).await
+                    self.client.abort_game(game_id).await
                 )),
                 Ok(status) => match status {
                     None => Err(anyhow!(
                         "No status for lambda invocation for {}, abort status: {:?}",
-                        id,
-                        self.client.abort_game(id).await
+                        game_id,
+                        self.client.abort_game(game_id).await
                     )),
                     Some(n) => {
                         if n == 202 {
-                            Ok(format!("Lambda successfully queued for game {}", id))
+                            Ok(format!("Lambda successfully queued for game {}", game_id))
                         } else {
                             Err(anyhow!(
                                 "{} status for lambda invocation for {}, abort status: {:?}",
                                 n,
-                                id,
-                                self.client.abort_game(id).await
+                                game_id,
+                                self.client.abort_game(game_id).await
                             ))
                         }
                     }
                 },
             }
         } else {
-            Ok(format!("Lambda already trigger for game {}", id))
+            Ok(format!("Lambda already trigger for game {}", game_id))
         }
-    }
-
-    fn should_trigger_game_lambda(&mut self, id: &str) -> bool {
-        let mut cache = self.game_id_cache.lock().unwrap();
-        let now = Instant::now();
-        cache.retain(|_, v| now.duration_since(*v) < self.cache_expiry);
-        cache.insert(id.to_owned(), now) == None
     }
 }
 
