@@ -199,7 +199,7 @@ dependencies = [
  "reqwest",
  "rusoto_core 0.47.0",
  "rusoto_dynamodb 0.47.0",
- "rusoto_lambda 0.47.0",
+ "rusoto_lambda",
  "serde",
  "serde_derive",
  "serde_json",
@@ -357,16 +357,6 @@ name = "crypto-mac"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b584a330336237c1eecd3e94266efb216c56ed91225d634cb2991c5f3fd1aeab"
-dependencies = [
- "generic-array",
- "subtle",
-]
-
-[[package]]
-name = "crypto-mac"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bff07008ec701e8028e2ceb8f83f0e4274ee62bd2dbdc4fefff2e9a91824081a"
 dependencies = [
  "generic-array",
  "subtle",
@@ -595,9 +585,9 @@ dependencies = [
  "log",
  "regex",
  "reqwest",
- "rusoto_core 0.46.0",
+ "rusoto_core 0.47.0",
  "rusoto_dynamodb 0.47.0",
- "rusoto_lambda 0.46.0",
+ "rusoto_lambda",
  "serde",
  "serde_derive",
  "serde_json",
@@ -865,16 +855,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "126888268dcc288495a26bf004b38c5fdbb31682f992c84ceb046a1f0fe38840"
 dependencies = [
  "crypto-mac 0.8.0",
- "digest 0.9.0",
-]
-
-[[package]]
-name = "hmac"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1441c6b1e930e2817404b5046f1f989899143a12bf92de603b69f4e0aee1e15"
-dependencies = [
- "crypto-mac 0.10.1",
  "digest 0.9.0",
 ]
 
@@ -1202,7 +1182,7 @@ dependencies = [
  "reqwest",
  "rusoto_core 0.47.0",
  "rusoto_dynamodb 0.47.0",
- "rusoto_lambda 0.47.0",
+ "rusoto_lambda",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1930,31 +1910,6 @@ dependencies = [
 
 [[package]]
 name = "rusoto_core"
-version = "0.46.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02aff20978970d47630f08de5f0d04799497818d16cafee5aec90c4b4d0806cf"
-dependencies = [
- "async-trait",
- "base64 0.13.0",
- "bytes 1.1.0",
- "crc32fast",
- "futures",
- "http",
- "hyper 0.14.18",
- "hyper-rustls 0.22.1",
- "lazy_static",
- "log",
- "rusoto_credential 0.46.0",
- "rusoto_signature 0.46.0",
- "rustc_version 0.2.3",
- "serde",
- "serde_json",
- "tokio 1.18.2",
- "xml-rs",
-]
-
-[[package]]
-name = "rusoto_core"
 version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b4f000e8934c1b4f70adde180056812e7ea6b1a247952db8ee98c94cd3116cc"
@@ -1995,24 +1950,6 @@ dependencies = [
  "serde_json",
  "shlex 0.1.1",
  "tokio 0.2.25",
- "zeroize",
-]
-
-[[package]]
-name = "rusoto_credential"
-version = "0.46.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e91e4c25ea8bfa6247684ff635299015845113baaa93ba8169b9e565701b58e"
-dependencies = [
- "async-trait",
- "chrono",
- "dirs-next",
- "futures",
- "hyper 0.14.18",
- "serde",
- "serde_json",
- "shlex 0.1.1",
- "tokio 1.18.2",
  "zeroize",
 ]
 
@@ -2064,21 +2001,6 @@ dependencies = [
 
 [[package]]
 name = "rusoto_lambda"
-version = "0.46.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2d72cde260360e7cbd6f6cc22f6e13e21ef6bcbc9e81f9c1e582053337fddd6"
-dependencies = [
- "async-trait",
- "bytes 1.1.0",
- "futures",
- "rusoto_core 0.46.0",
- "serde",
- "serde_derive",
- "serde_json",
-]
-
-[[package]]
-name = "rusoto_lambda"
 version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fdc31b04ba667093fc5beab21feb8977b623206081808e2f99831606a41c2b9"
@@ -2115,31 +2037,6 @@ dependencies = [
  "sha2",
  "time 0.2.27",
  "tokio 0.2.25",
-]
-
-[[package]]
-name = "rusoto_signature"
-version = "0.46.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5486e6b1673ab3e0ba1ded284fb444845fe1b7f41d13989a54dd60f62a7b2baa"
-dependencies = [
- "base64 0.13.0",
- "bytes 1.1.0",
- "futures",
- "hex",
- "hmac 0.10.1",
- "http",
- "hyper 0.14.18",
- "log",
- "md5",
- "percent-encoding",
- "pin-project-lite 0.2.9",
- "rusoto_credential 0.46.0",
- "rustc_version 0.2.3",
- "serde",
- "sha2",
- "time 0.2.27",
- "tokio 1.18.2",
 ]
 
 [[package]]

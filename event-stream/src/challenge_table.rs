@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Result};
+use rusoto_core::Region;
 use rusoto_dynamodb::QueryInput;
 use rusoto_dynamodb::{
     AttributeValue, AttributeValueUpdate, DynamoDb, DynamoDbClient, GetItemInput, PutItemInput,
@@ -36,21 +38,31 @@ pub struct ChallengeTableEntry {
 #[derive(Clone, Debug)]
 pub enum FetchEntriesRequest {
     Challenger(String),
-    EpochDay(u64),
+    EpochDay(Option<u64>),
 }
 
 impl ChallengeTableClient {
-    pub async fn insert_entry(&self, challenger: String, challenge: String) -> Result<()> {
+    pub fn new(config: &ChallengeTableConfig) -> ChallengeTableClient {
+        ChallengeTableClient {
+            params: config.clone(),
+            client: DynamoDbClient::new(
+                Region::from_str(config.id.region.as_str())
+                    .expect(format!("Bad region: {}", config.id.region).as_str()),
+            ),
+        }
+    }
+
+    pub async fn insert_entry(&self, challenger: &str, challenge: &str) -> Result<()> {
         let request = init(|r: &mut PutItemInput| {
             r.table_name = self.params.id.name.clone();
             r.item = init(|dest: &mut HashMap<String, AttributeValue>| {
                 dest.insert(
                     attribute_keys::CHALLENGER.to_owned(),
-                    init(|a: &mut AttributeValue| a.s = Some(challenger)),
+                    init(|a: &mut AttributeValue| a.s = Some(challenger.to_owned())),
                 );
                 dest.insert(
                     attribute_keys::CHALLENGE.to_owned(),
-                    init(|a: &mut AttributeValue| a.s = Some(challenge)),
+                    init(|a: &mut AttributeValue| a.s = Some(challenge.to_owned())),
                 );
                 dest.insert(
                     attribute_keys::STARTED.to_owned(),
@@ -161,9 +173,10 @@ impl ChallengeTableClient {
                 FetchEntriesRequest::Challenger(id) => {
                     Some(format!("{} = :{}", params.challenger_attribute, id))
                 }
-                FetchEntriesRequest::EpochDay(epoch_day) => Some(format!(
+                FetchEntriesRequest::EpochDay(epoch_day_override) => Some(format!(
                     "{} = :{}",
-                    params.challenge_day_attribute, epoch_day
+                    params.challenge_day_attribute,
+                    epoch_day_override.unwrap_or(epoch_day())
                 )),
             };
         })
