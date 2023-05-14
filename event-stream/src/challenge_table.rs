@@ -52,7 +52,7 @@ impl ChallengeTableClient {
         }
     }
 
-    pub async fn insert_entry(&self, challenger: &str, challenge: &str) -> Result<()> {
+    pub async fn insert_challenge(&self, challenger: &str, challenge: &str) -> Result<()> {
         let request = init(|r: &mut PutItemInput| {
             r.table_name = self.params.id.name.clone();
             r.item = init(|dest: &mut HashMap<String, AttributeValue>| {
@@ -87,17 +87,18 @@ impl ChallengeTableClient {
             .map_err(|e| anyhow!(e))
     }
 
-    pub async fn set_game_started(&self, challenger: String, challenge: String) -> Result<()> {
+    pub async fn update_game_started(&self, challenger: &str, challenge: &str) -> Result<bool> {
         let request = init(|r: &mut UpdateItemInput| {
             r.table_name = self.params.id.name.clone();
+            r.return_values = Some("ALL_OLD".to_owned());
             r.key = init(|k: &mut HashMap<String, AttributeValue>| {
                 k.insert(
                     attribute_keys::CHALLENGER.to_owned(),
-                    init(|a: &mut AttributeValue| a.s = Some(challenger)),
+                    init(|a: &mut AttributeValue| a.s = Some(challenger.to_owned())),
                 );
                 k.insert(
                     attribute_keys::CHALLENGE.to_owned(),
-                    init(|a: &mut AttributeValue| a.s = Some(challenge)),
+                    init(|a: &mut AttributeValue| a.s = Some(challenge.to_owned())),
                 );
             });
             r.attribute_updates = Some(init(|dest: &mut HashMap<String, AttributeValueUpdate>| {
@@ -113,8 +114,16 @@ impl ChallengeTableClient {
         self.client
             .update_item(request)
             .await
-            .map(|_| ())
             .map_err(|e| anyhow!(e))
+            .map(|response| {
+                !response
+                    .attributes
+                    .and_then(|attr| attr.get(attribute_keys::STARTED).cloned())
+                    .and_then(|started| started.bool)
+                    .expect(
+                        format!("Unknown flag change for {}-{}", challenger, challenge).as_str(),
+                    )
+            })
     }
 
     pub async fn fetch_entries(

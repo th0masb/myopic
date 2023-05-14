@@ -33,7 +33,7 @@ impl ChallengeService {
         if passes_static_checks && self.passes_table_checks(&challenge).await? {
             log::info!("Persisting challenge {}", challenge.id);
             self.challenge_table
-                .insert_entry(challenge.challenger.name.as_str(), challenge.id.as_str())
+                .insert_challenge(challenge.challenger.name.as_str(), challenge.id.as_str())
                 .await?;
             self.post_challenge_response(&challenge, "accept").await
         } else {
