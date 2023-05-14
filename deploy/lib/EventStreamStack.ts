@@ -11,6 +11,7 @@ export class EventStreamStack extends Stack {
         accountAndRegion: AccountAndRegion,
         cluster: ecs.Cluster,
         gameLambdaArn: string,
+        challengesTableArn: string,
         config: EventStreamConfig
     ) {
         super(scope, id, {env: accountAndRegion});
@@ -18,6 +19,7 @@ export class EventStreamStack extends Stack {
             compatibility: ecs.Compatibility.EC2,
         })
         taskDefinition.addToTaskRolePolicy(this.createLambdaInvokePolicy(gameLambdaArn))
+        taskDefinition.addToTaskRolePolicy(this.createChallengesTableAccessPolicy(challengesTableArn))
         const eventStreamImage = this.eventStreamImage()
         taskDefinition.addContainer(config.name, {
             image: eventStreamImage,
@@ -45,6 +47,20 @@ export class EventStreamStack extends Stack {
         const ps = new iam.PolicyStatement();
         ps.addActions("lambda:InvokeFunction");
         ps.addResources(functionArn)
+        return ps
+    }
+
+    private createChallengesTableAccessPolicy(tableArn: string) {
+        const ps = new iam.PolicyStatement();
+        ps.addActions(
+            "dynamodb:Query",
+            "dynamodb:PutItem",
+            "dynamodb:UpdateItem",
+        );
+        ps.addResources(
+            tableArn,
+            `${tableArn}/index/*`
+        )
         return ps
     }
 

@@ -50,7 +50,7 @@ const cluster = new ClusterStack(
 
 
 EventStreamConfigValues.forEach((config) => {
-    new ChallengesTableStack(
+    const challengesTable = new ChallengesTableStack(
         app,
         `${config.name}Challenges`,
         AccountAndRegionValues,
@@ -62,6 +62,7 @@ EventStreamConfigValues.forEach((config) => {
         AccountAndRegionValues,
         cluster.cluster,
         gameFunction.functionArn,
+        challengesTable.tableArn,
         config,
     )
 })
