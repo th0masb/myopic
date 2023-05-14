@@ -9,10 +9,10 @@ use rusoto_dynamodb::{
     AttributeValue, AttributeValueUpdate, DynamoDb, DynamoDbClient, GetItemInput, PutItemInput,
     UpdateItemInput,
 };
-
-use crate::config::ChallengeTableConfig;
+use crate::config::AwsResourceId;
 
 const SECS_IN_DAY: u64 = 24 * 60 * 60;
+const EPOCH_DAY_INDEX_NAME: &str = "EpochDayIndex";
 
 mod attribute_keys {
     pub const CHALLENGER: &str = "ChallengerID";
@@ -23,7 +23,7 @@ mod attribute_keys {
 }
 
 pub struct ChallengeTableClient {
-    params: ChallengeTableConfig,
+    table_name: String,
     client: DynamoDbClient,
 }
 
@@ -42,19 +42,19 @@ pub enum FetchEntriesRequest {
 }
 
 impl ChallengeTableClient {
-    pub fn new(config: &ChallengeTableConfig) -> ChallengeTableClient {
+    pub fn new(config: &AwsResourceId) -> ChallengeTableClient {
         ChallengeTableClient {
-            params: config.clone(),
+            table_name: config.name.clone(),
             client: DynamoDbClient::new(
-                Region::from_str(config.id.region.as_str())
-                    .expect(format!("Bad region: {}", config.id.region).as_str()),
+                Region::from_str(config.region.as_str())
+                    .expect(format!("Bad region: {}", config.region).as_str()),
             ),
         }
     }
 
     pub async fn insert_challenge(&self, challenger: &str, challenge: &str) -> Result<()> {
         let request = init(|r: &mut PutItemInput| {
-            r.table_name = self.params.id.name.clone();
+            r.table_name = self.table_name.clone();
             r.item = init(|dest: &mut HashMap<String, AttributeValue>| {
                 dest.insert(
                     attribute_keys::CHALLENGER.to_owned(),
@@ -89,7 +89,7 @@ impl ChallengeTableClient {
 
     pub async fn update_game_started(&self, challenger: &str, challenge: &str) -> Result<bool> {
         let request = init(|r: &mut UpdateItemInput| {
-            r.table_name = self.params.id.name.clone();
+            r.table_name = self.table_name.clone();
             r.return_values = Some("ALL_OLD".to_owned());
             r.key = init(|k: &mut HashMap<String, AttributeValue>| {
                 k.insert(
@@ -171,20 +171,19 @@ impl ChallengeTableClient {
         last_evaluated_key: Option<HashMap<String, AttributeValue>>,
     ) -> QueryInput {
         init(|query: &mut QueryInput| {
-            let params = &self.params;
-            query.table_name = params.id.name.clone();
+            query.table_name = self.table_name.clone();
             query.exclusive_start_key = last_evaluated_key;
             query.index_name = match request {
                 FetchEntriesRequest::Challenger(_) => None,
-                FetchEntriesRequest::EpochDay(_) => Some(params.challenge_day_index_name.clone()),
+                FetchEntriesRequest::EpochDay(_) => Some(EPOCH_DAY_INDEX_NAME.to_owned()),
             };
             query.key_condition_expression = match request {
                 FetchEntriesRequest::Challenger(id) => {
-                    Some(format!("{} = :{}", params.challenger_attribute, id))
+                    Some(format!("{} = :{}", attribute_keys::CHALLENGER, id))
                 }
                 FetchEntriesRequest::EpochDay(epoch_day_override) => Some(format!(
                     "{} = :{}",
-                    params.challenge_day_attribute,
+                    attribute_keys::EPOCH_DAY,
                     epoch_day_override.unwrap_or(epoch_day())
                 )),
             };

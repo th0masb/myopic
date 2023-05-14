@@ -54,6 +54,7 @@ EventStreamConfigValues.forEach((config) => {
         app,
         `${config.name}Challenges`,
         AccountAndRegionValues,
+        config,
     )
     new EventStreamStack(
         app,

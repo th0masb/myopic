@@ -65,6 +65,7 @@ export type EventStreamConfig = {
             statusPollGapSecs: number
             maxStreamLifeMins: number
         }
+        challengeTable: { name: string }
     }
 }
 
@@ -94,6 +95,7 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
                 retryWaitDurationSecs: 5,
                 statusPollGapSecs: 60,
             },
+            challengeTable: { name: "HyperopicChallenges" }
         }
     },
     {
@@ -115,7 +117,8 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
                         pattern: "^th0masb$"
                     }
                 ]
-            }
+            },
+            challengeTable: { name: "MyopicChallenges" }
         }
     }
 ]
