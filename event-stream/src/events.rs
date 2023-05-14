@@ -53,6 +53,12 @@ pub struct Variant {
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct GameStart {
     pub id: String,
+    pub opponent: Opponent,
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct Opponent {
+    pub id: String,
 }
 
 #[cfg(test)]
@@ -67,7 +73,11 @@ mod test {
         {
           "type": "gameStart",
           "game": {
-            "id": "1lsvP62l"
+            "id": "1lsvP62l",
+            "opponent": {
+              "id": "th0masb",
+              "other": 23
+            }
           }
         }"#;
 
@@ -77,7 +87,10 @@ mod test {
                 LichessEvent::Challenge { .. } => panic!("Wrong event: {:?}", event),
                 LichessEvent::GameStart { game } => assert_eq!(
                     GameStart {
-                        id: "1lsvP62l".to_owned()
+                        id: "1lsvP62l".to_owned(),
+                        opponent: Opponent {
+                            id: "th0masb".to_owned()
+                        }
                     },
                     game
                 ),
