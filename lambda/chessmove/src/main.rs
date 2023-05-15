@@ -7,7 +7,7 @@ use log;
 use simple_logger::SimpleLogger;
 
 use lambda_payloads::chessmove::*;
-use myopic_brain::{anyhow, Board, ChessBoard, EvalBoard, Move, SearchParameters};
+use myopic_brain::{anyhow, ChessBoard, EvalBoard, Move, SearchParameters};
 
 use crate::endings::LichessEndgameService;
 use crate::openings::DynamoOpeningService;
