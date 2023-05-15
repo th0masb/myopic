@@ -104,7 +104,7 @@ mod test {
     }
 
     fn test(expected: Option<TerminalState>, fen: &str) {
-        let mut board = fen.parse::<Board>().unwrap();
+        let board = fen.parse::<Board>().unwrap();
         assert_eq!(expected, board.terminal_state());
         assert_eq!(expected, board.reflect().terminal_state());
     }

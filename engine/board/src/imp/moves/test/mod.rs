@@ -72,7 +72,7 @@ fn execute_test(case: TestCase) -> Result<()> {
     Ok(())
 }
 
-fn execute_test_impl(mut board: Board, moves: ExpectedMoves) {
+fn execute_test_impl(board: Board, moves: ExpectedMoves) {
     for (computation_type, expected_moves) in moves.into_iter() {
         let actual_moves: MoveSet = board.compute_moves(computation_type).into_iter().collect();
         assert_eq!(

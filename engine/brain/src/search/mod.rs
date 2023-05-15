@@ -245,7 +245,7 @@ mod test {
                 let ref_move_pool = expected_move_pool.reflect();
                 test_impl(board, expected_move_pool, is_won);
                 test_impl(ref_board, ref_move_pool, is_won);
-            },
+            }
             Setup::Pgn(pgn_string) => {
                 let mut board = EvalBoard::default();
                 board.play_pgn(pgn_string).unwrap();
@@ -378,7 +378,7 @@ mod test {
         test(
             Setup::Pgn("1. e4 e5 2. f4 exf4 3. Nf3 g5 4. Nc3 Nc6 5. g3 g4 6. Nh4 Nd4 7. Bc4 Be7"),
             vec![UciMove::new("e1g1").unwrap()],
-            false
+            false,
         )
     }
 }
