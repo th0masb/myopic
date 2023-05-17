@@ -2,7 +2,7 @@
 name = "myopic-core"
 version = "1.3.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 repository = "https://github.com/th0masb/myopic"
 description = "Core chess utilities"
@@ -14,10 +14,10 @@ include = [
 ]
 
 [dependencies]
-itertools = "0.8"
-rand = "0.6.5"
-rand_pcg = "0.1.2"
-lazy_static = "1.2.0"
-anyhow = "1.0.35"
-enumset = "1.0.6"
-enum-map = "1.1.1"
+itertools = "0.10.5"
+rand = "0.8.5"
+rand_pcg = "0.3.1"
+lazy_static = "1.4.0"
+anyhow = "1.0.71"
+enumset = "1.1.2"
+enum-map = "2.5.0"

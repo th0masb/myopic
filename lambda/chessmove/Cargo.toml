@@ -8,18 +8,18 @@ edition = "2021"
 [dependencies]
 myopic-brain = { path = "../../engine/brain" }
 lambda-payloads = { path = "../payloads" }
-lambda_runtime = "0.4.1"
+lambda_runtime = "0.8.0"
 tokio = "1.0"
-serde_derive = "1.0.115"
-serde = "1.0.115"
-serde_json = "1.0.59"
-simple_logger = "1.16.0"
-itertools = "0.8"
-log = "0.4.14"
-bytes = "1.0"
-rand = "0.5.0"
-async-trait = "0.1.52"
-reqwest = { version = "0.11.8", default_features = false, features = ["rustls-tls", "blocking", "json"] }
-rusoto_core = { version = "0.47.0", default_features = false, features = ["rustls"] }
-rusoto_lambda = { version = "0.47.0", default_features = false, features = ["rustls"] }
-rusoto_dynamodb = { version = "0.47.0", default_features = false, features = ["rustls"] }
+serde_derive = "1.0.163"
+serde = "1.0.163"
+serde_json = "1.0.96"
+simple_logger = "4.1.0"
+itertools = "0.10.5"
+log = "0.4.17"
+bytes = "1.4.0"
+rand = "0.8.5"
+async-trait = "0.1.68"
+reqwest = { version = "0.11.18", default_features = false, features = ["rustls-tls", "blocking", "json"] }
+rusoto_core = { version = "0.48.0", default_features = false, features = ["rustls"] }
+rusoto_lambda = { version = "0.48.0", default_features = false, features = ["rustls"] }
+rusoto_dynamodb = { version = "0.48.0", default_features = false, features = ["rustls"] }

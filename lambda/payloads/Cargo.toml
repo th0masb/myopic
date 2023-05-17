@@ -2,11 +2,11 @@
 name = "lambda-payloads"
 version = "0.0.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde_derive = "1.0.115"
-serde = "1.0.115"
-serde_json = "1.0.59"
+serde_derive = "1.0.163"
+serde = "1.0.163"
+serde_json = "1.0.96"

@@ -56,14 +56,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     eprintln!("...");
     let mut entries = load_write_requests(&opt)?;
     let total_writes = entries.len();
-    let mut rt = tokio::runtime::Runtime::new()?;
+    let rt = tokio::runtime::Runtime::new()?;
     let client = DynamoDbClient::new(opt.region.clone());
 
     let progress = indicatif::ProgressBar::new(total_writes as u64);
     progress.set_message("Upload progress");
     progress.set_style(
         indicatif::ProgressStyle::default_bar()
-            .template("{msg} [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}")
+            .template("{msg} [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}")?
             .progress_chars("##-"),
     );
     while entries.len() > 0 {
