@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let game_progress = indicatif::ProgressBar::new(0);
     game_progress.set_style(
         indicatif::ProgressStyle::default_bar()
-            .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} extracting: {msg}")
+            .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} extracting: {msg}")?
             .progress_chars("##-"),
     );
 
@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     for (i, path) in get_pgn_file_paths(&opt)?.into_iter().enumerate() {
         // Update progress
         let file_name = path_to_string(&path);
-        game_progress.set_message(&format!("({}/{})[{}]", i + 1, n_files, file_name.as_str()));
+        game_progress.set_message(format!("({}/{})[{}]", i + 1, n_files, file_name.as_str()));
         game_progress.set_length(*game_counts.get(&file_name).unwrap() as u64);
         game_progress.reset();
 

@@ -2,17 +2,17 @@
 name = "dynamodb-uploader"
 version = "0.1.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = "0.3.21"
-serde_derive = "1.0.115"
-serde = "1.0.115"
-serde_json = "1.0.59"
-indicatif = "0.15.0"
-chrono = "0.4"
-rusoto_core = { version = "0.45.0", default_features = false, features = ["rustls"] }
-rusoto_dynamodb = { version = "0.45.0", default_features = false, features = ["rustls"] }
-tokio = { version = "0.2.22", default_features = false, features = ["rt-core"] }
+structopt = "0.3.26"
+serde_derive = "1.0.163"
+serde = "1.0.163"
+serde_json = "1.0.96"
+indicatif = "0.17.3"
+chrono = "0.4.24"
+rusoto_core = { version = "0.48.0", default_features = false, features = ["rustls"] }
+rusoto_dynamodb = { version = "0.48.0", default_features = false, features = ["rustls"] }
+tokio = { version = "1.28.1", features = ["full"] }

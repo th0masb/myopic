@@ -2,7 +2,7 @@
 name = "myopic-board"
 version = "2.2.0"
 authors = ["Thomas Ball <tomoliverball@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 repository = "https://github.com/th0masb/myopic"
 description = "Representation of a chess board"
@@ -15,6 +15,7 @@ include = [
 
 [dependencies]
 myopic-core = { path = "../core" }
-lazy_static = "1.2.0"
-itertools = "0.8"
-regex = "1"
+lazy_static = "1.4.0"
+itertools = "0.10.5"
+regex = "1.8.1"
+enum-map = "2.5.0"
