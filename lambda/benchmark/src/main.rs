@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use itertools::Itertools;
-use lambda_runtime::{Error, LambdaEvent, service_fn};
+use lambda_runtime::{service_fn, Error, LambdaEvent};
 use simple_logger::SimpleLogger;
 
 use lambda_payloads::benchmark::*;
