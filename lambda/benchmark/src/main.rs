@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use itertools::Itertools;
-use lambda_runtime::{handler_fn, Context, Error};
+use lambda_runtime::{Error, LambdaEvent, service_fn};
 use simple_logger::SimpleLogger;
 
 use lambda_payloads::benchmark::*;
@@ -17,11 +17,12 @@ async fn main() -> Result<(), Error> {
         .with_level(log::LevelFilter::Info)
         .without_timestamps()
         .init()?;
-    lambda_runtime::run(handler_fn(handler)).await?;
+    lambda_runtime::run(service_fn(handler)).await?;
     Ok(())
 }
 
-async fn handler(e: BenchStartEvent, ctx: Context) -> Result<BenchOutput, Error> {
+async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Error> {
+    let e = &event.payload;
     let roots = positions::get(e.positions)?;
     let n = roots.len();
     let start = Instant::now();
@@ -52,7 +53,7 @@ async fn handler(e: BenchStartEvent, ctx: Context) -> Result<BenchOutput, Error>
     let output = BenchOutput {
         depth_searched: e.depth,
         positions_searched: n,
-        memory_allocated_mb: ctx.env_config.memory as usize,
+        memory_allocated_mb: event.context.env_config.memory as usize,
         min_search_time_millis: execution_times[0],
         max_search_time_millis: execution_times[n - 1],
         median_search_time_millis: execution_times[n / 2],
