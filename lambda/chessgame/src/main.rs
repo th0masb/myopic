@@ -2,7 +2,7 @@ use std::io::{BufRead, BufReader};
 use std::str::FromStr;
 use std::time::{Duration, Instant};
 
-use lambda_runtime::{Error, LambdaEvent, service_fn};
+use lambda_runtime::{service_fn, Error, LambdaEvent};
 use reqwest::blocking::Response;
 use rusoto_core::Region;
 use simple_logger::SimpleLogger;

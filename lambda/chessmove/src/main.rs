@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
-use lambda_runtime::{LambdaEvent, service_fn, Error};
+use lambda_runtime::{service_fn, Error, LambdaEvent};
 use log;
 use simple_logger::SimpleLogger;
 
