@@ -1,4 +1,4 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1.57-bullseye AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.69-bullseye AS chef
 WORKDIR /build
 
 FROM chef AS planner
@@ -14,7 +14,7 @@ COPY . .
 ARG APP_NAME
 RUN cargo build --release --bin "$APP_NAME"
 
-FROM amazonlinux:2
+FROM amazonlinux:2023
 WORKDIR /app
 ARG APP_NAME
 ARG APP_CONFIG
