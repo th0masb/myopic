@@ -1,12 +1,10 @@
 use std::io::{BufRead, BufReader};
-
 use std::str::FromStr;
 use std::time::{Duration, Instant};
 
-use lambda_runtime::{handler_fn, Context, Error};
+use lambda_runtime::{Error, LambdaEvent, service_fn};
 use reqwest::blocking::Response;
 use rusoto_core::Region;
-
 use simple_logger::SimpleLogger;
 
 use game::Game;
@@ -29,13 +27,14 @@ async fn main() -> Result<(), Error> {
         .with_level(log::LevelFilter::Info)
         .without_timestamps()
         .init()?;
-    lambda_runtime::run(handler_fn(game_handler)).await?;
+    lambda_runtime::run(service_fn(game_handler)).await?;
     Ok(())
 }
 
-async fn game_handler(e: PlayGameEvent, _ctx: Context) -> Result<PlayGameOutput, Error> {
+async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutput, Error> {
     log::info!("Initializing game loop");
-    let mut game = init_game(&e)?;
+    let e = &event.payload;
+    let mut game = init_game(e)?;
     game.post_introduction().await;
     let (start, wait_duration) = (
         Instant::now(),

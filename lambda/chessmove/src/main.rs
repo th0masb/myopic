@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
-use lambda_runtime::{handler_fn, Context, Error};
+use lambda_runtime::{LambdaEvent, service_fn, Error};
 use log;
 use simple_logger::SimpleLogger;
 
@@ -30,17 +30,18 @@ async fn main() -> Result<(), Error> {
         .with_level(log::LevelFilter::Info)
         .without_timestamps()
         .init()?;
-    lambda_runtime::run(handler_fn(move_handler)).await?;
+    lambda_runtime::run(service_fn(move_handler)).await?;
     Ok(())
 }
 
-async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOutput, Error> {
+async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveOutput, Error> {
+    let choose_move = &event.payload;
     let start = Instant::now();
     // Setup the current game position
     let mut board = EvalBoard::default();
-    board.play_uci(event.moves_played.as_str())?;
+    board.play_uci(choose_move.moves_played.as_str())?;
 
-    let lookup_services = load_lookup_services(&event.features);
+    let lookup_services = load_lookup_services(&choose_move.features);
     match perform_lookups(board.clone_position(), lookup_services).await {
         Some(mv) => Ok(ChooseMoveOutput {
             best_move: mv.uci_format(),
@@ -50,8 +51,8 @@ async fn move_handler(event: ChooseMoveEvent, _: Context) -> Result<ChooseMoveOu
             let lookup_duration = start.elapsed();
             let search_time = TimeAllocator::default().allocate(
                 board.position_count(),
-                Duration::from_millis(event.clock_millis.remaining) - lookup_duration,
-                Duration::from_millis(event.clock_millis.increment),
+                Duration::from_millis(choose_move.clock_millis.remaining) - lookup_duration,
+                Duration::from_millis(choose_move.clock_millis.increment),
             );
             let search_outcome = myopic_brain::search(
                 board,
