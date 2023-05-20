@@ -14,7 +14,7 @@ COPY . .
 ARG APP_NAME
 RUN cargo build --release --bin "$APP_NAME"
 
-FROM amazonlinux:2023
+FROM gcr.io/distroless/cc-debian11@sha256:9b8e0854865dcaf49470b4ec305df45957020fbcf17b71eeb50ffd3bc5bf885d
 WORKDIR /app
 ARG APP_NAME
 ARG APP_CONFIG
