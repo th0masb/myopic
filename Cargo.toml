@@ -9,7 +9,8 @@ members = [
     "lambda/chessmove",
     "lambda/payloads",
     "openings/dynamodb-uploader",
-    "openings/pgn-extractor"
+    "openings/pgn-extractor",
+    "lib/response-stream",
 ]
 exclude = [
     "uci-client"

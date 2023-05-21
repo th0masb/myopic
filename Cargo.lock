@@ -1392,6 +1392,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "response-stream"
+version = "0.0.0"
+
+[[package]]
 name = "ring"
 version = "0.16.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
