@@ -138,21 +138,21 @@ impl Game {
         self.process_state(game.state).await
     }
 
-    fn get_game_state(&self, moves: &str) -> Result<(EvalBoard<Board>, u32)> {
+    fn get_game_state(&self, moves: &str) -> Result<(Side, u32)> {
         let mut state = EvalBoard::default();
         state.play_uci(moves)?;
         let pos_count = state.position_count();
-        Ok((state, pos_count as u32))
+        Ok((state.active(), pos_count as u32))
     }
 
     async fn process_state(&mut self, state: GameState) -> Result<GameExecutionState> {
         log::info!("Parsing previous game moves: {}", state.moves);
-        let (board, n_moves) = self.get_game_state(state.moves.as_str())?;
+        let (active_side, n_moves) = self.get_game_state(state.moves.as_str())?;
         self.halfmove_count = n_moves as usize;
         match state.status.as_str() {
             STARTED_STATUS | CREATED_STATUS => {
                 let metadata = self.get_latest_metadata()?.clone();
-                if board.active() != metadata.lambda_side {
+                if active_side != metadata.lambda_side {
                     log::info!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {

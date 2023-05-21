@@ -1,14 +1,16 @@
-use std::io::{BufRead, BufReader};
+use async_trait::async_trait;
 use std::str::FromStr;
 use std::time::{Duration, Instant};
 
 use lambda_runtime::{service_fn, Error, LambdaEvent};
-use reqwest::blocking::Response;
+use myopic_brain::anyhow::{anyhow, Result};
+use reqwest::Response;
 use rusoto_core::Region;
 use simple_logger::SimpleLogger;
 
 use game::Game;
 use lambda_payloads::chessgame::*;
+use response_stream::{LoopAction, StreamHandler};
 
 use crate::compute::MoveLambdaClient;
 use crate::game::{GameConfig, GameExecutionState};
@@ -34,49 +36,52 @@ async fn main() -> Result<(), Error> {
 async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutput, Error> {
     log::info!("Initializing game loop");
     let e = &event.payload;
-    let mut game = init_game(e)?;
+    let game = init_game(e)?;
     game.post_introduction().await;
-    let (start, wait_duration) = (
-        Instant::now(),
-        Duration::from_secs(e.abort_after_secs as u64),
-    );
-    for read_result in open_game_stream(&e.lichess_game_id, &e.lichess_auth_token)?.lines() {
-        match read_result {
-            Err(error) => {
-                log::error!("Problem reading from game stream {}", error);
-                return Err(Box::new(error));
-            }
-            Ok(event) => {
-                if event.trim().is_empty() {
-                    if game.halfmove_count() < 2 && start.elapsed() > wait_duration {
-                        match game.abort().await {
-                            Err(error) => {
-                                log::error!("Failed to abort game: {}", error);
-                                return Err(error.into());
-                            }
-                            Ok(status) => {
-                                if status.is_success() {
-                                    log::info!("Successfully aborted game due to inactivity!");
-                                    break;
-                                } else {
-                                    log::warn!("Failed to abort game, lichess status: {}", status)
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    log::info!("Received event: {}", event);
-                    match game.process_event(event.as_str()).await? {
-                        GameExecutionState::Running => continue,
-                        GameExecutionState::Finished => break,
-                    }
-                }
-            }
-        }
-    }
+    let mut handler = StreamLineHandler {
+        game,
+        start: Instant::now(),
+        max_wait: Duration::from_secs(e.abort_after_secs as u64),
+    };
+    let game_stream = open_game_stream(&e.lichess_game_id, &e.lichess_auth_token).await?;
+    response_stream::handle(game_stream, &mut handler).await?;
     Ok(PlayGameOutput {
         message: format!("Game {} completed", e.lichess_game_id),
     })
+}
+
+struct StreamLineHandler {
+    game: Game,
+    start: Instant,
+    max_wait: Duration,
+}
+
+#[async_trait]
+impl StreamHandler for StreamLineHandler {
+    async fn handle(&mut self, line: String) -> Result<LoopAction> {
+        if line.trim().is_empty() {
+            if self.game.halfmove_count() < 2 && self.start.elapsed() > self.max_wait {
+                let abort_status = self.game.abort().await?;
+                if abort_status.is_success() {
+                    log::info!("Successfully aborted game due to inactivity!");
+                    Ok(LoopAction::Break)
+                } else {
+                    Err(anyhow!(
+                        "Failed to abort game, lichess status: {}",
+                        abort_status
+                    ))
+                }
+            } else {
+                Ok(LoopAction::Continue)
+            }
+        } else {
+            log::info!("Received event: {}", line);
+            Ok(match self.game.process_event(line.as_str()).await? {
+                GameExecutionState::Running => LoopAction::Continue,
+                GameExecutionState::Finished => LoopAction::Break,
+            })
+        }
+    }
 }
 
 fn init_game(e: &PlayGameEvent) -> Result<Game, Error> {
@@ -90,10 +95,11 @@ fn init_game(e: &PlayGameEvent) -> Result<Game, Error> {
     .into())
 }
 
-fn open_game_stream(game_id: &String, auth_token: &String) -> Result<BufReader<Response>, Error> {
-    Ok(reqwest::blocking::Client::new()
+async fn open_game_stream(game_id: &String, auth_token: &String) -> Result<Response, Error> {
+    reqwest::Client::new()
         .get(format!("{}/{}", GAME_STREAM_ENDPOINT, game_id).as_str())
         .bearer_auth(auth_token)
         .send()
-        .map(|response| BufReader::new(response))?)
+        .await
+        .map_err(Error::from)
 }

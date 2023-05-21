@@ -30,14 +30,12 @@ pub async fn stream(params: AppConfig) {
 
         match open_event_stream(&params.lichess_bot.auth_token).await {
             Err(e) => log::warn!("Cannot connect to event stream {}", e),
-            Ok(response) => {
-                match response_stream::handle(response, &mut handler).await {
-                    Ok(_) => {}
-                    Err(e) => {
-                        log::error!("{}", e);
-                    }
+            Ok(response) => match response_stream::handle(response, &mut handler).await {
+                Ok(_) => {}
+                Err(e) => {
+                    log::error!("{}", e);
                 }
-            }
+            },
         }
 
         let wait = params.event_loop.stream_retry_wait();
@@ -54,9 +52,9 @@ struct StreamRefreshHandler<'a> {
 
 #[async_trait]
 impl response_stream::StreamHandler for StreamRefreshHandler<'_> {
-    async fn handle(&mut self, line: String) -> LoopAction {
+    async fn handle(&mut self, line: String) -> Result<LoopAction> {
         let elapsed = self.start.elapsed();
-        if elapsed > self.max_duration {
+        Ok(if elapsed > self.max_duration {
             log::info!(
                 "Refreshing event stream after {} mins",
                 elapsed.as_secs() / 60
@@ -64,7 +62,7 @@ impl response_stream::StreamHandler for StreamRefreshHandler<'_> {
             LoopAction::Break
         } else {
             self.processor.handle_stream_read(line.as_str()).await
-        }
+        })
     }
 }
 
