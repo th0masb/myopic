@@ -22,24 +22,6 @@ new OpeningDatabaseStack(
     "MyopicDatabaseStack",
     AccountAndRegionValues,
     OpeningTableConfigValues,
-);
-
-const bots = ["Myopic", "Hyperopic"].map((name) =>
-    new BotStack(
-        app,
-        name,
-        AccountAndRegionValues,
-        BotLambdaConfigValues,
-        OpeningTableConfigValues
-    )
-)
-
-const gameFunction = new GameLambdaStack(
-    app,
-    "LichessGameLambda",
-    AccountAndRegionValues,
-    GameLambdaConfigValues,
-    bots.map((bot) => bot.moveLambdaName)
 )
 
 const cluster = new ClusterStack(
@@ -48,8 +30,22 @@ const cluster = new ClusterStack(
     AccountAndRegionValues,
 )
 
-
 EventStreamConfigValues.forEach((config) => {
+    const bot = new BotStack(
+        app,
+        config.name,
+        AccountAndRegionValues,
+        BotLambdaConfigValues,
+        OpeningTableConfigValues
+    )
+    const gameFunction = new GameLambdaStack(
+        app,
+        `${config.name}GameLambda`,
+        AccountAndRegionValues,
+        GameLambdaConfigValues,
+        config.config.gameFunction.id.name,
+        bot.moveLambdaName
+    )
     const challengesTable = new ChallengesTableStack(
         app,
         `${config.name}Challenges`,
