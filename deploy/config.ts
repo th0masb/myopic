@@ -79,7 +79,7 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
         authTokenVar: "HYPEROPIC_TOKEN",
         config: {
             gameFunction: {
-                id: { name: "LichessGameLambda" },
+                id: { name: "HyperopicGameLambda" },
                 abortAfterSecs: 30
             },
             moveFunction: {

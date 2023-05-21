@@ -13,12 +13,13 @@ export class GameLambdaStack extends Stack {
         id: string,
         accountAndRegion: AccountAndRegion,
         lambdaConfig: LambdaConfig,
-        botFunctionNames: string[]
+        functionName: string,
+        moveFunctionName: string
     ) {
         super(scope, id, {env: accountAndRegion});
         const cargoBinName = CargoBinNames.get(LambdaType.LichessGame)!
         const fn = new lambda.DockerImageFunction(this, id, {
-            functionName: id,
+            functionName: functionName,
             retryAttempts: 0,
             memorySize: lambdaConfig.memoryMB,
             timeout: lambdaConfig.timeout,
@@ -36,8 +37,7 @@ export class GameLambdaStack extends Stack {
         const ps = new iam.PolicyStatement();
         ps.addActions("lambda:InvokeFunction");
         const {region, account} = accountAndRegion;
-        const fnPrefix = `arn:aws:lambda:${region}:${account}:function`;
-        ps.addResources(...botFunctionNames.map((bot) => `${fnPrefix}:${bot}`))
+        ps.addResources(`arn:aws:lambda:${region}:${account}:function:${moveFunctionName}`)
         fn.addToRolePolicy(ps);
         this.functionArn = fn.functionArn
     }
