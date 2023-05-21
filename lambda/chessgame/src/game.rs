@@ -166,7 +166,10 @@ impl Game {
                         Side::Black => (state.btime, state.binc),
                     };
                     tokio::select! {
-                        _ = self.cancel_token.cancelled() => Ok(GameExecutionState::Cancelled),
+                        _ = self.cancel_token.cancelled() => {
+                            log::info!("Move selection cancelled!");
+                            Ok(GameExecutionState::Cancelled)
+                        },
                         computed_move_result = self
                         .move_client
                         .compute_move(ChooseMoveEvent {
