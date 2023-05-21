@@ -460,12 +460,14 @@ name = "event-stream"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "bytes",
  "dotenv",
  "futures-util",
  "log",
  "regex",
  "reqwest",
+ "response-stream",
  "rusoto_core",
  "rusoto_dynamodb",
  "rusoto_lambda",
@@ -1394,6 +1396,12 @@ dependencies = [
 [[package]]
 name = "response-stream"
 version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "futures-util",
+ "reqwest",
+]
 
 [[package]]
 name = "ring"
