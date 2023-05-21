@@ -11,7 +11,7 @@ pub struct EventProcessor {
 }
 
 impl EventProcessor {
-    pub async fn handle_stream_read(&mut self, line: &str) -> LoopAction {
+    pub async fn handle_stream_read(&mut self, line: &str) -> LoopAction<()> {
         if line.is_empty() {
             self.user_status().await
         } else {
@@ -26,7 +26,7 @@ impl EventProcessor {
         }
     }
 
-    async fn user_status(&mut self) -> LoopAction {
+    async fn user_status(&mut self) -> LoopAction<()> {
         match self.status_service.user_status().await {
             Err(e) => {
                 log::warn!("Error fetching user status: {}", e);
@@ -37,7 +37,7 @@ impl EventProcessor {
                 if status.online {
                     LoopAction::Continue
                 } else {
-                    LoopAction::Break
+                    LoopAction::Break(())
                 }
             }
         }

@@ -51,15 +51,15 @@ struct StreamRefreshHandler<'a> {
 }
 
 #[async_trait]
-impl response_stream::StreamHandler for StreamRefreshHandler<'_> {
-    async fn handle(&mut self, line: String) -> Result<LoopAction> {
+impl response_stream::StreamHandler<()> for StreamRefreshHandler<'_> {
+    async fn handle(&mut self, line: String) -> Result<LoopAction<()>> {
         let elapsed = self.start.elapsed();
         Ok(if elapsed > self.max_duration {
             log::info!(
                 "Refreshing event stream after {} mins",
                 elapsed.as_secs() / 60
             );
-            LoopAction::Break
+            LoopAction::Break(())
         } else {
             self.processor.handle_stream_read(line.as_str()).await
         })
