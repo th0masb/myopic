@@ -1,8 +1,8 @@
 use crate::challenge::ChallengeService;
 use crate::events::LichessEvent;
 use crate::gamestart::GameStartService;
-use crate::streamloop::LoopAction;
 use crate::userstatus::StatusService;
+use response_stream::LoopAction;
 
 pub struct EventProcessor {
     pub challenge_service: ChallengeService,
