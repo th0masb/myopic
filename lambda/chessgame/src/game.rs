@@ -3,9 +3,10 @@ use std::cmp::max;
 use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveEventClock};
 use reqwest::StatusCode;
 use rusoto_core::Region;
+use tokio_util::sync::CancellationToken;
 
 use myopic_brain::anyhow::{anyhow, Result};
-use myopic_brain::{Board, ChessBoard, EvalBoard, Side};
+use myopic_brain::{ChessBoard, EvalBoard, Side};
 
 use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
 use crate::lichess::{LichessChatRoom, LichessService};
@@ -29,6 +30,7 @@ pub struct GameConfig {
     pub lichess_auth_token: String,
     pub move_region: Region,
     pub move_function_name: String,
+    pub cancel_token: CancellationToken,
 }
 
 pub struct Game {
@@ -37,12 +39,14 @@ pub struct Game {
     lichess_service: LichessService,
     move_client: MoveLambdaClient,
     halfmove_count: usize,
+    cancel_token: CancellationToken,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum GameExecutionState {
     Running,
     Finished,
+    Cancelled,
 }
 
 impl From<GameConfig> for Game {
@@ -53,6 +57,7 @@ impl From<GameConfig> for Game {
             bot_name: conf.bot_name,
             inferred_metadata: None,
             halfmove_count: 0,
+            cancel_token: conf.cancel_token,
         }
     }
 }
@@ -101,9 +106,9 @@ impl Game {
                 Err(anyhow!("{}", error))
             }
             Ok(event) => match event {
+                GameEvent::ChatLine { content } => self.process_chat(content),
                 GameEvent::GameFull { content } => self.process_game(content).await,
                 GameEvent::State { content } => self.process_state(content).await,
-                GameEvent::ChatLine { content } => self.process_chat(content),
             },
         }
     }
@@ -156,14 +161,13 @@ impl Game {
                     log::info!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
-                    // TODO Solve recursion issue - what if time to compute move is > than time
-                    // TODO left for this lambda? Best way to solve is probably fire and forget
-                    // TODO setup where move lambda places output onto message queue.
                     let (remaining, increment) = match metadata.lambda_side {
                         Side::White => (state.wtime, state.winc),
                         Side::Black => (state.btime, state.binc),
                     };
-                    let computed_move = self
+                    tokio::select! {
+                        _ = self.cancel_token.cancelled() => Ok(GameExecutionState::Cancelled),
+                        computed_move_result = self
                         .move_client
                         .compute_move(ChooseMoveEvent {
                             moves_played: state.moves.clone(),
@@ -173,10 +177,12 @@ impl Game {
                                 remaining: max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS),
                             },
                             features: vec![],
-                        })
-                        .await?;
-                    self.lichess_service.post_move(computed_move).await?;
-                    Ok(GameExecutionState::Running)
+                        }) => {
+                            let computed_move = computed_move_result?;
+                            self.lichess_service.post_move(computed_move).await?;
+                            Ok(GameExecutionState::Running)
+                        }
+                    }
                 }
             }
             // All other possibilities indicate the game is over

@@ -2,7 +2,6 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Error, Result};
 use async_trait::async_trait;
-use futures_util::StreamExt;
 
 use crate::challenge::ChallengeService;
 use crate::config::AppConfig;

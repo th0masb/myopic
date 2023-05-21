@@ -14,6 +14,7 @@ use response_stream::{LoopAction, StreamHandler};
 
 use crate::compute::MoveLambdaClient;
 use crate::game::{GameConfig, GameExecutionState};
+use tokio_util::sync::CancellationToken;
 
 mod compute;
 mod events;
@@ -22,6 +23,7 @@ mod lichess;
 mod messages;
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
+const CANCEL_PERIOD_MILLIS: u64 = 60000;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -34,45 +36,68 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutput, Error> {
+    let token = CancellationToken::new();
+
+    let cloned_token = token.clone();
+    let ctx = &event.context;
+    let cancel_wait = Duration::from_millis(ctx.deadline - CANCEL_PERIOD_MILLIS);
+    // Send cancellation signal after a certain time has passed
+    tokio::spawn(async move {
+        log::info!("Cancelling in {}s", cancel_wait.as_secs());
+        tokio::time::sleep(cancel_wait).await;
+        log::info!("Cancelling current lambda invocation");
+        cloned_token.cancel();
+    });
+
+    // Run the game loop
     log::info!("Initializing game loop");
     let e = &event.payload;
-    let game = init_game(e)?;
+    let game = init_game(e, token.child_token())?;
     game.post_introduction().await;
     let mut handler = StreamLineHandler {
         game,
         start: Instant::now(),
         max_wait: Duration::from_secs(e.abort_after_secs as u64),
+        cancel_token: token.child_token(),
     };
     let game_stream = open_game_stream(&e.lichess_game_id, &e.lichess_auth_token).await?;
     match response_stream::handle(game_stream, &mut handler).await? {
-        None => {}
-        Some(_) => {}
+        None => Err(Error::from("Game stream ended unexpectedly!")),
+        Some(CompletionType::Cancelled) => {
+            log::info!("Recursively calling this function");
+            Err(Error::from("TODO!"))
+        }
+        Some(CompletionType::GameFinished) => Ok(PlayGameOutput {
+            message: format!("Game {} completed", e.lichess_game_id),
+        }),
     }
-    Ok(PlayGameOutput {
-        message: format!("Game {} completed", e.lichess_game_id),
-    })
 }
 
 struct StreamLineHandler {
     game: Game,
     start: Instant,
     max_wait: Duration,
+    cancel_token: CancellationToken,
 }
 
 enum CompletionType {
-    Recursive,
-    Terminal,
+    Cancelled,
+    GameFinished,
 }
 
 #[async_trait]
 impl StreamHandler<CompletionType> for StreamLineHandler {
     async fn handle(&mut self, line: String) -> Result<LoopAction<CompletionType>> {
+        log::info!("Stream heartbeat");
+        if self.cancel_token.is_cancelled() {
+            return Ok(LoopAction::Break(CompletionType::Cancelled));
+        }
         if line.trim().is_empty() {
             if self.game.halfmove_count() < 2 && self.start.elapsed() > self.max_wait {
                 let abort_status = self.game.abort().await?;
                 if abort_status.is_success() {
                     log::info!("Successfully aborted game due to inactivity!");
-                    Ok(LoopAction::Break(CompletionType::Terminal))
+                    Ok(LoopAction::Break(CompletionType::GameFinished))
                 } else {
                     Err(anyhow!(
                         "Failed to abort game, lichess status: {}",
@@ -86,19 +111,21 @@ impl StreamHandler<CompletionType> for StreamLineHandler {
             log::info!("Received event: {}", line);
             Ok(match self.game.process_event(line.as_str()).await? {
                 GameExecutionState::Running => LoopAction::Continue,
-                GameExecutionState::Finished => LoopAction::Break(CompletionType::Terminal),
+                GameExecutionState::Finished => LoopAction::Break(CompletionType::GameFinished),
+                GameExecutionState::Cancelled => LoopAction::Break(CompletionType::Cancelled),
             })
         }
     }
 }
 
-fn init_game(e: &PlayGameEvent) -> Result<Game, Error> {
+fn init_game(event: &PlayGameEvent, cancel_token: CancellationToken) -> Result<Game, Error> {
     Ok(GameConfig {
-        game_id: e.lichess_game_id.clone(),
-        bot_name: e.lichess_bot_id.clone(),
-        lichess_auth_token: e.lichess_auth_token.clone(),
-        move_region: Region::from_str(e.move_function_region.as_str())?,
-        move_function_name: e.move_function_name.clone(),
+        game_id: event.lichess_game_id.clone(),
+        bot_name: event.lichess_bot_id.clone(),
+        lichess_auth_token: event.lichess_auth_token.clone(),
+        move_region: Region::from_str(event.move_function_region.as_str())?,
+        move_function_name: event.move_function_name.clone(),
+        cancel_token,
     }
     .into())
 }
