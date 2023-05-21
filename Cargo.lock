@@ -941,6 +941,7 @@ dependencies = [
  "myopic-brain",
  "rand",
  "reqwest",
+ "response-stream",
  "rusoto_core",
  "rusoto_dynamodb",
  "rusoto_lambda",
