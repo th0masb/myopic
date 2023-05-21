@@ -50,6 +50,8 @@ pub struct GameFunctionConfig {
     pub id: AwsResourceId,
     #[serde(rename = "abortAfterSecs")]
     pub abort_after_secs: u8,
+    #[serde(rename = "initialRecursionDepth")]
+    pub initial_recursion_depth: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -169,6 +171,7 @@ pub fn extract_game_lambda_payload(config: &AppConfig, game_id: &str) -> String 
         lichess_auth_token: config.lichess_bot.auth_token.clone(),
         lichess_bot_id: config.lichess_bot.bot_id.clone(),
         abort_after_secs: config.game_function.abort_after_secs,
+        depth_remaining: config.game_function.initial_recursion_depth,
     })
     .unwrap()
 }

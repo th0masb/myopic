@@ -67,13 +67,20 @@ async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutpu
     let game_stream = open_game_stream(&e.lichess_game_id, &e.lichess_auth_token).await?;
     match response_stream::handle(game_stream, &mut handler).await? {
         None => Err(Error::from("Game stream ended unexpectedly!")),
-        Some(CompletionType::Cancelled) => {
-            log::info!("Recursively calling this function");
-            Err(Error::from("TODO!"))
-        }
         Some(CompletionType::GameFinished) => Ok(PlayGameOutput {
             message: format!("Game {} completed", e.lichess_game_id),
         }),
+        Some(CompletionType::Cancelled) => {
+            log::info!("Recursively calling this function");
+            let mut payload = event.payload.clone();
+            payload.depth_remaining -= 1;
+            if payload.depth_remaining < 1 {
+                Err(Error::from("Can not recurse any further!"))
+            } else {
+                // TODO Invoke the lambda again with the new payload
+                Err(Error::from("TODO!"))
+            }
+        }
     }
 }
 
