@@ -1,6 +1,7 @@
 use async_trait::async_trait;
+use std::ops::Sub;
 use std::str::FromStr;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
 
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use myopic_brain::anyhow::{anyhow, Result};
@@ -23,7 +24,7 @@ mod lichess;
 mod messages;
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
-const CANCEL_PERIOD_MILLIS: u64 = 60000;
+const CANCEL_PERIOD_SECS: u64 = 60;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -39,9 +40,12 @@ async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutpu
     let token = CancellationToken::new();
 
     let cloned_token = token.clone();
-    let ctx = &event.context;
-    let cancel_wait = Duration::from_millis(ctx.deadline - CANCEL_PERIOD_MILLIS);
-    // Send cancellation signal after a certain time has passed
+    let cancel_wait = event
+        .context
+        .deadline()
+        .sub(Duration::from_secs(CANCEL_PERIOD_SECS))
+        .duration_since(SystemTime::now())?;
+
     tokio::spawn(async move {
         log::info!("Cancelling in {}s", cancel_wait.as_secs());
         tokio::time::sleep(cancel_wait).await;
@@ -90,6 +94,7 @@ impl StreamHandler<CompletionType> for StreamLineHandler {
     async fn handle(&mut self, line: String) -> Result<LoopAction<CompletionType>> {
         log::info!("Stream heartbeat");
         if self.cancel_token.is_cancelled() {
+            log::info!("Cancellation detected! Breaking from game stream");
             return Ok(LoopAction::Break(CompletionType::Cancelled));
         }
         if line.trim().is_empty() {
