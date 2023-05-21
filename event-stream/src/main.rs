@@ -26,7 +26,6 @@ mod events;
 mod forwarding;
 mod gamestart;
 mod lichess;
-mod payload;
 mod streamloop;
 mod userstatus;
 
