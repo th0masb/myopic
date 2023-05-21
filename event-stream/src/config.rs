@@ -2,7 +2,7 @@ use regex::Regex;
 use serde_derive::{Deserialize, Serialize};
 use std::time::Duration;
 
-use crate::payload::PlayGameEvent;
+use lambda_payloads::chessgame::PlayGameEvent;
 
 const LICHESS_AUTH_TOKEN_VAR: &'static str = "LICHESS_AUTH_TOKEN";
 const CONFIG_VAR: &'static str = "APP_CONFIG";
