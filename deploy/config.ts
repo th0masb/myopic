@@ -50,7 +50,8 @@ export type EventStreamConfig = {
     config: {
         gameFunction: {
             id: { name: string }
-            abortAfterSecs: number
+            abortAfterSecs: number,
+            maxRecursionDepth: number,
         }
         moveFunction: { name: string }
         lichessBot: {
@@ -80,7 +81,8 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
         config: {
             gameFunction: {
                 id: { name: "HyperopicGameLambda" },
-                abortAfterSecs: 30
+                abortAfterSecs: 30,
+                maxRecursionDepth: 3
             },
             moveFunction: {
                 name: "Hyperopic-Move"
@@ -112,7 +114,8 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
         config: {
             gameFunction: {
                 id: { name: "LichessGameLambda" },
-                abortAfterSecs: 30
+                abortAfterSecs: 30,
+                maxRecursionDepth: 3
             },
             moveFunction: {
                 name: "Myopic-Move"

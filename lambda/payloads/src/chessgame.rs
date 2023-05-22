@@ -22,10 +22,10 @@ pub struct PlayGameEvent {
     /// before aborting the game
     #[serde(rename = "abortAfterSecs")]
     pub abort_after_secs: u8,
-    /// Recursion depth remaining for this game
-    #[serde(rename = "depthRemaining")]
-    // TODO change to max depth + current depth so we don't duplicate intro messages
-    pub depth_remaining: u8,
+    #[serde(rename = "maxDepth")]
+    pub max_depth: u8,
+    #[serde(rename = "currentDepth")]
+    pub current_depth: u8,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
