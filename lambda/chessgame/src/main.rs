@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use bytes::Bytes;
 use std::ops::Sub;
 use std::str::FromStr;
 use std::time::{Duration, Instant, SystemTime};
@@ -7,6 +8,7 @@ use lambda_runtime::{service_fn, Error, LambdaEvent};
 use myopic_brain::anyhow::{anyhow, Result};
 use reqwest::Response;
 use rusoto_core::Region;
+use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
 use simple_logger::SimpleLogger;
 
 use game::Game;
@@ -57,7 +59,9 @@ async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutpu
     log::info!("Initializing game loop");
     let e = &event.payload;
     let game = init_game(e, token.child_token())?;
-    game.post_introduction().await;
+    if e.current_depth == 0 {
+        game.post_introduction().await;
+    }
     let mut handler = StreamLineHandler {
         game,
         start: Instant::now(),
@@ -77,8 +81,24 @@ async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutpu
             if payload.current_depth >= payload.max_depth {
                 Err(Error::from("Can not recurse any further!"))
             } else {
-                // TODO Invoke the lambda again with the new payload
-                Err(Error::from("TODO!"))
+                let region = Region::from_str(event.payload.move_function_region.as_str())?;
+                let response = LambdaClient::new(region)
+                    .invoke_async(InvokeAsyncRequest {
+                        function_name: event.context.invoked_function_arn.clone(),
+                        invoke_args: Bytes::from(serde_json::to_string(&payload)?),
+                    })
+                    .await?;
+
+                if let Some(202) = response.status {
+                    Ok(PlayGameOutput {
+                        message: format!("Successfully continued {}", e.lichess_game_id),
+                    })
+                } else {
+                    Err(Error::from(format!(
+                        "Recursion status {:?} for game {}",
+                        response.status, e.lichess_game_id
+                    )))
+                }
             }
         }
     }

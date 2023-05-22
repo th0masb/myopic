@@ -37,7 +37,10 @@ export class GameLambdaStack extends Stack {
         const ps = new iam.PolicyStatement();
         ps.addActions("lambda:InvokeFunction");
         const {region, account} = accountAndRegion;
-        ps.addResources(`arn:aws:lambda:${region}:${account}:function:${moveFunctionName}`)
+        ps.addResources(
+            `arn:aws:lambda:${region}:${account}:function:${moveFunctionName}`,
+            `arn:aws:lambda:${region}:${account}:function:${functionName}`,
+        )
         fn.addToRolePolicy(ps);
         this.functionArn = fn.functionArn
     }
