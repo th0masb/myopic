@@ -73,8 +73,8 @@ async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutpu
         Some(CompletionType::Cancelled) => {
             log::info!("Recursively calling this function");
             let mut payload = event.payload.clone();
-            payload.depth_remaining -= 1;
-            if payload.depth_remaining < 1 {
+            payload.current_depth += 1;
+            if payload.current_depth >= payload.max_depth {
                 Err(Error::from("Can not recurse any further!"))
             } else {
                 // TODO Invoke the lambda again with the new payload
