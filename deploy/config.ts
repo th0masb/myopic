@@ -113,7 +113,7 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
         authTokenVar: "MYOPIC_TOKEN",
         config: {
             gameFunction: {
-                id: { name: "LichessGameLambda" },
+                id: { name: "MyopicGameLambda" },
                 abortAfterSecs: 30,
                 maxRecursionDepth: 3
             },
