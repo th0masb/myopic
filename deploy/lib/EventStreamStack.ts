@@ -56,6 +56,7 @@ export class EventStreamStack extends Stack {
             "dynamodb:Query",
             "dynamodb:PutItem",
             "dynamodb:UpdateItem",
+            "dynamodb:GetItem",
         );
         ps.addResources(
             tableArn,
