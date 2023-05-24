@@ -70,6 +70,8 @@ impl ChallengeTableClient {
         log::info!("Inserting challenge for {}/{}", challenger_id, challenge_id);
         let request = init(|r: &mut PutItemInput| {
             r.table_name = self.table_name.clone();
+            // Don't overwite existing challenges!
+            r.condition_expression = Some(format!("attribute_not_exists({})", attribute_keys::EPOCH_DAY));
             r.item = init(|dest: &mut HashMap<String, AttributeValue>| {
                 dest.insert(
                     attribute_keys::CHALLENGER.to_owned(),
