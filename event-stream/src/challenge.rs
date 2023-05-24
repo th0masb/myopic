@@ -11,6 +11,7 @@ pub struct ChallengeService {
     validity_checks: Vec<Box<dyn ValidityCheck + Send + Sync>>,
     max_daily_challenges: usize,
     max_daily_user_challenges: usize,
+    our_id: String,
 }
 
 impl ChallengeService {
@@ -20,6 +21,7 @@ impl ChallengeService {
             challenge_table: ChallengeTableClient::new(&parameters.rate_limits.challenge_table),
             max_daily_challenges: parameters.rate_limits.max_daily_challenges,
             max_daily_user_challenges: parameters.rate_limits.max_daily_user_challenges,
+            our_id: parameters.lichess_bot.bot_id.to_lowercase(),
             validity_checks: vec![
                 Box::new(parameters.time_constraints.clone()),
                 Box::new(VariantCheck),
@@ -29,17 +31,28 @@ impl ChallengeService {
     }
 
     pub async fn process_challenge(&self, challenge: Challenge) -> Result<String> {
-        let passes_static_checks =
-            self.validity_checks.iter().all(|check| check.accepts(&challenge));
-
-        if passes_static_checks && self.passes_table_checks(&challenge).await? {
+        let challenge_id = challenge.id.as_str();
+        log::info!("Processing challenge {}", challenge_id);
+        if challenge.challenger.id == self.our_id {
             self.challenge_table
-                .insert_challenge(challenge.challenger.id.as_str(), challenge.id.as_str())
+                .insert_challenge(self.our_id.as_str(), challenge_id)
                 .await?;
-            self.post_challenge_response(&challenge, "accept").await
+            Ok(format!("Added entry for our challenge {}", challenge_id))
         } else {
-            log::info!("Illegal challenge: {:?}", &challenge);
-            self.post_challenge_response(&challenge, "decline").await
+            let passes_static_checks = self
+                .validity_checks
+                .iter()
+                .all(|check| check.accepts(&challenge));
+
+            if passes_static_checks && self.passes_table_checks(&challenge).await? {
+                self.challenge_table
+                    .insert_challenge(challenge.challenger.id.as_str(), challenge_id)
+                    .await?;
+                self.post_challenge_response(&challenge, "accept").await
+            } else {
+                log::info!("Illegal challenge: {:?}", &challenge);
+                self.post_challenge_response(&challenge, "decline").await
+            }
         }
     }
 

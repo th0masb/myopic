@@ -9,12 +9,11 @@ use crate::config::AppConfig;
 use crate::events::GameStart;
 use crate::lichess::LichessClient;
 
-const SELF_ID: &str = "Me";
-
 pub struct GameStartService {
     client: LichessClient,
     invoker: LambdaInvoker,
     challenge_table: ChallengeTableClient,
+    our_id: String,
 }
 
 impl GameStartService {
@@ -23,6 +22,7 @@ impl GameStartService {
             client: LichessClient::new(parameters.lichess_bot.auth_token.clone()),
             invoker: LambdaInvoker::new(parameters.clone()),
             challenge_table: ChallengeTableClient::new(&parameters.rate_limits.challenge_table),
+            our_id: parameters.lichess_bot.bot_id.to_lowercase(),
         }
     }
 
@@ -33,17 +33,7 @@ impl GameStartService {
 
         let their_challenge = table_client.get_entry(challenger_id, game_id).await?;
         if their_challenge.is_none() {
-            log::info!("Table entry absent, we initiated challenge {}!", game_id);
-            challenger_id = SELF_ID;
-            // We may have already inserted an entry and started the game
-            let our_challenge = table_client.get_entry(challenger_id, game_id).await?;
-            if our_challenge.is_none() {
-                log::info!("Creating new table entry for {}", game_id);
-                // We need to record the challenge to avoid duplicating the game lambda
-                table_client
-                    .insert_challenge(challenger_id, game_id)
-                    .await?
-            }
+            challenger_id = self.our_id.as_str();
         }
 
         if table_client.set_started(challenger_id, game_id).await? {
