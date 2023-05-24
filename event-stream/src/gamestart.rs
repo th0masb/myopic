@@ -9,6 +9,8 @@ use crate::config::AppConfig;
 use crate::events::GameStart;
 use crate::lichess::LichessClient;
 
+const SELF_ID: &str = "Me";
+
 pub struct GameStartService {
     client: LichessClient,
     invoker: LambdaInvoker,
@@ -25,9 +27,27 @@ impl GameStartService {
     }
 
     pub async fn process_event(&mut self, event: GameStart) -> Result<String> {
-        let (game_id, opponent_id) = (event.id.as_str(), event.opponent.id.as_str());
-        if self.challenge_table.set_started(opponent_id, game_id).await? {
-            log::info!("Lambda for {}/{} should be invoked", opponent_id, game_id);
+        let (game_id, mut challenger_id) = (event.id.as_str(), event.opponent.id.as_str());
+        log::info!("Processing GameStart {} against {}", game_id, challenger_id);
+        let table_client = &self.challenge_table;
+
+        let their_challenge = table_client.get_entry(challenger_id, game_id).await?;
+        if their_challenge.is_none() {
+            log::info!("Table entry absent, we initiated challenge {}!", game_id);
+            challenger_id = SELF_ID;
+            // We may have already inserted an entry and started the game
+            let our_challenge = table_client.get_entry(challenger_id, game_id).await?;
+            if our_challenge.is_none() {
+                log::info!("Creating new table entry for {}", game_id);
+                // We need to record the challenge to avoid duplicating the game lambda
+                table_client
+                    .insert_challenge(challenger_id, game_id)
+                    .await?
+            }
+        }
+
+        if table_client.set_started(challenger_id, game_id).await? {
+            log::info!("Lambda for {}/{} should be invoked", challenger_id, game_id);
             match self.invoker.trigger_lambda(game_id).await {
                 Err(e) => Err(anyhow!(
                     "Unable to trigger lambda: {}, abort status: {:?}",
