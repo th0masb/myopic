@@ -19,11 +19,15 @@ where
 {
     let mut response_stream = response.bytes_stream();
     while let Some(bytes) = response_stream.next().await {
-        let line = String::from_utf8(bytes?.to_vec())?;
-        match handler.handle(line.trim().to_owned()).await? {
-            LoopAction::Continue => continue,
-            LoopAction::Break(result) => return Ok(Some(result)),
+        let stream_line = String::from_utf8(bytes?.to_vec())?.trim().to_owned();
+        for event in stream_line.split('\n') {
+            match handler.handle(event.to_owned()).await? {
+                LoopAction::Continue => continue,
+                LoopAction::Break(result) => return Ok(Some(result)),
+            }
         }
     }
     Ok(None)
 }
+
+
