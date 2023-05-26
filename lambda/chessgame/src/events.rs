@@ -93,6 +93,25 @@ mod test {
     }
 
     #[test]
+    fn deserialize_draw_offer() {
+        let json = r#"{"type":"chatLine","room":"player","username":"lichess","text":"White offers draw"}"#;
+        match serde_json::from_str::<GameEvent>(json) {
+            Err(error) => panic!("Parse error {:?}", error),
+            Ok(event) => match event {
+                GameEvent::ChatLine { content } => assert_eq!(
+                    ChatLine {
+                        username: Some("lichess".to_owned()),
+                        text: Some("White offers draw".to_owned()),
+                        room: Some("player".to_owned()),
+                    },
+                    content
+                ),
+                _ => panic!("Wrong event {:?}", event),
+            },
+        }
+    }
+
+    #[test]
     fn deserialize_state() {
         let json = r#"{
             "type": "gameState",
