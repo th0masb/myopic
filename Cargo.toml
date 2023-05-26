@@ -7,6 +7,7 @@ members = [
     "lambda/benchmark",
     "lambda/chessgame",
     "lambda/chessmove",
+    "lambda/challenge",
     "lib/payloads",
     "openings/dynamodb-uploader",
     "openings/pgn-extractor",
