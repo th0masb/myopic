@@ -8,7 +8,7 @@ use tokio_util::sync::CancellationToken;
 use myopic_brain::anyhow::{anyhow, Result};
 use myopic_brain::{ChessBoard, EvalBoard, Side};
 
-use crate::events::{ChatLine, Clock, GameEvent, GameFull, GameState};
+use crate::events::{Clock, GameEvent, GameFull, GameState};
 use crate::lichess::{LichessChatRoom, LichessService};
 use crate::{messages, MoveLambdaClient};
 
@@ -106,16 +106,13 @@ impl Game {
                 Err(anyhow!("{}", error))
             }
             Ok(event) => match event {
-                GameEvent::ChatLine { content } => self.process_chat(content),
                 GameEvent::GameFull { content } => self.process_game(content).await,
                 GameEvent::State { content } => self.process_state(content).await,
+                GameEvent::ChatLine { .. } | GameEvent::OpponentGone { .. } => {
+                    Ok(GameExecutionState::Running)
+                }
             },
         }
-    }
-
-    fn process_chat(&self, _chat_line: ChatLine) -> Result<GameExecutionState> {
-        // Do nothing for now
-        Ok(GameExecutionState::Running)
     }
 
     async fn process_game(&mut self, game: GameFull) -> Result<GameExecutionState> {
