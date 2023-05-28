@@ -18,6 +18,18 @@ pub enum GameEvent {
         #[serde(flatten)]
         content: ChatLine,
     },
+    #[serde(rename = "opponentGone")]
+    OpponentGone {
+        #[serde(flatten)]
+        content: OpponentGone,
+    },
+}
+
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct OpponentGone {
+    pub gone: bool,
+    #[serde(rename = "claimWinInSeconds")]
+    pub claim_win_in_seconds: Option<u32>,
 }
 
 // Make all fields optional for now, don't want
@@ -66,6 +78,45 @@ mod test {
     use serde_json;
 
     use super::*;
+
+    #[test]
+    fn deserialize_opponent_gone_false() {
+        assert_eq!(
+            GameEvent::OpponentGone {
+                content: OpponentGone {
+                    gone: false,
+                    claim_win_in_seconds: None,
+                }
+            },
+            serde_json::from_str(
+                r#"{
+                    "type": "opponentGone",
+                    "gone": false
+                }"#
+            )
+            .expect("Could not parse test input")
+        )
+    }
+
+    #[test]
+    fn deserialize_opponent_gone_true() {
+        assert_eq!(
+            GameEvent::OpponentGone {
+                content: OpponentGone {
+                    gone: true,
+                    claim_win_in_seconds: Some(8),
+                }
+            },
+            serde_json::from_str(
+                r#"{
+                    "type": "opponentGone",
+                    "gone": true,
+                    "claimWinInSeconds": 8
+                }"#
+            )
+            .expect("Could not parse test input")
+        )
+    }
 
     #[test]
     fn deserialize_chat_line() {
