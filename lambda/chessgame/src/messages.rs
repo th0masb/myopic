@@ -1,11 +1,4 @@
-pub const INTRO_1: &'static str = "Hello! I am a serverless program written in Rust \
-and deployed via two AWS Lambda functions for computation and a DynamoDB table for \
-openings";
-
-pub const INTRO_2: &'static str = "I am active 24/7 and accept all realtime challenges \
-with a clock between 1+0 and 10+5";
-
-pub const INTRO_3: &'static str = "The code is hosted on GitHub and can be found by \
-googling \"th0masb/myopic\" (links cannot be posted here)";
-
-pub const INTRO_4: &'static str = "Thanks for playing, good luck and have fun!";
+pub const INTRO: &'static str = "In this shared endeavor, victory is not the ultimate goal; \
+    rather, it is the pursuit of wisdom, the cultivation of patience, and the enrichment of our \
+    minds. So, let us engage in thoughtful discourse, ponder the mysteries of the game, and embark \
+    on a profound exploration of the philosophical realm that chess unveils.";
