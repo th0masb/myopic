@@ -44,10 +44,19 @@ export const AccountAndRegionValues: AccountAndRegion = {
     account: process.env.MYOPIC_AWS_ACCOUNT!,
 }
 
-export type EventStreamConfig = {
+export type BotConfig = {
     name: string
     authTokenVar: string
-    config: {
+    challengerConfig?: {
+        ourUserId: string,
+        token: string,
+        challengeCount: number,
+        timeLimitOptions: {
+            limit: number,
+            increment: number
+        }[]
+    }
+    eventStreamConfig: {
         gameFunction: {
             id: { name: string }
             abortAfterSecs: number,
@@ -74,11 +83,17 @@ export type EventStreamConfig = {
     }
 }
 
-export const EventStreamConfigValues: EventStreamConfig[] = [
+export const BotConfigValues: BotConfig[] = [
     {
         name: "Hyperopic",
         authTokenVar: "HYPEROPIC_TOKEN",
-        config: {
+        challengerConfig: {
+            ourUserId: "hyperopic",
+            token: process.env["HYPEROPIC_TOKEN"]!,
+            challengeCount: 24,
+            timeLimitOptions: []
+        },
+        eventStreamConfig: {
             gameFunction: {
                 id: { name: "HyperopicGameLambda" },
                 abortAfterSecs: 30,
@@ -89,29 +104,18 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
             },
             lichessBot: {
                 botId: "Hyperopic",
-                userMatchers: [
-                    {
-                        include: true,
-                        pattern: "^th0masb$"
-                    }
-                ]
-            },
-            eventLoop: {
-                maxStreamLifeMins: 60,
-                retryWaitDurationSecs: 5,
-                statusPollGapSecs: 60,
             },
             rateLimits: {
                 challengeTable: { name: "HyperopicChallenges" },
                 maxDailyChallenges: 100,
-                maxDailyUserChallenges: 100,
+                maxDailyUserChallenges: 5,
             }
         }
     },
     {
         name: "Myopic",
         authTokenVar: "MYOPIC_TOKEN",
-        config: {
+        eventStreamConfig: {
             gameFunction: {
                 id: { name: "MyopicGameLambda" },
                 abortAfterSecs: 30,
@@ -122,11 +126,17 @@ export const EventStreamConfigValues: EventStreamConfig[] = [
             },
             lichessBot: {
                 botId: "myopic-bot",
+                userMatchers: [
+                    {
+                        include: true,
+                        pattern: "^th0masb$"
+                    }
+                ]
             },
             rateLimits: {
                 challengeTable: { name: "MyopicChallenges" },
                 maxDailyChallenges: 100,
-                maxDailyUserChallenges: 5,
+                maxDailyUserChallenges: 100,
             }
         }
     }

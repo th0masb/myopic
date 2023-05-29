@@ -1,6 +1,6 @@
 import {aws_ecs as ecs, aws_iam as iam, Stack} from "aws-cdk-lib";
 import {Construct} from "constructs";
-import {AccountAndRegion, EventStreamConfig} from "../config";
+import {AccountAndRegion, BotConfig} from "../config";
 import {DockerImageAsset} from "aws-cdk-lib/aws-ecr-assets";
 import * as path from "path";
 
@@ -12,7 +12,7 @@ export class EventStreamStack extends Stack {
         cluster: ecs.Cluster,
         gameLambdaArn: string,
         challengesTableArn: string,
-        config: EventStreamConfig
+        config: BotConfig
     ) {
         super(scope, id, {env: accountAndRegion});
         const taskDefinition = new ecs.TaskDefinition(this, "EventStreamTaskDefinition", {
@@ -26,7 +26,7 @@ export class EventStreamStack extends Stack {
             memoryLimitMiB: 210,
             environment: {
                 LICHESS_AUTH_TOKEN: process.env[config.authTokenVar]!,
-                APP_CONFIG: JSON.stringify(config.config)
+                APP_CONFIG: JSON.stringify(config.eventStreamConfig)
             },
             logging: ecs.LogDrivers.awsLogs({
                 streamPrefix: "EventStream",

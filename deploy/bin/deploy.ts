@@ -8,7 +8,7 @@ import {ClusterStack} from "../lib/ClusterStack";
 import {
     AccountAndRegionValues,
     BotLambdaConfigValues,
-    EventStreamConfigValues,
+    BotConfigValues,
     GameLambdaConfigValues,
     OpeningTableConfigValues
 } from "../config";
@@ -30,7 +30,7 @@ const cluster = new ClusterStack(
     AccountAndRegionValues,
 )
 
-EventStreamConfigValues.forEach((config) => {
+BotConfigValues.forEach((config) => {
     const bot = new BotStack(
         app,
         config.name,
@@ -43,7 +43,7 @@ EventStreamConfigValues.forEach((config) => {
         `${config.name}GameLambda`,
         AccountAndRegionValues,
         GameLambdaConfigValues,
-        config.config.gameFunction.id.name,
+        config.eventStreamConfig.gameFunction.id.name,
         bot.moveLambdaName
     )
     const challengesTable = new ChallengesTableStack(

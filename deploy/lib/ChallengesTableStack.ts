@@ -1,6 +1,6 @@
 import {aws_dynamodb as db, RemovalPolicy, Stack} from "aws-cdk-lib";
 import {Construct} from "constructs";
-import {AccountAndRegion, EventStreamConfig} from "../config";
+import {AccountAndRegion, BotConfig} from "../config";
 import {BillingMode} from "aws-cdk-lib/aws-dynamodb";
 
 export class ChallengesTableStack extends Stack {
@@ -10,12 +10,12 @@ export class ChallengesTableStack extends Stack {
         scope: Construct,
         id: string,
         accountAndRegion: AccountAndRegion,
-        eventStreamConfig: EventStreamConfig,
+        eventStreamConfig: BotConfig,
     ) {
         super(scope, id, {env: accountAndRegion});
         const table = new db.Table(this, `${id}-Table`, {
             billingMode: BillingMode.PAY_PER_REQUEST,
-            tableName: eventStreamConfig.config.rateLimits.challengeTable.name,
+            tableName: eventStreamConfig.eventStreamConfig.rateLimits.challengeTable.name,
             removalPolicy: RemovalPolicy.DESTROY,
             timeToLiveAttribute: "Expiry",
             partitionKey: {

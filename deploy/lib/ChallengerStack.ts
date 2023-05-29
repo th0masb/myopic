@@ -1,0 +1,40 @@
+import {aws_lambda as lambda, Duration, Stack} from "aws-cdk-lib";
+import {Construct} from "constructs";
+import {AccountAndRegion, BotConfig} from "../config";
+import * as path from "path";
+
+export class ChallengerStack extends Stack {
+    constructor(
+        scope: Construct,
+        id: string,
+        accountAndRegion: AccountAndRegion,
+        botConfig: BotConfig,
+    ) {
+        super(scope, id, {env: accountAndRegion});
+
+        const challengeFn = new lambda.DockerImageFunction(this, id, {
+            functionName: `${botConfig.name}Challenger`,
+            retryAttempts: 0,
+            memorySize: 128,
+            timeout: Duration.minutes(3),
+            code: lambda.DockerImageCode.fromImageAsset(
+                path.join(__dirname, "..", ".."),
+                {
+                    file: path.join("tools", "workspace.dockerfile"),
+                    buildArgs: {
+                        APP_NAME: "challenge",
+                        APP_CONFIG: JSON.stringify({
+
+
+                        })
+                    },
+                }
+            ),
+        });
+
+
+
+
+
+    }
+}
