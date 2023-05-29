@@ -116,15 +116,18 @@ impl ChallengeTableClient {
                 );
             }))
         });
-        self.client.update_item(request).await.map_err(|e| anyhow!(e)).map(|response| {
-            !response
-                .attributes
-                .and_then(|attr| attr.get(attribute_keys::STARTED).cloned())
-                .and_then(|started| started.bool)
-                .expect(
-                    format!("Unknown flag change for {}-{}", challenger_id, challenge_id).as_str(),
-                )
-        })
+        self.client
+            .update_item(request)
+            .await
+            .map_err(|e| anyhow!(e))
+            .and_then(|response| {
+                response
+                    .attributes
+                    .and_then(|attr| attr.get(attribute_keys::STARTED).cloned())
+                    .and_then(|started| started.bool)
+                    .map(|started| !started)
+                    .ok_or(anyhow!("Unknown flag change for {}-{}", challenger_id, challenge_id))
+            })
     }
 
     pub async fn fetch_challenges_today(&self) -> Result<Vec<ChallengeTableEntry>> {

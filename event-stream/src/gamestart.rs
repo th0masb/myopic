@@ -31,9 +31,12 @@ impl GameStartService {
         log::info!("Processing GameStart {} against {}", game_id, challenger_id);
         let table_client = &self.challenge_table;
 
-        let their_challenge = table_client.get_entry(challenger_id, game_id).await?;
-        if their_challenge.is_none() {
+        if table_client.get_entry(challenger_id, game_id).await?.is_none() {
             challenger_id = self.our_id.as_str();
+        }
+
+        if table_client.get_entry(challenger_id, game_id).await?.is_none() {
+            return Err(anyhow!("No challenge entry found for {}", game_id))
         }
 
         if table_client.set_started(challenger_id, game_id).await? {
@@ -65,7 +68,7 @@ impl GameStartService {
                 },
             }
         } else {
-            Ok(format!("Lambda for {}/{} was already invoked", opponent_id, game_id))
+            Ok(format!("Lambda for {}/{} was already invoked", challenger_id, game_id))
         }
     }
 }

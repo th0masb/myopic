@@ -155,22 +155,15 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "challenge"
 version = "0.0.0"
 dependencies = [
- "bytes",
- "lambda-payloads",
  "lambda_runtime",
  "log",
  "rand",
  "reqwest",
- "response-stream",
- "rusoto_core",
- "rusoto_dynamodb",
- "rusoto_lambda",
  "serde",
  "serde_derive",
  "serde_json",
  "simple_logger",
  "tokio",
- "tokio-util",
 ]
 
 [[package]]

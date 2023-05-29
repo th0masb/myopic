@@ -72,12 +72,8 @@ impl Game {
     }
 
     pub async fn post_introduction(&self) {
-        for chatline in
-            vec![messages::INTRO_1, messages::INTRO_2, messages::INTRO_3, messages::INTRO_4]
-        {
-            self.post_chat(chatline, LichessChatRoom::Player).await;
-            self.post_chat(chatline, LichessChatRoom::Spectator).await;
-        }
+        self.post_chat(messages::INTRO, LichessChatRoom::Player).await;
+        self.post_chat(messages::INTRO, LichessChatRoom::Spectator).await;
     }
 
     async fn post_chat(&self, text: &str, room: LichessChatRoom) {
