@@ -71,11 +71,11 @@ impl Board {
         target: Square,
         captured: Option<Piece>,
     ) {
-        self.pieces.toggle_piece(moving, &[source, target]);
-        match captured {
-            None => {}
-            Some(p) => self.pieces.toggle_piece(p, &[target]),
-        };
+        if let Some(p) = captured {
+            self.pieces.unset_piece(p, target);
+        }
+        self.pieces.unset_piece(moving, source);
+        self.pieces.set_piece(moving, target);
         self.rights = self.rights.remove_rights(source | target);
         self.enpassant = Board::compute_enpassant(source, target, moving);
         self.clock = if captured.is_some() || moving.is_pawn() {
@@ -87,13 +87,21 @@ impl Board {
 
     fn make_castle(&mut self, zone: CastleZone) {
         self.rights = self.rights.apply_castling(zone.side());
-        self.toggle_castle_pieces(zone);
+        let (rook, r_source, r_target) = zone.rook_data();
+        let (king, k_source, k_target) = zone.king_data();
+        self.pieces.unset_piece(rook, r_source);
+        self.pieces.unset_piece(king, k_source);
+        self.pieces.set_piece(rook, r_target);
+        self.pieces.set_piece(king, k_target);
         self.enpassant = None;
         self.clock += 1;
     }
 
     fn make_enpassant(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
-        self.toggle_enpassant_pieces(side, from, dest, capture);
+        let moving_pawn = Piece::pawn(side);
+        self.pieces.unset_piece(moving_pawn.reflect(), capture);
+        self.pieces.unset_piece(moving_pawn, from);
+        self.pieces.set_piece(moving_pawn, dest);
         self.enpassant = None;
         self.clock = 0;
     }
@@ -105,13 +113,12 @@ impl Board {
         promoted: Piece,
         captured: Option<Piece>,
     ) {
+        if let Some(p) = captured {
+            self.pieces.unset_piece(p, dest);
+        }
         let moved = Piece::pawn(promoted.side());
-        self.pieces.toggle_piece(moved, &[from]);
-        self.pieces.toggle_piece(promoted, &[dest]);
-        match captured {
-            None => {}
-            Some(p) => self.pieces.toggle_piece(p, &[dest]),
-        };
+        self.pieces.unset_piece(moved, from);
+        self.pieces.set_piece(promoted, dest);
         self.enpassant = None;
         self.clock = 0;
     }
@@ -162,19 +169,27 @@ impl Board {
         target: Square,
         captured: Option<Piece>,
     ) {
-        self.pieces.toggle_piece(piece, &[target, source]);
-        match captured {
-            None => {}
-            Some(p) => self.pieces.toggle_piece(p, &[target]),
-        };
+        self.pieces.unset_piece(piece, target);
+        self.pieces.set_piece(piece, source);
+        if let Some(p) = captured {
+            self.pieces.set_piece(p, target);
+        }
     }
 
     fn unmake_castle(&mut self, zone: CastleZone) {
-        self.toggle_castle_pieces(zone);
+        let (rook, r_source, r_target) = zone.rook_data();
+        let (king, k_source, k_target) = zone.king_data();
+        self.pieces.set_piece(rook, r_source);
+        self.pieces.set_piece(king, k_source);
+        self.pieces.unset_piece(rook, r_target);
+        self.pieces.unset_piece(king, k_target);
     }
 
     fn unmake_enpassant(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
-        self.toggle_enpassant_pieces(side, from, dest, capture);
+        let moving_pawn = Piece::pawn(side);
+        self.pieces.unset_piece(moving_pawn, dest);
+        self.pieces.set_piece(moving_pawn.reflect(), capture);
+        self.pieces.set_piece(moving_pawn, from);
     }
 
     fn unmake_promotion(
@@ -184,32 +199,12 @@ impl Board {
         promoted: Piece,
         captured: Option<Piece>,
     ) {
-        let moved_pawn = Piece::pawn(promoted.side());
-        self.pieces.toggle_piece(moved_pawn, &[from]);
-        self.pieces.toggle_piece(promoted, &[dest]);
-        match captured {
-            None => {}
-            Some(p) => self.pieces.toggle_piece(p, &[dest]),
-        };
-    }
-
-    fn toggle_castle_pieces(&mut self, zone: CastleZone) {
-        let (rook, r_source, r_target) = zone.rook_data();
-        let (king, k_source, k_target) = zone.king_data();
-        self.pieces.toggle_piece(rook, &[r_source, r_target]);
-        self.pieces.toggle_piece(king, &[k_source, k_target]);
-    }
-
-    fn toggle_enpassant_pieces(
-        &mut self,
-        side: Side,
-        source: Square,
-        dest: Square,
-        capture: Square,
-    ) {
-        self.pieces.toggle_piece(Piece::pawn(side), &[source, dest]);
-        self.pieces
-            .toggle_piece(Piece::pawn(side.reflect()), &[capture]);
+        let moved = Piece::pawn(promoted.side());
+        self.pieces.unset_piece(promoted, dest);
+        self.pieces.set_piece(moved, from);
+        if let Some(p) = captured {
+            self.pieces.set_piece(p, dest);
+        }
     }
 
     /// Determines the enpassant square for the next board state given a

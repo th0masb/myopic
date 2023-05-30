@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 pub use mv::Move;
 use myopic_core::anyhow::Result;
 use myopic_core::enum_map::Enum;

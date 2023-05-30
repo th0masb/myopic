@@ -160,6 +160,11 @@ impl Board {
             .0
             .iter()
             .filter(|&z| p1(z) && p2(z))
+            .filter(|&z| {
+                let (king, k_source, _) = z.king_data();
+                let (rook, r_source, _) = z.rook_data();
+                self.piece(k_source) == Some(king) && self.piece(r_source) == Some(rook)
+            })
             .map(|zone| Move::Castle { source, zone })
             .collect()
     }
