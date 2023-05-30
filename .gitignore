@@ -7,5 +7,5 @@
 
 **/.idea/
 **/*.iml
-**/flamegraph.svg
+**/flamegraph*.svg
 **/perf.data*

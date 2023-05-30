@@ -87,6 +87,14 @@ impl Piece {
         }
     }
 
+    /// Returns the bishop belonging to the given side.
+    pub fn bishop(side: Side) -> Piece {
+        match side {
+            Side::White => Piece::WB,
+            Side::Black => Piece::BB,
+        }
+    }
+
     /// Returns the pawn which belongs to the given side.
     pub fn pawn(side: Side) -> Piece {
         match side {

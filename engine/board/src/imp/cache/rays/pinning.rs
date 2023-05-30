@@ -27,7 +27,7 @@ impl Board {
         let passive = self.side(self.active.reflect());
         let king_loc = self.pieces.king_location(self.active);
 
-        self.compute_potential_pinners(king_loc)
+        self.compute_xrays(king_loc)
             .iter()
             .map(|square| BitBoard::cord(king_loc, square))
             .filter(|&cord| (cord & active).size() == 2 && (cord & passive).size() == 1)
@@ -38,15 +38,14 @@ impl Board {
             .collect()
     }
 
-    fn compute_potential_pinners(&self, king_loc: Square) -> BitBoard {
+    fn compute_xrays(&self, king_loc: Square) -> BitBoard {
         let passive_sliders = match self.active {
             Side::White => BLACK_SLIDERS,
             Side::Black => WHITE_SLIDERS,
         };
-        let locs = |p: Piece| self.pieces.locs(p);
         passive_sliders
             .iter()
-            .flat_map(|&p| locs(p) & p.empty_control(king_loc))
+            .map(|&p| self.pieces.locs(p) & p.empty_control(king_loc))
             .collect()
     }
 }

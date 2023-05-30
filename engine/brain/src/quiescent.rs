@@ -1,7 +1,8 @@
 use std::cmp;
+use MoveComputeType::{Attacks, AttacksChecks};
 
 use myopic_board::anyhow::Result;
-use myopic_board::{BitBoard, Move, MoveComputeType, Reflectable, TerminalState};
+use myopic_board::{Move, MoveComputeType, TerminalState};
 
 use crate::eval::EvalChessBoard;
 use crate::{eval, see};
@@ -60,51 +61,41 @@ pub fn search<B: EvalChessBoard>(
 }
 
 fn compute_quiescent_moves<B: EvalChessBoard>(state: &mut B, depth: i32) -> Vec<Move> {
-    let mut moves = if depth < Q_CHECK_CAP {
-        state.compute_moves(MoveComputeType::Attacks)
-    } else {
-        state.compute_moves(MoveComputeType::AttacksChecks)
-    };
-    let enemies = state.side(state.active().reflect());
-    let is_attack_filter = |mv: &Move| is_attack(mv, enemies);
+    let moves_type = if depth < Q_CHECK_CAP { Attacks } else { AttacksChecks };
     // If in check don't filter out any attacks, we must check all available moves.
     let good_attack_threshold = if state.in_check() { -eval::INFTY } else { 0 };
-    let split_index = itertools::partition(&mut moves, is_attack_filter);
-    // Score attacks using see and filter bad exchanges before sorting and
-    // recombining.
-    let mut attacks: Vec<_> = moves
-        .iter()
-        .take(split_index)
-        .map(|mv| (mv, score_attack(state, mv)))
-        .filter(|(_, score)| *score > good_attack_threshold)
-        .collect();
-    attacks.sort_by_key(|(_, score)| -*score);
 
-    moves
-        .iter()
-        .cloned()
-        .skip(split_index)
-        .chain(attacks.into_iter().map(|(mv, _)| mv.clone()))
-        .collect()
+    let mut moves = state.compute_moves(moves_type)
+        .into_iter()
+        .map(|mv| (score(state, &mv), mv))
+        .filter(|(s, _)| *s > good_attack_threshold)
+        .collect::<Vec<_>>();
+
+    moves.sort_unstable_by_key(|(score, _)| -*score);
+    moves.into_iter().map(|(_, m)| m).collect()
 }
 
-fn score_attack<B: EvalChessBoard>(state: &mut B, attack: &Move) -> i32 {
-    match attack {
-        &Move::Enpassant { .. } => 10000,
-        &Move::Promotion { .. } => 20000,
-        &Move::Standard { from, dest, .. } => {
-            see::exchange_value(state, from, dest, state.piece_values())
+fn score<B: EvalChessBoard>(state: &mut B, mv: &Move) -> i32 {
+    if !is_attack(mv) {
+        30000
+    } else {
+        match mv {
+            &Move::Enpassant { .. } => 10000,
+            &Move::Promotion { .. } => 20000,
+            &Move::Standard { from, dest, .. } => {
+                see::exchange_value(state, from, dest, state.piece_values())
+            }
+            // Should never get here
+            _ => 0,
         }
-        // Should never get here
-        _ => 0,
     }
 }
 
-fn is_attack(query: &Move, enemies: BitBoard) -> bool {
+fn is_attack(query: &Move) -> bool {
     match query {
         &Move::Enpassant { .. } => true,
         &Move::Castle { .. } => false,
-        &Move::Promotion { dest, .. } => enemies.contains(dest),
-        &Move::Standard { dest, .. } => enemies.contains(dest),
+        &Move::Promotion { capture, .. } => capture.is_some(),
+        &Move::Standard { capture, .. } => capture.is_some(),
     }
 }

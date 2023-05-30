@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use itertools::Itertools;
-use lambda_runtime::{service_fn, Error, LambdaEvent};
+use lambda_runtime::{service_fn, Context, Error, LambdaEvent};
 use simple_logger::SimpleLogger;
 
 use lambda_payloads::benchmark::*;
@@ -10,15 +10,22 @@ use myopic_brain::SearchParameters;
 mod positions;
 
 const LOG_GAP: usize = 2;
+const RUN_LOCALLY_VAR: &str = "RUN_LOCALLY";
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    SimpleLogger::new()
-        .with_level(log::LevelFilter::Info)
-        .without_timestamps()
-        .init()?;
-    lambda_runtime::run(service_fn(handler)).await?;
-    Ok(())
+    SimpleLogger::new().with_level(log::LevelFilter::Info).without_timestamps().init()?;
+    if let Ok(_) = std::env::var(RUN_LOCALLY_VAR) {
+        let output = handler(LambdaEvent::new(
+            BenchStartEvent { positions: 200, depth: 5, table_size: 10_000_000 },
+            Context::default(),
+        ))
+        .await?;
+        println!("{}", serde_json::to_string_pretty(&output)?);
+        Ok(())
+    } else {
+        lambda_runtime::run(service_fn(handler)).await
+    }
 }
 
 async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Error> {
@@ -29,26 +36,16 @@ async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Err
     let mut moves = vec![];
     for (i, root) in roots.into_iter().enumerate() {
         if i % LOG_GAP == 0 {
-            log::info!(
-                "[Position {}, Elapsed {}ms]",
-                i,
-                start.elapsed().as_millis()
-            );
+            log::info!("[Position {}, Elapsed {}ms]", i, start.elapsed().as_millis());
         }
         moves.push(myopic_brain::search(
             root,
-            SearchParameters {
-                terminator: e.depth,
-                table_size: e.table_size,
-            },
+            SearchParameters { terminator: e.depth, table_size: e.table_size },
         )?);
     }
 
-    let execution_times = moves
-        .iter()
-        .map(|o| o.time.as_millis() as u64)
-        .sorted()
-        .collect::<Vec<_>>();
+    let execution_times =
+        moves.iter().map(|o| o.time.as_millis() as u64).sorted().collect::<Vec<_>>();
 
     let output = BenchOutput {
         depth_searched: e.depth,

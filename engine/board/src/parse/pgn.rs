@@ -155,7 +155,7 @@ fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
 
 #[cfg(test)]
 mod test {
-    use crate::{Board, ChessBoard};
+    use crate::Board;
 
     use super::*;
 
