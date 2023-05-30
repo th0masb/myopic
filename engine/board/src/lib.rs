@@ -83,7 +83,8 @@ pub trait ChessBoard {
 
     /// Compute a vector of all the legal moves in this position for the
     /// given computation type. Note there is no particular ordering to the
-    /// move vector.
+    /// move vector. If we are in check then the type is ignored and all
+    /// legal moves are returned.
     fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move>;
 
     /// Compute the termination state of this node. If it is not terminal

@@ -169,7 +169,7 @@ fn piece_char(piece: Piece) -> char {
 mod test {
     use myopic_core::anyhow::Result;
 
-    use crate::{Board, ChessBoard};
+    use crate::Board;
 
     fn execute_success_test(expected_finish: &'static str, uci: &'static str) -> Result<()> {
         let finish = expected_finish.parse::<Board>()?;

@@ -1,5 +1,6 @@
 use std::cmp;
-use std::fmt::Debug;
+use lazy_static::lazy_static;
+use enum_map::EnumMap;
 
 use myopic_board::{BitBoard, ChessBoard, Piece, Reflectable, Side, Square};
 
@@ -35,6 +36,11 @@ struct See<'a, B: ChessBoard> {
     values: &'a [i32; 6],
 }
 
+lazy_static! {
+    static ref ATTDEF_CONSTRAINTS: EnumMap<Square, BitBoard> =
+        compute_attack_location_constraints();
+}
+
 impl<B: ChessBoard> See<'_, B> {
     fn value(&self, piece: Piece) -> i32 {
         self.values[(piece as usize) % 6]
@@ -62,7 +68,12 @@ impl<B: ChessBoard> See<'_, B> {
             //}
             attadef ^= src;
             removed ^= src;
-            let (new_attadef, new_xray) = self.update_xray(removed, attadef, xray);
+            let (new_attadef, new_xray) = self.update_xray(
+                removed,
+                attacker,
+                attadef,
+                xray
+            );
             attadef = new_attadef;
             xray = new_xray;
             active = active.reflect();
@@ -89,46 +100,53 @@ impl<B: ChessBoard> See<'_, B> {
     fn pieces_involved(&self) -> BitBoardPair {
         let (board, target) = (self.board, self.target);
         let (whites, blacks) = board.sides();
-        let zero = BitBoard::EMPTY;
-        let (mut attadef, mut xray) = (zero, zero);
-        // 1. Get possible attack/defense squares from cache lookup
-        // 2. & this with all pieces
-        // 3. Iterate over result looking up the pieces in constant time
-        // 4. Check if thses pieces are actually attdef/xray
-        for (p, loc) in Piece::all().flat_map(|p| self.locs(p).into_iter().map(move |loc| (p, loc)))
-        {
-            if p.control(loc, whites, blacks).contains(target) {
-                attadef ^= loc;
-            } else if is_slider(p) && p.control(loc, zero, zero).contains(target) {
-                xray ^= loc;
+        let (mut attadef, mut xray) = (BitBoard::EMPTY, BitBoard::EMPTY);
+        for (piece, loc) in self.compute_potential_attdef() {
+            if can_xray(piece) {
+                if piece.empty_control(loc).contains(target) {
+                    xray ^= loc;
+                    if piece.control(loc, whites, blacks).contains(target) {
+                        xray ^= loc;
+                        attadef ^= loc;
+                    }
+                }
+            } else if piece.control(loc, whites, blacks).contains(target) {
+                attadef ^= loc
             }
         }
         (attadef, xray)
     }
 
-    fn update_xray(&self, removed: BitBoard, attadef: BitBoard, xray: BitBoard) -> BitBoardPair {
-        if xray.is_empty() || self.is_knight_position(removed) {
+    fn compute_potential_attdef(&self) -> impl Iterator<Item = (Piece, Square)> + '_ {
+        let constraints = ATTDEF_CONSTRAINTS[self.target];
+        Piece::all()
+            .flat_map(move |p| (self.locs(p) & constraints).into_iter().map(move |loc| (p, loc)))
+    }
+
+    fn update_xray(
+        &self,
+        all_removed: BitBoard,
+        last_removed: Piece,
+        attadef: BitBoard,
+        xray: BitBoard
+    ) -> BitBoardPair {
+        // A knight being removed cannot unlock a rank/file xray
+        if xray.is_empty() || last_removed.is_knight() {
             (attadef, xray)
         } else {
             let (mut whites, mut blacks) = self.board.sides();
-            whites = whites - removed;
-            blacks = blacks - removed;
+            whites = whites - all_removed;
+            blacks = blacks - all_removed;
             let (mut new_attadef, mut new_xray) = (attadef, xray);
-            sliders()
-                .iter()
-                .map(|&p| (p, self.locs(p) & xray))
-                .flat_map(|(p, locs)| locs.iter().map(move |loc| (p, loc)))
-                .filter(|(p, loc)| p.control(*loc, whites, blacks).contains(self.target))
-                .for_each(|(_, loc)| {
-                    new_xray ^= loc;
-                    new_attadef ^= loc;
-                });
+            xray.iter().for_each(|square| {
+                let p = self.board.piece(square).unwrap();
+                if p.control(square, whites, blacks).contains(self.target) {
+                    new_xray ^= square;
+                    new_attadef ^= square;
+                }
+            });
             (new_attadef, new_xray)
         }
-    }
-
-    fn is_knight_position(&self, square: BitBoard) -> bool {
-        (self.board.locs(&[Piece::WN]) | self.board.locs(&[Piece::BN])).intersects(square)
     }
 
     fn least_valuable_piece(&self, options: BitBoard, side: Side) -> BitBoard {
@@ -139,22 +157,20 @@ impl<B: ChessBoard> See<'_, B> {
     }
 }
 
-fn sliders<'a>() -> &'a [Piece] {
-    &[
-        Piece::WB,
-        Piece::WR,
-        Piece::WQ,
-        Piece::BB,
-        Piece::BR,
-        Piece::BQ,
-    ]
-}
-
-fn is_slider(piece: Piece) -> bool {
+fn can_xray(piece: Piece) -> bool {
     match piece {
         Piece::WP | Piece::BP | Piece::WN | Piece::BN | Piece::WK | Piece::BK => false,
         _ => true,
     }
+}
+
+fn compute_attack_location_constraints() -> EnumMap<Square, BitBoard> {
+    let mut result = EnumMap::default();
+    for square in Square::iter() {
+        result[square] = Piece::WQ.empty_control(square) |
+            Piece::WN.empty_control(square)
+    }
+    result
 }
 
 #[cfg(test)]
@@ -246,6 +262,16 @@ mod test {
                 .parse::<Board>()
                 .unwrap(),
             expected: vec![(Square::H6, Square::H7, 1)],
+        })
+    }
+
+    #[test]
+    fn see_case_4() {
+        execute_case(TestCase {
+            board: "3r2k1/3r1ppp/2n5/8/3P4/5N2/5PPP/3R1RK1 b - - 6 27"
+                .parse::<Board>()
+                .unwrap(),
+            expected: vec![(Square::C6, Square::D4, 1)],
         })
     }
 }

@@ -18,7 +18,7 @@ pub struct Positions {
     hash: u64,
 }
 
-fn convert(boards: &PiecePositions) -> SquarePositions {
+fn compute_square_positions(boards: &PiecePositions) -> SquarePositions {
     let mut squares = SquarePositions::default();
     for piece in Piece::all() {
         for square in boards[piece as usize] {
@@ -26,6 +26,13 @@ fn convert(boards: &PiecePositions) -> SquarePositions {
         }
     }
     squares
+}
+
+fn compute_side_positions(boards: &[BitBoard]) -> SidePositions {
+    [
+        boards.iter().take(6).fold(BitBoard::EMPTY, |a, &b| a | b),
+        boards.iter().skip(6).fold(BitBoard::EMPTY, |a, &b| a | b),
+    ]
 }
 
 impl FromStr for Positions {
@@ -50,8 +57,8 @@ impl FromStr for Positions {
             Ok(Positions {
                 pieces: bitboards,
                 hash: hash_boards(&bitboards),
-                sides: [compute_whites(&bitboards), compute_blacks(&bitboards)],
-                squares: convert(&bitboards),
+                sides: compute_side_positions(&bitboards),
+                squares: compute_square_positions(&bitboards),
             })
         }
     }
@@ -66,8 +73,8 @@ impl Reflectable for Positions {
         Positions {
             pieces: new_boards,
             hash: hash_boards(&new_boards),
-            sides: [compute_whites(&new_boards), compute_blacks(&new_boards)],
-            squares: convert(&new_boards),
+            sides: compute_side_positions(&new_boards),
+            squares: compute_square_positions(&new_boards),
         }
     }
 }
@@ -79,14 +86,6 @@ fn hash_boards(boards: &[BitBoard]) -> u64 {
         .zip(Piece::all())
         .flat_map(|(&b, p)| b.into_iter().map(move |sq| hash::piece(p, sq)))
         .fold(0u64, |a, b| a ^ b)
-}
-
-fn compute_whites(boards: &[BitBoard]) -> BitBoard {
-    boards.iter().take(6).fold(BitBoard::EMPTY, |a, &b| a | b)
-}
-
-fn compute_blacks(boards: &[BitBoard]) -> BitBoard {
-    boards.iter().skip(6).fold(BitBoard::EMPTY, |a, &b| a | b)
 }
 
 fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
@@ -126,16 +125,13 @@ impl Positions {
         Positions {
             pieces: dest,
             hash: initial_hash,
-            sides: [compute_whites(&dest), compute_blacks(&dest)],
-            squares: convert(&dest),
+            sides: compute_side_positions(&dest),
+            squares: compute_square_positions(&dest),
         }
     }
 
     pub fn side_locations(&self, side: Side) -> BitBoard {
-        match side {
-            Side::White => self.whites(),
-            Side::Black => self.blacks(),
-        }
+        self.sides[side as usize]
     }
 
     pub fn king_location(&self, side: Side) -> Square {
@@ -167,8 +163,8 @@ impl Positions {
 
     pub(crate) fn unset_piece(&mut self, piece: Piece, location: Square) {
         self.hash ^= hash::piece(piece, location);
-        self.pieces[piece as usize] &= !location;
-        self.sides[piece.side() as usize] &= !location;
+        self.pieces[piece as usize] -= location;
+        self.sides[piece.side() as usize] -= location;
         self.squares[location] = None;
     }
 
@@ -186,13 +182,14 @@ mod test {
 
     use super::*;
 
-    //#[test]
-    //fn test_toggle_square() {
-    //    let mut board = init_tracker(Some(E5), Some(C3));
-    //    board.toggle_piece(Piece::WP, &[E5, E4]);
-    //    board.toggle_piece(Piece::BN, &[C3]);
-    //    assert_eq!(init_tracker(Some(E4), None), board);
-    //}
+    #[test]
+    fn test_toggle_square() {
+        let mut board = init_tracker(Some(E5), Some(C3));
+        board.unset_piece(Piece::WP, E5);
+        board.set_piece(Piece::WP, E4);
+        board.unset_piece(Piece::BN, C3);
+        assert_eq!(init_tracker(Some(E4), None), board);
+    }
 
     fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> Positions {
         let mut boards: [BitBoard; 12] = [BitBoard::EMPTY; 12];
@@ -203,8 +200,8 @@ mod test {
         Positions {
             pieces: boards,
             hash: p_hash ^ n_hash,
-            sides: [compute_whites(&boards), compute_blacks(&boards)],
-            squares: convert(&boards),
+            sides: compute_side_positions(&boards),
+            squares: compute_square_positions(&boards),
         }
     }
 }
