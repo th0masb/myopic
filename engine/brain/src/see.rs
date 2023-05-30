@@ -1,4 +1,5 @@
 use std::cmp;
+use std::fmt::Debug;
 
 use myopic_board::{BitBoard, ChessBoard, Piece, Reflectable, Side, Square};
 
@@ -90,6 +91,10 @@ impl<B: ChessBoard> See<'_, B> {
         let (whites, blacks) = board.sides();
         let zero = BitBoard::EMPTY;
         let (mut attadef, mut xray) = (zero, zero);
+        // 1. Get possible attack/defense squares from cache lookup
+        // 2. & this with all pieces
+        // 3. Iterate over result looking up the pieces in constant time
+        // 4. Check if thses pieces are actually attdef/xray
         for (p, loc) in Piece::all().flat_map(|p| self.locs(p).into_iter().map(move |loc| (p, loc)))
         {
             if p.control(loc, whites, blacks).contains(target) {

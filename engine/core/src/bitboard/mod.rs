@@ -245,6 +245,18 @@ impl ops::BitOrAssign<Square> for BitBoard {
     }
 }
 
+impl ops::BitAndAssign<BitBoard> for BitBoard {
+    fn bitand_assign(&mut self, rhs: BitBoard) {
+        self.0 = self.0 & rhs.0;
+    }
+}
+
+impl ops::BitAndAssign<Square> for BitBoard {
+    fn bitand_assign(&mut self, rhs: Square) {
+        self.0 = self.0 & (1u64 << (rhs as u64));
+    }
+}
+
 impl fmt::Debug for BitBoard {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{{{}}}", self.into_iter().join(", "))
