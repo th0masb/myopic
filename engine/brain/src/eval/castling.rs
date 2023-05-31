@@ -1,14 +1,14 @@
 use enum_map::EnumMap;
 use myopic_board::{ChessBoard, Move};
 use crate::{CastleZone, Side};
-use crate::eval::EvalComponent;
+use crate::eval::EvalFacet;
 
 #[derive(Default, Eq, PartialEq)]
-pub struct CastlingEvalComponent {
+pub struct CastlingFacet {
     castling_status: EnumMap<Side, Option<CastleZone>>,
 }
 
-impl CastlingEvalComponent {
+impl CastlingFacet {
     fn penalty<B : ChessBoard>(&self, side: Side, board: &B) -> i32 {
         if self.castling_status[side].is_some() {
             0
@@ -20,12 +20,12 @@ impl CastlingEvalComponent {
     }
 }
 
-impl <B: ChessBoard> EvalComponent<B> for CastlingEvalComponent {
+impl <B: ChessBoard> EvalFacet<B> for CastlingFacet {
     fn static_eval(&self, board: &B) -> i32 {
         self.penalty(Side::White, board) - self.penalty(Side::Black, board)
     }
 
-    fn make(&mut self, mv: &Move) {
+    fn make(&mut self, mv: &Move, _: &B) {
         match mv {
             Move::Castle { zone, .. } => self.castling_status[zone.side()] = Some(*zone),
             _ => ()

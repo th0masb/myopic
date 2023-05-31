@@ -11,6 +11,7 @@ pub mod tables;
 pub mod values;
 mod castling;
 mod development;
+mod antipattern;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -46,10 +47,13 @@ pub trait EvalChessBoard: ChessBoard {
     fn positional_eval(&self, piece: Piece, location: Square) -> i32;
 }
 
-pub trait EvalComponent<B : ChessBoard> {
+pub trait EvalFacet<B : ChessBoard> {
+    /// Return the static evaluation of the given position. Implementors are guaranteed
+    /// that exactly the same move sequence will have been passed to this component
+    /// and the given board position. I.e the internal states are aligned.
     fn static_eval(&self, board: &B) -> i32;
 
-    fn make(&mut self, mv: &Move);
+    fn make(&mut self, mv: &Move, board: &B);
 
     fn unmake(&mut self, mv: &Move);
 }
