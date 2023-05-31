@@ -1,4 +1,4 @@
-use myopic_board::{ChessBoard, Move, Piece, Square};
+use myopic_board::{Board, ChessBoard, Move, Piece, Square};
 
 use crate::eval::EvalComponent;
 use crate::{PieceValues, PositionTables, Reflectable};
@@ -29,8 +29,8 @@ impl Reflectable for Material {
     }
 }
 
-impl EvalComponent for Material {
-    fn static_eval(&self) -> i32 {
+impl EvalComponent<Board> for Material {
+    fn static_eval(&self, _: &Board) -> i32 {
         let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
         let (mid, end) = (self.mid_eval, self.end_eval);
         ((mid * (256 - phase)) + end * phase) / 256
