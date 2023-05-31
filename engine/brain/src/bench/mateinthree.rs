@@ -144,7 +144,7 @@ fn benchmark() {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 search_duration += outcome.time;
-                if test_case.expected_move != outcome.best_move || WIN_VALUE != outcome.eval {
+                if test_case.expected_move != outcome.best_move || WIN_VALUE != outcome.relative_eval {
                     err_count += 1;
                     println!(
                         "Error at {}: Position {}, expected {}, actual {}",

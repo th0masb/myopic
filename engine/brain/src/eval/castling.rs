@@ -15,14 +15,14 @@ impl CastlingFacet {
         } else {
             let rights_remaining = board.remaining_rights()
                 .iter().filter(|z| z.side() == side).count();
-            ((2 - rights_remaining) as i32) * -100
+            ((2 - rights_remaining) as i32) * 100
         }
     }
 }
 
 impl <B: ChessBoard> EvalFacet<B> for CastlingFacet {
     fn static_eval(&self, board: &B) -> i32 {
-        self.penalty(Side::White, board) - self.penalty(Side::Black, board)
+        self.penalty(Side::Black, board) - self.penalty(Side::White, board)
     }
 
     fn make(&mut self, mv: &Move, _: &B) {

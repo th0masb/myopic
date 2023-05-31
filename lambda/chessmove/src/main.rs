@@ -66,7 +66,7 @@ async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveO
                 search_details: Some(SearchDetails {
                     depth_searched: search_outcome.depth,
                     search_duration_millis: search_outcome.time.as_millis() as u64,
-                    eval: search_outcome.eval,
+                    eval: search_outcome.relative_eval,
                 }),
             })
         }

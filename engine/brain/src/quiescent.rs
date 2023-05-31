@@ -24,7 +24,7 @@ pub fn search<B: EvalChessBoard>(
         return Ok(match state.terminal_state() {
             Some(TerminalState::Loss) => eval::LOSS_VALUE,
             Some(TerminalState::Draw) => eval::DRAW_VALUE,
-            None => state.static_eval(),
+            None => state.relative_eval(),
         });
     }
     // If we aren't in check then we can use the static eval as the initial
@@ -36,7 +36,7 @@ pub fn search<B: EvalChessBoard>(
     let mut result = if state.in_check() {
         -eval::INFTY
     } else {
-        state.static_eval()
+        state.relative_eval()
     };
 
     // Break immediately if the stand pat is greater than beta.

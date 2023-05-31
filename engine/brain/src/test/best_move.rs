@@ -47,7 +47,7 @@ fn test_impl<B: EvalChessBoard>(board: B, expected_move_pool: Vec<UciMove>, is_w
                 serde_json::to_string(&outcome).unwrap()
             );
             if is_won {
-                assert_eq!(eval::WIN_VALUE, outcome.eval);
+                assert_eq!(eval::WIN_VALUE, outcome.relative_eval);
             }
         }
     }

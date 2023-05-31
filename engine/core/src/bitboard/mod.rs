@@ -110,6 +110,10 @@ impl BitBoard {
         BitBoard(4629771061636907072),
         BitBoard(9259542123273814144),
     ];
+
+    pub const RIM: BitBoard = BitBoard(
+        72340172838076673 | 9259542123273814144 | 255 | 18374686479671623680
+    );
 }
 
 impl Default for BitBoard {

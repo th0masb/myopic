@@ -27,16 +27,17 @@ pub const DRAW_VALUE: i32 = 0;
 
 /// Extension of the Board trait which adds a static evaluation function.
 pub trait EvalChessBoard: ChessBoard {
-    /// The static evaluation function assigns a score to this exact
+    /// The relative evaluation function assigns a score to this exact
     /// position at the point of time it is called. It does not take
     /// into account potential captures/recaptures etc. It must follow
-    /// the rule that 'a higher score is best for the active side'. That
-    /// is if it is white to move next then a high positive score indicates
-    /// a favorable position for white and if it is black to move a high
-    /// positive score indicates a favorable position for black. If the
-    /// state it terminal it must return the LOSS_VALUE or DRAW_VALUE
-    /// depending on the type of termination.
-    fn static_eval(&self) -> i32;
+    /// the rule that 'A LARGER +VE SCORE BETTER FOR ACTIVE, LARGER -VE
+    /// SCORE BETTER FOR PASSIVE'. That is if it is white to move next
+    /// then a high positive score indicates a favorable position for
+    /// white and if it is black to move a high positive score indicates
+    /// a favorable position for black. If the state it terminal it must
+    /// return the LOSS_VALUE or DRAW_VALUE depending on the type of
+    /// termination.
+    fn relative_eval(&self) -> i32;
 
     /// The value each piece is considered to have in the current
     /// state of the game.
@@ -50,7 +51,9 @@ pub trait EvalChessBoard: ChessBoard {
 pub trait EvalFacet<B : ChessBoard> {
     /// Return the static evaluation of the given position. Implementors are guaranteed
     /// that exactly the same move sequence will have been passed to this component
-    /// and the given board position. I.e the internal states are aligned.
+    /// and the given board position. I.e the internal states are aligned. It must
+    /// follow the rule 'A LARGER +VE SCORE BETTER FOR WHITE, LARGER -VE SCORE BETTER
+    /// FOR BLACK'.
     fn static_eval(&self, board: &B) -> i32;
 
     fn make(&mut self, mv: &Move, board: &B);
