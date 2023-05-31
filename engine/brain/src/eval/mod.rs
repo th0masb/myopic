@@ -10,6 +10,7 @@ mod material;
 pub mod opening;
 pub mod tables;
 pub mod values;
+mod castling;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -45,8 +46,8 @@ pub trait EvalChessBoard: ChessBoard {
     fn positional_eval(&self, piece: Piece, location: Square) -> i32;
 }
 
-pub trait EvalComponent {
-    fn static_eval(&self) -> i32;
+pub trait EvalComponent<B : ChessBoard> {
+    fn static_eval(&self, board: &B) -> i32;
 
     fn make(&mut self, mv: &Move);
 

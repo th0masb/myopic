@@ -1,5 +1,5 @@
 use myopic_board::enum_map::{enum_map, Enum, EnumMap};
-use myopic_board::Square;
+use myopic_board::{Board, Square};
 use std::borrow::BorrowMut;
 
 use crate::eval::EvalComponent;
@@ -196,8 +196,8 @@ impl PieceTracker {
     }
 }
 
-impl EvalComponent for OpeningComponent {
-    fn static_eval(&self) -> i32 {
+impl EvalComponent<Board> for OpeningComponent {
+    fn static_eval(&self, _: &Board) -> i32 {
         self.score
     }
 
@@ -399,19 +399,19 @@ mod test {
         let mut board = case.board;
         let mut component = OpeningComponent::new(dummy_rewards());
         for (uci_mv, expected_eval) in case.moves_evals {
-            let curr_eval = component.static_eval();
+            let curr_eval = component.score;
             let mv = board.parse_uci(uci_mv.as_str())?;
             component.make(&mv);
             assert_eq!(
                 expected_eval,
-                component.static_eval(),
+                component.score,
                 "make {}",
                 uci_mv.as_str()
             );
             component.unmake(&mv);
             assert_eq!(
                 curr_eval,
-                component.static_eval(),
+                component.score,
                 "unmake {}",
                 uci_mv.as_str()
             );
