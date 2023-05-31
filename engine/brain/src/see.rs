@@ -274,4 +274,14 @@ mod test {
             expected: vec![(Square::C6, Square::D4, 1)],
         })
     }
+
+    #[test]
+    fn see_case_5() {
+        execute_case(TestCase {
+            board: "r3k2r/pp1b1ppp/4p3/1Bbp4/8/2N5/PPP2PPP/R1BQ1RK1 w kq - 1 11"
+                .parse::<Board>()
+                .unwrap(),
+            expected: vec![(Square::B5, Square::D7, 0)],
+        })
+    }
 }

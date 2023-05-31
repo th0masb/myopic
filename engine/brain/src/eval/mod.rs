@@ -5,8 +5,6 @@ use myopic_board::{ChessBoard, Move, Piece, Square};
 use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
 
-#[cfg(test)]
-mod clearcut;
 pub mod imp;
 mod material;
 pub mod opening;
