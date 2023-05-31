@@ -1,6 +1,6 @@
 use myopic_board::{Board, ChessBoard, Move, Piece, Square};
 
-use crate::eval::EvalComponent;
+use crate::eval::EvalFacet;
 use crate::{PieceValues, PositionTables, Reflectable};
 
 const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
@@ -9,7 +9,7 @@ const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
     + 2 * PHASE_VALUES[4];
 
 #[derive(Clone, PartialEq, Eq)]
-pub struct Material {
+pub struct MaterialFacet {
     piece_values: PieceValues,
     table_values: PositionTables,
     mid_eval: i32,
@@ -17,9 +17,9 @@ pub struct Material {
     phase: i32,
 }
 
-impl Reflectable for Material {
+impl Reflectable for MaterialFacet {
     fn reflect(&self) -> Self {
-        Material {
+        MaterialFacet {
             mid_eval: -self.mid_eval,
             end_eval: -self.end_eval,
             phase: self.phase,
@@ -29,14 +29,14 @@ impl Reflectable for Material {
     }
 }
 
-impl EvalComponent<Board> for Material {
-    fn static_eval(&self, _: &Board) -> i32 {
+impl <B: ChessBoard> EvalFacet<B> for MaterialFacet {
+    fn static_eval(&self, _: &B) -> i32 {
         let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
         let (mid, end) = (self.mid_eval, self.end_eval);
         ((mid * (256 - phase)) + end * phase) / 256
     }
 
-    fn make(&mut self, mv: &Move) {
+    fn make(&mut self, mv: &Move, _: &B) {
         match mv {
             &Move::Standard {
                 moving,
@@ -139,9 +139,9 @@ impl EvalComponent<Board> for Material {
     }
 }
 
-impl Material {
-    pub fn new<B: ChessBoard>(board: &B, values: PieceValues, tables: PositionTables) -> Material {
-        Material {
+impl MaterialFacet {
+    pub fn new<B: ChessBoard>(board: &B, values: PieceValues, tables: PositionTables) -> MaterialFacet {
+        MaterialFacet {
             mid_eval: compute_midgame(board, &values, &tables),
             end_eval: compute_endgame(board, &values, &tables),
             phase: compute_phase(board),

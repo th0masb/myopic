@@ -7,23 +7,23 @@ use myopic_board::{
 };
 
 use crate::enumset::EnumSet;
-use crate::eval::material::Material;
-use crate::eval::{EvalChessBoard, EvalComponent};
+use crate::eval::material::MaterialFacet;
+use crate::eval::{EvalChessBoard, EvalFacet};
 use crate::{eval, Board, PieceValues, PositionTables};
-use crate::eval::castling::CastlingEvalComponent;
-use crate::eval::development::DevelopmentEvalComponent;
+use crate::eval::castling::CastlingFacet;
+use crate::eval::development::DevelopmentFacet;
 
 pub struct EvalBoard<B: ChessBoard> {
     board: B,
-    material: Material,
-    cmps: Vec<Box<dyn EvalComponent<B>>>,
+    material: MaterialFacet,
+    facets: Vec<Box<dyn EvalFacet<B>>>,
 }
 
 pub struct BoardBuilder {
     board: Board,
     piece_values: PieceValues,
     position_tables: PositionTables,
-    cmps: Vec<Box<dyn EvalComponent<Board>>>,
+    facets: Vec<Box<dyn EvalFacet<Board>>>,
 }
 
 impl Default for EvalBoard<Board> {
@@ -43,10 +43,10 @@ impl From<Board> for BoardBuilder {
         BoardBuilder {
             position_tables: PositionTables::default(),
             piece_values: PieceValues::default(),
-            cmps: if board.to_fen().as_str() == crate::START_FEN {
+            facets: if board.to_fen().as_str() == crate::START_FEN {
                 vec![
-                    Box::new(CastlingEvalComponent::default()),
-                    Box::new(DevelopmentEvalComponent::default()),
+                    Box::new(CastlingFacet::default()),
+                    Box::new(DevelopmentFacet::default()),
                 ]
             } else {
                 vec![]
@@ -83,56 +83,52 @@ impl BoardBuilder {
         self
     }
 
-    pub fn add_eval_component(mut self, cmp: Box<dyn EvalComponent<Board>>) -> BoardBuilder {
-        self.cmps.push(cmp);
+    pub fn add_eval_component(mut self, cmp: Box<dyn EvalFacet<Board>>) -> BoardBuilder {
+        self.facets.push(cmp);
         self
     }
 
     pub fn build(self) -> EvalBoard<Board> {
         EvalBoard {
-            material: Material::new(&self.board, self.piece_values, self.position_tables),
+            material: MaterialFacet::new(&self.board, self.piece_values, self.position_tables),
             board: self.board,
-            cmps: self.cmps,
+            facets: self.facets,
         }
     }
 }
 
-impl<B: ChessBoard> ChessBoard for EvalBoard<B> {
+impl<B: ChessBoard + Clone> ChessBoard for EvalBoard<B> {
     fn make(&mut self, action: Move) -> Result<()> {
-        self.material.make(&action);
-        for cmp in self.cmps.iter_mut() {
-            cmp.make(&action);
+        self.material.make(&action, &self.board);
+        for cmp in self.facets.iter_mut() {
+            cmp.make(&action, &self.board);
         }
         self.board.make(action)
     }
 
     fn unmake(&mut self) -> Result<Move> {
         let action = self.board.unmake()?;
-        self.material.unmake(&action);
-        for cmp in self.cmps.iter_mut() {
+        <MaterialFacet as EvalFacet<B>>::unmake(&mut self.material, &action);
+        for cmp in self.facets.iter_mut() {
             cmp.unmake(&action);
         }
         Ok(action)
     }
 
     fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {
-        let parsed_moves = self.board.play_pgn(moves)?;
+        let mut state_clone = self.board.clone();
+        let parsed_moves = state_clone.play_pgn(moves)?;
         for mv in parsed_moves.iter() {
-            self.material.make(mv);
-            for cmp in self.cmps.iter_mut() {
-                cmp.make(mv);
-            }
+            self.make(mv.clone())?;
         }
         Ok(parsed_moves)
     }
 
     fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
-        let parsed_moves = self.board.play_uci(moves)?;
+        let mut state_clone = self.board.clone();
+        let parsed_moves = state_clone.play_uci(moves)?;
         for mv in parsed_moves.iter() {
-            self.material.make(mv);
-            for cmp in self.cmps.iter_mut() {
-                cmp.make(mv);
-            }
+            self.make(mv.clone())?;
         }
         Ok(parsed_moves)
     }
@@ -209,7 +205,7 @@ impl EvalChessBoard for EvalBoard<Board> {
             Some(TerminalState::Loss) => eval::LOSS_VALUE,
             None => {
                 let eval = self.material.static_eval(&self.board)
-                    + self.cmps.iter().map(|cmp| cmp.static_eval(&self.board)).sum::<i32>();
+                    + self.facets.iter().map(|cmp| cmp.static_eval(&self.board)).sum::<i32>();
                 match self.active() {
                     Side::White => eval,
                     Side::Black => -eval,
