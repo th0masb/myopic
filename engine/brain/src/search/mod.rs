@@ -50,7 +50,8 @@ pub struct SearchParameters<T: SearchTerminator> {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SearchOutcome {
     pub best_move: Move,
-    pub eval: i32,
+    /// Larger +ve score better for side to move
+    pub relative_eval: i32,
     pub depth: usize,
     pub time: Duration,
     pub optimal_path: Vec<Move>,
@@ -63,7 +64,7 @@ impl serde::Serialize for SearchOutcome {
     {
         let mut state = serializer.serialize_struct("SearchOutcome", 4)?;
         state.serialize_field("bestMove", &self.best_move.uci_format())?;
-        state.serialize_field("positionEval", &self.eval)?;
+        state.serialize_field("positionEval", &self.relative_eval)?;
         state.serialize_field("depthSearched", &self.depth)?;
         state.serialize_field("searchDurationMillis", &self.time.as_millis())?;
         state.serialize_field(
@@ -95,7 +96,7 @@ mod searchoutcome_serialize_test {
                 source: 0,
                 zone: CastleZone::WK,
             },
-            eval: -125,
+            relative_eval: -125,
             depth: 2,
             time: Duration::from_millis(3000),
             optimal_path: vec![
@@ -162,7 +163,7 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
             .ok_or(break_err)
             .map(|response| SearchOutcome {
                 best_move: response.best_move,
-                eval: response.eval,
+                relative_eval: response.eval,
                 depth: response.depth,
                 time: search_start.elapsed(),
                 optimal_path: response.path,

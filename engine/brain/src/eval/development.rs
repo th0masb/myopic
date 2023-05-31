@@ -74,13 +74,13 @@ impl DevelopmentFacet {
             .filter(|(_, &moved_index)| moved_index.is_none()).count() as f64;
 
         let move_index_mult = (self.move_index as f64 / self.move_index_divisor as f64).exp2();
-        -min((move_index_mult * undeveloped_count * (self.undeveloped_cost as f64)).round() as i32, self.max_penalty)
+        min((move_index_mult * undeveloped_count * (self.undeveloped_cost as f64)).round() as i32, self.max_penalty)
     }
 }
 
 impl <B : ChessBoard> EvalFacet<B> for DevelopmentFacet {
     fn static_eval(&self, _: &B) -> i32 {
-        self.penalty(Side::White) - self.penalty(Side::Black)
+        self.penalty(Side::Black) - self.penalty(Side::White)
     }
 
     fn make(&mut self, mv: &Move, _: &B) {
@@ -134,8 +134,8 @@ mod test {
             },
         };
 
-        assert_eq!(-(3 * 3 * 32), under_test.penalty(Side::White));
-        assert_eq!(-(4 * 3 * 32), under_test.penalty(Side::Black));
+        assert_eq!(3 * 3 * 32, under_test.penalty(Side::White));
+        assert_eq!(4 * 3 * 32, under_test.penalty(Side::Black));
     }
 
     #[test]

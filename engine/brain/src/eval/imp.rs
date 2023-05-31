@@ -10,6 +10,7 @@ use crate::enumset::EnumSet;
 use crate::eval::material::MaterialFacet;
 use crate::eval::{EvalChessBoard, EvalFacet};
 use crate::{eval, Board, PieceValues, PositionTables};
+use crate::eval::antipattern::KnightRimFacet;
 use crate::eval::castling::CastlingFacet;
 use crate::eval::development::DevelopmentFacet;
 
@@ -47,6 +48,7 @@ impl From<Board> for BoardBuilder {
                 vec![
                     Box::new(CastlingFacet::default()),
                     Box::new(DevelopmentFacet::default()),
+                    Box::new(KnightRimFacet::default()),
                 ]
             } else {
                 vec![]
@@ -199,7 +201,7 @@ impl<B: ChessBoard + Clone> ChessBoard for EvalBoard<B> {
 }
 
 impl EvalChessBoard for EvalBoard<Board> {
-    fn static_eval(&self) -> i32 {
+    fn relative_eval(&self) -> i32 {
         match self.terminal_state() {
             Some(TerminalState::Draw) => eval::DRAW_VALUE,
             Some(TerminalState::Loss) => eval::LOSS_VALUE,

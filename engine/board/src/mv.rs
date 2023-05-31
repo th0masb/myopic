@@ -225,6 +225,15 @@ mod test {
 }
 
 impl Move {
+    pub fn moving_side(&self) -> Side {
+        match self {
+            &Move::Standard { moving, .. } => moving.side(),
+            &Move::Enpassant { side, .. } => side,
+            &Move::Promotion { promoted, .. } => promoted.side(),
+            &Move::Castle { zone, .. } => zone.side(),
+        }
+    }
+
     pub fn source(&self) -> u64 {
         *match self {
             Move::Standard { source, .. } => source,

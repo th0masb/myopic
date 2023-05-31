@@ -93,6 +93,13 @@ impl Side {
             Side::Black => BitBoard::RANKS[0],
         }
     }
+
+    pub fn parity(self) -> i32 {
+        match self {
+            Side::White => 1,
+            Side::Black => -1,
+        }
+    }
 }
 
 /// Type representing a square on a chessboard.
