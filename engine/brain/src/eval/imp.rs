@@ -8,10 +8,10 @@ use myopic_board::{
 
 use crate::enumset::EnumSet;
 use crate::eval::material::Material;
-use crate::eval::opening::OpeningComponent;
 use crate::eval::{EvalChessBoard, EvalComponent};
 use crate::{eval, Board, PieceValues, PositionTables};
 use crate::eval::castling::CastlingEvalComponent;
+use crate::eval::development::DevelopmentEvalComponent;
 
 pub struct EvalBoard<B: ChessBoard> {
     board: B,
@@ -44,8 +44,10 @@ impl From<Board> for BoardBuilder {
             position_tables: PositionTables::default(),
             piece_values: PieceValues::default(),
             cmps: if board.to_fen().as_str() == crate::START_FEN {
-                vec![Box::new(OpeningComponent::default())]
-                //vec![Box::new(CastlingEvalComponent::default())]
+                vec![
+                    Box::new(CastlingEvalComponent::default()),
+                    Box::new(DevelopmentEvalComponent::default()),
+                ]
             } else {
                 vec![]
             },
