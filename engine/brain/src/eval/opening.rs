@@ -79,16 +79,16 @@ impl Default for OpeningRewards {
     fn default() -> Self {
         OpeningRewards {
             pieces: enum_map! {
-                OpeningPiece::EPawn => 200,
-                OpeningPiece::DPawn => 150,
-                OpeningPiece::BKnight => 100,
-                OpeningPiece::GKnight => 150,
-                OpeningPiece::CBishop => 100,
-                OpeningPiece::FBishop => 150,
+                OpeningPiece::EPawn => 110,
+                OpeningPiece::DPawn => 110,
+                OpeningPiece::BKnight => 40,
+                OpeningPiece::GKnight => 50,
+                OpeningPiece::CBishop => 40,
+                OpeningPiece::FBishop => 40,
             },
             castle: enum_map! {
-                CastleSide::King => 200,
-                CastleSide::Queen => 100,
+                CastleSide::King => 500,
+                CastleSide::Queen => 20,
             },
         }
     }

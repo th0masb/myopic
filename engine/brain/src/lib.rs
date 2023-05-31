@@ -22,3 +22,5 @@ mod see;
 
 #[cfg(test)]
 mod bench;
+#[cfg(test)]
+mod test;
