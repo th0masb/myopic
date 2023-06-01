@@ -1,9 +1,9 @@
-use std::fmt::Debug;
 pub use mv::Move;
 use myopic_core::anyhow::Result;
 use myopic_core::enum_map::Enum;
 pub use myopic_core::*;
 pub use parse::uci::UciMove;
+use std::fmt::Debug;
 
 use crate::enumset::EnumSet;
 pub use crate::imp::Board;

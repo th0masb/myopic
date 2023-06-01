@@ -1,6 +1,6 @@
+use crate::eval::EvalFacet;
 use crate::{ChessBoard, Move, Piece, Square};
 use crate::{PieceValues, PositionTables, Reflectable};
-use crate::eval::EvalFacet;
 
 const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
 const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
@@ -28,7 +28,7 @@ impl Reflectable for MaterialFacet {
     }
 }
 
-impl <B: ChessBoard> EvalFacet<B> for MaterialFacet {
+impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
     fn static_eval(&self, _: &B) -> i32 {
         let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
         let (mid, end) = (self.mid_eval, self.end_eval);
@@ -37,18 +37,36 @@ impl <B: ChessBoard> EvalFacet<B> for MaterialFacet {
 
     fn make(&mut self, mv: &Move, _: &B) {
         match mv {
-            &Move::Standard { moving, from, dest, capture, .. } => {
+            &Move::Standard {
+                moving,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
                 self.remove(moving, from);
                 self.add(moving, dest);
                 capture.map(|taken| self.remove(taken, dest));
             }
-            &Move::Promotion { from, dest, promoted, capture, .. } => {
+            &Move::Promotion {
+                from,
+                dest,
+                promoted,
+                capture,
+                ..
+            } => {
                 let pawn = Piece::pawn(promoted.side());
                 self.remove(pawn, from);
                 self.add(promoted, dest);
                 capture.map(|taken| self.remove(taken, dest));
             }
-            &Move::Enpassant { side, from, dest, capture, .. } => {
+            &Move::Enpassant {
+                side,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
                 let active_pawn = Piece::pawn(side);
                 self.remove(active_pawn, from);
                 self.add(active_pawn, dest);
@@ -67,18 +85,36 @@ impl <B: ChessBoard> EvalFacet<B> for MaterialFacet {
 
     fn unmake(&mut self, mv: &Move) {
         match mv {
-            &Move::Standard { moving, from, dest, capture, .. } => {
+            &Move::Standard {
+                moving,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
                 self.remove(moving, dest);
                 self.add(moving, from);
                 capture.map(|taken| self.add(taken, dest));
             }
-            &Move::Promotion { from, dest, promoted, capture, .. } => {
+            &Move::Promotion {
+                from,
+                dest,
+                promoted,
+                capture,
+                ..
+            } => {
                 let pawn = Piece::pawn(promoted.side());
                 self.add(pawn, from);
                 self.remove(promoted, dest);
                 capture.map(|taken| self.add(taken, dest));
             }
-            &Move::Enpassant { side, from, dest, capture, .. } => {
+            &Move::Enpassant {
+                side,
+                from,
+                dest,
+                capture,
+                ..
+            } => {
                 let active_pawn = Piece::pawn(side);
                 let passive_pawn = active_pawn.reflect();
                 self.remove(active_pawn, dest);
@@ -98,7 +134,11 @@ impl <B: ChessBoard> EvalFacet<B> for MaterialFacet {
 }
 
 impl MaterialFacet {
-    pub fn new<B: ChessBoard>(board: &B, values: PieceValues, tables: PositionTables) -> MaterialFacet {
+    pub fn new<B: ChessBoard>(
+        board: &B,
+        values: PieceValues,
+        tables: PositionTables,
+    ) -> MaterialFacet {
         MaterialFacet {
             mid_eval: compute_midgame(board, &values, &tables),
             end_eval: compute_endgame(board, &values, &tables),

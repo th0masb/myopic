@@ -55,7 +55,7 @@ fn assert_move_better(
     pgn: &str,
     expected_better_uci_move: &str,
     expected_worse_uci_move: &str,
-    depth: usize
+    depth: usize,
 ) {
     let outcome_from_better_move = search_after_move(pgn, expected_better_uci_move, depth);
     let outcome_from_worse_move = search_after_move(pgn, expected_worse_uci_move, depth);
@@ -74,10 +74,19 @@ fn assert_move_better(
 
 fn search_after_move(pgn: &str, mv: &str, depth: usize) -> SearchOutcome {
     let mut board = EvalBoard::default();
-    board.play_pgn(pgn).expect(format!("Invalid {}", pgn).as_str());
-    board.play_uci(mv).expect(format!("Invalid {} {}", pgn, mv).as_str());
-    crate::search(board, SearchParameters {
-        terminator: depth,
-        table_size: TABLE_SIZE,
-    }).map_err(|e| panic!("Could not search at {}: {}", pgn, e)).unwrap()
+    board
+        .play_pgn(pgn)
+        .expect(format!("Invalid {}", pgn).as_str());
+    board
+        .play_uci(mv)
+        .expect(format!("Invalid {} {}", pgn, mv).as_str());
+    crate::search(
+        board,
+        SearchParameters {
+            terminator: depth,
+            table_size: TABLE_SIZE,
+        },
+    )
+    .map_err(|e| panic!("Could not search at {}: {}", pgn, e))
+    .unwrap()
 }

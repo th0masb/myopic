@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
+use enum_map::EnumMap;
 use myopic_core::anyhow::{anyhow, Error, Result};
 use myopic_core::*;
-use enum_map::EnumMap;
 
 use crate::parse::patterns;
 

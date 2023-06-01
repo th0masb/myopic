@@ -1,6 +1,6 @@
-use std::cmp;
-use lazy_static::lazy_static;
 use enum_map::EnumMap;
+use lazy_static::lazy_static;
+use std::cmp;
 
 use myopic_board::{BitBoard, ChessBoard, Piece, Reflectable, Side, Square};
 
@@ -68,12 +68,7 @@ impl<B: ChessBoard> See<'_, B> {
             //}
             attadef ^= src;
             removed ^= src;
-            let (new_attadef, new_xray) = self.update_xray(
-                removed,
-                attacker,
-                attadef,
-                xray
-            );
+            let (new_attadef, new_xray) = self.update_xray(removed, attacker, attadef, xray);
             attadef = new_attadef;
             xray = new_xray;
             active = active.reflect();
@@ -119,8 +114,11 @@ impl<B: ChessBoard> See<'_, B> {
 
     fn compute_potential_attdef(&self) -> impl Iterator<Item = (Piece, Square)> + '_ {
         let constraints = ATTDEF_CONSTRAINTS[self.target];
-        Piece::all()
-            .flat_map(move |p| (self.locs(p) & constraints).into_iter().map(move |loc| (p, loc)))
+        Piece::all().flat_map(move |p| {
+            (self.locs(p) & constraints)
+                .into_iter()
+                .map(move |loc| (p, loc))
+        })
     }
 
     fn update_xray(
@@ -128,7 +126,7 @@ impl<B: ChessBoard> See<'_, B> {
         all_removed: BitBoard,
         last_removed: Piece,
         attadef: BitBoard,
-        xray: BitBoard
+        xray: BitBoard,
     ) -> BitBoardPair {
         // A knight being removed cannot unlock a rank/file xray
         if xray.is_empty() || last_removed.is_knight() {
@@ -167,8 +165,7 @@ fn can_xray(piece: Piece) -> bool {
 fn compute_attack_location_constraints() -> EnumMap<Square, BitBoard> {
     let mut result = EnumMap::default();
     for square in Square::iter() {
-        result[square] = Piece::WQ.empty_control(square) |
-            Piece::WN.empty_control(square)
+        result[square] = Piece::WQ.empty_control(square) | Piece::WN.empty_control(square)
     }
     result
 }
