@@ -97,12 +97,6 @@ mod test {
 
     use super::*;
 
-    #[derive(Clone, Debug)]
-    struct TestCase {
-        board: Board,
-        expected: Option<TerminalState>,
-    }
-
     fn test(expected: Option<TerminalState>, fen: &str) {
         let board = fen.parse::<Board>().unwrap();
         assert_eq!(expected, board.terminal_state());
