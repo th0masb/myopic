@@ -61,11 +61,16 @@ pub fn search<B: EvalChessBoard>(
 }
 
 fn compute_quiescent_moves<B: EvalChessBoard>(state: &mut B, depth: i32) -> Vec<Move> {
-    let moves_type = if depth < Q_CHECK_CAP { Attacks } else { AttacksChecks };
+    let moves_type = if depth < Q_CHECK_CAP {
+        Attacks
+    } else {
+        AttacksChecks
+    };
     // If in check don't filter out any attacks, we must check all available moves.
     let good_attack_threshold = if state.in_check() { -eval::INFTY } else { 0 };
 
-    let mut moves = state.compute_moves(moves_type)
+    let mut moves = state
+        .compute_moves(moves_type)
         .into_iter()
         .map(|mv| (score(state, &mv), mv))
         .filter(|(s, _)| *s > good_attack_threshold)

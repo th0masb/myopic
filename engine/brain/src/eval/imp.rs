@@ -7,12 +7,12 @@ use myopic_board::{
 };
 
 use crate::enumset::EnumSet;
-use crate::eval::material::MaterialFacet;
-use crate::eval::{EvalChessBoard, EvalFacet};
-use crate::{eval, Board, PieceValues, PositionTables};
 use crate::eval::antipattern::KnightRimFacet;
 use crate::eval::castling::CastlingFacet;
 use crate::eval::development::DevelopmentFacet;
+use crate::eval::material::MaterialFacet;
+use crate::eval::{EvalChessBoard, EvalFacet};
+use crate::{eval, Board, PieceValues, PositionTables};
 
 pub struct EvalBoard<B: ChessBoard> {
     board: B,
@@ -207,7 +207,11 @@ impl EvalChessBoard for EvalBoard<Board> {
             Some(TerminalState::Loss) => eval::LOSS_VALUE,
             None => {
                 let eval = self.material.static_eval(&self.board)
-                    + self.facets.iter().map(|cmp| cmp.static_eval(&self.board)).sum::<i32>();
+                    + self
+                        .facets
+                        .iter()
+                        .map(|cmp| cmp.static_eval(&self.board))
+                        .sum::<i32>();
                 match self.active() {
                     Side::White => eval,
                     Side::Black => -eval,

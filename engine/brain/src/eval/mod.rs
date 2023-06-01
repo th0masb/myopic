@@ -5,13 +5,13 @@ use myopic_board::{ChessBoard, Move, Piece, Square};
 use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
 
+mod antipattern;
+mod castling;
+mod development;
 pub mod imp;
 mod material;
 pub mod tables;
 pub mod values;
-mod castling;
-mod development;
-mod antipattern;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -50,7 +50,7 @@ pub trait EvalChessBoard: ChessBoard {
 
 /// Represents some (possibly stateful) feature of a position which can be
 /// evaluated.
-pub trait EvalFacet<B : ChessBoard> {
+pub trait EvalFacet<B: ChessBoard> {
     /// Return the static evaluation of the given position. Implementors are guaranteed
     /// that exactly the same move sequence will have been passed to this component
     /// and the given board position. I.e the internal states are aligned. It must

@@ -1,12 +1,15 @@
-use enum_map::{Enum, enum_map, EnumMap};
+use enum_map::{enum_map, Enum, EnumMap};
 use lazy_static::lazy_static;
 
-use crate::{ChessBoard, Move};
-use crate::{BitBoard, Side, Square};
 use crate::eval::EvalFacet;
+use crate::{BitBoard, Side, Square};
+use crate::{ChessBoard, Move};
 
 #[derive(Debug, Copy, Clone, PartialEq, Enum)]
-enum Knight { B, G }
+enum Knight {
+    B,
+    G,
+}
 
 /// Give penalty for each knight whose first move is onto the board rim
 pub struct KnightRimFacet {
@@ -27,7 +30,8 @@ impl Default for KnightRimFacet {
 
 impl KnightRimFacet {
     fn pattern_count(&self, side: Side) -> i32 {
-        self.first_move[side].iter()
+        self.first_move[side]
+            .iter()
             .filter(|(_, &fm)| fm.is_some() && BitBoard::RIM.contains(fm.unwrap().1))
             .count() as i32
     }
@@ -43,9 +47,9 @@ lazy_static! {
     };
 }
 
-impl <B: ChessBoard> EvalFacet<B> for KnightRimFacet {
+impl<B: ChessBoard> EvalFacet<B> for KnightRimFacet {
     fn static_eval(&self, _: &B) -> i32 {
-       self.penalty * (self.pattern_count(Side::Black) - self.pattern_count(Side::White))
+        self.penalty * (self.pattern_count(Side::Black) - self.pattern_count(Side::White))
     }
 
     fn make(&mut self, mv: &Move, _: &B) {
@@ -64,9 +68,9 @@ impl <B: ChessBoard> EvalFacet<B> for KnightRimFacet {
         if let Move::Standard { from, .. } = mv {
             if let Some((side, knight)) = START_LOCS[*from] {
                 if let Some((index, _)) = self.first_move[side][knight] {
-                   if index == self.move_index {
-                       self.first_move[side][knight] = None
-                   }
+                    if index == self.move_index {
+                        self.first_move[side][knight] = None
+                    }
                 }
             }
         }
