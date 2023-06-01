@@ -1,7 +1,9 @@
-use crate::eval::EvalFacet;
-use crate::{CastleZone, Side};
 use enum_map::EnumMap;
-use myopic_board::{ChessBoard, Move};
+
+use crate::{CastleZone, Side};
+use crate::{ChessBoard, Move};
+use crate::enumset::EnumSet;
+use crate::eval::EvalFacet;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct CastlingFacet {
@@ -19,12 +21,11 @@ impl Default for CastlingFacet {
 }
 
 impl CastlingFacet {
-    fn penalty<B: ChessBoard>(&self, side: Side, board: &B) -> i32 {
+    fn penalty(&self, side: Side, rights: &EnumSet<CastleZone>) -> i32 {
         if self.castling_status[side].is_some() {
             0
         } else {
-            let rights_remaining = board
-                .remaining_rights()
+            let rights_remaining = rights
                 .iter()
                 .filter(|z| z.side() == side)
                 .count() as i32;
@@ -35,7 +36,8 @@ impl CastlingFacet {
 
 impl<B: ChessBoard> EvalFacet<B> for CastlingFacet {
     fn static_eval(&self, board: &B) -> i32 {
-        self.penalty(Side::Black, board) - self.penalty(Side::White, board)
+        let rights = board.remaining_rights();
+        self.penalty(Side::Black, &rights) - self.penalty(Side::White, &rights)
     }
 
     fn make(&mut self, mv: &Move, _: &B) {
@@ -54,9 +56,28 @@ impl<B: ChessBoard> EvalFacet<B> for CastlingFacet {
 #[cfg(test)]
 mod test {
     use enum_map::enum_map;
-    use crate::eval::castling::CastlingFacet;
+    use enumset::{EnumSet, enum_set};
+
     use crate::{CastleZone, Side};
+    use crate::eval::castling::CastlingFacet;
     use crate::test::facets::test_facet_evolution;
+
+    #[test]
+    fn evaluation_not_castled() {
+        let under_test = CastlingFacet {
+            penalty: 100,
+            castling_status: enum_map! {Side::White => None, Side::Black => None },
+        };
+
+        assert_eq!(200, under_test.penalty(Side::White, &enum_set!()));
+        assert_eq!(200, under_test.penalty(Side::Black, &enum_set!()));
+
+        assert_eq!(100, under_test.penalty(Side::White, &enum_set!(CastleZone::WK)));
+        assert_eq!(200, under_test.penalty(Side::Black, &enum_set!(CastleZone::WK)));
+
+        assert_eq!(200, under_test.penalty(Side::White, &enum_set!(CastleZone::BK)));
+        assert_eq!(100, under_test.penalty(Side::Black, &enum_set!(CastleZone::BK)));
+    }
 
     #[test]
     fn evolution_queenside() {
