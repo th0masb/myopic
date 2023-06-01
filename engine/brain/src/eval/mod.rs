@@ -48,6 +48,8 @@ pub trait EvalChessBoard: ChessBoard {
     fn positional_eval(&self, piece: Piece, location: Square) -> i32;
 }
 
+/// Represents some (possibly stateful) feature of a position which can be
+/// evaluated.
 pub trait EvalFacet<B : ChessBoard> {
     /// Return the static evaluation of the given position. Implementors are guaranteed
     /// that exactly the same move sequence will have been passed to this component
@@ -56,8 +58,11 @@ pub trait EvalFacet<B : ChessBoard> {
     /// FOR BLACK'.
     fn static_eval(&self, board: &B) -> i32;
 
+    /// Update internal state by making the given move FROM the given position
     fn make(&mut self, mv: &Move, board: &B);
 
+    /// Update internal state by unmaking the given move which is guaranteed to have
+    /// previously been passed to the "make" method.
     fn unmake(&mut self, mv: &Move);
 }
 

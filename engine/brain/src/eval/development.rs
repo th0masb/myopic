@@ -1,9 +1,10 @@
 use std::cmp::min;
+
 use enum_map::{Enum, enum_map, EnumMap};
 use lazy_static::lazy_static;
 
 use crate::{ChessBoard, Move};
-use crate::{Reflectable, Side, Square};
+use crate::{Side, Square};
 use crate::eval::EvalFacet;
 
 #[derive(Debug, Copy, Clone, PartialEq, Enum)]
@@ -106,10 +107,12 @@ impl <B : ChessBoard> EvalFacet<B> for DevelopmentFacet {
 #[cfg(test)]
 mod test {
     use enum_map::enum_map;
-    use myopic_board::{Board, ChessBoard};
-    use crate::eval::development::{DevelopmentFacet, MAX_PENALTY, PiecesMoved};
+
+    use crate::{Board, ChessBoard};
+    use crate::eval::development::{DevelopmentFacet, MAX_PENALTY};
     use crate::eval::EvalFacet;
     use crate::Side;
+
     use super::DevelopmentPiece;
 
     #[test]
@@ -136,6 +139,7 @@ mod test {
 
         assert_eq!(3 * 3 * 32, under_test.penalty(Side::White));
         assert_eq!(4 * 3 * 32, under_test.penalty(Side::Black));
+        assert_eq!(1 * 3 * 32, under_test.static_eval(&Board::default()));
     }
 
     #[test]
