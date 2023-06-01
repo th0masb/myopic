@@ -11,6 +11,8 @@ where
     let mut board = Board::default();
     let moves = board.play_pgn(pgn).unwrap();
 
+    assert_eq!(moves.len(), expected_states.len());
+
     // Run through the moves comparing against the expected states
     let mut board = Board::default();
     let mut under_test = F::default();

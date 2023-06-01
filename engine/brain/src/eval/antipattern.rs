@@ -11,10 +11,13 @@ enum Knight {
     G,
 }
 
+type FirstMoveStore = EnumMap<Side, EnumMap<Knight, Option<(usize, Square)>>>;
+
 /// Give penalty for each knight whose first move is onto the board rim
+#[derive(Debug, Clone, PartialEq)]
 pub struct KnightRimFacet {
     penalty: i32,
-    first_move: EnumMap<Side, EnumMap<Knight, Option<(usize, Square)>>>,
+    first_move: FirstMoveStore,
     move_index: usize,
 }
 
@@ -74,5 +77,112 @@ impl<B: ChessBoard> EvalFacet<B> for KnightRimFacet {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use enum_map::enum_map;
+    use myopic_board::Board;
+    use crate::eval::antipattern::{FirstMoveStore, KnightRimFacet};
+    use crate::{Side, Square};
+    use crate::eval::EvalFacet;
+    use crate::test::facets::test_facet_evolution;
+    use super::Knight;
+
+    #[test]
+    fn evaluation() {
+        let facet = KnightRimFacet {
+            penalty: 75,
+            move_index: 9,
+            first_move: enum_map! {
+                Side::White => enum_map! {
+                    Knight::B => Some((3, Square::C3)),
+                    Knight::G => Some((3, Square::H3)),
+                },
+                Side::Black => enum_map! {
+                    Knight::B => Some((3, Square::C6)),
+                    Knight::G => None,
+                },
+            },
+        };
+
+        assert_eq!(-75, facet.static_eval(&Board::default()));
+    }
+
+    #[test]
+    fn evolution() {
+        test_facet_evolution(
+            "1. e4 Nc6 2. d4 d5 3. Nf3 Nh6 4. Na3 f6",
+            vec![
+                FirstMoveStore::default(),
+                enum_map! {
+                    Side::White => Default::default(),
+                    Side::Black => enum_map! {
+                        Knight::G => None,
+                        Knight::B => Some((1, Square::C6))
+                    },
+                },
+                enum_map! {
+                    Side::White => Default::default(),
+                    Side::Black => enum_map! {
+                        Knight::G => None,
+                        Knight::B => Some((1, Square::C6))
+                    },
+                },
+                enum_map! {
+                    Side::White => Default::default(),
+                    Side::Black => enum_map! {
+                        Knight::G => None,
+                        Knight::B => Some((1, Square::C6))
+                    },
+                },
+                enum_map! {
+                    Side::White => enum_map! {
+                        Knight::G => Some((4, Square::F3)),
+                        Knight::B => None
+                    },
+                    Side::Black => enum_map! {
+                        Knight::G => None,
+                        Knight::B => Some((1, Square::C6))
+                    },
+                },
+                enum_map! {
+                    Side::White => enum_map! {
+                        Knight::G => Some((4, Square::F3)),
+                        Knight::B => None
+                    },
+                    Side::Black => enum_map! {
+                        Knight::G => Some((5, Square::H6)),
+                        Knight::B => Some((1, Square::C6))
+                    },
+                },
+                enum_map! {
+                    Side::White => enum_map! {
+                        Knight::G => Some((4, Square::F3)),
+                        Knight::B => Some((6, Square::A3))
+                    },
+                    Side::Black => enum_map! {
+                        Knight::G => Some((5, Square::H6)),
+                        Knight::B => Some((1, Square::C6))
+                    },
+                },
+                enum_map! {
+                    Side::White => enum_map! {
+                        Knight::G => Some((4, Square::F3)),
+                        Knight::B => Some((6, Square::A3))
+                    },
+                    Side::Black => enum_map! {
+                        Knight::G => Some((5, Square::H6)),
+                        Knight::B => Some((1, Square::C6))
+                    },
+                },
+            ].into_iter().enumerate().map(|(i, first_move)| {
+                let mut facet = KnightRimFacet::default();
+                facet.first_move = first_move;
+                facet.move_index = i + 1;
+                facet
+            }).collect()
+        )
     }
 }

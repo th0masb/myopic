@@ -1053,6 +1053,7 @@ version = "1.8.0"
 dependencies = [
  "dotenv",
  "enum-map",
+ "enumset",
  "itertools",
  "lazy_static",
  "myopic-board",
