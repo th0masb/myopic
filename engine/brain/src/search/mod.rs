@@ -204,10 +204,7 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
         path.reverse();
         // If the path returned is empty then there must be no legal moves in this position
         if path.is_empty() {
-            Err(anyhow!(
-                "No moves found for position {}",
-                self.root.to_fen()
-            ))
+            Err(anyhow!("No moves found for position {} at depth {}", self.root.to_fen(), depth))
         } else {
             Ok(BestMoveResponse {
                 best_move: path.get(0).unwrap().clone(),

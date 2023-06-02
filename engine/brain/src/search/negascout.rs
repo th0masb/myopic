@@ -122,7 +122,7 @@ where
     pub move_quality_estimator: M,
     /// Placeholder to satisfy the compiler because of the 'unused'
     /// type parameter for the board
-    pub board_type: std::marker::PhantomData<B>,
+    pub board_type: PhantomData<B>,
 }
 
 enum TableSuggestion {

@@ -1,12 +1,8 @@
-use itertools::Itertools;
-
-use myopic_core::anyhow::{anyhow, Result};
 use myopic_core::{Reflectable, Square};
+use myopic_core::anyhow::{anyhow, Result};
 
 use crate::imp::rights::Rights;
 use crate::Move;
-
-const REPETITION_WINDOW: usize = 15;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Discards {
@@ -42,28 +38,8 @@ impl History {
         self.inner.push((mv, discards));
     }
 
-    pub fn has_three_repetitions(&self) -> bool {
-        self.inner.len() >= REPETITION_WINDOW && {
-            let hashes = self
-                .inner
-                .iter()
-                .map(|(m, _)| m.source())
-                .sorted()
-                .collect_vec();
-            let (mut last, mut count) = (hashes[0], 1);
-            for &hash in hashes.iter().skip(1) {
-                if hash == last {
-                    count += 1;
-                    if count == 3 {
-                        break;
-                    }
-                } else {
-                    count = 1;
-                    last = hash;
-                }
-            }
-            count == 3
-        }
+    pub fn historical_positions(&self) -> impl Iterator<Item = u64> + '_ {
+        self.inner.iter().map(|(m, _)| m.source())
     }
 
     pub fn attempt_pop(&mut self) -> Result<(Move, Discards)> {

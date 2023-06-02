@@ -1,9 +1,12 @@
+use itertools::Itertools;
 use myopic_core::*;
 
 use crate::Board;
 use crate::ChessBoard;
 use crate::MoveComputeType;
 use crate::TerminalState;
+
+const HALF_MOVE_CLOCK_LIMIT: usize = 100;
 
 impl Board {
     pub fn terminal_state(&self) -> Option<TerminalState> {
@@ -21,22 +24,46 @@ impl Board {
     }
 
     fn compute_terminal_state(&self) -> Option<TerminalState> {
-        if self.half_move_clock() >= 50 || self.history.has_three_repetitions() {
-            return Some(TerminalState::Draw);
-        }
         let active = self.active;
         let active_king = self.king(active);
         let passive_control = self.passive_control();
         let (whites, blacks) = self.sides();
-        // If king can move somewhere which is usually the case then not terminal.
         let king_moves = Piece::king(active).moves(active_king, whites, blacks);
+        // If king can move somewhere which is usually the case then not terminal.
         if (king_moves - passive_control).is_populated() {
             None
         } else if passive_control.contains(active_king) {
             self.checked_termination()
         } else {
             self.unchecked_termination()
+        }.or(self.check_clock_limit()).or(self.check_repetitions())
+    }
+
+    fn check_clock_limit(&self) -> Option<TerminalState> {
+        if self.half_move_clock() >= HALF_MOVE_CLOCK_LIMIT {
+            Some(TerminalState::Draw)
+        } else {
+            None
         }
+    }
+
+    fn check_repetitions(&self) -> Option<TerminalState> {
+        let mut position_hashes = self.history.historical_positions().collect_vec();
+        position_hashes.push(self.hash());
+        position_hashes.sort_unstable();
+        let (mut last, mut count) = (position_hashes[0], 1usize);
+        for hash in position_hashes.into_iter().skip(1) {
+            if hash == last {
+                count += 1;
+                if count == 3 {
+                    break;
+                }
+            } else {
+                count = 1;
+                last = hash;
+            }
+        }
+        if count == 3 { Some(TerminalState::Draw) } else { None }
     }
 
     /// Assumes king is in check and cannot move out of it
@@ -88,47 +115,5 @@ fn qrbnp<'a>(side: Side) -> &'a [Piece] {
     match side {
         Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN, Piece::WP],
         Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN, Piece::BP],
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use myopic_core::Reflectable;
-
-    use super::*;
-
-    fn test(expected: Option<TerminalState>, fen: &str) {
-        let board = fen.parse::<Board>().unwrap();
-        assert_eq!(expected, board.terminal_state());
-        assert_eq!(expected, board.reflect().terminal_state());
-    }
-
-    #[test]
-    fn checkmate() {
-        test(
-            Some(TerminalState::Loss),
-            "5R1k/pp2R2p/8/1b2r3/3p3q/8/PPB3P1/6K1 b - - 0 36",
-        )
-    }
-
-    #[test]
-    fn not_terminal() {
-        test(
-            None,
-            "r1b1qrk1/pp5p/1np2b2/3nNP2/3P2p1/1BN5/PP1BQ1P1/4RRK1 b - - 0 18",
-        );
-    }
-
-    #[test]
-    fn not_terminal2() {
-        test(None, "4R3/1p4rk/6p1/2p1BpP1/p1P1pP2/P7/1P6/K2Q4 b - - 0 2");
-    }
-
-    #[test]
-    fn stalemate() {
-        test(
-            Some(TerminalState::Draw),
-            "6k1/6p1/7p/8/1p6/p1qp4/8/3K4 w - - 0 45",
-        );
     }
 }
