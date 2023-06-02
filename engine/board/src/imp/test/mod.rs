@@ -1,3 +1,6 @@
+mod clock;
+mod termination;
+
 use myopic_core::*;
 use std::cell::RefCell;
 

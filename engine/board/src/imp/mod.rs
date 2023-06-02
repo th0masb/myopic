@@ -72,9 +72,9 @@ impl FromStr for Board {
 
 fn hash(pos: &Positions, rights: Rights, active: Side, ep: Option<Square>) -> u64 {
     pos.hash()
-        ^ crate::hash::zones(rights.0)
-        ^ crate::hash::side(active)
-        ^ ep.map_or(0u64, |x| crate::hash::enpassant(x))
+        ^ hash::zones(rights.0)
+        ^ hash::side(active)
+        ^ ep.map_or(0u64, |x| hash::enpassant(x))
 }
 
 #[cfg(test)]
