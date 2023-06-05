@@ -387,3 +387,22 @@ fn case_19() -> Result<()> {
         ],
     })
 }
+
+#[test]
+fn case_20() -> Result<()> {
+    execute_test(TestCase {
+        board: "8/1p3B2/1n6/p3Pkp1/3P1pPp/1K3P1P/8/8 b - g3 0 41",
+        #[rustfmt::skip]
+        expected_all: vec![
+            "ebf4g3g4", "ebh4g3g4"
+        ],
+        #[rustfmt::skip]
+        expected_attacks: vec![
+            "ebf4g3g4", "ebh4g3g4"
+        ],
+        #[rustfmt::skip]
+        expected_attacks_checks: vec![
+            "ebf4g3g4", "ebh4g3g4"
+        ],
+    })
+}
