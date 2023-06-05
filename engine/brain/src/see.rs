@@ -56,7 +56,7 @@ impl<B: ChessBoard> See<'_, B> {
 
         let mut attacker = first_attacker;
         let mut active = first_attacker.side();
-        let mut src = self.source.lift();
+        let mut src = self.source.into();
         let mut removed = BitBoard::EMPTY;
         let (mut attadef, mut xray) = self.pieces_involved();
         loop {

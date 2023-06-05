@@ -193,8 +193,8 @@ mod test {
 
     fn init_tracker(pawn_loc: Option<Square>, knight_loc: Option<Square>) -> Positions {
         let mut boards: [BitBoard; 12] = [BitBoard::EMPTY; 12];
-        boards[Piece::WP as usize] = pawn_loc.map_or(BitBoard::EMPTY, |x| x.lift());
-        boards[Piece::BN as usize] = knight_loc.map_or(BitBoard::EMPTY, |x| x.lift());
+        boards[Piece::WP as usize] = pawn_loc.map_or(BitBoard::EMPTY, |x| x.into());
+        boards[Piece::BN as usize] = knight_loc.map_or(BitBoard::EMPTY, |x| x.into());
         let p_hash = pawn_loc.map_or(0u64, |x| hash::piece(Piece::WP, x));
         let n_hash = knight_loc.map_or(0u64, |x| hash::piece(Piece::BN, x));
         Positions {

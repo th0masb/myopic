@@ -91,7 +91,8 @@ const CONTROL: [BitBoard; 64] = [
 
 #[cfg(test)]
 mod white_test {
-    use crate::bitboard::constants::*;
+    use std::ops::Not;
+    use crate::square::Square::*;
     use crate::pieces::Piece;
 
     use super::*;
@@ -101,17 +102,17 @@ mod white_test {
         let zero = BitBoard::EMPTY;
         assert_eq!(
             D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3,
-            Piece::WK.control(Square::E3, zero, zero)
+            Piece::WK.control(E3, zero, zero)
         );
         assert_eq!(
             B1 | B2 | C2 | D2 | D1,
-            Piece::WK.control(Square::C1, zero, zero)
+            Piece::WK.control(C1, zero, zero)
         );
     }
 
     #[test]
     fn test_moves() {
-        assert_eq!(B2 | C2 | D2 | D1, Piece::WK.moves(Square::C1, B1, C2));
+        assert_eq!(B2 | C2 | D2 | D1, Piece::WK.moves(C1, B1.into(), C2.into()));
     }
 
     //    #[test]

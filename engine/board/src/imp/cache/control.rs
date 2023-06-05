@@ -45,7 +45,7 @@ mod test {
     use crate::enumset::EnumSet;
     use crate::imp::test::TestBoard;
     use crate::imp::Board;
-    use crate::{constants::*, BitBoard, Side};
+    use crate::{Square::*, BitBoard, Side};
 
     struct TestCase {
         board: TestBoard,
@@ -64,19 +64,19 @@ mod test {
         TestBoard {
             whites: vec![
                 A2 | B3 | C2 | D2 | E4 | F2 | G2 | H2,
-                F3,
+                !!F3,
                 B2 | F1,
-                A1,
-                D1,
-                E1,
+                !!A1,
+                !!D1,
+                !!E1,
             ],
             blacks: vec![
                 A7 | B7 | C7 | D7 | E5 | F7 | G7 | H5,
                 C6 | G8,
-                C8,
+                !!C8,
                 A8 | H8,
-                F6,
-                E8,
+                !!F6,
+                !!E8,
             ],
             castle_rights: EnumSet::all(),
             enpassant: None,
