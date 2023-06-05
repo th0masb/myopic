@@ -34,6 +34,11 @@ fn not_terminal3() {
 }
 
 #[test]
+fn not_terminal4() {
+    test_fen(None, "8/1p3B2/1n6/p3Pkp1/3P1pPp/1K3P1P/8/8 b - g3 0 41");
+}
+
+#[test]
 fn stalemate() {
     test_fen(Some(TerminalState::Draw), "6k1/6p1/7p/8/1p6/p1qp4/8/3K4 w - - 0 45");
 }
