@@ -207,7 +207,7 @@ mod test {
         for i in 0..64 {
             assert_eq!(
                 PAWN[i as usize].0,
-                tables.midgame(Piece::WP, Square::from_index(i))
+                tables.midgame(Piece::WP, i.into())
             )
         }
     }

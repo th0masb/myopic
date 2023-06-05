@@ -35,7 +35,7 @@ impl Board {
 
 #[cfg(test)]
 mod test {
-    use myopic_core::constants::*;
+    use myopic_core::Square::*;
 
     use super::*;
 
@@ -52,8 +52,8 @@ mod test {
     fn case_one() {
         let fen = "6r1/5p1k/4pP2/4N3/3PN3/6P1/2B3PK/7R w - - 1 10";
         let expected_pinned = vec![
-            (Square::E4, C2 | D3 | E4 | F5 | G6 | H7),
-            (Square::H2, H1 | H2 | H3 | H4 | H5 | H6 | H7),
+            (E4, C2 | D3 | E4 | F5 | G6 | H7),
+            (H2, H1 | H2 | H3 | H4 | H5 | H6 | H7),
         ]
         .into_iter()
         .collect();

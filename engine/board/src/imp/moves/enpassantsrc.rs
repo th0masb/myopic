@@ -31,17 +31,17 @@ const ADJACENTS: [BitBoard; 8] = [
 
 #[cfg(test)]
 mod test_enpassant_source_squares {
-    use myopic_core::{constants::*, Side, Square};
+    use myopic_core::{Square::*, Side, Square};
 
     use super::squares;
 
     #[test]
     fn test() {
-        assert_eq!(H4 | F4, squares(Side::B, Square::G3));
-        assert_eq!(G4, squares(Side::B, Square::H3));
-        assert_eq!(B4, squares(Side::B, Square::A3));
-        assert_eq!(H5 | F5, squares(Side::W, Square::G6));
-        assert_eq!(G5, squares(Side::W, Square::H6));
-        assert_eq!(B5, squares(Side::W, Square::A6));
+        assert_eq!(H4 | F4, squares(Side::B, G3));
+        assert_eq!(!!G4, squares(Side::B, H3));
+        assert_eq!(!!B4, squares(Side::B, A3));
+        assert_eq!(H5 | F5, squares(Side::W, G6));
+        assert_eq!(!!G5, squares(Side::W, H6));
+        assert_eq!(!!B5, squares(Side::W, A6));
     }
 }

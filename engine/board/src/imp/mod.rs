@@ -82,7 +82,7 @@ mod fen_test {
     use crate::enumset::EnumSet;
     use crate::imp::test::TestBoard;
     use crate::Board;
-    use crate::{constants::*, CastleZone, Side, Square};
+    use crate::{Square::*, CastleZone, Side, Square};
 
     use super::*;
 
@@ -98,18 +98,18 @@ mod fen_test {
             whites: vec![
                 A3 | B2 | C4 | E4 | F2 | G2 | H2,
                 C3 | D4,
-                E2,
+                !!E2,
                 D1 | F1,
-                D2,
-                G1,
+                !!D2,
+                !!G1,
             ],
             blacks: vec![
                 A6 | B7 | D6 | E6 | F7 | G6 | H6,
-                E7,
+                !!E7,
                 C8 | G7,
                 A8 | D8,
-                C7,
-                G8,
+                !!C7,
+                !!G8,
             ],
             castle_rights: EnumSet::empty(),
             clock: 3,
@@ -124,8 +124,15 @@ mod fen_test {
     fn fen_to_board_case_2() -> Result<()> {
         let fen = "rnb2rk1/ppp2ppp/4pq2/8/2PP4/5N2/PP3PPP/R2QKB1R w KQ - 2 9";
         let board = TestBoard {
-            whites: vec![A2 | B2 | C4 | D4 | F2 | G2 | H2, F3, F1, A1 | H1, D1, E1],
-            blacks: vec![A7 | B7 | C7 | E6 | F7 | G7 | H7, B8, C8, A8 | F8, F6, G8],
+            whites: vec![
+                A2 | B2 | C4 | D4 | F2 | G2 | H2,
+                !!F3,
+                !!F1,
+                A1 | H1,
+                !!D1,
+                !!E1,
+            ],
+            blacks: vec![A7 | B7 | C7 | E6 | F7 | G7 | H7, !!B8, !!C8, A8 | F8, !!F6, !!G8],
             castle_rights: CastleZone::WK | CastleZone::WQ,
             clock: 2,
             active: Side::W,
@@ -144,16 +151,16 @@ mod fen_test {
                 B1 | G1,
                 C1 | F1,
                 A1 | H1,
-                D1,
-                E1,
+                !!D1,
+                !!E1,
             ],
             blacks: vec![
                 A7 | B7 | C7 | D5 | E7 | F7 | G7 | H7,
                 A6 | G8,
                 C8 | F8,
                 A8 | H8,
-                D8,
-                E8,
+                !!D8,
+                !!E8,
             ],
             castle_rights: EnumSet::all(),
             clock: 0,
@@ -168,8 +175,8 @@ mod fen_test {
     fn fen_to_board_case_4() -> Result<()> {
         let fen = "r6k/p5pp/p1b2qnN/8/3Q4/2P1B3/PP4PP/R5K1 b - - 2 21";
         let board = TestBoard {
-            whites: vec![A2 | B2 | C3 | G2 | H2, H6, E3, A1, D4, G1],
-            blacks: vec![A7 | A6 | G7 | H7, G6, C6, A8, F6, H8],
+            whites: vec![A2 | B2 | C3 | G2 | H2, !!H6, !!E3, !!A1, !!D4, !!G1],
+            blacks: vec![A7 | A6 | G7 | H7, !!G6, !!C6, !!A8, !!F6, !!H8],
             castle_rights: EnumSet::empty(),
             clock: 2,
             active: Side::B,

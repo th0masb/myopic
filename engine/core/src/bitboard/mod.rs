@@ -7,7 +7,6 @@ use crate::bitboard::iterator::BitBoardIterator;
 use crate::square::Square::H1;
 use crate::{Dir, Square};
 
-pub mod constants;
 mod cords;
 mod iterator;
 
@@ -142,6 +141,12 @@ impl FromIterator<Square> for BitBoard {
 impl FromIterator<BitBoard> for BitBoard {
     fn from_iter<I: IntoIterator<Item = BitBoard>>(iter: I) -> Self {
         iter.into_iter().fold(BitBoard::EMPTY, |a, b| a | b)
+    }
+}
+
+impl From<Square> for BitBoard {
+    fn from(value: Square) -> Self {
+        value.lift()
     }
 }
 

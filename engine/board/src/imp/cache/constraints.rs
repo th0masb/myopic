@@ -89,7 +89,7 @@ impl Board {
         let mut constraints = MoveConstraints::all_universal();
         // Add pinned constraints
         constraints.intersect_pins(pinned);
-        let enpassant_set = self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.lift());
+        let enpassant_set = self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.into());
         let passive_locs = self.side(passive);
         if !checks {
             for piece in Piece::of(active) {
@@ -145,7 +145,7 @@ impl Board {
             // zone.
             let (piece, attack_location) = attackers[0];
             let blocking_squares = if piece.is_knight() {
-                attack_location.lift()
+                attack_location.into()
             } else {
                 BitBoard::cord(attack_location, active_king_loc)
             };

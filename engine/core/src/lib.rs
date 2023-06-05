@@ -7,7 +7,6 @@ use enum_map::Enum;
 pub use enumset;
 use enumset::EnumSetType;
 
-pub use bitboard::constants;
 pub use bitboard::BitBoard;
 pub use castlezone::CastleZone;
 pub use pieces::Piece;

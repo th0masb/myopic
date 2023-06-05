@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use myopic_core::constants::*;
+use myopic_core::Square::*;
 use myopic_core::*;
 
 use crate::enumset::EnumSet;
@@ -43,11 +43,11 @@ const EMPTY: BitBoard = BitBoard::EMPTY;
 
 #[test]
 fn test_white_kingside_castling() -> Result<()> {
-    let blacks = vec![A7 | C5 | E7 | F7, B6, D6, A8 | H8, D7, E8];
+    let blacks = vec![A7 | C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8];
     check_case(TestCase {
         mv: "cwk",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: blacks.clone(),
             castle_rights: EnumSet::all(),
             active: Side::W,
@@ -56,7 +56,7 @@ fn test_white_kingside_castling() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | F1, C2, G1],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | F1, !!C2, !!G1],
             blacks: blacks.clone(),
             castle_rights: CastleZone::BK | CastleZone::BQ,
             active: Side::B,
@@ -69,11 +69,11 @@ fn test_white_kingside_castling() -> Result<()> {
 
 #[test]
 fn test_white_queenside_castling() -> Result<()> {
-    let blacks = vec![A7 | C5 | E7 | F7, B6, D6, A8 | H8, D7, E8];
+    let blacks = vec![A7 | C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8];
     check_case(TestCase {
         mv: "cwq",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: blacks.clone(),
             castle_rights: EnumSet::all(),
             active: Side::W,
@@ -82,7 +82,7 @@ fn test_white_queenside_castling() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, H1 | D1, C2, C1],
+            whites: vec![F2 | G2, !!B3, !!C4, H1 | D1, !!C2, !!C1],
             blacks: blacks.clone(),
             castle_rights: CastleZone::BK | CastleZone::BQ,
             active: Side::B,
@@ -95,12 +95,12 @@ fn test_white_queenside_castling() -> Result<()> {
 
 #[test]
 fn test_black_kingside_castling() -> Result<()> {
-    let whites = vec![F2 | G2, B3, C4, A1 | H1, C2, E1];
+    let whites = vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1];
     check_case(TestCase {
         mv: "cbk",
         start: TestBoard {
             whites: whites.clone(),
-            blacks: vec![A7 | C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            blacks: vec![A7 | C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -109,7 +109,7 @@ fn test_black_kingside_castling() -> Result<()> {
         },
         end: TestBoard {
             whites: whites.clone(),
-            blacks: vec![A7 | C5 | E7 | F7, B6, D6, A8 | F8, D7, G8],
+            blacks: vec![A7 | C5 | E7 | F7, !!B6, !!D6, A8 | F8, !!D7, !!G8],
             castle_rights: CastleZone::WK | CastleZone::WQ,
             active: Side::W,
             enpassant: None,
@@ -121,12 +121,12 @@ fn test_black_kingside_castling() -> Result<()> {
 
 #[test]
 fn test_black_queenside_castling() -> Result<()> {
-    let whites = vec![F2 | G2, B3, C4, A1 | H1, C2, E1];
+    let whites = vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1];
     check_case(TestCase {
         mv: "cbq",
         start: TestBoard {
             whites: whites.clone(),
-            blacks: vec![A7 | C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            blacks: vec![A7 | C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -135,7 +135,7 @@ fn test_black_queenside_castling() -> Result<()> {
         },
         end: TestBoard {
             whites: whites.clone(),
-            blacks: vec![A7 | C5 | E7 | F7, B6, D6, D8 | H8, D7, C8],
+            blacks: vec![A7 | C5 | E7 | F7, !!B6, !!D6, D8 | H8, !!D7, !!C8],
             castle_rights: CastleZone::WK | CastleZone::WQ,
             active: Side::W,
             enpassant: None,
@@ -150,8 +150,8 @@ fn test_white_rook_taking_black_rook_removing_kingside_rights() -> Result<()> {
     check_case(TestCase {
         mv: "swrh1h8br",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -159,8 +159,8 @@ fn test_white_rook_taking_black_rook_removing_kingside_rights() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H8, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H8, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, !!A8, !!D7, !!E8],
             castle_rights: CastleZone::WQ | CastleZone::BQ,
             active: Side::B,
             enpassant: None,
@@ -175,8 +175,8 @@ fn test_black_rook_taking_white_rook_removing_kingside_rights() -> Result<()> {
     check_case(TestCase {
         mv: "sbrh8h1wr",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -184,8 +184,8 @@ fn test_black_rook_taking_white_rook_removing_kingside_rights() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H1, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, !!A1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H1, !!D7, !!E8],
             castle_rights: CastleZone::WQ | CastleZone::BQ,
             active: Side::W,
             enpassant: None,
@@ -200,8 +200,8 @@ fn test_white_rook_taking_black_rook_removing_queenside_rights() -> Result<()> {
     check_case(TestCase {
         mv: "swra1a8br",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -209,8 +209,8 @@ fn test_white_rook_taking_black_rook_removing_queenside_rights() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A8 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A8 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, !!H8, !!D7, !!E8],
             castle_rights: CastleZone::WK | CastleZone::BK,
             active: Side::B,
             enpassant: None,
@@ -225,8 +225,8 @@ fn test_black_rook_taking_white_rook_removing_queenside_rights() -> Result<()> {
     check_case(TestCase {
         mv: "sbra8a1wr",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -234,8 +234,8 @@ fn test_black_rook_taking_white_rook_removing_queenside_rights() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A1 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, !!H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A1 | H8, !!D7, !!E8],
             castle_rights: CastleZone::WK | CastleZone::BK,
             active: Side::W,
             enpassant: None,
@@ -250,8 +250,8 @@ fn test_white_king_moving_removes_castling_rights() -> Result<()> {
     check_case(TestCase {
         mv: "swke1f1-",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -259,8 +259,8 @@ fn test_white_king_moving_removes_castling_rights() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, F1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!F1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: CastleZone::BK | CastleZone::BQ,
             active: Side::B,
             enpassant: None,
@@ -275,8 +275,8 @@ fn test_black_king_moving_removes_castling_rights() -> Result<()> {
     check_case(TestCase {
         mv: "sbke8f8-",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -284,8 +284,8 @@ fn test_black_king_moving_removes_castling_rights() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, F8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!F8],
             castle_rights: CastleZone::WK | CastleZone::WQ,
             active: Side::W,
             enpassant: None,
@@ -300,8 +300,8 @@ fn test_white_pawn_moves_forward_two() -> Result<()> {
     check_case(TestCase {
         mv: "swpf2f4-",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -309,8 +309,8 @@ fn test_white_pawn_moves_forward_two() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F4 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F4 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: Some(Square::F3),
@@ -325,8 +325,8 @@ fn test_black_pawn_moves_forward_two() -> Result<()> {
     check_case(TestCase {
         mv: "sbpf7f5-",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -334,8 +334,8 @@ fn test_black_pawn_moves_forward_two() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F5, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F5, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: Some(Square::F6),
@@ -350,8 +350,8 @@ fn test_white_pawn_moves_forward_one() -> Result<()> {
     check_case(TestCase {
         mv: "swpf2f3-",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -359,8 +359,8 @@ fn test_white_pawn_moves_forward_one() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F3 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F3 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -375,8 +375,8 @@ fn test_black_pawn_moves_forward_one() -> Result<()> {
     check_case(TestCase {
         mv: "sbpf7f6-",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -384,8 +384,8 @@ fn test_black_pawn_moves_forward_one() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F6, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F6, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -401,8 +401,8 @@ fn test_white_knight_takes_black_knight() -> Result<()> {
     check_case(TestCase {
         mv: "swnb3b6bn",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -410,8 +410,8 @@ fn test_white_knight_takes_black_knight() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B6, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, EMPTY, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B6, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, EMPTY, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -426,8 +426,8 @@ fn test_black_knight_takes_white_knight() -> Result<()> {
     check_case(TestCase {
         mv: "sbnb6b3wn",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -435,8 +435,8 @@ fn test_black_knight_takes_white_knight() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, EMPTY, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B3, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, EMPTY, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B3, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -451,8 +451,8 @@ fn test_white_bishop_takes_black_bishop() -> Result<()> {
     check_case(TestCase {
         mv: "swbc4d6bb",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -460,8 +460,8 @@ fn test_white_bishop_takes_black_bishop() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, D6, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, EMPTY, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!D6, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, EMPTY, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -476,8 +476,8 @@ fn test_black_bishop_takes_white_bishop() -> Result<()> {
     check_case(TestCase {
         mv: "sbbd6c4wb",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -485,8 +485,8 @@ fn test_black_bishop_takes_white_bishop() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, EMPTY, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, C4, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, EMPTY, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!C4, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -501,8 +501,8 @@ fn test_white_pawn_takes_black_pawn() -> Result<()> {
     check_case(TestCase {
         mv: "swpf2c5bp",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -510,8 +510,8 @@ fn test_white_pawn_takes_black_pawn() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![C5 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![C5 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -526,8 +526,8 @@ fn test_black_pawn_takes_white_bishop() -> Result<()> {
     check_case(TestCase {
         mv: "sbpc5c4wb",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -535,8 +535,8 @@ fn test_black_pawn_takes_white_bishop() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, EMPTY, A1 | H1, C2, E1],
-            blacks: vec![C4 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, EMPTY, A1 | H1, !!C2, !!E1],
+            blacks: vec![C4 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -552,8 +552,8 @@ fn test_white_queen_takes_black_queen() -> Result<()> {
     check_case(TestCase {
         mv: "swqc2d7bq",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -561,8 +561,8 @@ fn test_white_queen_takes_black_queen() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, D7, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, EMPTY, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!D7, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -577,8 +577,8 @@ fn test_black_queen_takes_white_queen() -> Result<()> {
     check_case(TestCase {
         mv: "sbqd7c2wq",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -586,8 +586,8 @@ fn test_black_queen_takes_white_queen() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, EMPTY, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, C2, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, EMPTY, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!C2, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -602,8 +602,8 @@ fn test_white_king_takes_black_king() -> Result<()> {
     check_case(TestCase {
         mv: "swke1e8bk",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -611,8 +611,8 @@ fn test_white_king_takes_black_king() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E8],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, EMPTY],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E8],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, EMPTY],
             castle_rights: EnumSet::empty(),
             active: Side::B,
             enpassant: None,
@@ -627,8 +627,8 @@ fn test_black_king_takes_white_king() -> Result<()> {
     check_case(TestCase {
         mv: "sbke8e1wk",
         start: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, E1],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E8],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -636,8 +636,8 @@ fn test_black_king_takes_white_king() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, B3, C4, A1 | H1, C2, EMPTY],
-            blacks: vec![C5 | E7 | F7, B6, D6, A8 | H8, D7, E1],
+            whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, EMPTY],
+            blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E1],
             castle_rights: EnumSet::empty(),
             active: Side::W,
             enpassant: None,
@@ -652,17 +652,17 @@ fn test_white_enpassant() -> Result<()> {
     check_case(TestCase {
         mv: "ewd5e6e5",
         start: TestBoard {
-            whites: vec![D5 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
-            blacks: vec![E5 | F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            whites: vec![D5 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
+            blacks: vec![E5 | F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
-            enpassant: Some(Square::E6),
+            enpassant: Some(E6),
             clock: 21,
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![E6 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
-            blacks: vec![F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            whites: vec![E6 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
+            blacks: vec![F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -677,17 +677,17 @@ fn test_black_enpassant() -> Result<()> {
     check_case(TestCase {
         mv: "ebe4d3d4",
         start: TestBoard {
-            whites: vec![D4 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
-            blacks: vec![E4 | F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            whites: vec![D4 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
+            blacks: vec![E4 | F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
-            enpassant: Some(Square::D3),
+            enpassant: Some(D3),
             clock: 21,
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
-            blacks: vec![D3 | F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            whites: vec![F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
+            blacks: vec![D3 | F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,
@@ -702,8 +702,8 @@ fn test_white_promotion() -> Result<()> {
     check_case(TestCase {
         mv: "pc7b8wqbr",
         start: TestBoard {
-            whites: vec![C7 | F2 | G2, EMPTY, F3, B1, EMPTY, E1],
-            blacks: vec![C2 | F7 | G7 | H7, EMPTY, G6, B8, EMPTY, E8],
+            whites: vec![C7 | F2 | G2, EMPTY, !!F3, !!B1, EMPTY, !!E1],
+            blacks: vec![C2 | F7 | G7 | H7, EMPTY, !!G6, !!B8, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: Some(Square::D4),
@@ -711,8 +711,8 @@ fn test_white_promotion() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![F2 | G2, EMPTY, F3, B1, B8, E1],
-            blacks: vec![C2 | F7 | G7 | H7, EMPTY, G6, EMPTY, EMPTY, E8],
+            whites: vec![F2 | G2, EMPTY, !!F3, !!B1, !!B8, !!E1],
+            blacks: vec![C2 | F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -727,8 +727,8 @@ fn test_black_promotion() -> Result<()> {
     check_case(TestCase {
         mv: "pc2b1bn-",
         start: TestBoard {
-            whites: vec![C7 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
-            blacks: vec![C2 | F7 | G7 | H7, EMPTY, G6, B8, EMPTY, E8],
+            whites: vec![C7 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
+            blacks: vec![C2 | F7 | G7 | H7, EMPTY, !!G6, !!B8, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::B,
             enpassant: None,
@@ -736,8 +736,8 @@ fn test_black_promotion() -> Result<()> {
             history_count: 11,
         },
         end: TestBoard {
-            whites: vec![C7 | F2 | G2, EMPTY, F3, EMPTY, EMPTY, E1],
-            blacks: vec![F7 | G7 | H7, B1, G6, B8, EMPTY, E8],
+            whites: vec![C7 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
+            blacks: vec![F7 | G7 | H7, !!B1, !!G6, !!B8, EMPTY, !!E8],
             castle_rights: EnumSet::all(),
             active: Side::W,
             enpassant: None,

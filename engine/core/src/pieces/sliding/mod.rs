@@ -131,9 +131,9 @@ mod powerset_test {
         let non_empty = vec![A1, F3, H5];
         let mut expected = HashSet::new();
         expected.insert(BitBoard::EMPTY);
-        expected.insert(A1.lift());
-        expected.insert(F3.lift());
-        expected.insert(H5.lift());
+        expected.insert(A1.into());
+        expected.insert(F3.into());
+        expected.insert(H5.into());
         expected.insert(A1 | F3);
         expected.insert(A1 | H5);
         expected.insert(F3 | H5);

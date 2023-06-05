@@ -47,11 +47,6 @@ impl Square {
         BitBoard::FILES[self.file_index()]
     }
 
-    /// 'Lifts' this square to a singleton set of squares.
-    pub const fn lift(self) -> BitBoard {
-        BitBoard(1u64 << (self as u64))
-    }
-
     /// Finds the next square on a chessboard from this square in a
     /// given direction if it exists.
     pub fn next(self, dir: Dir) -> Option<Square> {
@@ -95,6 +90,10 @@ impl Square {
             .flat_map(|&dir| self.next(dir).into_iter())
             .collect()
     }
+
+    pub(crate) const fn lift(self) -> BitBoard {
+        BitBoard(1u64 << (self as u64))
+    }
 }
 
 impl std::fmt::Display for Square {
@@ -137,35 +136,35 @@ impl std::ops::Shr<usize> for Square {
 impl std::ops::Not for Square {
     type Output = BitBoard;
     fn not(self) -> Self::Output {
-        !self.lift()
+        !<Square as Into<BitBoard>>::into(self)
     }
 }
 
 impl std::ops::BitOr<Square> for Square {
     type Output = BitBoard;
     fn bitor(self, other: Square) -> Self::Output {
-        self.lift() | other.lift()
+        <Square as Into<BitBoard>>::into(self) | <Square as Into<BitBoard>>::into(other)
     }
 }
 
 impl std::ops::BitOr<BitBoard> for Square {
     type Output = BitBoard;
     fn bitor(self, other: BitBoard) -> Self::Output {
-        self.lift() | other
+        <Square as Into<BitBoard>>::into(self) | other
     }
 }
 
 impl std::ops::BitAnd<BitBoard> for Square {
     type Output = BitBoard;
     fn bitand(self, other: BitBoard) -> Self::Output {
-        self.lift() & other
+        <Square as Into<BitBoard>>::into(self) & other
     }
 }
 
 impl std::ops::Sub<BitBoard> for Square {
     type Output = BitBoard;
     fn sub(self, other: BitBoard) -> Self::Output {
-        self.lift() - other
+        <Square as Into<BitBoard>>::into(self) - other
     }
 }
 
@@ -188,6 +187,11 @@ mod test {
     use crate::Dir::*;
 
     #[test]
+    fn lift() {
+        assert_eq!(A1.lift(), !!A1)
+    }
+
+    #[test]
     fn test_rank() {
         assert_eq!(A1 | B1 | C1 | D1 | E1 | F1 | G1 | H1, F1.rank());
         assert_eq!(A4 | B4 | C4 | D4 | E4 | F4 | G4 | H4, D4.rank());
@@ -204,7 +208,7 @@ mod test {
         for i in 0..64 {
             let prev: Vec<_> = Square::iter().take(i).collect();
             let next: Vec<_> = Square::iter().skip(i + 1).collect();
-            let pivot = Square::from_index(i);
+            let pivot: Square = i.into();
 
             for smaller in prev {
                 assert_eq!(true, smaller < pivot);
@@ -229,7 +233,7 @@ mod test {
     #[test]
     fn test_search_one() {
         assert_eq!(D3.search_one(&vec!(S, E)), D2 | E3);
-        assert_eq!(A8.search_one(&vec!(N, NWW, SE)), B7.lift());
+        assert_eq!(A8.search_one(&vec!(N, NWW, SE)), B7.into());
     }
 
     #[test]
