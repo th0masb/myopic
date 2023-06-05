@@ -253,7 +253,7 @@ mod uci_conversion_test {
             "e5d6",
             Move::Enpassant {
                 source: 0u64,
-                side: Side::White,
+                side: Side::W,
                 from: Square::E5,
                 dest: Square::D6,
                 capture: Square::D5,

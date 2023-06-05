@@ -40,8 +40,8 @@ impl Board {
 
     fn compute_xrays(&self, king_loc: Square) -> BitBoard {
         let passive_sliders = match self.active {
-            Side::White => BLACK_SLIDERS,
-            Side::Black => WHITE_SLIDERS,
+            Side::W => BLACK_SLIDERS,
+            Side::B => WHITE_SLIDERS,
         };
         passive_sliders
             .iter()

@@ -43,8 +43,8 @@ impl Rights {
         Rights(
             self.0
                 - match side {
-                    Side::White => CastleZone::WK | CastleZone::WQ,
-                    Side::Black => CastleZone::BK | CastleZone::BQ,
+                    Side::W => CastleZone::WK | CastleZone::WQ,
+                    Side::B => CastleZone::BK | CastleZone::BQ,
                 },
         )
     }

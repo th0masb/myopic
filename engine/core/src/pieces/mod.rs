@@ -66,57 +66,57 @@ impl Piece {
     /// Returns the king which belongs to the given side.
     pub fn king(side: Side) -> Piece {
         match side {
-            Side::White => Piece::WK,
-            Side::Black => Piece::BK,
+            Side::W => Piece::WK,
+            Side::B => Piece::BK,
         }
     }
 
     /// Returns the queen which belongs to the given side.
     pub fn queen(side: Side) -> Piece {
         match side {
-            Side::White => Piece::WQ,
-            Side::Black => Piece::BQ,
+            Side::W => Piece::WQ,
+            Side::B => Piece::BQ,
         }
     }
 
     /// Returns the rook belonging to the given side.
     pub fn rook(side: Side) -> Piece {
         match side {
-            Side::White => Piece::WR,
-            Side::Black => Piece::BR,
+            Side::W => Piece::WR,
+            Side::B => Piece::BR,
         }
     }
 
     /// Returns the bishop belonging to the given side.
     pub fn bishop(side: Side) -> Piece {
         match side {
-            Side::White => Piece::WB,
-            Side::Black => Piece::BB,
+            Side::W => Piece::WB,
+            Side::B => Piece::BB,
         }
     }
 
     /// Returns the pawn which belongs to the given side.
     pub fn pawn(side: Side) -> Piece {
         match side {
-            Side::White => Piece::WP,
-            Side::Black => Piece::BP,
+            Side::W => Piece::WP,
+            Side::B => Piece::BP,
         }
     }
 
     /// Returns a slice containing all pieces belonging to the given side.
     pub fn of(side: Side) -> impl Iterator<Item = Piece> {
         match side {
-            Side::White => (&WHITE).iter().cloned(),
-            Side::Black => (&BLACK).iter().cloned(),
+            Side::W => (&WHITE).iter().cloned(),
+            Side::B => (&BLACK).iter().cloned(),
         }
     }
 
     /// Returns the side that this piece belongs to.
     pub fn side(self) -> Side {
         if (self as u8) < 6 {
-            Side::White
+            Side::W
         } else {
-            Side::Black
+            Side::B
         }
     }
 

@@ -19,18 +19,18 @@ enum DevelopmentPiece {
 
 lazy_static! {
     static ref START_LOCS: EnumMap<Square, Option<(Side, DevelopmentPiece)>> = enum_map! {
-        Square::E2 => Some((Side::White, DevelopmentPiece::EPawn)),
-        Square::E7 => Some((Side::Black, DevelopmentPiece::EPawn)),
-        Square::D2 => Some((Side::White, DevelopmentPiece::DPawn)),
-        Square::D7 => Some((Side::Black, DevelopmentPiece::DPawn)),
-        Square::B1 => Some((Side::White, DevelopmentPiece::BKnight)),
-        Square::B8 => Some((Side::Black, DevelopmentPiece::BKnight)),
-        Square::G1 => Some((Side::White, DevelopmentPiece::GKnight)),
-        Square::G8 => Some((Side::Black, DevelopmentPiece::GKnight)),
-        Square::C1 => Some((Side::White, DevelopmentPiece::CBishop)),
-        Square::C8 => Some((Side::Black, DevelopmentPiece::CBishop)),
-        Square::F1 => Some((Side::White, DevelopmentPiece::FBishop)),
-        Square::F8 => Some((Side::Black, DevelopmentPiece::FBishop)),
+        Square::E2 => Some((Side::W, DevelopmentPiece::EPawn)),
+        Square::E7 => Some((Side::B, DevelopmentPiece::EPawn)),
+        Square::D2 => Some((Side::W, DevelopmentPiece::DPawn)),
+        Square::D7 => Some((Side::B, DevelopmentPiece::DPawn)),
+        Square::B1 => Some((Side::W, DevelopmentPiece::BKnight)),
+        Square::B8 => Some((Side::B, DevelopmentPiece::BKnight)),
+        Square::G1 => Some((Side::W, DevelopmentPiece::GKnight)),
+        Square::G8 => Some((Side::B, DevelopmentPiece::GKnight)),
+        Square::C1 => Some((Side::W, DevelopmentPiece::CBishop)),
+        Square::C8 => Some((Side::B, DevelopmentPiece::CBishop)),
+        Square::F1 => Some((Side::W, DevelopmentPiece::FBishop)),
+        Square::F8 => Some((Side::B, DevelopmentPiece::FBishop)),
         _ => None,
     };
 }
@@ -89,7 +89,7 @@ impl DevelopmentFacet {
 
 impl<B: ChessBoard> EvalFacet<B> for DevelopmentFacet {
     fn static_eval(&self, _: &B) -> i32 {
-        self.penalty(Side::Black) - self.penalty(Side::White)
+        self.penalty(Side::B) - self.penalty(Side::W)
     }
 
     fn make(&mut self, mv: &Move, _: &B) {
@@ -132,13 +132,13 @@ mod test {
             move_index_divisor: 2,
             max_penalty: 10000,
             pieces_moved: enum_map! {
-                Side::White => enum_map! {
+                Side::W => enum_map! {
                     DevelopmentPiece::EPawn => Some(0),
                     DevelopmentPiece::GKnight => Some(2),
                     DevelopmentPiece::FBishop => Some(4),
                     _ => None
                 },
-                Side::Black => enum_map! {
+                Side::B => enum_map! {
                     DevelopmentPiece::EPawn => Some(1),
                     DevelopmentPiece::BKnight => Some(3),
                     _ => None
@@ -146,8 +146,8 @@ mod test {
             },
         };
 
-        assert_eq!(3 * 3 * 32, under_test.penalty(Side::White));
-        assert_eq!(4 * 3 * 32, under_test.penalty(Side::Black));
+        assert_eq!(3 * 3 * 32, under_test.penalty(Side::W));
+        assert_eq!(4 * 3 * 32, under_test.penalty(Side::B));
         assert_eq!(1 * 3 * 32, under_test.static_eval(&Board::default()));
     }
 
@@ -157,66 +157,66 @@ mod test {
             "1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. Bxc6 bxc6 5. d4 exd4 6. Nxd4 Bc5 7. Be3 Bb7 8. Nc3 d6",
             vec![
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         _ => None
                     },
-                    Side::Black => Default::default(),
+                    Side::B => Default::default(),
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         _ => None
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         _ => None
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         _ => None
                     },
-                    Side::Black => enum_map! {
-                        DevelopmentPiece::EPawn => Some(1),
-                        DevelopmentPiece::BKnight => Some(3),
-                        _ => None
-                    },
-                },
-                enum_map! {
-                    Side::White => enum_map! {
-                        DevelopmentPiece::EPawn => Some(0),
-                        DevelopmentPiece::GKnight => Some(2),
-                        DevelopmentPiece::FBishop => Some(4),
-                        _ => None
-                    },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         _ => None
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
+                        DevelopmentPiece::EPawn => Some(1),
+                        DevelopmentPiece::BKnight => Some(3),
+                        _ => None
+                    },
+                },
+                enum_map! {
+                    Side::W => enum_map! {
+                        DevelopmentPiece::EPawn => Some(0),
+                        DevelopmentPiece::GKnight => Some(2),
+                        DevelopmentPiece::FBishop => Some(4),
+                        _ => None
+                    },
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -224,13 +224,13 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -238,13 +238,13 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -252,14 +252,14 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
                         DevelopmentPiece::DPawn => Some(8),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -267,14 +267,14 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
                         DevelopmentPiece::DPawn => Some(8),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -282,14 +282,14 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
                         DevelopmentPiece::DPawn => Some(8),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -297,14 +297,14 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
                         DevelopmentPiece::DPawn => Some(8),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -313,7 +313,7 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
@@ -321,7 +321,7 @@ mod test {
                         DevelopmentPiece::CBishop => Some(12),
                         _ => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -330,7 +330,7 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
@@ -338,25 +338,7 @@ mod test {
                         DevelopmentPiece::CBishop => Some(12),
                         _ => None
                     },
-                    Side::Black => enum_map! {
-                        DevelopmentPiece::EPawn => Some(1),
-                        DevelopmentPiece::BKnight => Some(3),
-                        DevelopmentPiece::GKnight => Some(5),
-                        DevelopmentPiece::FBishop => Some(11),
-                        DevelopmentPiece::CBishop => Some(13),
-                        _ => None
-                    },
-                },
-                enum_map! {
-                    Side::White => enum_map! {
-                        DevelopmentPiece::EPawn => Some(0),
-                        DevelopmentPiece::GKnight => Some(2),
-                        DevelopmentPiece::FBishop => Some(4),
-                        DevelopmentPiece::DPawn => Some(8),
-                        DevelopmentPiece::CBishop => Some(12),
-                        DevelopmentPiece::BKnight => Some(14),
-                    },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),
@@ -366,7 +348,7 @@ mod test {
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         DevelopmentPiece::EPawn => Some(0),
                         DevelopmentPiece::GKnight => Some(2),
                         DevelopmentPiece::FBishop => Some(4),
@@ -374,7 +356,25 @@ mod test {
                         DevelopmentPiece::CBishop => Some(12),
                         DevelopmentPiece::BKnight => Some(14),
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
+                        DevelopmentPiece::EPawn => Some(1),
+                        DevelopmentPiece::BKnight => Some(3),
+                        DevelopmentPiece::GKnight => Some(5),
+                        DevelopmentPiece::FBishop => Some(11),
+                        DevelopmentPiece::CBishop => Some(13),
+                        _ => None
+                    },
+                },
+                enum_map! {
+                    Side::W => enum_map! {
+                        DevelopmentPiece::EPawn => Some(0),
+                        DevelopmentPiece::GKnight => Some(2),
+                        DevelopmentPiece::FBishop => Some(4),
+                        DevelopmentPiece::DPawn => Some(8),
+                        DevelopmentPiece::CBishop => Some(12),
+                        DevelopmentPiece::BKnight => Some(14),
+                    },
+                    Side::B => enum_map! {
                         DevelopmentPiece::EPawn => Some(1),
                         DevelopmentPiece::BKnight => Some(3),
                         DevelopmentPiece::GKnight => Some(5),

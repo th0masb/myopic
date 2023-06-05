@@ -18,8 +18,8 @@ pub fn piece(piece: Piece, square: Square) -> u64 {
 /// Get the hash of the given side to move
 pub fn side(side: Side) -> u64 {
     match side {
-        Side::Black => FEATURES[N_FEATURES - 1],
-        Side::White => 0,
+        Side::B => FEATURES[N_FEATURES - 1],
+        Side::W => 0,
     }
 }
 
@@ -76,7 +76,7 @@ mod test {
         for square in Square::iter().take(8) {
             unique_add(&mut dest, enpassant(square));
         }
-        unique_add(&mut dest, side(Side::Black));
+        unique_add(&mut dest, side(Side::B));
     }
 
     fn unique_add(dest: &mut Vec<u64>, next: u64) {

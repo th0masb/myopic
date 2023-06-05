@@ -2,10 +2,10 @@ use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
 use enum_map::Enum;
+use Square::*;
 
 use crate::{BitBoard, Dir};
 
-/// Type representing a square on a chessboard.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Enum)]
 #[rustfmt::skip]
 pub enum Square {
@@ -19,32 +19,10 @@ pub enum Square {
     H8, G8, F8, E8, D8, C8, B8, A8,
 }
 
-impl std::fmt::Display for Square {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", format!("{:?}", self).to_lowercase())
-    }
-}
-
-impl FromStr for Square {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let lower = s.to_lowercase();
-        Square::iter()
-            .find(|sq| sq.to_string() == lower)
-            .ok_or(anyhow!("Cannot parse {} as a Square", s))
-    }
-}
-
 impl Square {
     /// Return an iterator traversing all squares in order.
     pub fn iter() -> impl Iterator<Item = Square> {
         ALL.iter().cloned()
-    }
-
-    /// Retrieve a square by it's corresponding index.
-    pub fn from_index(i: usize) -> Square {
-        ALL[i]
     }
 
     /// Return the index of the rank on which this square resides.
@@ -77,20 +55,7 @@ impl Square {
     /// Finds the next square on a chessboard from this square in a
     /// given direction if it exists.
     pub fn next(self, dir: Dir) -> Option<Square> {
-        let dr = match dir {
-            Dir::E | Dir::W => 0,
-            Dir::N | Dir::NE | Dir::NEE | Dir::NW | Dir::NWW => 1,
-            Dir::NNE | Dir::NNW => 2,
-            Dir::S | Dir::SE | Dir::SEE | Dir::SW | Dir::SWW => -1,
-            Dir::SSE | Dir::SSW => -2,
-        };
-        let df = match dir {
-            Dir::N | Dir::S => 0,
-            Dir::W | Dir::NW | Dir::NNW | Dir::SW | Dir::SSW => 1,
-            Dir::NWW | Dir::SWW => 2,
-            Dir::E | Dir::NE | Dir::NNE | Dir::SE | Dir::SSE => -1,
-            Dir::NEE | Dir::SEE => -2,
-        };
+        let (dr, df) = dir.dr_df();
         let new_rank = (self.rank_index() as i8) + dr;
         let new_file = (self.file_index() as i8) + df;
         if -1 < new_rank && new_rank < 8 && -1 < new_file && new_file < 8 {
@@ -132,17 +97,40 @@ impl Square {
     }
 }
 
+impl std::fmt::Display for Square {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
+    }
+}
+
+impl From<usize> for Square {
+    fn from(value: usize) -> Self {
+        ALL[value]
+    }
+}
+
+impl FromStr for Square {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let lower = s.to_lowercase();
+        Square::iter()
+            .find(|sq| sq.to_string() == lower)
+            .ok_or(anyhow!("Cannot parse {} as a Square", s))
+    }
+}
+
 impl std::ops::Shl<usize> for Square {
     type Output = Square;
     fn shl(self, rhs: usize) -> Self::Output {
-        Square::from_index(self as usize + rhs)
+        (self as usize + rhs).into()
     }
 }
 
 impl std::ops::Shr<usize> for Square {
     type Output = Square;
     fn shr(self, rhs: usize) -> Self::Output {
-        Square::from_index(self as usize - rhs)
+        (self as usize - rhs).into()
     }
 }
 
@@ -183,14 +171,14 @@ impl std::ops::Sub<BitBoard> for Square {
 
 #[rustfmt::skip]
 const ALL: [Square; 64] = [
-    Square::H1, Square::G1, Square::F1, Square::E1, Square::D1, Square::C1, Square::B1, Square::A1,
-    Square::H2, Square::G2, Square::F2, Square::E2, Square::D2, Square::C2, Square::B2, Square::A2,
-    Square::H3, Square::G3, Square::F3, Square::E3, Square::D3, Square::C3, Square::B3, Square::A3,
-    Square::H4, Square::G4, Square::F4, Square::E4, Square::D4, Square::C4, Square::B4, Square::A4,
-    Square::H5, Square::G5, Square::F5, Square::E5, Square::D5, Square::C5, Square::B5, Square::A5,
-    Square::H6, Square::G6, Square::F6, Square::E6, Square::D6, Square::C6, Square::B6, Square::A6,
-    Square::H7, Square::G7, Square::F7, Square::E7, Square::D7, Square::C7, Square::B7, Square::A7,
-    Square::H8, Square::G8, Square::F8, Square::E8, Square::D8, Square::C8, Square::B8, Square::A8,
+    H1, G1, F1, E1, D1, C1, B1, A1,
+    H2, G2, F2, E2, D2, C2, B2, A2,
+    H3, G3, F3, E3, D3, C3, B3, A3,
+    H4, G4, F4, E4, D4, C4, B4, A4,
+    H5, G5, F5, E5, D5, C5, B5, A5,
+    H6, G6, F6, E6, D6, C6, B6, A6,
+    H7, G7, F7, E7, D7, C7, B7, A7,
+    H8, G8, F8, E8, D8, C8, B8, A8,
 ];
 
 #[cfg(test)]

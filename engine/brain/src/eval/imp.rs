@@ -213,8 +213,8 @@ impl EvalChessBoard for EvalBoard<Board> {
                         .map(|cmp| cmp.static_eval(&self.board))
                         .sum::<i32>();
                 match self.active() {
-                    Side::White => eval,
-                    Side::Black => -eval,
+                    Side::W => eval,
+                    Side::B => -eval,
                 }
             }
         }

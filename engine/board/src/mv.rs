@@ -201,7 +201,7 @@ mod test {
         assert_eq!(
             Move::Enpassant {
                 source: 0,
-                side: Side::Black,
+                side: Side::B,
                 from: Square::D4,
                 dest: Square::C3,
                 capture: Square::C4,

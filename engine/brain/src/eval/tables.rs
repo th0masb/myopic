@@ -17,8 +17,8 @@ pub struct PositionTables {
 
 fn parity(piece: Piece) -> i32 {
     match piece.side() {
-        Side::White => 1,
-        Side::Black => -1,
+        Side::W => 1,
+        Side::B => -1,
     }
 }
 
@@ -38,8 +38,8 @@ fn table_index(piece: Piece, adjusted_location: Square) -> usize {
 
 fn adjust_location(side: Side, location: Square) -> Square {
     match side {
-        Side::White => location,
-        Side::Black => location.reflect(),
+        Side::W => location,
+        Side::B => location.reflect(),
     }
 }
 

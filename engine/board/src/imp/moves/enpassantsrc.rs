@@ -37,11 +37,11 @@ mod test_enpassant_source_squares {
 
     #[test]
     fn test() {
-        assert_eq!(H4 | F4, squares(Side::Black, Square::G3));
-        assert_eq!(G4, squares(Side::Black, Square::H3));
-        assert_eq!(B4, squares(Side::Black, Square::A3));
-        assert_eq!(H5 | F5, squares(Side::White, Square::G6));
-        assert_eq!(G5, squares(Side::White, Square::H6));
-        assert_eq!(B5, squares(Side::White, Square::A6));
+        assert_eq!(H4 | F4, squares(Side::B, Square::G3));
+        assert_eq!(G4, squares(Side::B, Square::H3));
+        assert_eq!(B4, squares(Side::B, Square::A3));
+        assert_eq!(H5 | F5, squares(Side::W, Square::G6));
+        assert_eq!(G5, squares(Side::W, Square::H6));
+        assert_eq!(B5, squares(Side::W, Square::A6));
     }
 }

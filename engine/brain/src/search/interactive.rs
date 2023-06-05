@@ -113,13 +113,13 @@ impl<B: EvalChessBoard + Clone + 'static> InteractiveSearch<B> {
             let mut time = max(
                 500,
                 match active {
-                    Side::White => w_inc,
+                    Side::W => w_inc,
                     _ => b_inc,
                 },
             );
             time += match active {
-                Side::White => w_base / 10,
-                Side::Black => b_base / 10,
+                Side::W => w_base / 10,
+                Side::B => b_base / 10,
             };
             self.set_max_time(min(
                 time,
