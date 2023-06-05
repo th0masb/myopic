@@ -173,7 +173,7 @@ impl Board {
 
 fn pnbrq<'a>(side: Side) -> &'a [Piece; 5] {
     match side {
-        Side::White => &[Piece::WP, Piece::WN, Piece::WB, Piece::WR, Piece::WQ],
-        Side::Black => &[Piece::BP, Piece::BN, Piece::BB, Piece::BR, Piece::BQ],
+        Side::W => &[Piece::WP, Piece::WN, Piece::WB, Piece::WR, Piece::WQ],
+        Side::B => &[Piece::BP, Piece::BN, Piece::BB, Piece::BR, Piece::BQ],
     }
 }

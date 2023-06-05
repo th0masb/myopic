@@ -40,24 +40,24 @@ impl CastleZone {
     /// Return the side which this zone belongs to.
     pub fn side(&self) -> Side {
         match self {
-            CastleZone::WK | CastleZone::WQ => Side::White,
-            CastleZone::BK | CastleZone::BQ => Side::Black,
+            CastleZone::WK | CastleZone::WQ => Side::W,
+            CastleZone::BK | CastleZone::BQ => Side::B,
         }
     }
 
     /// Return the kingside zone for the given side.
     pub fn kingside(side: Side) -> CastleZone {
         match side {
-            Side::White => CastleZone::WK,
-            Side::Black => CastleZone::BK,
+            Side::W => CastleZone::WK,
+            Side::B => CastleZone::BK,
         }
     }
 
     /// Return the queenside zone for the given side.
     pub fn queenside(side: Side) -> CastleZone {
         match side {
-            Side::White => CastleZone::WQ,
-            Side::Black => CastleZone::BQ,
+            Side::W => CastleZone::WQ,
+            Side::B => CastleZone::BQ,
         }
     }
 

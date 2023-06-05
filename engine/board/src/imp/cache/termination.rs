@@ -113,7 +113,7 @@ impl Board {
 
 fn qrbnp<'a>(side: Side) -> &'a [Piece] {
     match side {
-        Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN, Piece::WP],
-        Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN, Piece::BP],
+        Side::W => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN, Piece::WP],
+        Side::B => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN, Piece::BP],
     }
 }

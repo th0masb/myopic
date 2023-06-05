@@ -9,7 +9,7 @@ pub fn white_control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBo
 pub fn white_moves(loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
     let all = white | black;
     let mut result = ((loc - BitBoard::RANKS[7]) << 8) - all;
-    if Side::White.pawn_first_rank().contains(loc) && !result.is_empty() {
+    if Side::W.pawn_first_rank().contains(loc) && !result.is_empty() {
         result = result | ((loc.lift() << 16) - all)
     }
     result | (white_control(loc, white, black) & black)
@@ -22,7 +22,7 @@ pub fn black_control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBo
 pub fn black_moves(loc: Square, white: BitBoard, black: BitBoard) -> BitBoard {
     let all = white | black;
     let mut result = ((loc - BitBoard::RANKS[0]) >> 8) - all;
-    if Side::Black.pawn_first_rank().contains(loc) && !result.is_empty() {
+    if Side::B.pawn_first_rank().contains(loc) && !result.is_empty() {
         result = result | ((loc.lift() >> 16) - all)
     }
     result | (black_control(loc, white, black) & white)

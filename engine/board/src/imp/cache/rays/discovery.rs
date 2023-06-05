@@ -22,8 +22,8 @@ impl Board {
 
     fn compute_xrayers(&self, king_loc: Square) -> BitBoard {
         let active_sliders = match self.active {
-            Side::White => super::WHITE_SLIDERS,
-            Side::Black => super::BLACK_SLIDERS,
+            Side::W => super::WHITE_SLIDERS,
+            Side::B => super::BLACK_SLIDERS,
         };
         let locs = |p: Piece| self.locs(&[p]);
         active_sliders

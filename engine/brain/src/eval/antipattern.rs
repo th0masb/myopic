@@ -42,17 +42,17 @@ impl KnightRimFacet {
 
 lazy_static! {
     static ref START_LOCS: EnumMap<Square, Option<(Side, Knight)>> = enum_map! {
-        Square::B1 => Some((Side::White, Knight::B)),
-        Square::B8 => Some((Side::Black, Knight::B)),
-        Square::G1 => Some((Side::White, Knight::G)),
-        Square::G8 => Some((Side::Black, Knight::G)),
+        Square::B1 => Some((Side::W, Knight::B)),
+        Square::B8 => Some((Side::B, Knight::B)),
+        Square::G1 => Some((Side::W, Knight::G)),
+        Square::G8 => Some((Side::B, Knight::G)),
         _ => None,
     };
 }
 
 impl<B: ChessBoard> EvalFacet<B> for KnightRimFacet {
     fn static_eval(&self, _: &B) -> i32 {
-        self.penalty * (self.pattern_count(Side::Black) - self.pattern_count(Side::White))
+        self.penalty * (self.pattern_count(Side::B) - self.pattern_count(Side::W))
     }
 
     fn make(&mut self, mv: &Move, _: &B) {
@@ -96,11 +96,11 @@ mod test {
             penalty: 75,
             move_index: 9,
             first_move: enum_map! {
-                Side::White => enum_map! {
+                Side::W => enum_map! {
                     Knight::B => Some((3, Square::C3)),
                     Knight::G => Some((3, Square::H3)),
                 },
-                Side::Black => enum_map! {
+                Side::B => enum_map! {
                     Knight::B => Some((3, Square::C6)),
                     Knight::G => None,
                 },
@@ -117,62 +117,62 @@ mod test {
             vec![
                 FirstMoveStore::default(),
                 enum_map! {
-                    Side::White => Default::default(),
-                    Side::Black => enum_map! {
+                    Side::W => Default::default(),
+                    Side::B => enum_map! {
                         Knight::G => None,
                         Knight::B => Some((1, Square::C6))
                     },
                 },
                 enum_map! {
-                    Side::White => Default::default(),
-                    Side::Black => enum_map! {
+                    Side::W => Default::default(),
+                    Side::B => enum_map! {
                         Knight::G => None,
                         Knight::B => Some((1, Square::C6))
                     },
                 },
                 enum_map! {
-                    Side::White => Default::default(),
-                    Side::Black => enum_map! {
+                    Side::W => Default::default(),
+                    Side::B => enum_map! {
                         Knight::G => None,
                         Knight::B => Some((1, Square::C6))
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         Knight::G => Some((4, Square::F3)),
                         Knight::B => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         Knight::G => None,
                         Knight::B => Some((1, Square::C6))
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         Knight::G => Some((4, Square::F3)),
                         Knight::B => None
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         Knight::G => Some((5, Square::H6)),
                         Knight::B => Some((1, Square::C6))
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         Knight::G => Some((4, Square::F3)),
                         Knight::B => Some((6, Square::A3))
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         Knight::G => Some((5, Square::H6)),
                         Knight::B => Some((1, Square::C6))
                     },
                 },
                 enum_map! {
-                    Side::White => enum_map! {
+                    Side::W => enum_map! {
                         Knight::G => Some((4, Square::F3)),
                         Knight::B => Some((6, Square::A3))
                     },
-                    Side::Black => enum_map! {
+                    Side::B => enum_map! {
                         Knight::G => Some((5, Square::H6)),
                         Knight::B => Some((1, Square::C6))
                     },

@@ -26,7 +26,7 @@ fn to_fen_board<B: ChessBoard>(board: &B) -> String {
     let mut dest = String::new();
     let mut empty_count = 0;
     for i in 0..64 {
-        match board.piece(Square::from_index(63 - i)) {
+        match board.piece((63 - i).into()) {
             None => {
                 empty_count += 1;
             }
@@ -52,8 +52,8 @@ fn to_fen_board<B: ChessBoard>(board: &B) -> String {
 
 fn to_fen_side<B: ChessBoard>(board: &B) -> String {
     match board.active() {
-        Side::White => "w".to_string(),
-        Side::Black => "b".to_string(),
+        Side::W => "w".to_string(),
+        Side::B => "b".to_string(),
     }
 }
 

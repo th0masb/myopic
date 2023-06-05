@@ -17,7 +17,7 @@ impl Iterator for BitBoardIterator {
         } else {
             let lsb = bitscan(self.0);
             self.0 ^= 1u64 << lsb as u64;
-            Some(Square::from_index(lsb))
+            Some(lsb.into())
         }
     }
 }

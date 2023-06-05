@@ -37,7 +37,7 @@ impl CastlingFacet {
 impl<B: ChessBoard> EvalFacet<B> for CastlingFacet {
     fn static_eval(&self, board: &B) -> i32 {
         let rights = board.remaining_rights();
-        self.penalty(Side::Black, &rights) - self.penalty(Side::White, &rights)
+        self.penalty(Side::B, &rights) - self.penalty(Side::W, &rights)
     }
 
     fn make(&mut self, mv: &Move, _: &B) {
@@ -66,17 +66,17 @@ mod test {
     fn evaluation_not_castled() {
         let under_test = CastlingFacet {
             penalty: 100,
-            castling_status: enum_map! {Side::White => None, Side::Black => None },
+            castling_status: enum_map! {Side::W => None, Side::B => None },
         };
 
-        assert_eq!(200, under_test.penalty(Side::White, &enum_set!()));
-        assert_eq!(200, under_test.penalty(Side::Black, &enum_set!()));
+        assert_eq!(200, under_test.penalty(Side::W, &enum_set!()));
+        assert_eq!(200, under_test.penalty(Side::B, &enum_set!()));
 
-        assert_eq!(100, under_test.penalty(Side::White, &enum_set!(CastleZone::WK)));
-        assert_eq!(200, under_test.penalty(Side::Black, &enum_set!(CastleZone::WK)));
+        assert_eq!(100, under_test.penalty(Side::W, &enum_set!(CastleZone::WK)));
+        assert_eq!(200, under_test.penalty(Side::B, &enum_set!(CastleZone::WK)));
 
-        assert_eq!(200, under_test.penalty(Side::White, &enum_set!(CastleZone::BK)));
-        assert_eq!(100, under_test.penalty(Side::Black, &enum_set!(CastleZone::BK)));
+        assert_eq!(200, under_test.penalty(Side::W, &enum_set!(CastleZone::BK)));
+        assert_eq!(100, under_test.penalty(Side::B, &enum_set!(CastleZone::BK)));
     }
 
     #[test]
@@ -85,40 +85,40 @@ mod test {
             "1. d4 d5 2. Be3 Bf5 3. Nc3 Qd6 4. Qd2 Nc6 5. O-O-O O-O-O 6. g3 h6",
             vec![
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => Some(CastleZone::WQ), Side::Black => None,
+                    Side::W => Some(CastleZone::WQ), Side::B => None,
                 },
                 enum_map! {
-                    Side::White => Some(CastleZone::WQ), Side::Black => Some(CastleZone::BQ),
+                    Side::W => Some(CastleZone::WQ), Side::B => Some(CastleZone::BQ),
                 },
                 enum_map! {
-                    Side::White => Some(CastleZone::WQ), Side::Black => Some(CastleZone::BQ),
+                    Side::W => Some(CastleZone::WQ), Side::B => Some(CastleZone::BQ),
                 },
                 enum_map! {
-                    Side::White => Some(CastleZone::WQ), Side::Black => Some(CastleZone::BQ),
+                    Side::W => Some(CastleZone::WQ), Side::B => Some(CastleZone::BQ),
                 },
             ].into_iter().map(|status| {
                 let mut facet = CastlingFacet::default();
@@ -134,34 +134,34 @@ mod test {
             "1. e4 e5 2. Be2 Be7 3. Nf3 Nf6 4. O-O O-O 5. c4 a5",
             vec![
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => None, Side::Black => None,
+                    Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::White => Some(CastleZone::WK), Side::Black => None,
+                    Side::W => Some(CastleZone::WK), Side::B => None,
                 },
                 enum_map! {
-                    Side::White => Some(CastleZone::WK), Side::Black => Some(CastleZone::BK),
+                    Side::W => Some(CastleZone::WK), Side::B => Some(CastleZone::BK),
                 },
                 enum_map! {
-                    Side::White => Some(CastleZone::WK), Side::Black => Some(CastleZone::BK),
+                    Side::W => Some(CastleZone::WK), Side::B => Some(CastleZone::BK),
                 },
                 enum_map! {
-                    Side::White => Some(CastleZone::WK), Side::Black => Some(CastleZone::BK),
+                    Side::W => Some(CastleZone::WK), Side::B => Some(CastleZone::BK),
                 },
             ].into_iter().map(|status| {
                 let mut facet = CastlingFacet::default();

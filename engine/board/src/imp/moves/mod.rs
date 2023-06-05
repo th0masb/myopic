@@ -75,8 +75,8 @@ impl Board {
 
     fn promotion_targets<'a>(side: Side) -> &'a [Piece; 4] {
         match side {
-            Side::White => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN],
-            Side::Black => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN],
+            Side::W => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN],
+            Side::B => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN],
         }
     }
 

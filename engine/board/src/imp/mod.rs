@@ -113,7 +113,7 @@ mod fen_test {
             ],
             castle_rights: EnumSet::empty(),
             clock: 3,
-            active: Side::White,
+            active: Side::W,
             enpassant: None,
             history_count: 36,
         };
@@ -128,7 +128,7 @@ mod fen_test {
             blacks: vec![A7 | B7 | C7 | E6 | F7 | G7 | H7, B8, C8, A8 | F8, F6, G8],
             castle_rights: CastleZone::WK | CastleZone::WQ,
             clock: 2,
-            active: Side::White,
+            active: Side::W,
             enpassant: None,
             history_count: 16,
         };
@@ -157,7 +157,7 @@ mod fen_test {
             ],
             castle_rights: EnumSet::all(),
             clock: 0,
-            active: Side::White,
+            active: Side::W,
             enpassant: Some(Square::D6),
             history_count: 4,
         };
@@ -172,7 +172,7 @@ mod fen_test {
             blacks: vec![A7 | A6 | G7 | H7, G6, C6, A8, F6, H8],
             castle_rights: EnumSet::empty(),
             clock: 2,
-            active: Side::Black,
+            active: Side::B,
             enpassant: None,
             history_count: 41,
         };
@@ -251,15 +251,15 @@ impl ChessBoard for Board {
 
     fn side(&self, side: Side) -> BitBoard {
         match side {
-            Side::White => self.pieces.whites(),
-            Side::Black => self.pieces.blacks(),
+            Side::W => self.pieces.whites(),
+            Side::B => self.pieces.blacks(),
         }
     }
 
     fn sides(&self) -> (BitBoard, BitBoard) {
         (
-            self.pieces.side_locations(Side::White),
-            self.pieces.side_locations(Side::Black),
+            self.pieces.side_locations(Side::W),
+            self.pieces.side_locations(Side::B),
         )
     }
 

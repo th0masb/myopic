@@ -23,12 +23,12 @@ impl Board {
     fn compute_passive_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
-            Side::White => (
+            Side::W => (
                 pieces.whites(),
-                pieces.blacks() - pieces.king_location(Side::Black),
+                pieces.blacks() - pieces.king_location(Side::B),
             ),
-            Side::Black => (
-                pieces.whites() - pieces.king_location(Side::White),
+            Side::B => (
+                pieces.whites() - pieces.king_location(Side::W),
                 pieces.blacks(),
             ),
         };
@@ -80,7 +80,7 @@ mod test {
             ],
             castle_rights: EnumSet::all(),
             enpassant: None,
-            active: Side::White,
+            active: Side::W,
             clock: 20,
             history_count: 20,
         }
@@ -97,7 +97,7 @@ mod test {
 
         execute_test(TestCase {
             board: get_test_board(),
-            side: Side::White,
+            side: Side::W,
             expected_control,
         })
     }
@@ -113,7 +113,7 @@ mod test {
 
         execute_test(TestCase {
             board: get_test_board(),
-            side: Side::Black,
+            side: Side::B,
             expected_control,
         })
     }

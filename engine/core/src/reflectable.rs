@@ -13,8 +13,8 @@ pub trait Reflectable {
 impl Reflectable for Side {
     fn reflect(&self) -> Self {
         match self {
-            Side::White => Side::Black,
-            Side::Black => Side::White,
+            Side::W => Side::B,
+            Side::B => Side::W,
         }
     }
 }
@@ -51,7 +51,7 @@ impl Reflectable for BitBoard {
 impl Reflectable for Square {
     fn reflect(&self) -> Self {
         let (fi, ri) = (self.file_index(), self.rank_index());
-        Square::from_index((8 * (7 - ri) + fi) as usize)
+        ((8 * (7 - ri) + fi) as usize).into()
     }
 }
 

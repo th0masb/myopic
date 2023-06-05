@@ -50,7 +50,7 @@ impl FromStr for Positions {
             let mut bitboards = [BitBoard::EMPTY; 12];
             for (i, x) in board.into_iter().enumerate() {
                 match x {
-                    Some(p) => bitboards[p as usize] |= Square::from_index(i),
+                    Some(p) => bitboards[p as usize] |= <usize as Into<Square>>::into(i),
                     _ => (),
                 }
             }
@@ -139,11 +139,11 @@ impl Positions {
     }
 
     pub fn whites(&self) -> BitBoard {
-        self.sides[Side::White as usize]
+        self.sides[Side::W as usize]
     }
 
     pub fn blacks(&self) -> BitBoard {
-        self.sides[Side::Black as usize]
+        self.sides[Side::B as usize]
     }
 
     pub fn locs(&self, piece: Piece) -> BitBoard {

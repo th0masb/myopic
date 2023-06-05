@@ -39,7 +39,7 @@ impl PieceValues {
 
 fn parity(piece: Piece) -> i32 {
     match piece.side() {
-        Side::White => 1,
-        Side::Black => -1,
+        Side::W => 1,
+        Side::B => -1,
     }
 }

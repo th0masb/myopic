@@ -124,10 +124,10 @@ impl Game {
             clock: game.clock,
             lambda_side: if self.bot_name == game.white.name {
                 log::info!("Detected lambda is playing as white");
-                Side::White
+                Side::W
             } else if self.bot_name == game.black.name {
                 log::info!("Detected lambda is playing as black");
-                Side::Black
+                Side::B
             } else {
                 return Err(anyhow!(
                     "Name not matched, us: {} w: {} b: {}",
@@ -159,8 +159,8 @@ impl Game {
                     Ok(GameExecutionState::Running)
                 } else {
                     let (remaining, increment) = match metadata.lambda_side {
-                        Side::White => (state.wtime, state.winc),
-                        Side::Black => (state.btime, state.binc),
+                        Side::W => (state.wtime, state.winc),
+                        Side::B => (state.btime, state.binc),
                     };
                     tokio::select! {
                         _ = self.cancel_token.cancelled() => {

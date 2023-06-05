@@ -139,7 +139,7 @@ fn compute_control<B: EvalChessBoard>(board: &B, piece: Piece) -> BitBoard {
 
 fn parity(side: Side) -> i32 {
     match side {
-        Side::White => 1,
-        Side::Black => -1,
+        Side::W => 1,
+        Side::B => -1,
     }
 }
