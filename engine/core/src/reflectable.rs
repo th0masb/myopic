@@ -41,20 +41,7 @@ impl Reflectable for Square {
 /// We reflect a piece to it's correspondent on the opposite side.
 impl Reflectable for Piece {
     fn reflect(&self) -> Self {
-        match self {
-            Piece::WP => Piece::BP,
-            Piece::WN => Piece::BN,
-            Piece::WB => Piece::BB,
-            Piece::WR => Piece::BR,
-            Piece::WQ => Piece::BQ,
-            Piece::WK => Piece::BK,
-            Piece::BP => Piece::WP,
-            Piece::BN => Piece::WN,
-            Piece::BB => Piece::WB,
-            Piece::BR => Piece::WR,
-            Piece::BQ => Piece::WQ,
-            Piece::BK => Piece::WK,
-        }
+        Piece(self.0.reflect(), self.1)
     }
 }
 

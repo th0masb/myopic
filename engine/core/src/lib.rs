@@ -32,13 +32,6 @@ pub struct Corner(pub Side, pub Flank);
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Line(pub Square, pub Square);
 
-#[derive(Debug, PartialOrd, Ord, Hash, Enum, EnumSetType)]
-#[rustfmt::skip]
-pub enum PieceType { P, N, B, R, Q, K }
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct Piece2(pub Side, pub PieceType);
-
 #[derive(Debug, EnumSetType, Hash, PartialOrd, Ord)]
 #[rustfmt::skip]
 pub enum Dir { N, E, S, W, NE, SE, SW, NW, NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW }
@@ -120,13 +113,6 @@ impl FromStr for Flank {
 }
 
 impl Side {
-    //pub fn king_start(self) -> Square {
-    //    match self {
-    //        Side::W => Square::E1,
-    //        Side::B => Square::E8,
-    //    }
-    //}
-
     /// Get the vertical direction in which a pawn on this side moves
     /// (north or south).
     pub fn pawn_dir(self) -> Dir {

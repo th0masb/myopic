@@ -5,7 +5,6 @@ use crate::square::Square;
 use crate::Dir;
 
 pub mod bishops;
-pub mod queens;
 pub mod rooks;
 
 /// API for computing the magic index for a bishop positioned at a given
