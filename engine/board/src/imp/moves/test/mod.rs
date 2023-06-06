@@ -39,18 +39,9 @@ fn execute_test(case: TestCase) -> Result<()> {
     let board = case.board.parse::<Board>()?;
     let board_hash = board.hash();
     let expected = vec![
-        (
-            MoveComputeType::All,
-            parse_moves(board_hash, &case.expected_all)?,
-        ),
-        (
-            MoveComputeType::Attacks,
-            parse_moves(board_hash, &case.expected_attacks)?,
-        ),
-        (
-            MoveComputeType::AttacksChecks,
-            parse_moves(board_hash, &case.expected_attacks_checks)?,
-        ),
+        (MoveComputeType::All, parse_moves(board_hash, &case.expected_all)?),
+        (MoveComputeType::Attacks, parse_moves(board_hash, &case.expected_attacks)?),
+        (MoveComputeType::AttacksChecks, parse_moves(board_hash, &case.expected_attacks_checks)?),
     ];
 
     let ref_board = board.reflect();
@@ -58,12 +49,7 @@ fn execute_test(case: TestCase) -> Result<()> {
     let ref_moves = expected
         .iter()
         .map(|(t, mvs)| {
-            (
-                *t,
-                mvs.into_iter()
-                    .map(|m| m.reflect_for(ref_hash))
-                    .collect::<BTreeSet<_>>(),
-            )
+            (*t, mvs.into_iter().map(|m| m.reflect_for(ref_hash)).collect::<BTreeSet<_>>())
         })
         .collect::<Vec<_>>();
 
@@ -86,15 +72,7 @@ fn execute_test_impl(board: Board, moves: ExpectedMoves) {
 }
 
 fn format_difference(expected: MoveSet, actual: MoveSet) -> String {
-    let left_sub_right = expected
-        .clone()
-        .difference(&actual)
-        .map(|m| m.to_string())
-        .collect_vec();
-    let right_sub_left = actual
-        .clone()
-        .difference(&expected)
-        .map(|m| m.to_string())
-        .collect_vec();
+    let left_sub_right = expected.clone().difference(&actual).map(|m| m.to_string()).collect_vec();
+    let right_sub_left = actual.clone().difference(&expected).map(|m| m.to_string()).collect_vec();
     format!("E - A: {:?}, A - E: {:?}", left_sub_right, right_sub_left)
 }

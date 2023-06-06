@@ -95,11 +95,9 @@ impl Default for AppConfig {
         let config = get_env_var(CONFIG_VAR);
         serde_json::from_str(config.as_str())
             .or_else(|_e| {
-                std::fs::read_to_string(config.as_str())
-                    .map_err(anyhow::Error::from)
-                    .and_then(|s| {
-                        serde_json::from_str::<AppConfig>(s.as_str()).map_err(anyhow::Error::from)
-                    })
+                std::fs::read_to_string(config.as_str()).map_err(anyhow::Error::from).and_then(
+                    |s| serde_json::from_str::<AppConfig>(s.as_str()).map_err(anyhow::Error::from),
+                )
             })
             .expect(format!("Could not parse config from {}", config).as_str())
     }
@@ -153,10 +151,7 @@ fn default_region() -> String {
 }
 
 fn default_user_matchers() -> Vec<StringMatcher> {
-    vec![StringMatcher {
-        include: true,
-        pattern: Regex::new(r".*").unwrap(),
-    }]
+    vec![StringMatcher { include: true, pattern: Regex::new(r".*").unwrap() }]
 }
 
 fn get_env_var(key: &str) -> String {

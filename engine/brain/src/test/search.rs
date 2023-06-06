@@ -1,5 +1,5 @@
-use myopic_board::ChessBoard;
 use crate::{EvalBoard, SearchOutcome, SearchParameters};
+use myopic_board::ChessBoard;
 
 #[test]
 fn early_draw_bug_1() {
@@ -42,20 +42,14 @@ fn early_draw_bug_2() {
         103. Bd4+ Kc1 104. Qf4+ Kd1 105. Qf3+ Kc1 106. Qf1+ Kc2 107. Qf5+ Kc1 108. Qf1+ Kc2 \
         109. Qg2+ Kd1 110. Qf3+ Kc1 111. Qf4+ Kd1 112. Qg4+ Kc1 113. Qg1+ Kc2 114. Qg2+ Kd1 \
         115. Qh1+ Kc2 116. Qe4+ Kc1 117. Qe1+ Kc2 118. Qe4+ Kc1 119. Qe1+",
-        3
+        3,
     );
 }
 
 fn search(pgn: &str, depth: usize) -> SearchOutcome {
     let mut board = EvalBoard::default();
-    board
-        .play_pgn(pgn)
-        .expect(format!("Invalid {}", pgn).as_str());
-    crate::search(
-        board,
-        SearchParameters {
-            terminator: depth,
-            table_size: 10_000,
-        },
-    ).map_err(|e| panic!("{}", e)).unwrap()
+    board.play_pgn(pgn).expect(format!("Invalid {}", pgn).as_str());
+    crate::search(board, SearchParameters { terminator: depth, table_size: 10_000 })
+        .map_err(|e| panic!("{}", e))
+        .unwrap()
 }

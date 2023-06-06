@@ -26,10 +26,7 @@ pub trait LookupMoveService<B: ChessBoard + Send>: Display {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    SimpleLogger::new()
-        .with_level(log::LevelFilter::Info)
-        .without_timestamps()
-        .init()?;
+    SimpleLogger::new().with_level(log::LevelFilter::Info).without_timestamps().init()?;
     lambda_runtime::run(service_fn(move_handler)).await?;
     Ok(())
 }
@@ -43,10 +40,7 @@ async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveO
 
     let lookup_services = load_lookup_services(&choose_move.features);
     match perform_lookups(board.clone_position(), lookup_services).await {
-        Some(mv) => Ok(ChooseMoveOutput {
-            best_move: mv.uci_format(),
-            search_details: None,
-        }),
+        Some(mv) => Ok(ChooseMoveOutput { best_move: mv.uci_format(), search_details: None }),
         None => {
             let lookup_duration = start.elapsed();
             let search_time = TimeAllocator::default().allocate(
@@ -56,10 +50,7 @@ async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveO
             );
             let search_outcome = myopic_brain::search(
                 board,
-                SearchParameters {
-                    terminator: search_time,
-                    table_size: TABLE_SIZE,
-                },
+                SearchParameters { terminator: search_time, table_size: TABLE_SIZE },
             )?;
             Ok(ChooseMoveOutput {
                 best_move: search_outcome.best_move.uci_format(),

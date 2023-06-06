@@ -32,12 +32,7 @@ pub enum SearchCommand<B: EvalChessBoard + Clone> {
     Infinite,
     Depth(usize),
     Time(usize),
-    GameTime {
-        w_base: usize,
-        w_inc: usize,
-        b_base: usize,
-        b_inc: usize,
-    },
+    GameTime { w_base: usize, w_inc: usize, b_base: usize, b_inc: usize },
 }
 
 /// Create an interactive search running on a separate thread, communication happens
@@ -60,12 +55,9 @@ pub fn search<B: EvalChessBoard + Clone + Send + Sync + 'static>(
                     SearchCommand::Root(root) => search.root = Some(root),
                     SearchCommand::Depth(max_depth) => search.max_depth = max_depth,
                     SearchCommand::Time(max_time) => search.set_max_time(max_time),
-                    SearchCommand::GameTime {
-                        w_base,
-                        w_inc,
-                        b_base,
-                        b_inc,
-                    } => search.set_game_time(w_base, w_inc, b_base, b_inc),
+                    SearchCommand::GameTime { w_base, w_inc, b_base, b_inc } => {
+                        search.set_game_time(w_base, w_inc, b_base, b_inc)
+                    }
                     SearchCommand::Infinite => {
                         search.max_time = INFINITE_DURATION;
                         search.max_depth = INFINITE_DEPTH;
@@ -121,10 +113,7 @@ impl<B: EvalChessBoard + Clone + 'static> InteractiveSearch<B> {
                 Side::W => w_base / 10,
                 Side::B => b_base / 10,
             };
-            self.set_max_time(min(
-                time,
-                MAX_COMPUTED_MOVE_SEARCH_DURATION.as_millis() as usize,
-            ));
+            self.set_max_time(min(time, MAX_COMPUTED_MOVE_SEARCH_DURATION.as_millis() as usize));
         }
     }
 
@@ -144,10 +133,7 @@ impl<B: EvalChessBoard + Clone + 'static> InteractiveSearch<B> {
         };
         blocking_search(
             self.root.clone().unwrap(),
-            SearchParameters {
-                terminator: tracker,
-                table_size: self.transposition_table_size,
-            },
+            SearchParameters { terminator: tracker, table_size: self.transposition_table_size },
         )
     }
 }

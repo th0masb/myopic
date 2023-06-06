@@ -1,6 +1,6 @@
 use myopic_board::{Move, Move::*, Reflectable, Side, Square};
 
-use crate::{BitBoard, EvalChessBoard, Piece, Piece::*};
+use crate::{BitBoard, Class, EvalChessBoard, Piece};
 
 /// A function which approximately evaluates the quality
 /// of a move within the context of the given position.
@@ -76,10 +76,8 @@ enum MoveCategory {
 fn get_category<B: EvalChessBoard>(board: &B, mv: &Move) -> MoveCategory {
     match mv {
         Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
-        &Standard {
-            moving, from, dest, ..
-        } => {
-            if board.side(moving.side().reflect()).contains(dest) {
+        &Standard { moving, from, dest, .. } => {
+            if board.side(moving.0.reflect()).contains(dest) {
                 let exchange_value =
                     crate::see::exchange_value(board, from, dest, board.piece_values());
                 if exchange_value > 0 {
@@ -92,7 +90,7 @@ fn get_category<B: EvalChessBoard>(board: &B, mv: &Move) -> MoveCategory {
                     .map(|n| MoveCategory::BadExchange(n))
                     .unwrap_or_else(|| {
                         MoveCategory::Positional(
-                            parity(moving.side())
+                            parity(moving.0)
                                 * (board.positional_eval(moving, dest)
                                     - board.positional_eval(moving, from)),
                         )
@@ -104,27 +102,22 @@ fn get_category<B: EvalChessBoard>(board: &B, mv: &Move) -> MoveCategory {
 
 fn get_lower_value_delta<B: EvalChessBoard>(board: &B, piece: Piece, dst: Square) -> Option<i32> {
     let piece_values = board.piece_values().clone();
-    let moving_value = piece_values[piece as usize % 6];
-    get_lower_value_pieces(piece)
+    let moving_value = piece_values[piece.1 as usize];
+    get_lower_value_pieces(piece.1)
         .into_iter()
-        .filter(|&p| compute_control(board, *p).contains(dst))
-        .map(|&p| piece_values[p as usize % 6] - moving_value)
+        .map(|&class| Piece(piece.0.reflect(), class))
+        .filter(|p| compute_control(board, *p).contains(dst))
+        .map(|p| piece_values[p.1 as usize] - moving_value)
         .min()
 }
 
-fn get_lower_value_pieces<'a>(piece: Piece) -> &'a [Piece] {
-    match piece {
-        WP | BP => &[],
-
-        WN | WB => &[BP],
-        WR => &[BP, BN, BB],
-        WQ => &[BP, BN, BB, BR],
-        WK => &[BP, BN, BB, BR, BQ],
-
-        BN | BB => &[WP],
-        BR => &[WP, WN, WB],
-        BQ => &[WP, WN, WB, WR],
-        BK => &[WP, WN, WB, WR, WQ],
+fn get_lower_value_pieces<'a>(class: Class) -> &'a [Class] {
+    match class {
+        Class::P => &[],
+        Class::N | Class::B => &[Class::P],
+        Class::R => &[Class::P, Class::N, Class::B],
+        Class::Q => &[Class::P, Class::N, Class::B, Class::R],
+        Class::K => &[Class::P, Class::N, Class::B, Class::R, Class::Q],
     }
 }
 
@@ -133,7 +126,7 @@ fn compute_control<B: EvalChessBoard>(board: &B, piece: Piece) -> BitBoard {
     board
         .locs(&[piece])
         .iter()
-        .map(|s| piece.control(s, white, black))
+        .map(|s| piece.control(s, white | black))
         .fold(BitBoard::EMPTY, |l, r| l | r)
 }
 

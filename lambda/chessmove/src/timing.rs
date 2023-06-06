@@ -37,11 +37,7 @@ impl TimeAllocator {
         };
         // Divide by two because we need to think for half of the remaining moves
         let exp_remaining = (self.half_moves_remaining)(half_moves_played) / 2f64;
-        info!(
-            "Played {} half moves and expect {} more",
-            half_moves_played / 2,
-            exp_remaining
-        );
+        info!("Played {} half moves and expect {} more", half_moves_played / 2, exp_remaining);
         let estimated_no_inc =
             ((remaining_including_latency.as_millis() as f64) / exp_remaining).round() as u64;
         let estimated = Duration::from_millis(estimated_no_inc) + increment;

@@ -74,11 +74,7 @@ impl ChallengeTableClient {
                 );
             });
         });
-        self.client
-            .put_item(request)
-            .await
-            .map(|_| ())
-            .map_err(|e| anyhow!(e))
+        self.client.put_item(request).await.map(|_| ()).map_err(|e| anyhow!(e))
     }
 
     pub async fn set_started(&self, challenger_id: &str, challenge_id: &str) -> Result<bool> {
@@ -106,20 +102,15 @@ impl ChallengeTableClient {
                 );
             }))
         });
-        self.client
-            .update_item(request)
-            .await
-            .map_err(|e| anyhow!(e))
-            .map(|response| {
-                !response
-                    .attributes
-                    .and_then(|attr| attr.get(attribute_keys::STARTED).cloned())
-                    .and_then(|started| started.bool)
-                    .expect(
-                        format!("Unknown flag change for {}-{}", challenger_id, challenge_id)
-                            .as_str(),
-                    )
-            })
+        self.client.update_item(request).await.map_err(|e| anyhow!(e)).map(|response| {
+            !response
+                .attributes
+                .and_then(|attr| attr.get(attribute_keys::STARTED).cloned())
+                .and_then(|started| started.bool)
+                .expect(
+                    format!("Unknown flag change for {}-{}", challenger_id, challenge_id).as_str(),
+                )
+        })
     }
 
     pub async fn fetch_challenges_today(&self) -> Result<Vec<ChallengeTableEntry>> {
@@ -201,10 +192,7 @@ fn extract_attribute<T, F: Fn(&AttributeValue) -> Option<T>>(
 }
 
 fn epoch_secs() -> u64 {
-    SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_secs()
+    SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs()
 }
 
 fn epoch_day() -> u64 {

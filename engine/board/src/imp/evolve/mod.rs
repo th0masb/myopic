@@ -34,28 +34,16 @@ impl Board {
 
         // Moves specific actions
         match mv {
-            Standard {
-                moving,
-                from,
-                dest,
-                capture,
-                ..
-            } => self.make_standard(moving, from, dest, capture),
+            Standard { moving, from, dest, capture, .. } => {
+                self.make_standard(moving, from, dest, capture)
+            }
             Castle { corner: zone, .. } => self.make_castle(zone),
-            Enpassant {
-                side,
-                from,
-                dest,
-                capture,
-                ..
-            } => self.make_enpassant(side, from, dest, capture),
-            Promotion {
-                from,
-                dest,
-                promoted,
-                capture,
-                ..
-            } => self.make_promotion(from, dest, promoted, capture),
+            Enpassant { side, from, dest, capture, .. } => {
+                self.make_enpassant(side, from, dest, capture)
+            }
+            Promotion { from, dest, promoted, capture, .. } => {
+                self.make_promotion(from, dest, promoted, capture)
+            }
         };
 
         // General actions
@@ -78,11 +66,7 @@ impl Board {
         self.pieces.set_piece(moving, target);
         self.rights.remove_rights(source | target);
         self.enpassant = Board::compute_enpassant(source, target, moving);
-        self.clock = if captured.is_some() || moving.1 == Class::P {
-            0
-        } else {
-            self.clock + 1
-        };
+        self.clock = if captured.is_some() || moving.1 == Class::P { 0 } else { self.clock + 1 };
     }
 
     fn make_castle(&mut self, corner: Corner) {
@@ -131,28 +115,16 @@ impl Board {
         let (mv, state) = self.history.attempt_pop()?;
 
         match &mv {
-            &Standard {
-                moving,
-                from,
-                dest,
-                capture,
-                ..
-            } => self.unmake_standard(moving, from, dest, capture),
+            &Standard { moving, from, dest, capture, .. } => {
+                self.unmake_standard(moving, from, dest, capture)
+            }
 
-            &Promotion {
-                from,
-                dest,
-                promoted,
-                capture,
-                ..
-            } => self.unmake_promotion(from, dest, promoted, capture),
-            &Enpassant {
-                side,
-                from,
-                dest,
-                capture,
-                ..
-            } => self.unmake_enpassant(side, from, dest, capture),
+            &Promotion { from, dest, promoted, capture, .. } => {
+                self.unmake_promotion(from, dest, promoted, capture)
+            }
+            &Enpassant { side, from, dest, capture, .. } => {
+                self.unmake_enpassant(side, from, dest, capture)
+            }
             &Castle { corner: zone, .. } => self.unmake_castle(zone),
         };
 
@@ -213,7 +185,11 @@ impl Board {
 
     /// Determines the enpassant square for the next board state given a
     /// piece which has just moved from the source to the target.
-    fn compute_enpassant(source: Square, target: Square, Piece(side, class): Piece) -> Option<Square> {
+    fn compute_enpassant(
+        source: Square,
+        target: Square,
+        Piece(side, class): Piece,
+    ) -> Option<Square> {
         if class == Class::P {
             if side.pawn_first_rank().contains(source) && side.pawn_third_rank().contains(target) {
                 source.next(side.pawn_dir())

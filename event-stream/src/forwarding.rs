@@ -35,11 +35,7 @@ pub async fn challenge(
     user: String,
     params: ChallengeRequest,
 ) -> Result<impl warp::Reply, Infallible> {
-    log::info!(
-        "Challenging {} with game params {}",
-        user,
-        serde_json::to_string(&params).unwrap()
-    );
+    log::info!("Challenging {} with game params {}", user, serde_json::to_string(&params).unwrap());
     let forward_response = client.post_challenge(user.as_str(), &params).await;
     let response = match forward_response {
         Ok((code, body)) => {

@@ -29,10 +29,8 @@ impl ChallengeService {
     }
 
     pub async fn process_challenge(&self, challenge: Challenge) -> Result<String> {
-        let passes_static_checks = self
-            .validity_checks
-            .iter()
-            .all(|check| check.accepts(&challenge));
+        let passes_static_checks =
+            self.validity_checks.iter().all(|check| check.accepts(&challenge));
 
         if passes_static_checks && self.passes_table_checks(&challenge).await? {
             self.challenge_table
@@ -50,11 +48,7 @@ impl ChallengeService {
         challenge: &Challenge,
         decision: &str,
     ) -> Result<String> {
-        log::info!(
-            "Posting {} response for challenge {}",
-            decision,
-            challenge.id
-        );
+        log::info!("Posting {} response for challenge {}", decision, challenge.id);
         self.lichess
             .post_challenge_response(&challenge, decision)
             .await
@@ -64,10 +58,8 @@ impl ChallengeService {
     async fn passes_table_checks(&self, challenge: &Challenge) -> Result<bool> {
         let all_challenges_today = self.challenge_table.fetch_challenges_today().await?;
         let user_id = challenge.challenger.id.as_str();
-        let user_challenges_today = all_challenges_today
-            .iter()
-            .filter(|c| c.challenger == user_id)
-            .count();
+        let user_challenges_today =
+            all_challenges_today.iter().filter(|c| c.challenger == user_id).count();
 
         log::info!(
             "{} challenges today, {} from {}",

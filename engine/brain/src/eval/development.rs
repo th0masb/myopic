@@ -64,9 +64,7 @@ impl DevelopmentFacet {
         self.pieces_moved
             .iter()
             .flat_map(|(side, ds)| {
-                ds.iter()
-                    .filter(|(_, &mv)| mv == Some(move_count))
-                    .map(move |(d, _)| (side, d))
+                ds.iter().filter(|(_, &mv)| mv == Some(move_count)).map(move |(d, _)| (side, d))
             })
             .next()
     }
@@ -119,8 +117,8 @@ mod test {
     use crate::eval::development::DevelopmentFacet;
     use crate::eval::EvalFacet;
     use crate::test::facets::test_facet_evolution;
-    use crate::Side;
     use crate::Board;
+    use crate::Side;
 
     use super::DevelopmentPiece;
 

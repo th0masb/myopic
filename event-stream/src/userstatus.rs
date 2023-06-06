@@ -26,10 +26,7 @@ impl StatusService {
     pub async fn user_status(&mut self) -> Result<Option<UserStatus>> {
         if self.status_checkpoint.elapsed() > self.status_poll_gap {
             self.status_checkpoint = Instant::now();
-            self.client
-                .user_status(self.user_id.as_str())
-                .await
-                .map(|status| Some(status))
+            self.client.user_status(self.user_id.as_str()).await.map(|status| Some(status))
         } else {
             Ok(None)
         }
@@ -74,10 +71,7 @@ mod test {
     #[test]
     fn deserialize_with_flag_absent() -> Result<()> {
         assert_eq!(
-            vec![UserStatus {
-                id: "id".to_string(),
-                online: false,
-            }],
+            vec![UserStatus { id: "id".to_string(), online: false }],
             serde_json::from_str::<Vec<UserStatus>>(r#"[{"id": "id"}]"#)?
         );
         Ok(())
@@ -90,10 +84,7 @@ mod test {
             "online": true
         }]"#;
         assert_eq!(
-            vec![UserStatus {
-                id: "id".to_string(),
-                online: true,
-            }],
+            vec![UserStatus { id: "id".to_string(), online: true }],
             serde_json::from_str::<Vec<UserStatus>>(json)?
         );
         Ok(())

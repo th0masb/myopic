@@ -36,7 +36,9 @@ impl Board {
             self.checked_termination()
         } else {
             self.unchecked_termination()
-        }.or(self.check_clock_limit()).or(self.check_repetitions())
+        }
+        .or(self.check_clock_limit())
+        .or(self.check_repetitions())
     }
 
     fn check_clock_limit(&self) -> Option<TerminalState> {
@@ -63,7 +65,11 @@ impl Board {
                 last = hash;
             }
         }
-        if count == 3 { Some(TerminalState::Draw) } else { None }
+        if count == 3 {
+            Some(TerminalState::Draw)
+        } else {
+            None
+        }
     }
 
     /// Assumes king is in check and cannot move out of it
@@ -102,10 +108,7 @@ impl Board {
         for &class in qrbnp() {
             let piece = Piece(self.active, class);
             let locations = self.locs(&[piece]) & pin_rays;
-            if locations
-                .iter()
-                .any(|loc| moves2(piece, loc).is_populated())
-            {
+            if locations.iter().any(|loc| moves2(piece, loc).is_populated()) {
                 return None;
             }
         }

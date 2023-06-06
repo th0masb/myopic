@@ -62,9 +62,7 @@ async fn main() {
     try_join!(
         tokio::task::spawn(async move { streamloop::stream(params).await }),
         tokio::task::spawn(async move {
-            warp::serve(challenge_forwarding)
-                .run(server_addr.parse::<SocketAddr>().unwrap())
-                .await
+            warp::serve(challenge_forwarding).run(server_addr.parse::<SocketAddr>().unwrap()).await
         })
     )
     .unwrap();

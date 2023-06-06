@@ -1,9 +1,9 @@
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 
-use crate::{Corner, Side};
 use crate::pieces::Piece;
 use crate::square::Square;
+use crate::{Corner, Side};
 
 // Total number of hashing features
 const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
@@ -50,9 +50,9 @@ fn gen_unique(seed: u64, count: usize) -> Vec<u64> {
 
 #[cfg(test)]
 mod test {
-    use crate::Flank;
     use crate::pieces::Class;
     use crate::square::Square;
+    use crate::Flank;
 
     use super::*;
 
@@ -66,7 +66,6 @@ mod test {
                     unique_add(&mut dest, piece(Piece(*side, *class), square));
                 }
             }
-
         }
         for side in &[Side::W, Side::B] {
             for flank in &[Flank::K, Flank::Q] {

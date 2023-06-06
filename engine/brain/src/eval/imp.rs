@@ -1,10 +1,9 @@
-use std::str::FromStr;
 use enum_map::EnumMap;
+use std::str::FromStr;
 
 use myopic_board::anyhow::{Error, Result};
 use myopic_board::{
-    BitBoard, ChessBoard, FenPart, Move, MoveComputeType, Piece, Side, Square,
-    TerminalState,
+    BitBoard, ChessBoard, FenPart, Move, MoveComputeType, Piece, Side, Square, TerminalState,
 };
 
 use crate::enumset::EnumSet;
@@ -13,7 +12,7 @@ use crate::eval::castling::CastlingFacet;
 use crate::eval::development::DevelopmentFacet;
 use crate::eval::material::MaterialFacet;
 use crate::eval::{EvalChessBoard, EvalFacet};
-use crate::{eval, Board, PieceValues, PositionTables, Flank};
+use crate::{eval, Board, Flank, PieceValues, PositionTables};
 
 pub struct EvalBoard<B: ChessBoard> {
     board: B,
@@ -208,11 +207,7 @@ impl EvalChessBoard for EvalBoard<Board> {
             Some(TerminalState::Loss) => eval::LOSS_VALUE,
             None => {
                 let eval = self.material.static_eval(&self.board)
-                    + self
-                        .facets
-                        .iter()
-                        .map(|cmp| cmp.static_eval(&self.board))
-                        .sum::<i32>();
+                    + self.facets.iter().map(|cmp| cmp.static_eval(&self.board)).sum::<i32>();
                 match self.active() {
                     Side::W => eval,
                     Side::B => -eval,
@@ -253,10 +248,7 @@ mod test {
 
     impl Reflectable for TestCase {
         fn reflect(&self) -> Self {
-            TestCase {
-                start_position: self.start_position.reflect(),
-                moves: self.moves.reflect(),
-            }
+            TestCase { start_position: self.start_position.reflect(), moves: self.moves.reflect() }
         }
     }
 
@@ -297,10 +289,7 @@ mod test {
     }
 
     fn test(start_fen: &'static str, moves: Vec<UciMove>) {
-        execute_test(TestCase {
-            start_position: start_fen.parse::<Board>().unwrap(),
-            moves,
-        })
+        execute_test(TestCase { start_position: start_fen.parse::<Board>().unwrap(), moves })
     }
 
     #[test]

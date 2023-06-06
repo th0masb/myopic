@@ -31,7 +31,7 @@ const ADJACENTS: [BitBoard; 8] = [
 
 #[cfg(test)]
 mod test_enpassant_source_squares {
-    use myopic_core::{Square::*, Side};
+    use myopic_core::{Side, Square::*};
 
     use super::squares;
 

@@ -11,9 +11,7 @@ pub struct GameStream {
 
 impl GameStream {
     pub fn new(f: File) -> GameStream {
-        GameStream {
-            inner: BufReader::new(f).lines(),
-        }
+        GameStream { inner: BufReader::new(f).lines() }
     }
 }
 
@@ -106,12 +104,7 @@ mod test {
     }
 
     fn file_path(name: &str) -> String {
-        format!(
-            "{}/{}/{}",
-            env::var("CARGO_MANIFEST_DIR").unwrap(),
-            RELATIVE_RESOURCE_PATH,
-            name
-        )
+        format!("{}/{}/{}", env::var("CARGO_MANIFEST_DIR").unwrap(), RELATIVE_RESOURCE_PATH, name)
     }
 
     #[test]

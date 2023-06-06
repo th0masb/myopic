@@ -1,6 +1,7 @@
 use crate::eval::EvalFacet;
 use crate::{ChessBoard, Line, Move, Piece, Square};
 use crate::{PieceValues, PositionTables, Reflectable};
+use myopic_board::Class;
 
 const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
 const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
@@ -37,37 +38,19 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
 
     fn make(&mut self, mv: &Move, _: &B) {
         match mv {
-            &Move::Standard {
-                moving,
-                from,
-                dest,
-                capture,
-                ..
-            } => {
+            &Move::Standard { moving, from, dest, capture, .. } => {
                 self.remove(moving, from);
                 self.add(moving, dest);
                 capture.map(|taken| self.remove(taken, dest));
             }
-            &Move::Promotion {
-                from,
-                dest,
-                promoted,
-                capture,
-                ..
-            } => {
-                let pawn = Piece::pawn(promoted.side());
+            &Move::Promotion { from, dest, promoted, capture, .. } => {
+                let pawn = Piece(promoted.0, Class::P);
                 self.remove(pawn, from);
                 self.add(promoted, dest);
                 capture.map(|taken| self.remove(taken, dest));
             }
-            &Move::Enpassant {
-                side,
-                from,
-                dest,
-                capture,
-                ..
-            } => {
-                let active_pawn = Piece::pawn(side);
+            &Move::Enpassant { side, from, dest, capture, .. } => {
+                let active_pawn = Piece(side, Class::P);
                 self.remove(active_pawn, from);
                 self.add(active_pawn, dest);
                 self.remove(active_pawn.reflect(), capture);
@@ -75,8 +58,8 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
             &Move::Castle { corner, .. } => {
                 let Line(r_src, r_target) = Line::rook_castling(corner);
                 let Line(k_src, k_target) = Line::king_castling(corner);
-                let rook = Piece::rook(corner.0);
-                let king = Piece::king(corner.0);
+                let rook = Piece(corner.0, Class::R);
+                let king = Piece(corner.0, Class::K);
                 self.remove(rook, r_src);
                 self.add(rook, r_target);
                 self.remove(king, k_src);
@@ -87,37 +70,19 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
 
     fn unmake(&mut self, mv: &Move) {
         match mv {
-            &Move::Standard {
-                moving,
-                from,
-                dest,
-                capture,
-                ..
-            } => {
+            &Move::Standard { moving, from, dest, capture, .. } => {
                 self.remove(moving, dest);
                 self.add(moving, from);
                 capture.map(|taken| self.add(taken, dest));
             }
-            &Move::Promotion {
-                from,
-                dest,
-                promoted,
-                capture,
-                ..
-            } => {
-                let pawn = Piece::pawn(promoted.side());
+            &Move::Promotion { from, dest, promoted, capture, .. } => {
+                let pawn = Piece(promoted.0, Class::P);
                 self.add(pawn, from);
                 self.remove(promoted, dest);
                 capture.map(|taken| self.add(taken, dest));
             }
-            &Move::Enpassant {
-                side,
-                from,
-                dest,
-                capture,
-                ..
-            } => {
-                let active_pawn = Piece::pawn(side);
+            &Move::Enpassant { side, from, dest, capture, .. } => {
+                let active_pawn = Piece(side, Class::P);
                 let passive_pawn = active_pawn.reflect();
                 self.remove(active_pawn, dest);
                 self.add(active_pawn, from);
@@ -126,8 +91,8 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
             &Move::Castle { corner, .. } => {
                 let Line(r_src, r_target) = Line::rook_castling(corner);
                 let Line(k_src, k_target) = Line::king_castling(corner);
-                let rook = Piece::rook(corner.0);
-                let king = Piece::king(corner.0);
+                let rook = Piece(corner.0, Class::R);
+                let king = Piece(corner.0, Class::K);
                 self.add(rook, r_src);
                 self.remove(rook, r_target);
                 self.add(king, k_src);
@@ -174,25 +139,21 @@ impl MaterialFacet {
         let (tables, values) = (&self.table_values, &self.piece_values);
         self.mid_eval -= tables.midgame(piece, location) + values.midgame(piece);
         self.end_eval -= tables.endgame(piece, location) + values.endgame(piece);
-        self.phase += PHASE_VALUES[(piece as usize) % 6];
+        self.phase += PHASE_VALUES[piece.1 as usize];
     }
 
     fn add(&mut self, piece: Piece, location: Square) {
         let (tables, values) = (&self.table_values, &self.piece_values);
         self.mid_eval += tables.midgame(piece, location) + values.midgame(piece);
         self.end_eval += tables.endgame(piece, location) + values.endgame(piece);
-        self.phase -= PHASE_VALUES[(piece as usize) % 6];
+        self.phase -= PHASE_VALUES[piece.1 as usize];
     }
 }
 
 pub fn compute_phase<B: ChessBoard>(board: &B) -> i32 {
-    let pieces: Vec<_> = Piece::whites()
-        .take(5)
-        .chain(Piece::blacks().take(5))
-        .collect();
-    let phase_sub: i32 = pieces
-        .into_iter()
-        .map(|p| board.locs(&[p]).size() as i32 * PHASE_VALUES[(p as usize) % 6])
+    let phase_sub: i32 = Piece::all()
+        .filter(|p| p.1 != Class::K)
+        .map(|p| board.locs(&[p]).size() as i32 * PHASE_VALUES[p.1 as usize])
         .sum();
     TOTAL_PHASE - phase_sub
 }

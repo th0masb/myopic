@@ -23,11 +23,7 @@ pub struct KnightRimFacet {
 
 impl Default for KnightRimFacet {
     fn default() -> Self {
-        KnightRimFacet {
-            penalty: 80,
-            first_move: Default::default(),
-            move_index: 0,
-        }
+        KnightRimFacet { penalty: 80, first_move: Default::default(), move_index: 0 }
     }
 }
 
@@ -82,13 +78,13 @@ impl<B: ChessBoard> EvalFacet<B> for KnightRimFacet {
 
 #[cfg(test)]
 mod test {
-    use enum_map::enum_map;
-    use myopic_board::Board;
+    use super::Knight;
     use crate::eval::antipattern::{FirstMoveStore, KnightRimFacet};
-    use crate::{Side, Square};
     use crate::eval::EvalFacet;
     use crate::test::facets::test_facet_evolution;
-    use super::Knight;
+    use crate::{Side, Square};
+    use enum_map::enum_map;
+    use myopic_board::Board;
 
     #[test]
     fn evaluation() {
@@ -177,12 +173,16 @@ mod test {
                         Knight::B => Some((1, Square::C6))
                     },
                 },
-            ].into_iter().enumerate().map(|(i, first_move)| {
+            ]
+            .into_iter()
+            .enumerate()
+            .map(|(i, first_move)| {
                 let mut facet = KnightRimFacet::default();
                 facet.first_move = first_move;
                 facet.move_index = i + 1;
                 facet
-            }).collect()
+            })
+            .collect(),
         )
     }
 }

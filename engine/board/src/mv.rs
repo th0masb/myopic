@@ -1,49 +1,25 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use myopic_core::{anyhow::{Error, Result}, Corner, Line, Reflectable, Side};
+use myopic_core::{
+    anyhow::{Error, Result},
+    Corner, Line, Reflectable, Side,
+};
 
 use crate::{Piece, Square};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Move {
-    Standard {
-        source: u64,
-        moving: Piece,
-        from: Square,
-        dest: Square,
-        capture: Option<Piece>,
-    },
-    Enpassant {
-        source: u64,
-        side: Side,
-        from: Square,
-        dest: Square,
-        capture: Square,
-    },
-    Promotion {
-        source: u64,
-        from: Square,
-        dest: Square,
-        promoted: Piece,
-        capture: Option<Piece>,
-    },
-    Castle {
-        source: u64,
-        corner: Corner,
-    },
+    Standard { source: u64, moving: Piece, from: Square, dest: Square, capture: Option<Piece> },
+    Enpassant { source: u64, side: Side, from: Square, dest: Square, capture: Square },
+    Promotion { source: u64, from: Square, dest: Square, promoted: Piece, capture: Option<Piece> },
+    Castle { source: u64, corner: Corner },
 }
 
 impl Display for Move {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Move::Standard {
-                moving,
-                from,
-                dest,
-                capture,
-                ..
-            } => write!(
+            Move::Standard { moving, from, dest, capture, .. } => write!(
                 f,
                 "s{}{}{}{}",
                 moving,
@@ -54,13 +30,7 @@ impl Display for Move {
                     Some(p) => p.to_string(),
                 }
             ),
-            Move::Promotion {
-                from,
-                dest,
-                promoted,
-                capture,
-                ..
-            } => write!(
+            Move::Promotion { from, dest, promoted, capture, .. } => write!(
                 f,
                 "p{}{}{}{}",
                 from,
@@ -71,13 +41,9 @@ impl Display for Move {
                     Some(p) => p.to_string(),
                 }
             ),
-            Move::Enpassant {
-                side,
-                from,
-                dest,
-                capture,
-                ..
-            } => write!(f, "e{}{}{}{}", side, from, dest, capture),
+            Move::Enpassant { side, from, dest, capture, .. } => {
+                write!(f, "e{}{}{}{}", side, from, dest, capture)
+            }
             Move::Castle { corner, .. } => write!(f, "c{}{:?}", corner.0, corner.1),
         }
     }
@@ -138,9 +104,9 @@ where
 
 #[cfg(test)]
 mod test {
-    use myopic_core::{Class, Flank};
     use crate::mv::Move;
     use crate::{Piece, Square};
+    use myopic_core::{Class, Flank};
 
     use super::*;
 
@@ -212,10 +178,7 @@ mod test {
     #[test]
     fn castle() -> Result<()> {
         assert_eq!(
-            Move::Castle {
-                source: 0,
-                corner: Corner(Side::B, Flank::K),
-            },
+            Move::Castle { source: 0, corner: Corner(Side::B, Flank::K) },
             Move::from("cbk", 0u64)?
         );
         Ok(())
@@ -250,61 +213,39 @@ impl Move {
                 let Line(src, dest) = Line::king_castling(*corner);
                 format!("{}{}", src, dest)
             }
-            Move::Promotion {
-                from,
-                dest,
-                promoted: Piece(_, class),
-                ..
-            } => format!("{}{}{}", from, dest, class),
+            Move::Promotion { from, dest, promoted: Piece(_, class), .. } => {
+                format!("{}{}{}", from, dest, class)
+            }
         }
     }
 
     // TODO move me somewhere better
     pub(crate) fn reflect_for(&self, new_source: u64) -> Move {
         match self {
-            &Move::Standard {
-                moving,
-                dest,
-                from,
-                capture,
-                ..
-            } => Move::Standard {
+            &Move::Standard { moving, dest, from, capture, .. } => Move::Standard {
                 source: new_source,
                 moving: moving.reflect(),
                 dest: dest.reflect(),
                 from: from.reflect(),
                 capture: capture.reflect(),
             },
-            &Move::Promotion {
-                from,
-                dest,
-                promoted,
-                capture,
-                ..
-            } => Move::Promotion {
+            &Move::Promotion { from, dest, promoted, capture, .. } => Move::Promotion {
                 source: new_source,
                 from: from.reflect(),
                 dest: dest.reflect(),
                 promoted: promoted.reflect(),
                 capture: capture.reflect(),
             },
-            &Move::Enpassant {
-                side,
-                from,
-                dest,
-                capture,
-                ..
-            } => Move::Enpassant {
+            &Move::Enpassant { side, from, dest, capture, .. } => Move::Enpassant {
                 source: new_source,
                 side: side.reflect(),
                 from: from.reflect(),
                 dest: dest.reflect(),
                 capture: capture.reflect(),
             },
-            &Move::Castle { corner: zone, .. } => Move::Castle {
-                source: new_source,
-                corner: zone.reflect(),
-            },
+            &Move::Castle { corner: zone, .. } => {
+                Move::Castle { source: new_source, corner: zone.reflect() }
+            }
         }
     }
 }

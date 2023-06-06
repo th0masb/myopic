@@ -21,11 +21,7 @@ pub struct LichessService {
 
 impl LichessService {
     pub fn new(auth_token: String, game_id: String) -> LichessService {
-        LichessService {
-            client: Client::new(),
-            auth_token,
-            game_id,
-        }
+        LichessService { client: Client::new(), auth_token, game_id }
     }
 
     pub async fn abort(&self) -> Result<StatusCode> {

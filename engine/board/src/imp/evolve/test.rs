@@ -5,10 +5,10 @@ use myopic_core::Square::*;
 use myopic_core::*;
 
 use crate::enumset::EnumSet;
+use crate::imp::rights::Rights;
 use crate::imp::test::TestBoard;
 use crate::imp::Board;
 use crate::{ChessBoard, Move};
-use crate::imp::rights::Rights;
 
 #[derive(Debug, Clone)]
 struct TestCase {

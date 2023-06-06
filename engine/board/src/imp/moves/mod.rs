@@ -47,13 +47,7 @@ impl Board {
         let source = self.hash();
         dests
             .iter()
-            .map(|dest| Move::Standard {
-                source,
-                moving,
-                from,
-                dest,
-                capture: self.piece(dest),
-            })
+            .map(|dest| Move::Standard { source, moving, from, dest, capture: self.piece(dest) })
             .collect()
     }
 
@@ -62,15 +56,15 @@ impl Board {
         dests
             .iter()
             .flat_map(|dest| {
-                [Class::Q, Class::R, Class::B, Class::N]
-                    .iter()
-                    .map(move |&promoted| Move::Promotion {
+                [Class::Q, Class::R, Class::B, Class::N].iter().map(move |&promoted| {
+                    Move::Promotion {
                         source,
                         from,
                         dest,
                         promoted: Piece(side, promoted),
                         capture: self.piece(dest),
-                    })
+                    }
+                })
             })
             .collect()
     }
@@ -97,13 +91,7 @@ impl Board {
             if constraints.get(from).contains(capture)
                 && self.enpassant_doesnt_discover_attack(from)
             {
-                moves.push(Move::Enpassant {
-                    source,
-                    side: active,
-                    from,
-                    dest,
-                    capture,
-                });
+                moves.push(Move::Enpassant { source, side: active, from, dest, capture });
             }
         }
         for location in promotion {
@@ -137,9 +125,8 @@ impl Board {
     }
 
     fn separate_pawn_locs(&self) -> (BitBoard, BitBoard, BitBoard) {
-        let enpassant_source = self
-            .enpassant
-            .map_or(BitBoard::EMPTY, |sq| enpassantsrc::squares(self.active, sq));
+        let enpassant_source =
+            self.enpassant.map_or(BitBoard::EMPTY, |sq| enpassantsrc::squares(self.active, sq));
         let promotion_rank = self.active.pawn_promoting_from_rank();
         let pawn_locs = self.locs(&[Piece(self.active, Class::P)]);
         (
@@ -161,8 +148,8 @@ impl Board {
             .filter(|&c| {
                 let Line(k_source, _) = Line::king_castling(c);
                 let Line(r_source, _) = Line::rook_castling(c);
-                self.piece(k_source).map(|p| p.1 == Class::K).unwrap_or(false) &&
-                    self.piece(r_source).map(|p| p.1 == Class::R).unwrap_or(false)
+                self.piece(k_source).map(|p| p.1 == Class::K).unwrap_or(false)
+                    && self.piece(r_source).map(|p| p.1 == Class::R).unwrap_or(false)
             })
             .map(|corner| Move::Castle { source, corner })
             .collect()

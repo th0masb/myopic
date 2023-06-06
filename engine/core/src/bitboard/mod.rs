@@ -295,18 +295,12 @@ fn loc(sq: Square) -> u64 {
 
 #[allow(dead_code)]
 fn create_files() -> Vec<BitBoard> {
-    (H1.search(Dir::W) | H1)
-        .into_iter()
-        .map(|sq| sq.search(Dir::N) | sq)
-        .collect()
+    (H1.search(Dir::W) | H1).into_iter().map(|sq| sq.search(Dir::N) | sq).collect()
 }
 
 #[allow(dead_code)]
 fn create_ranks() -> Vec<BitBoard> {
-    (H1.search(Dir::N) | H1)
-        .into_iter()
-        .map(|sq| sq.search(Dir::W) | sq)
-        .collect()
+    (H1.search(Dir::N) | H1).into_iter().map(|sq| sq.search(Dir::W) | sq).collect()
 }
 
 #[cfg(test)]

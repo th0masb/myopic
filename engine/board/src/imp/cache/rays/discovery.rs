@@ -7,7 +7,8 @@ impl Board {
     pub fn compute_discoveries(&self) -> RaySet {
         let active = self.side(self.active);
         let passive = self.side(self.active.reflect());
-        let king_loc = self.pieces.locs(Piece(self.active.reflect(), Class::K)).into_iter().next().unwrap();
+        let king_loc =
+            self.pieces.locs(Piece(self.active.reflect(), Class::K)).into_iter().next().unwrap();
 
         self.compute_xrayers(king_loc)
             .iter()
@@ -37,22 +38,17 @@ mod test {
 
     fn execute_test(fen: &'static str, expected_discoveries: RaySet) {
         let board = fen.parse::<Board>().unwrap();
-        assert_eq!(
-            expected_discoveries.reflect(),
-            board.reflect().compute_discoveries()
-        );
+        assert_eq!(expected_discoveries.reflect(), board.reflect().compute_discoveries());
         assert_eq!(expected_discoveries, board.compute_discoveries());
     }
 
     #[test]
     fn case_one() {
         let fen = "6r1/5p1k/4pP2/4N3/3PN3/6P1/2B3PK/7R w - - 1 10";
-        let expected_pinned = vec![
-            (E4, C2 | D3 | E4 | F5 | G6 | H7),
-            (H2, H1 | H2 | H3 | H4 | H5 | H6 | H7),
-        ]
-        .into_iter()
-        .collect();
+        let expected_pinned =
+            vec![(E4, C2 | D3 | E4 | F5 | G6 | H7), (H2, H1 | H2 | H3 | H4 | H5 | H6 | H7)]
+                .into_iter()
+                .collect();
 
         execute_test(fen, expected_pinned);
     }

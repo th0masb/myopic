@@ -165,11 +165,7 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
     lazy_static! {
         static ref SEP: Regex = Regex::new(r"[$]{4}").unwrap();
     }
-    let data_path = format!(
-        "{}/{}",
-        std::env::var("CARGO_MANIFEST_DIR").unwrap(),
-        data_path
-    );
+    let data_path = format!("{}/{}", std::env::var("CARGO_MANIFEST_DIR").unwrap(), data_path);
     let file = fs::File::open(&data_path).unwrap();
     let reader = BufReader::new(file);
     let mut dest = Vec::new();
@@ -193,10 +189,7 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
                 }
                 Ok(moves) => {
                     let expected_move = moves.first().unwrap().to_owned();
-                    dest.push(TestCase {
-                        board: EvalBoard::from(board),
-                        expected_move,
-                    });
+                    dest.push(TestCase { board: EvalBoard::from(board), expected_move });
                     if dest.len() == max_cases {
                         break;
                     }

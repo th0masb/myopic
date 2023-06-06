@@ -2,8 +2,8 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
-use enumset::EnumSetType;
 use enum_map::Enum;
+use enumset::EnumSetType;
 
 use crate::{BitBoard, Side, Square};
 
@@ -42,7 +42,7 @@ impl FromStr for Class {
             "r" | "R" => Ok(Class::R),
             "q" | "Q" => Ok(Class::Q),
             "k" | "K" => Ok(Class::K),
-            _ => Err(anyhow!("{} not a piece type", s))
+            _ => Err(anyhow!("{} not a piece type", s)),
         }
     }
 }
@@ -66,6 +66,13 @@ impl Class {
 }
 
 impl Piece {
+    pub fn all() -> impl Iterator<Item = Piece> {
+        Class::all()
+            .into_iter()
+            .map(|class| Piece(Side::W, class))
+            .chain(Class::all().into_iter().map(|class| Piece(Side::B, class)))
+    }
+
     /// Computes the control set for this piece given it's location and the
     /// locations of all the occupied squares on the board.
     pub fn control(&self, loc: Square, occupied: BitBoard) -> BitBoard {
@@ -74,12 +81,13 @@ impl Piece {
             Class::K => kings::control(loc),
             Class::B => sliding::bishops::control(loc, occupied),
             Class::R => sliding::rooks::control(loc, occupied),
-            Class::Q => sliding::bishops::control(loc, occupied) |
-                sliding::rooks::control(loc, occupied),
+            Class::Q => {
+                sliding::bishops::control(loc, occupied) | sliding::rooks::control(loc, occupied)
+            }
             Class::P => match self.0 {
                 Side::W => pawns::white_control(loc),
                 Side::B => pawns::black_control(loc),
-            }
+            },
         }
     }
 
@@ -100,16 +108,16 @@ impl Piece {
             Class::P => match self.0 {
                 Side::W => pawns::white_moves(loc, whites, blacks),
                 Side::B => pawns::black_moves(loc, whites, blacks),
-            }
-            _ => self.control(loc, whites | blacks)
+            },
+            _ => self.control(loc, whites | blacks),
         }) - friendly
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{Piece, Side};
     use crate::pieces::Class;
+    use crate::{Piece, Side};
 
     #[test]
     fn display() {

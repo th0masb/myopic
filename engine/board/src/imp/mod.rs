@@ -1,12 +1,12 @@
+use enum_map::EnumMap;
 use std::cell::RefCell;
 use std::cmp::max;
 use std::str::FromStr;
-use enum_map::EnumMap;
 
 use myopic_core::anyhow::{anyhow, Error, Result};
 use myopic_core::*;
 
-
+use crate::enumset::EnumSet;
 use crate::imp::cache::CalculationCache;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;
@@ -14,7 +14,6 @@ use crate::imp::rights::Rights;
 use crate::mv::{parse_op, Move};
 use crate::parse::patterns;
 use crate::ChessBoard;
-use crate::enumset::EnumSet;
 use crate::FenPart;
 use crate::MoveComputeType;
 use crate::TerminalState;
@@ -51,10 +50,8 @@ impl FromStr for Board {
 
     fn from_str(fen: &str) -> Result<Self, Self::Err> {
         if patterns::fen().is_match(&fen) {
-            let space_split: Vec<_> = patterns::space()
-                .split(&fen)
-                .map(|s| s.trim().to_owned())
-                .collect();
+            let space_split: Vec<_> =
+                patterns::space().split(&fen).map(|s| s.trim().to_owned()).collect();
             let active = space_split[1].parse::<Side>()?;
             let curr_move = space_split[5].parse::<usize>()?;
             Ok(Board {
@@ -73,19 +70,17 @@ impl FromStr for Board {
 }
 
 fn hash(pos: &Positions, rights: &Rights, active: Side, ep: Option<Square>) -> u64 {
-    let mut result = pos.hash()
-        ^ hash::side(active)
-        ^ ep.map_or(0u64, |x| hash::enpassant(x));
+    let mut result = pos.hash() ^ hash::side(active) ^ ep.map_or(0u64, |x| hash::enpassant(x));
     rights.corners().for_each(|c| result ^= hash::zone(c));
     result
 }
 
 #[cfg(test)]
 mod fen_test {
-    
+
     use crate::imp::test::TestBoard;
     use crate::Board;
-    use crate::{Square::*, Side};
+    use crate::{Side, Square::*};
 
     use super::*;
 
@@ -246,10 +241,7 @@ impl ChessBoard for Board {
     }
 
     fn sides(&self) -> (BitBoard, BitBoard) {
-        (
-            self.pieces.side_locations(Side::W),
-            self.pieces.side_locations(Side::B),
-        )
+        (self.pieces.side_locations(Side::W), self.pieces.side_locations(Side::B))
     }
 
     fn hash(&self) -> u64 {
@@ -265,10 +257,7 @@ impl ChessBoard for Board {
     }
 
     fn locs(&self, pieces: &[Piece]) -> BitBoard {
-        pieces
-            .into_iter()
-            .map(|&p| self.pieces.locs(p))
-            .fold(BitBoard::EMPTY, |l, r| l | r)
+        pieces.into_iter().map(|&p| self.pieces.locs(p)).fold(BitBoard::EMPTY, |l, r| l | r)
     }
 
     fn king(&self, side: Side) -> Square {

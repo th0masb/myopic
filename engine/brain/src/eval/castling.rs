@@ -1,9 +1,9 @@
 use enum_map::EnumMap;
 
-use crate::{Corner, Flank, Side};
-use crate::{ChessBoard, Move};
 use crate::enumset::EnumSet;
 use crate::eval::EvalFacet;
+use crate::{ChessBoard, Move};
+use crate::{Corner, Flank, Side};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct CastlingFacet {
@@ -13,10 +13,7 @@ pub struct CastlingFacet {
 
 impl Default for CastlingFacet {
     fn default() -> Self {
-        CastlingFacet {
-            castling_status: Default::default(),
-            penalty: 100,
-        }
+        CastlingFacet { castling_status: Default::default(), penalty: 100 }
     }
 }
 
@@ -52,11 +49,11 @@ impl<B: ChessBoard> EvalFacet<B> for CastlingFacet {
 #[cfg(test)]
 mod test {
     use enum_map::enum_map;
-    use enumset::{EnumSet, enum_set};
+    use enumset::{enum_set, EnumSet};
 
-    use crate::{Flank, Side};
     use crate::eval::castling::CastlingFacet;
     use crate::test::facets::test_facet_evolution;
+    use crate::{Flank, Side};
 
     #[test]
     fn evaluation_not_castled() {
@@ -119,11 +116,14 @@ mod test {
                 enum_map! {
                     Side::W => Some(Flank::Q), Side::B => Some(Flank::Q),
                 },
-            ].into_iter().map(|status| {
+            ]
+            .into_iter()
+            .map(|status| {
                 let mut facet = CastlingFacet::default();
                 facet.castling_status = status;
                 facet
-            }).collect()
+            })
+            .collect(),
         )
     }
 
@@ -162,11 +162,14 @@ mod test {
                 enum_map! {
                     Side::W => Some(Flank::K), Side::B => Some(Flank::K),
                 },
-            ].into_iter().map(|status| {
+            ]
+            .into_iter()
+            .map(|status| {
                 let mut facet = CastlingFacet::default();
                 facet.castling_status = status;
                 facet
-            }).collect()
+            })
+            .collect(),
         )
     }
 }
