@@ -25,7 +25,8 @@ fn compute_square_positions(boards: &PiecePositions) -> SquarePositions {
 }
 
 fn iter(boards: &PiecePositions) -> impl Iterator<Item = (Side, Class, Square)> + '_ {
-    boards.iter()
+    boards
+        .iter()
         .flat_map(|(side, classes)| classes.iter().map(move |(class, board)| (side, class, *board)))
         .flat_map(|(side, class, board)| board.into_iter().map(move |sq| (side, class, sq)))
 }
@@ -68,7 +69,9 @@ impl FromStr for Positions {
 impl Reflectable for Positions {
     fn reflect(&self) -> Self {
         let mut new_boards = PiecePositions::default();
-        iter(&self.pieces).for_each(|(side, class, square)| new_boards[side.reflect()][class] |= square.reflect());
+        iter(&self.pieces).for_each(|(side, class, square)| {
+            new_boards[side.reflect()][class] |= square.reflect()
+        });
         Positions {
             pieces: new_boards,
             hash: hash_boards(&new_boards),
@@ -78,10 +81,8 @@ impl Reflectable for Positions {
     }
 }
 
-
 fn hash_boards(boards: &PiecePositions) -> u64 {
-    iter(boards)
-        .fold(0u64, |a, (side, class, square)| a ^ hash::piece(Piece(side, class), square))
+    iter(boards).fold(0u64, |a, (side, class, square)| a ^ hash::piece(Piece(side, class), square))
 }
 
 fn convert_rank(fen_rank: String) -> Vec<Option<Piece>> {
@@ -116,7 +117,8 @@ impl Positions {
     pub fn new(initial_boards: &[BitBoard]) -> Positions {
         assert_eq!(12, initial_boards.len());
         let mut positions = PiecePositions::default();
-        PiecePositions::default().iter()
+        PiecePositions::default()
+            .iter()
             .flat_map(|(side, classes)| classes.iter().map(move |(class, _)| (side, class)))
             .for_each(|(side, class)| {
                 positions[side][class] = initial_boards[(side as usize) * 6 + (class as usize)]

@@ -27,9 +27,7 @@ impl MoveConstraints {
     }
 
     pub fn all(bitboard: BitBoard) -> MoveConstraints {
-        MoveConstraints {
-            data: EnumMap::from_array([bitboard; 64]),
-        }
+        MoveConstraints { data: EnumMap::from_array([bitboard; 64]) }
     }
 
     fn intersect(&mut self, location: Square, constraint: BitBoard) {
@@ -111,11 +109,7 @@ impl Board {
                 let is_pawn = piece.1 == Class::P;
                 let enpassant = if is_pawn { enpassant_set } else { BitBoard::EMPTY };
                 let check_squares = piece.reflect().control(passive_king, whites | blacks);
-                let promotion = if is_pawn {
-                    promotion_checks
-                } else {
-                    BitBoard::EMPTY
-                };
+                let promotion = if is_pawn { promotion_checks } else { BitBoard::EMPTY };
                 for loc in self.locs(&[piece]) {
                     let discov = discoveries.ray(loc).map(|r| !r).unwrap_or(BitBoard::EMPTY);
                     constraints.intersect(
@@ -157,7 +151,8 @@ impl Board {
     fn compute_king_attackers(&self) -> Vec<(Piece, Square)> {
         let (whites, blacks) = self.sides();
         let king_loc = self.king(self.active);
-        pnbrq().into_iter()
+        pnbrq()
+            .into_iter()
             .map(|class| Piece(self.active.reflect(), class))
             .flat_map(|p| self.pieces.locs(p).into_iter().map(move |s| (p, s)))
             .filter(|(p, s)| p.control(*s, whites | blacks).contains(king_loc))

@@ -36,11 +36,8 @@ impl MoveOrderingHints {
         precursors: Vec<Move>,
     ) {
         let curr_level = self.compute_shallow_eval(root);
-        let next_paths = curr_level
-            .iter()
-            .map(|m| m.mv.clone())
-            .take(SHALLOW_EVAL_BRANCHING)
-            .collect_vec();
+        let next_paths =
+            curr_level.iter().map(|m| m.mv.clone()).take(SHALLOW_EVAL_BRANCHING).collect_vec();
 
         self.set_evs(precursors.clone(), curr_level);
 
@@ -75,10 +72,7 @@ impl MoveOrderingHints {
     pub fn add_pv(&mut self, depth: usize, pv: &Vec<Move>) {
         for (i, mv) in pv.iter().enumerate() {
             let precursors = pv.iter().cloned().take(i).collect_vec();
-            let step = PVMove {
-                mv: mv.clone(),
-                depth,
-            };
+            let step = PVMove { mv: mv.clone(), depth };
             match self.pvs.get_mut(&precursors) {
                 None => {
                     self.pvs.insert(precursors.clone(), vec![step]);

@@ -34,11 +34,7 @@ where
     B: EvalChessBoard,
     T: SearchTerminator,
 {
-    Search {
-        root,
-        terminator: parameters.terminator,
-    }
-    .search(parameters.table_size)
+    Search { root, terminator: parameters.terminator }.search(parameters.table_size)
 }
 
 pub struct SearchParameters<T: SearchTerminator> {
@@ -69,11 +65,7 @@ impl serde::Serialize for SearchOutcome {
         state.serialize_field("searchDurationMillis", &self.time.as_millis())?;
         state.serialize_field(
             "optimalPath",
-            &self
-                .optimal_path
-                .iter()
-                .map(|m| m.uci_format())
-                .collect::<Vec<_>>(),
+            &self.optimal_path.iter().map(|m| m.uci_format()).collect::<Vec<_>>(),
         )?;
         state.end()
     }
@@ -85,29 +77,23 @@ mod searchoutcome_serialize_test {
 
     use serde_json;
 
+    use crate::{Class, Flank, Side};
     use myopic_board::{Corner, Move, Piece, Square};
-    use crate::{Flank, Side};
 
     use super::SearchOutcome;
 
     #[test]
     fn test_json_serialize() {
         let search_outcome = SearchOutcome {
-            best_move: Move::Castle {
-                source: 0,
-                corner: Corner(Side::W, Flank::K),
-            },
+            best_move: Move::Castle { source: 0, corner: Corner(Side::W, Flank::K) },
             relative_eval: -125,
             depth: 2,
             time: Duration::from_millis(3000),
             optimal_path: vec![
-                Move::Castle {
-                    source: 0,
-                    corner: Corner(Side::W, Flank::K),
-                },
+                Move::Castle { source: 0, corner: Corner(Side::W, Flank::K) },
                 Move::Standard {
                     source: 1,
-                    moving: Piece::BP,
+                    moving: Piece(Side::B, Class::P),
                     from: Square::D7,
                     dest: Square::D5,
                     capture: None,
@@ -160,15 +146,13 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
             }
         }
 
-        best_response
-            .ok_or(break_err)
-            .map(|response| SearchOutcome {
-                best_move: response.best_move,
-                relative_eval: response.eval,
-                depth: response.depth,
-                time: search_start.elapsed(),
-                optimal_path: response.path,
-            })
+        best_response.ok_or(break_err).map(|response| SearchOutcome {
+            best_move: response.best_move,
+            relative_eval: response.eval,
+            depth: response.depth,
+            time: search_start.elapsed(),
+            optimal_path: response.path,
+        })
     }
 
     fn best_move(
@@ -207,12 +191,7 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
         if path.is_empty() {
             Err(anyhow!("No moves found for position {} at depth {}", self.root.to_fen(), depth))
         } else {
-            Ok(BestMoveResponse {
-                best_move: path.get(0).unwrap().clone(),
-                eval,
-                path,
-                depth,
-            })
+            Ok(BestMoveResponse { best_move: path.get(0).unwrap().clone(), eval, path, depth })
         }
     }
 }

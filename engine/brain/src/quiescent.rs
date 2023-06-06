@@ -33,11 +33,7 @@ pub fn search<B: EvalChessBoard>(
     // which will improve our score. We cannot make this assumption if we
     // are in check because we will consider all the moves and so we
     // assume lost until proven otherwise.
-    let mut result = if state.in_check() {
-        -eval::INFTY
-    } else {
-        state.relative_eval()
-    };
+    let mut result = if state.in_check() { -eval::INFTY } else { state.relative_eval() };
 
     // Break immediately if the stand pat is greater than beta.
     if result >= beta {
@@ -61,11 +57,7 @@ pub fn search<B: EvalChessBoard>(
 }
 
 fn compute_quiescent_moves<B: EvalChessBoard>(state: &mut B, depth: i32) -> Vec<Move> {
-    let moves_type = if depth < Q_CHECK_CAP {
-        Attacks
-    } else {
-        AttacksChecks
-    };
+    let moves_type = if depth < Q_CHECK_CAP { Attacks } else { AttacksChecks };
     // If in check don't filter out any attacks, we must check all available moves.
     let good_attack_threshold = if state.in_check() { -eval::INFTY } else { 0 };
 

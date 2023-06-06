@@ -14,10 +14,7 @@ pub struct MoveLambdaClient {
 
 impl From<(Region, String)> for MoveLambdaClient {
     fn from((region, name): (Region, String)) -> Self {
-        MoveLambdaClient {
-            function_name: name,
-            client: LambdaClient::new(region),
-        }
+        MoveLambdaClient { function_name: name, client: LambdaClient::new(region) }
     }
 }
 

@@ -84,8 +84,8 @@ const CONTROL: [BitBoard; 64] = [
 #[cfg(test)]
 mod white_test {
     use crate::pieces::{Class, Piece};
-    use crate::Side;
     use crate::square::Square::*;
+    use crate::Side;
 
     use super::*;
 
@@ -96,10 +96,7 @@ mod white_test {
             D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3,
             Piece(Side::W, Class::K).control(E3, zero)
         );
-        assert_eq!(
-            B1 | B2 | C2 | D2 | D1,
-            Piece(Side::W, Class::K).control(C1, zero)
-        );
+        assert_eq!(B1 | B2 | C2 | D2 | D1, Piece(Side::W, Class::K).control(C1, zero));
     }
 
     #[test]
@@ -117,8 +114,8 @@ mod white_test {
 #[cfg(test)]
 mod black_test {
     use crate::pieces::{Class, Piece};
-    use crate::Side;
     use crate::square::Square::*;
+    use crate::Side;
 
     use super::*;
 

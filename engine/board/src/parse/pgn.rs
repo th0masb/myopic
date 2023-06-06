@@ -1,6 +1,9 @@
 use regex::Regex;
 
-use myopic_core::{anyhow::{anyhow, Result}, Class, Corner, Flank, Piece, Square};
+use myopic_core::{
+    anyhow::{anyhow, Result},
+    Class, Corner, Flank, Square,
+};
 
 use crate::parse::patterns::*;
 use crate::{ChessBoard, Move, MoveComputeType};
@@ -68,18 +71,13 @@ fn parse_single_move<B: ChessBoard>(start: &mut B, pgn_move: &str) -> Result<Mov
     let matching = legal
         .into_iter()
         .filter(|mv| match mv {
-            &Move::Standard {
-                moving, from, dest, ..
-            } => move_piece_matches(moving.1) && target == Some(dest) && matches_start(from),
+            &Move::Standard { moving, from, dest, .. } => {
+                move_piece_matches(moving.1) && target == Some(dest) && matches_start(from)
+            }
             &Move::Enpassant { from, .. } => {
                 move_matches_pawn && target == start.enpassant() && matches_start(from)
             }
-            &Move::Promotion {
-                from,
-                dest,
-                promoted,
-                ..
-            } => {
+            &Move::Promotion { from, dest, promoted, .. } => {
                 move_matches_pawn
                     && target == Some(dest)
                     && matches_start(from)
@@ -114,10 +112,7 @@ fn char_at(string: &String, index: usize) -> char {
 }
 
 fn find_differentiating_rank_or_file(pgn_move: &str, re: &Regex) -> Option<char> {
-    let all_matches: Vec<_> = re
-        .find_iter(pgn_move)
-        .map(|m| m.as_str().to_owned())
-        .collect();
+    let all_matches: Vec<_> = re.find_iter(pgn_move).map(|m| m.as_str().to_owned()).collect();
     if all_matches.len() == 1 {
         None
     } else {
@@ -126,10 +121,7 @@ fn find_differentiating_rank_or_file(pgn_move: &str, re: &Regex) -> Option<char>
 }
 
 fn piece_ordinals(pgn_move: &str) -> (usize, usize) {
-    let matches: Vec<_> = pgn_piece()
-        .find_iter(pgn_move)
-        .map(|m| m.as_str().to_owned())
-        .collect();
+    let matches: Vec<_> = pgn_piece().find_iter(pgn_move).map(|m| m.as_str().to_owned()).collect();
     let is_promotion = pgn_move.contains("=");
     let (move_piece, promote_piece) = if matches.is_empty() {
         (None, None)
@@ -168,10 +160,7 @@ mod test {
 
     #[test]
     fn case_zero() -> Result<()> {
-        execute_success_test(
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-            "",
-        )
+        execute_success_test("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "")
     }
 
     #[test]

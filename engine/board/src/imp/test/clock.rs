@@ -3,8 +3,9 @@ use crate::{Board, ChessBoard};
 #[test]
 fn case_1() {
     let mut board = Board::default();
-    board.play_pgn(
-        "1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nf3 Nxe4 5. Be2 Be7 6. d3 Nf6 7. O-O O-O \
+    board
+        .play_pgn(
+            "1. e4 e5 2. Nf3 Nf6 3. Nxe5 d6 4. Nf3 Nxe4 5. Be2 Be7 6. d3 Nf6 7. O-O O-O \
         8. d4 Nc6 9. d5 Nb4 10. Nc3 Bf5 11. a3 Nxc2 12. Nh4 Nxa1 13. Nxf5 Qd7 14. Bd3 Nc2 \
         15. Nxe7+ Qxe7 16. Qxc2 Qe5 17. Bb5 Nxd5 18. Bc4 Nxc3 19. bxc3 Qc5 20. Be2 g6 \
         21. Bb2 Rae8 22. Qd2 Re7 23. c4 Rfe8 24. Qh6 f6 25. Bd3 Re6 26. h3 R8e7 27. Qc1 Kg7 \
@@ -21,7 +22,8 @@ fn case_1() {
         97. Kg2 Qg6+ 98. Kh3 Qb1 99. Qf1+ Kc2 100. Qc4+ Kd1 101. Qf1+ Kc2 102. Qf5+ Kb2 \
         103. Bd4+ Kc1 104. Qf4+ Kd1 105. Qf3+ Kc1 106. Qf1+ Kc2 107. Qf5+ Kc1 108. Qf1+ Kc2 \
         109. Qg2+ Kd1 110. Qf3+ Kc1 111. Qf4+ Kd1 112. Qg4+ Kc1 113. Qg1+ Kc2 114. Qg2+ Kd1 \
-        115. Qh1+ Kc2 116. Qe4+ Kc1 117. Qe1+ Kc2 118. Qe4+ Kc1 119. Qe1+ Kc2"
-    ).unwrap();
+        115. Qh1+ Kc2 116. Qe4+ Kc1 117. Qe1+ Kc2 118. Qe4+ Kc1 119. Qe1+ Kc2",
+        )
+        .unwrap();
     assert_eq!(board.half_move_clock(), 99);
 }

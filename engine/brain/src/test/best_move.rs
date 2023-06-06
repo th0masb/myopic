@@ -31,13 +31,7 @@ fn test(setup: Setup, expected_move_pool: Vec<UciMove>, is_won: bool) {
 }
 
 fn test_impl<B: EvalChessBoard>(board: B, expected_move_pool: Vec<UciMove>, is_won: bool) {
-    match crate::search(
-        board,
-        SearchParameters {
-            terminator: DEPTH,
-            table_size: TABLE_SIZE,
-        },
-    ) {
+    match crate::search(board, SearchParameters { terminator: DEPTH, table_size: TABLE_SIZE }) {
         Err(message) => panic!("{}", message),
         Ok(outcome) => {
             assert!(

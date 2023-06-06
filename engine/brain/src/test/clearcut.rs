@@ -13,13 +13,7 @@ fn case_1() -> Result<()> {
     let mut state = EvalBoard::default();
     state.play_uci(uci_sequence)?;
     let (depth, table_size) = (4, 10000);
-    let search_outcome = crate::search(
-        state,
-        SearchParameters {
-            terminator: depth,
-            table_size,
-        },
-    )?;
+    let search_outcome = crate::search(state, SearchParameters { terminator: depth, table_size })?;
     assert_eq!("c8d7", search_outcome.best_move.uci_format().as_str());
     Ok(())
 }
@@ -30,18 +24,8 @@ fn check_pv_length_is_depth() -> Result<()> {
     let mut state = EvalBoard::default();
     state.play_uci(uci_sequence)?;
     let (depth, table_size) = (4, 10000);
-    let search_outcome = crate::search(
-        state,
-        SearchParameters {
-            terminator: depth,
-            table_size,
-        },
-    )?;
-    let path = search_outcome
-        .optimal_path
-        .iter()
-        .map(|m| m.uci_format())
-        .collect_vec();
+    let search_outcome = crate::search(state, SearchParameters { terminator: depth, table_size })?;
+    let path = search_outcome.optimal_path.iter().map(|m| m.uci_format()).collect_vec();
     assert_eq!(depth, path.len(), "{:?}", path);
     Ok(())
 }

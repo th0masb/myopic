@@ -86,9 +86,7 @@ impl Square {
     /// Find the squares adjacent to this square in all of the
     /// given directions and returns them as a set.
     pub(crate) fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
-        dirs.iter()
-            .flat_map(|&dir| self.next(dir).into_iter())
-            .collect()
+        dirs.iter().flat_map(|&dir| self.next(dir).into_iter()).collect()
     }
 
     pub(crate) const fn lift(self) -> BitBoard {

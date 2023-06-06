@@ -8,7 +8,7 @@ pub use enumset;
 use enumset::EnumSetType;
 
 pub use bitboard::BitBoard;
-pub use pieces::{Piece, Class};
+pub use pieces::{Class, Piece};
 pub use reflectable::Reflectable;
 pub use square::Square;
 
@@ -164,7 +164,6 @@ impl Side {
         }
     }
 }
-
 
 #[cfg(test)]
 mod test {

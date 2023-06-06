@@ -72,12 +72,9 @@ impl Game {
     }
 
     pub async fn post_introduction(&self) {
-        for chatline in vec![
-            messages::INTRO_1,
-            messages::INTRO_2,
-            messages::INTRO_3,
-            messages::INTRO_4,
-        ] {
+        for chatline in
+            vec![messages::INTRO_1, messages::INTRO_2, messages::INTRO_3, messages::INTRO_4]
+        {
             self.post_chat(chatline, LichessChatRoom::Player).await;
             self.post_chat(chatline, LichessChatRoom::Spectator).await;
         }
@@ -89,12 +86,7 @@ impl Game {
                 log::warn!("Failed to post chatline {} in {:?}: {}", text, room, err)
             }
             Ok(status) => {
-                log::info!(
-                    "Response status {} for chatline {} in room {:?}",
-                    status,
-                    text,
-                    room
-                )
+                log::info!("Response status {} for chatline {} in room {:?}", status, text, room)
             }
         }
     }
@@ -194,8 +186,6 @@ impl Game {
     }
 
     fn get_latest_metadata(&self) -> Result<&InferredGameMetadata> {
-        self.inferred_metadata
-            .as_ref()
-            .ok_or(anyhow!("Metadata not initialized"))
+        self.inferred_metadata.as_ref().ok_or(anyhow!("Metadata not initialized"))
     }
 }

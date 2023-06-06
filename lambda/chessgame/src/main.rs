@@ -30,10 +30,7 @@ const CANCEL_PERIOD_SECS: u64 = 60;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    SimpleLogger::new()
-        .with_level(log::LevelFilter::Info)
-        .without_timestamps()
-        .init()?;
+    SimpleLogger::new().with_level(log::LevelFilter::Info).without_timestamps().init()?;
     lambda_runtime::run(service_fn(game_handler)).await?;
     Ok(())
 }
@@ -71,9 +68,9 @@ async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutpu
     let game_stream = open_game_stream(&e.lichess_game_id, &e.lichess_auth_token).await?;
     match response_stream::handle(game_stream, &mut handler).await? {
         None => Err(Error::from("Game stream ended unexpectedly!")),
-        Some(CompletionType::GameFinished) => Ok(PlayGameOutput {
-            message: format!("Game {} completed", e.lichess_game_id),
-        }),
+        Some(CompletionType::GameFinished) => {
+            Ok(PlayGameOutput { message: format!("Game {} completed", e.lichess_game_id) })
+        }
         Some(CompletionType::Cancelled) => {
             log::info!("Recursively calling this function");
             let mut payload = event.payload.clone();
@@ -131,10 +128,7 @@ impl StreamHandler<CompletionType> for StreamLineHandler {
                     log::info!("Successfully aborted game due to inactivity!");
                     Ok(LoopAction::Break(CompletionType::GameFinished))
                 } else {
-                    Err(anyhow!(
-                        "Failed to abort game, lichess status: {}",
-                        abort_status
-                    ))
+                    Err(anyhow!("Failed to abort game, lichess status: {}", abort_status))
                 }
             } else {
                 Ok(LoopAction::Continue)

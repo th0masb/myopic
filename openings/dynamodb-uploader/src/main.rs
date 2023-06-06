@@ -136,24 +136,15 @@ impl SourceEntry {
             self.moves
                 .iter()
                 .map(|record| {
-                    format!(
-                        "{}{}{}",
-                        record.mv, &options.frequency_separator, record.freq
-                    )
+                    format!("{}{}{}", record.mv, &options.frequency_separator, record.freq)
                 })
                 .collect(),
         );
 
         let mut item = HashMap::new();
-        item.insert(
-            options.position_attribute.clone().to_string(),
-            position_attribute_value,
-        );
+        item.insert(options.position_attribute.clone().to_string(), position_attribute_value);
         item.insert(options.moves_attribute.clone(), moves_attribute_value);
 
-        WriteRequest {
-            delete_request: None,
-            put_request: Some(PutRequest { item }),
-        }
+        WriteRequest { delete_request: None, put_request: Some(PutRequest { item }) }
     }
 }

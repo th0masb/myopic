@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 use myopic_core::anyhow::{anyhow, Result};
-use myopic_core::{Class, Line, Piece, Square};
+use myopic_core::{Class, Line, Square};
 
 use crate::parse::patterns::uci_move;
 use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
@@ -17,9 +17,7 @@ pub struct UciMove {
 impl UciMove {
     pub fn new(s: &str) -> Result<UciMove> {
         if uci_move().is_match(s) {
-            Ok(UciMove {
-                inner: s.to_string(),
-            })
+            Ok(UciMove { inner: s.to_string() })
         } else {
             Err(anyhow!("Not uci format: {}", s))
         }
@@ -83,14 +81,8 @@ mod uci_struct_test {
 
     #[test]
     fn reflect() {
-        assert_eq!(
-            UciMove::new("a8c5").unwrap(),
-            UciMove::new("a1c4").unwrap().reflect()
-        );
-        assert_eq!(
-            UciMove::new("a8c5n").unwrap(),
-            UciMove::new("a1c4n").unwrap().reflect()
-        );
+        assert_eq!(UciMove::new("a8c5").unwrap(), UciMove::new("a1c4").unwrap().reflect());
+        assert_eq!(UciMove::new("a8c5n").unwrap(), UciMove::new("a1c4n").unwrap().reflect());
     }
 }
 
@@ -122,35 +114,18 @@ pub fn single_move<B: ChessBoard>(start: &B, uci_move: &str) -> Result<Move> {
                 let Line(king_src, king_dest) = Line::king_castling(corner);
                 f == king_src && d == king_dest
             }
-            &Move::Promotion {
-                from,
-                dest,
-                promoted,
-                ..
-            } => {
+            &Move::Promotion { from, dest, promoted, .. } => {
                 from == f
                     && dest == d
-                    && promoting
-                        .map(|c| piece_char(promoted.1) == c)
-                        .unwrap_or(false)
+                    && promoting.map(|c| piece_char(promoted.1) == c).unwrap_or(false)
             }
         })
         .ok_or(anyhow!("No moves matching {}", uci_move))
 }
 
 fn extract_uci_component(pgn_move: &str) -> Result<(Square, Square, Option<char>)> {
-    let from = pgn_move
-        .chars()
-        .take(2)
-        .collect::<String>()
-        .as_str()
-        .parse::<Square>()?;
-    let dest = pgn_move
-        .chars()
-        .skip(2)
-        .take(2)
-        .collect::<String>()
-        .parse::<Square>()?;
+    let from = pgn_move.chars().take(2).collect::<String>().as_str().parse::<Square>()?;
+    let dest = pgn_move.chars().skip(2).take(2).collect::<String>().parse::<Square>()?;
 
     Ok((from, dest, pgn_move.chars().skip(4).next()))
 }
@@ -183,10 +158,7 @@ mod test {
 
     #[test]
     fn case_zero() -> Result<()> {
-        execute_success_test(
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-            "",
-        )
+        execute_success_test("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "")
     }
 
     #[test]

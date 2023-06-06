@@ -1,12 +1,11 @@
+use crate::enumset::EnumSet;
+use enum_map::EnumMap;
 pub use mv::Move;
 use myopic_core::anyhow::Result;
 use myopic_core::enum_map::Enum;
 pub use myopic_core::*;
 pub use parse::uci::UciMove;
 use std::fmt::Debug;
-use enum_map::EnumMap;
-use crate::enumset::EnumSet;
-
 
 pub use crate::imp::Board;
 
@@ -202,35 +201,19 @@ mod uci_conversion_test {
     fn test_castling_conversion() {
         assert_eq!(
             "e1g1",
-            Move::Castle {
-                source: 1u64,
-                corner: Corner(Side::W, Flank::K),
-            }
-            .uci_format()
+            Move::Castle { source: 1u64, corner: Corner(Side::W, Flank::K) }.uci_format()
         );
         assert_eq!(
             "e1c1",
-            Move::Castle {
-                source: 1u64,
-                corner: Corner(Side::W, Flank::Q),
-            }
-            .uci_format()
+            Move::Castle { source: 1u64, corner: Corner(Side::W, Flank::Q) }.uci_format()
         );
         assert_eq!(
             "e8g8",
-            Move::Castle {
-                source: 8u64,
-                corner: Corner(Side::B, Flank::K),
-            }
-            .uci_format()
+            Move::Castle { source: 8u64, corner: Corner(Side::B, Flank::K) }.uci_format()
         );
         assert_eq!(
             "e8c8",
-            Move::Castle {
-                source: 8u64,
-                corner: Corner(Side::B, Flank::Q),
-            }
-            .uci_format()
+            Move::Castle { source: 8u64, corner: Corner(Side::B, Flank::Q) }.uci_format()
         );
     }
 

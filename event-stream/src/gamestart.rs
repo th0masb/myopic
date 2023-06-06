@@ -26,11 +26,7 @@ impl GameStartService {
 
     pub async fn process_event(&mut self, event: GameStart) -> Result<String> {
         let (game_id, opponent_id) = (event.id.as_str(), event.opponent.id.as_str());
-        if self
-            .challenge_table
-            .set_started(opponent_id, game_id)
-            .await?
-        {
+        if self.challenge_table.set_started(opponent_id, game_id).await? {
             log::info!("Lambda for {}/{} should be invoked", opponent_id, game_id);
             match self.invoker.trigger_lambda(game_id).await {
                 Err(e) => Err(anyhow!(
@@ -59,10 +55,7 @@ impl GameStartService {
                 },
             }
         } else {
-            Ok(format!(
-                "Lambda for {}/{} was already invoked",
-                opponent_id, game_id
-            ))
+            Ok(format!("Lambda for {}/{} was already invoked", opponent_id, game_id))
         }
     }
 }
@@ -75,10 +68,7 @@ struct LambdaInvoker {
 impl LambdaInvoker {
     fn new(params: AppConfig) -> LambdaInvoker {
         let region = Region::from_str(params.game_function.id.region.as_str()).unwrap();
-        LambdaInvoker {
-            client: LambdaClient::new(region),
-            params,
-        }
+        LambdaInvoker { client: LambdaClient::new(region), params }
     }
 
     async fn trigger_lambda(&self, game_id: &str) -> Result<Option<i64>> {
@@ -87,10 +77,6 @@ impl LambdaInvoker {
             function_name: self.params.game_function.id.name.clone(),
             invoke_args: bytes::Bytes::from(payload),
         };
-        self.client
-            .invoke_async(request)
-            .await
-            .map(|response| response.status)
-            .map_err(Error::from)
+        self.client.invoke_async(request).await.map(|response| response.status).map_err(Error::from)
     }
 }

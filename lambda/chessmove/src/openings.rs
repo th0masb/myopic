@@ -40,10 +40,7 @@ impl Default for DynamoOpeningService {
             .expect(format!("Could not parse table config {}", table_var).as_str());
         let region = Region::from_str(table.region.as_str())
             .expect(format!("Could not parse {} as region", table.region).as_str());
-        DynamoOpeningService {
-            params: table,
-            client: DynamoDbClient::new(region),
-        }
+        DynamoOpeningService { params: table, client: DynamoDbClient::new(region) }
     }
 }
 
@@ -100,9 +97,7 @@ impl DynamoOpeningService {
 
     fn try_extract_move(&self, attributes: HashMap<String, AttributeValue>) -> ah::Result<String> {
         match attributes.get(&self.params.move_key) {
-            None => Err(ah::anyhow!(
-                "Position exists but missing recommended move attribute"
-            )),
+            None => Err(ah::anyhow!("Position exists but missing recommended move attribute")),
             Some(attribute) => match &attribute.ss {
                 None => Err(ah::anyhow!(
                     "Position and recommended move attribute exist but not string set type"
@@ -153,15 +148,9 @@ impl FromStr for MoveRecord {
     type Err = ah::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let split = s
-            .split(MOVE_FREQ_SEPARATOR)
-            .map(|s| s.to_string())
-            .collect::<Vec<_>>();
+        let split = s.split(MOVE_FREQ_SEPARATOR).map(|s| s.to_string()).collect::<Vec<_>>();
         Ok(MoveRecord {
-            mv: split
-                .get(0)
-                .ok_or(ah::anyhow!("Cannot parse move from {}", s))?
-                .clone(),
+            mv: split.get(0).ok_or(ah::anyhow!("Cannot parse move from {}", s))?.clone(),
             freq: split
                 .get(1)
                 .ok_or(ah::anyhow!("Cannot parse freq from {}", s))?
@@ -176,12 +165,8 @@ mod test {
 
     #[test]
     fn test_choose_move() {
-        let choices = vec![
-            format!("a2a3:1"),
-            format!("b2b4:1"),
-            format!("g8f6:3"),
-            format!("e1g1:20"),
-        ];
+        let choices =
+            vec![format!("a2a3:1"), format!("b2b4:1"), format!("g8f6:3"), format!("e1g1:20")];
 
         assert_eq!(format!("a2a3"), choose_move(&choices, || { 0 }).unwrap());
         assert_eq!(format!("b2b4"), choose_move(&choices, || { 1 }).unwrap());

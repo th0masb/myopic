@@ -124,10 +124,7 @@ mod test {
     fn start_position_board() {
         assert_eq!(
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
-            to_fen_impl(
-                &crate::START_FEN.parse::<Board>().unwrap(),
-                &[FenPart::Board],
-            )
+            to_fen_impl(&crate::START_FEN.parse::<Board>().unwrap(), &[FenPart::Board],)
         )
     }
 
@@ -135,10 +132,7 @@ mod test {
     fn start_position_active() {
         assert_eq!(
             "w",
-            to_fen_impl(
-                &crate::START_FEN.parse::<Board>().unwrap(),
-                &[FenPart::Active],
-            )
+            to_fen_impl(&crate::START_FEN.parse::<Board>().unwrap(), &[FenPart::Active],)
         )
     }
 
@@ -146,10 +140,7 @@ mod test {
     fn start_position_castling_rights() {
         assert_eq!(
             "KQkq",
-            to_fen_impl(
-                &crate::START_FEN.parse::<Board>().unwrap(),
-                &[FenPart::CastlingRights],
-            )
+            to_fen_impl(&crate::START_FEN.parse::<Board>().unwrap(), &[FenPart::CastlingRights],)
         )
     }
 
@@ -157,10 +148,7 @@ mod test {
     fn start_position_enpassant() {
         assert_eq!(
             "-",
-            to_fen_impl(
-                &crate::START_FEN.parse::<Board>().unwrap(),
-                &[FenPart::Enpassant],
-            )
+            to_fen_impl(&crate::START_FEN.parse::<Board>().unwrap(), &[FenPart::Enpassant],)
         )
     }
 
@@ -168,10 +156,7 @@ mod test {
     fn start_position_half_move_count() {
         assert_eq!(
             "0",
-            to_fen_impl(
-                &crate::START_FEN.parse::<Board>().unwrap(),
-                &[FenPart::HalfMoveCount],
-            )
+            to_fen_impl(&crate::START_FEN.parse::<Board>().unwrap(), &[FenPart::HalfMoveCount],)
         )
     }
 
@@ -179,10 +164,7 @@ mod test {
     fn start_position_move_count() {
         assert_eq!(
             "1",
-            to_fen_impl(
-                &crate::START_FEN.parse::<Board>().unwrap(),
-                &[FenPart::MoveCount],
-            )
+            to_fen_impl(&crate::START_FEN.parse::<Board>().unwrap(), &[FenPart::MoveCount],)
         )
     }
 
@@ -202,18 +184,13 @@ mod test {
                 ],
             )
         );
-        assert_eq!(
-            crate::START_FEN,
-            crate::START_FEN.parse::<Board>()?.to_fen()
-        );
+        assert_eq!(crate::START_FEN, crate::START_FEN.parse::<Board>()?.to_fen());
         Ok(())
     }
 
     fn position_1() -> Board {
         let mut board = crate::start();
-        board
-            .play_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5")
-            .unwrap();
+        board.play_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5").unwrap();
         board
     }
 
@@ -272,9 +249,7 @@ mod test {
 
     fn position_2() -> Board {
         let mut board = crate::start();
-        board
-            .play_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5 5. Ke2 Kd7 6. Rh1")
-            .unwrap();
+        board.play_pgn("1. e4 Nf6 2. Nf3 Rg8 3. Rg1 h6 4. e5 d5 5. Ke2 Kd7 6. Rh1").unwrap();
         board
     }
 

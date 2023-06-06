@@ -1,6 +1,7 @@
 use serde_derive::{Deserialize, Serialize};
 
-use myopic_board::{Piece, Piece::*, Reflectable, Side, Square};
+use crate::Class;
+use myopic_board::{Piece, Reflectable, Side, Square};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq)]
 pub struct PositionTables {
@@ -16,22 +17,18 @@ pub struct PositionTables {
 }
 
 fn parity(piece: Piece) -> i32 {
-    match piece.side() {
+    match piece.0 {
         Side::W => 1,
         Side::B => -1,
     }
 }
 
 fn table_index(piece: Piece, adjusted_location: Square) -> usize {
-    if piece.is_pawn() {
+    if piece.1 == Class::P {
         (adjusted_location as usize) % 32
     } else {
         let file_index = adjusted_location.file_index();
-        let column_index = if file_index < 4 {
-            file_index
-        } else {
-            7 - file_index
-        };
+        let column_index = if file_index < 4 { file_index } else { 7 - file_index };
         adjusted_location.rank_index() * 4 + column_index
     }
 }
@@ -71,16 +68,16 @@ impl PositionTables {
     }
 
     fn access(&self, piece: Piece, location: Square, f: fn((i32, i32)) -> i32) -> i32 {
-        let adjusted_location = adjust_location(piece.side(), location);
+        let adjusted_location = adjust_location(piece.0, location);
         let table_index = table_index(piece, adjusted_location);
         parity(piece)
-            * match piece {
-                WN | BN => f(self.knight[table_index]),
-                WB | BB => f(self.bishop[table_index]),
-                WR | BR => f(self.rook[table_index]),
-                WQ | BQ => f(self.queen[table_index]),
-                WK | BK => f(self.king[table_index]),
-                WP | BP => {
+            * match piece.1 {
+                Class::N => f(self.knight[table_index]),
+                Class::B => f(self.bishop[table_index]),
+                Class::R => f(self.rook[table_index]),
+                Class::Q => f(self.queen[table_index]),
+                Class::K => f(self.king[table_index]),
+                Class::P => {
                     if (adjusted_location as usize) < 32 {
                         f(self.pawn_1_4[table_index])
                     } else {
@@ -182,9 +179,9 @@ const PAWN_5_8: [(i32, i32); 32] = [
 
 #[cfg(test)]
 mod test {
-    use myopic_board::{Piece, Reflectable, Square, Square::*};
+    use myopic_board::{Piece, Reflectable, Square::*};
 
-    use crate::PositionTables;
+    use crate::{Class, PositionTables, Side};
 
     // Fully connected pawn table
     #[rustfmt::skip]
@@ -205,10 +202,7 @@ mod test {
     fn test_pawn_table_conjunction() {
         let tables = PositionTables::default();
         for i in 0..64 {
-            assert_eq!(
-                PAWN[i as usize].0,
-                tables.midgame(Piece::WP, i.into())
-            )
+            assert_eq!(PAWN[i as usize].0, tables.midgame(Piece(Side::W, Class::P), i.into()))
         }
     }
 
@@ -223,44 +217,44 @@ mod test {
     #[test]
     fn test_midgame() {
         let tables = PositionTables::default();
-        assert_eq!(-7, tables.midgame(Piece::WP, C6));
-        assert_eq!(7, tables.midgame(Piece::BP, C3));
+        assert_eq!(-7, tables.midgame(Piece(Side::W, Class::P), C6));
+        assert_eq!(7, tables.midgame(Piece(Side::B, Class::P), C3));
 
-        assert_eq!(19, tables.midgame(Piece::WN, D3));
-        assert_eq!(-19, tables.midgame(Piece::BN, D6));
+        assert_eq!(19, tables.midgame(Piece(Side::W, Class::N), D3));
+        assert_eq!(-19, tables.midgame(Piece(Side::B, Class::N), D6));
 
-        assert_eq!(26, tables.midgame(Piece::WB, C4));
-        assert_eq!(-26, tables.midgame(Piece::BB, C5));
+        assert_eq!(26, tables.midgame(Piece(Side::W, Class::B), C4));
+        assert_eq!(-26, tables.midgame(Piece(Side::B, Class::B), C5));
 
-        assert_eq!(-5, tables.midgame(Piece::WR, F2));
-        assert_eq!(5, tables.midgame(Piece::BR, F7));
+        assert_eq!(-5, tables.midgame(Piece(Side::W, Class::R), F2));
+        assert_eq!(5, tables.midgame(Piece(Side::B, Class::R), F7));
 
-        assert_eq!(6, tables.midgame(Piece::WQ, B3));
-        assert_eq!(-6, tables.midgame(Piece::BQ, B6));
+        assert_eq!(6, tables.midgame(Piece(Side::W, Class::Q), B3));
+        assert_eq!(-6, tables.midgame(Piece(Side::B, Class::Q), B6));
 
-        assert_eq!(325, tables.midgame(Piece::WK, B1));
-        assert_eq!(-325, tables.midgame(Piece::BK, B8));
+        assert_eq!(325, tables.midgame(Piece(Side::W, Class::K), B1));
+        assert_eq!(-325, tables.midgame(Piece(Side::B, Class::K), B8));
     }
 
     #[test]
     fn test_endgame() {
         let tables = PositionTables::default();
-        assert_eq!(21, tables.endgame(Piece::WP, C6));
-        assert_eq!(-21, tables.endgame(Piece::BP, C3));
+        assert_eq!(21, tables.endgame(Piece(Side::W, Class::P), C6));
+        assert_eq!(-21, tables.endgame(Piece(Side::B, Class::P), C3));
 
-        assert_eq!(-18, tables.endgame(Piece::WN, E1));
-        assert_eq!(18, tables.endgame(Piece::BN, E8));
+        assert_eq!(-18, tables.endgame(Piece(Side::W, Class::N), E1));
+        assert_eq!(18, tables.endgame(Piece(Side::B, Class::N), E8));
 
-        assert_eq!(16, tables.endgame(Piece::WB, D4));
-        assert_eq!(-16, tables.endgame(Piece::BB, D5));
+        assert_eq!(16, tables.endgame(Piece(Side::W, Class::B), D4));
+        assert_eq!(-16, tables.endgame(Piece(Side::B, Class::B), D5));
 
-        assert_eq!(-2, tables.endgame(Piece::WR, D3));
-        assert_eq!(2, tables.endgame(Piece::BR, D6));
+        assert_eq!(-2, tables.endgame(Piece(Side::W, Class::R), D3));
+        assert_eq!(2, tables.endgame(Piece(Side::B, Class::R), D6));
 
-        assert_eq!(-23, tables.endgame(Piece::WQ, A4));
-        assert_eq!(23, tables.endgame(Piece::BQ, A5));
+        assert_eq!(-23, tables.endgame(Piece(Side::W, Class::Q), A4));
+        assert_eq!(23, tables.endgame(Piece(Side::B, Class::Q), A5));
 
-        assert_eq!(141, tables.endgame(Piece::WK, D7));
-        assert_eq!(-141, tables.endgame(Piece::BK, D2));
+        assert_eq!(141, tables.endgame(Piece(Side::W, Class::K), D7));
+        assert_eq!(-141, tables.endgame(Piece(Side::B, Class::K), D2));
     }
 }

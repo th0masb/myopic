@@ -5,9 +5,9 @@ use anyhow::{anyhow, Error, Result};
 use myopic_core::*;
 
 use enum_map::{enum_map, EnumMap};
-use enumset::EnumSet;
 #[cfg(test)]
 use enumset::enum_set;
+use enumset::EnumSet;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Default)]
 pub struct Rights(pub EnumMap<Side, EnumSet<Flank>>);
@@ -36,7 +36,7 @@ impl FromStr for Rights {
                         "Q" => (Side::W, Flank::Q),
                         "k" => (Side::B, Flank::K),
                         "q" => (Side::B, Flank::Q),
-                        _ => panic!()
+                        _ => panic!(),
                     };
                     rights.0[side].insert(flank);
                 };
@@ -56,16 +56,22 @@ impl Rights {
     }
 
     pub fn remove_rights(&mut self, srcdest: BitBoard) {
-        srcdest.iter().for_each(|square| {
-            match square {
-                Square::E1 => self.0[Side::W] = EnumSet::empty(),
-                Square::E8 => self.0[Side::B] = EnumSet::empty(),
-                Square::A1 => { self.0[Side::W].remove(Flank::Q); },
-                Square::A8 => { self.0[Side::B].remove(Flank::Q); },
-                Square::H1 => { self.0[Side::W].remove(Flank::K); },
-                Square::H8 => { self.0[Side::B].remove(Flank::K); },
-                _ => {}
+        srcdest.iter().for_each(|square| match square {
+            Square::E1 => self.0[Side::W] = EnumSet::empty(),
+            Square::E8 => self.0[Side::B] = EnumSet::empty(),
+            Square::A1 => {
+                self.0[Side::W].remove(Flank::Q);
             }
+            Square::A8 => {
+                self.0[Side::B].remove(Flank::Q);
+            }
+            Square::H1 => {
+                self.0[Side::W].remove(Flank::K);
+            }
+            Square::H8 => {
+                self.0[Side::B].remove(Flank::K);
+            }
+            _ => {}
         });
     }
 }

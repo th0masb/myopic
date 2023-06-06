@@ -83,10 +83,7 @@ mod test {
     fn deserialize_opponent_gone_false() {
         assert_eq!(
             GameEvent::OpponentGone {
-                content: OpponentGone {
-                    gone: false,
-                    claim_win_in_seconds: None,
-                }
+                content: OpponentGone { gone: false, claim_win_in_seconds: None }
             },
             serde_json::from_str(
                 r#"{
@@ -102,10 +99,7 @@ mod test {
     fn deserialize_opponent_gone_true() {
         assert_eq!(
             GameEvent::OpponentGone {
-                content: OpponentGone {
-                    gone: true,
-                    claim_win_in_seconds: Some(8),
-                }
+                content: OpponentGone { gone: true, claim_win_in_seconds: Some(8) }
             },
             serde_json::from_str(
                 r#"{
@@ -238,25 +232,9 @@ mod test {
             Err(error) => panic!("Parse error {:?}", error),
             Ok(event) => match event {
                 GameEvent::GameFull { content } => {
-                    assert_eq!(
-                        Player {
-                            name: format!("th0masb")
-                        },
-                        content.white
-                    );
-                    assert_eq!(
-                        Player {
-                            name: format!("myopic-bot")
-                        },
-                        content.black
-                    );
-                    assert_eq!(
-                        Clock {
-                            initial: 1200000,
-                            increment: 10000
-                        },
-                        content.clock
-                    );
+                    assert_eq!(Player { name: format!("th0masb") }, content.white);
+                    assert_eq!(Player { name: format!("myopic-bot") }, content.black);
+                    assert_eq!(Clock { initial: 1200000, increment: 10000 }, content.clock);
                     assert_eq!(
                         GameState {
                             moves: String::from("e2e4 e7e5"),

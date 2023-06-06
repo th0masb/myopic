@@ -79,19 +79,13 @@ impl std::ops::Neg for SearchResponse {
     type Output = SearchResponse;
 
     fn neg(self) -> Self::Output {
-        SearchResponse {
-            eval: -self.eval,
-            path: self.path,
-        }
+        SearchResponse { eval: -self.eval, path: self.path }
     }
 }
 
 impl Default for SearchResponse {
     fn default() -> Self {
-        SearchResponse {
-            eval: 0,
-            path: vec![],
-        }
+        SearchResponse { eval: 0, path: vec![] }
     }
 }
 
@@ -162,49 +156,27 @@ where
             let (hash, mut table_suggestion) = (root.hash(), None);
             match self.transposition_table.get(hash) {
                 None => {}
-                Some(TreeNode::Pv {
-                    depth,
-                    eval,
-                    optimal_path,
-                }) => {
+                Some(TreeNode::Pv { depth, eval, optimal_path }) => {
                     if (*depth as usize) >= ctx.depth_remaining {
                         // We already searched this position fully at a sufficient depth
-                        return Ok(SearchResponse {
-                            eval: *eval,
-                            path: optimal_path.clone(),
-                        });
+                        return Ok(SearchResponse { eval: *eval, path: optimal_path.clone() });
                     } else {
                         // The depth wasn't sufficient and so we only have a suggestion
                         // for the best move
-                        table_suggestion = optimal_path
-                            .last()
-                            .map(|m| TableSuggestion::Pv(*depth, m.clone()))
+                        table_suggestion =
+                            optimal_path.last().map(|m| TableSuggestion::Pv(*depth, m.clone()))
                     }
                 }
-                Some(TreeNode::Cut {
-                    depth,
-                    beta,
-                    cutoff_move,
-                }) => {
+                Some(TreeNode::Cut { depth, beta, cutoff_move }) => {
                     if (*depth as usize) >= ctx.depth_remaining && ctx.beta <= *beta {
-                        return Ok(SearchResponse {
-                            eval: ctx.beta,
-                            path: vec![],
-                        });
+                        return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
                     } else {
                         table_suggestion = Some(TableSuggestion::Cut(cutoff_move.clone()));
                     }
                 }
-                Some(TreeNode::All {
-                    depth,
-                    eval,
-                    best_move,
-                }) => {
+                Some(TreeNode::All { depth, eval, best_move }) => {
                     if (*depth as usize) >= ctx.depth_remaining && *eval <= ctx.alpha {
-                        return Ok(SearchResponse {
-                            eval: *eval,
-                            path: vec![],
-                        });
+                        return Ok(SearchResponse { eval: *eval, path: vec![] });
                     } else {
                         table_suggestion = Some(TableSuggestion::All(best_move.clone()));
                     }
@@ -212,10 +184,8 @@ where
             };
 
             let (start_alpha, mut result, mut best_path) = (ctx.alpha, -eval::INFTY, vec![]);
-            for (i, evolve) in self
-                .compute_moves(root, &ctx.precursors, table_suggestion)
-                .into_iter()
-                .enumerate()
+            for (i, evolve) in
+                self.compute_moves(root, &ctx.precursors, table_suggestion).into_iter().enumerate()
             {
                 root.make(evolve.clone())?;
                 #[allow(unused_assignments)]
@@ -257,10 +227,7 @@ where
                             cutoff_move: evolve,
                         },
                     );
-                    return Ok(SearchResponse {
-                        eval: ctx.beta,
-                        path: vec![],
-                    });
+                    return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
                 }
             }
 
@@ -292,10 +259,7 @@ where
                 )
             }
 
-            Ok(SearchResponse {
-                eval: result,
-                path: best_path,
-            })
+            Ok(SearchResponse { eval: result, path: best_path })
         }
     }
 

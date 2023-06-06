@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use crate::{Board, ChessBoard};
 use crate::eval::EvalFacet;
+use crate::{Board, ChessBoard};
 
 pub fn test_facet_evolution<F>(pgn: &str, expected_states: Vec<F>)
 where

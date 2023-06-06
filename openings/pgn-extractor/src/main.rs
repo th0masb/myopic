@@ -143,9 +143,7 @@ fn count_games(file_paths: &Vec<PathBuf>) -> Result<HashMap<String, usize>, Box<
 }
 
 fn path_to_string(path: &PathBuf) -> String {
-    path.to_str()
-        .expect("Couldn't convert path to string")
-        .to_string()
+    path.to_str().expect("Couldn't convert path to string").to_string()
 }
 
 fn parse_entries(
@@ -155,11 +153,7 @@ fn parse_entries(
     game: &str,
 ) -> Result<Vec<CollectionEntry>, anyhow::Error> {
     let mut board = myopic_board::start();
-    let moves: Vec<Move> = board
-        .play_pgn(game)?
-        .into_iter()
-        .take(offset + depth)
-        .collect();
+    let moves: Vec<Move> = board.play_pgn(game)?.into_iter().take(offset + depth).collect();
 
     let (mut board, mut entries) = (myopic_board::start(), vec![]);
     for (i, mv) in moves.into_iter().enumerate() {

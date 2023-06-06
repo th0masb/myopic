@@ -4,8 +4,6 @@ mod termination;
 use myopic_core::*;
 use std::cell::RefCell;
 
-
-
 use crate::imp::cache::CalculationCache;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;

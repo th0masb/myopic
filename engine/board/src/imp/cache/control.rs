@@ -23,14 +23,8 @@ impl Board {
     fn compute_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
-            Side::W => (
-                pieces.whites(),
-                pieces.blacks() - pieces.king_loc(Side::B),
-            ),
-            Side::B => (
-                pieces.whites() - pieces.king_loc(Side::W),
-                pieces.blacks(),
-            ),
+            Side::W => (pieces.whites(), pieces.blacks() - pieces.king_loc(Side::B)),
+            Side::B => (pieces.whites() - pieces.king_loc(Side::W), pieces.blacks()),
         };
         let locs = |piece: Piece| pieces.locs(piece);
         let control = |piece: Piece, square: Square| piece.control(square, whites | blacks);
@@ -44,11 +38,11 @@ impl Board {
 
 #[cfg(test)]
 mod test {
-    
+
+    use crate::imp::rights::Rights;
     use crate::imp::test::TestBoard;
     use crate::imp::Board;
-    use crate::{Square::*, BitBoard, Side};
-    use crate::imp::rights::Rights;
+    use crate::{BitBoard, Side, Square::*};
 
     struct TestCase {
         board: TestBoard,
@@ -57,30 +51,13 @@ mod test {
     }
 
     fn execute_test(case: TestCase) {
-        assert_eq!(
-            case.expected_control,
-            Board::from(case.board).compute_control(case.side)
-        );
+        assert_eq!(case.expected_control, Board::from(case.board).compute_control(case.side));
     }
 
     fn get_test_board() -> TestBoard {
         TestBoard {
-            whites: vec![
-                A2 | B3 | C2 | D2 | E4 | F2 | G2 | H2,
-                !!F3,
-                B2 | F1,
-                !!A1,
-                !!D1,
-                !!E1,
-            ],
-            blacks: vec![
-                A7 | B7 | C7 | D7 | E5 | F7 | G7 | H5,
-                C6 | G8,
-                !!C8,
-                A8 | H8,
-                !!F6,
-                !!E8,
-            ],
+            whites: vec![A2 | B3 | C2 | D2 | E4 | F2 | G2 | H2, !!F3, B2 | F1, !!A1, !!D1, !!E1],
+            blacks: vec![A7 | B7 | C7 | D7 | E5 | F7 | G7 | H5, C6 | G8, !!C8, A8 | H8, !!F6, !!E8],
             castle_rights: Rights::all(),
             enpassant: None,
             active: Side::W,
@@ -98,11 +75,7 @@ mod test {
         .into_iter()
         .collect();
 
-        execute_test(TestCase {
-            board: get_test_board(),
-            side: Side::W,
-            expected_control,
-        })
+        execute_test(TestCase { board: get_test_board(), side: Side::W, expected_control })
     }
 
     #[test]
@@ -114,10 +87,6 @@ mod test {
         .into_iter()
         .collect();
 
-        execute_test(TestCase {
-            board: get_test_board(),
-            side: Side::B,
-            expected_control,
-        })
+        execute_test(TestCase { board: get_test_board(), side: Side::B, expected_control })
     }
 }

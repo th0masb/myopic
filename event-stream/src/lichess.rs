@@ -14,10 +14,7 @@ pub struct LichessClient {
 
 impl LichessClient {
     pub fn new(auth_token: String) -> LichessClient {
-        LichessClient {
-            auth_token,
-            client: reqwest::Client::new(),
-        }
+        LichessClient { auth_token, client: reqwest::Client::new() }
     }
 
     pub async fn abort_game(&self, game_id: &str) -> Result<StatusCode> {

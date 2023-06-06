@@ -1,5 +1,5 @@
-use myopic_core::{Reflectable, Square};
 use myopic_core::anyhow::{anyhow, Result};
+use myopic_core::{Reflectable, Square};
 
 use crate::imp::rights::Rights;
 use crate::Move;
@@ -24,10 +24,7 @@ pub struct History {
 
 impl History {
     pub fn new(prev_position_count: usize) -> History {
-        History {
-            prev_position_count,
-            inner: Vec::new(),
-        }
+        History { prev_position_count, inner: Vec::new() }
     }
 
     pub fn position_count(&self) -> usize {
@@ -43,9 +40,7 @@ impl History {
     }
 
     pub fn attempt_pop(&mut self) -> Result<(Move, Discards)> {
-        self.inner
-            .pop()
-            .ok_or(anyhow!("Empty history, could not pop last move!"))
+        self.inner.pop().ok_or(anyhow!("Empty history, could not pop last move!"))
     }
 
     pub(crate) fn reflect_for(&self, new_hash: u64) -> History {

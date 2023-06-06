@@ -14,10 +14,7 @@ pub struct PieceValues {
 
 impl Default for PieceValues {
     fn default() -> Self {
-        PieceValues {
-            midgame: DEFAULT_MIDGAME,
-            endgame: DEFAULT_ENDGAME,
-        }
+        PieceValues { midgame: DEFAULT_MIDGAME, endgame: DEFAULT_ENDGAME }
     }
 }
 
@@ -28,17 +25,17 @@ impl PieceValues {
 
     /// Retrieve the midgame value of the given piece.
     pub fn midgame(&self, piece: Piece) -> i32 {
-        parity(piece) * self.midgame[(piece as usize) % 6]
+        parity(piece) * self.midgame[piece.1 as usize]
     }
 
     /// Retrieve the endgame value of the given piece.
     pub fn endgame(&self, piece: Piece) -> i32 {
-        parity(piece) * self.endgame[(piece as usize) % 6]
+        parity(piece) * self.endgame[piece.1 as usize]
     }
 }
 
 fn parity(piece: Piece) -> i32 {
-    match piece.side() {
+    match piece.0 {
         Side::W => 1,
         Side::B => -1,
     }

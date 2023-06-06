@@ -47,9 +47,6 @@ impl Reflectable for RaySet {
         for point in self.points {
             contents[point.reflect()] = self.contents[point].reflect();
         }
-        RaySet {
-            points: self.points.reflect(),
-            contents,
-        }
+        RaySet { points: self.points.reflect(), contents }
     }
 }
