@@ -1,10 +1,9 @@
-
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 
+use crate::{Corner, Side};
 use crate::pieces::Piece;
 use crate::square::Square;
-use crate::{Corner, Side};
 
 // Total number of hashing features
 const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;

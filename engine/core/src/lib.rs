@@ -8,7 +8,7 @@ pub use enumset;
 use enumset::EnumSetType;
 
 pub use bitboard::BitBoard;
-pub use pieces::Piece;
+pub use pieces::{Piece, Class};
 pub use reflectable::Reflectable;
 pub use square::Square;
 

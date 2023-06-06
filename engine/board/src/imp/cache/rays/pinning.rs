@@ -4,8 +4,6 @@ use crate::imp::cache::rays::RaySet;
 use crate::imp::Board;
 use crate::ChessBoard;
 
-use super::{BLACK_SLIDERS, WHITE_SLIDERS};
-
 impl Board {
     pub fn pinned_set(&self) -> RaySet {
         let mut cache = self.cache.borrow_mut();
@@ -25,7 +23,7 @@ impl Board {
     fn compute_pinned(&self) -> RaySet {
         let active = self.side(self.active);
         let passive = self.side(self.active.reflect());
-        let king_loc = self.pieces.king_location(self.active);
+        let king_loc = self.pieces.locs(Piece(self.active, Class::K)).into_iter().next().unwrap();
 
         self.compute_xrays(king_loc)
             .iter()
@@ -39,13 +37,10 @@ impl Board {
     }
 
     fn compute_xrays(&self, king_loc: Square) -> BitBoard {
-        let passive_sliders = match self.active {
-            Side::W => BLACK_SLIDERS,
-            Side::B => WHITE_SLIDERS,
-        };
-        passive_sliders
+        [Class::B, Class::R, Class::Q]
             .iter()
-            .map(|&p| self.pieces.locs(p) & p.empty_control(king_loc))
+            .map(|&class| Piece(self.active.reflect(), class))
+            .map(|piece| self.pieces.locs(piece) & piece.empty_control(king_loc))
             .collect()
     }
 }

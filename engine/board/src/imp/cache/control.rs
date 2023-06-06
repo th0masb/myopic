@@ -8,7 +8,7 @@ impl Board {
         match cache.passive_control {
             Some(x) => x,
             None => {
-                let result = self.compute_passive_control(self.active.reflect());
+                let result = self.compute_control(self.active.reflect());
                 cache.passive_control = Some(result);
                 result
             }
@@ -20,21 +20,23 @@ impl Board {
     /// check it cannot create it's own escape squares by blocking the
     /// control ray of an attacking slider. TODO Improve efficiency by
     /// treated all pawns as a block
-    fn compute_passive_control(&self, side: Side) -> BitBoard {
+    fn compute_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
             Side::W => (
                 pieces.whites(),
-                pieces.blacks() - pieces.king_location(Side::B),
+                pieces.blacks() - pieces.king_loc(Side::B),
             ),
             Side::B => (
-                pieces.whites() - pieces.king_location(Side::W),
+                pieces.whites() - pieces.king_loc(Side::W),
                 pieces.blacks(),
             ),
         };
         let locs = |piece: Piece| pieces.locs(piece);
-        let control = |piece: Piece, square: Square| piece.control(square, whites, blacks);
-        Piece::of(side)
+        let control = |piece: Piece, square: Square| piece.control(square, whites | blacks);
+        Class::all()
+            .into_iter()
+            .map(|class| Piece(side, class))
             .flat_map(|p| locs(p).into_iter().map(move |sq| control(p, sq)))
             .collect()
     }
@@ -57,7 +59,7 @@ mod test {
     fn execute_test(case: TestCase) {
         assert_eq!(
             case.expected_control,
-            Board::from(case.board).compute_passive_control(case.side)
+            Board::from(case.board).compute_control(case.side)
         );
     }
 

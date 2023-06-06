@@ -272,7 +272,7 @@ impl ChessBoard for Board {
     }
 
     fn king(&self, side: Side) -> Square {
-        self.pieces.king_location(side)
+        self.pieces.locs(Piece(side, Class::K)).into_iter().next().unwrap()
     }
 
     fn piece(&self, location: Square) -> Option<Piece> {

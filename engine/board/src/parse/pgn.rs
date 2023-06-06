@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use myopic_core::{anyhow::{anyhow, Result}, Corner, Flank, Piece, Square};
+use myopic_core::{anyhow::{anyhow, Result}, Class, Corner, Flank, Piece, Square};
 
 use crate::parse::patterns::*;
 use crate::{ChessBoard, Move, MoveComputeType};
@@ -54,9 +54,9 @@ fn parse_single_move<B: ChessBoard>(start: &mut B, pgn_move: &str) -> Result<Mov
 
     // Functionality for checking if a piece type matches the pgn move.
     let (move_piece_ordinal, promote_piece_ordinal) = piece_ordinals(pgn_move);
-    let move_piece_matches = |p: Piece| move_piece_ordinal == (p as usize % 6);
-    let promote_piece_matches = |p: Piece| promote_piece_ordinal == (p as usize % 6);
-    let move_matches_pawn = move_piece_matches(Piece::WP);
+    let move_piece_matches = |p: Class| move_piece_ordinal == (p as usize);
+    let promote_piece_matches = |p: Class| promote_piece_ordinal == (p as usize);
+    let move_matches_pawn = move_piece_matches(Class::P);
 
     // Functionality for differentiating ambiguous moves.
     let file = find_differentiating_rank_or_file(pgn_move, file());
@@ -70,7 +70,7 @@ fn parse_single_move<B: ChessBoard>(start: &mut B, pgn_move: &str) -> Result<Mov
         .filter(|mv| match mv {
             &Move::Standard {
                 moving, from, dest, ..
-            } => move_piece_matches(moving) && target == Some(dest) && matches_start(from),
+            } => move_piece_matches(moving.1) && target == Some(dest) && matches_start(from),
             &Move::Enpassant { from, .. } => {
                 move_matches_pawn && target == start.enpassant() && matches_start(from)
             }
@@ -83,7 +83,7 @@ fn parse_single_move<B: ChessBoard>(start: &mut B, pgn_move: &str) -> Result<Mov
                 move_matches_pawn
                     && target == Some(dest)
                     && matches_start(from)
-                    && promote_piece_matches(promoted)
+                    && promote_piece_matches(promoted.1)
             }
             &Move::Castle { .. } => false,
         })

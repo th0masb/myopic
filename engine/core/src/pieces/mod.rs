@@ -16,8 +16,14 @@ mod sliding;
 #[rustfmt::skip]
 pub enum Class { P, N, B, R, Q, K }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Piece(pub Side, pub Class);
+
+impl Display for Class {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
+    }
+}
 
 impl Display for Piece {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -50,6 +56,12 @@ impl FromStr for Piece {
         } else {
             Ok(Piece(s[0..1].parse()?, s[1..2].parse()?))
         }
+    }
+}
+
+impl Class {
+    pub fn all() -> [Class; 6] {
+        [Class::P, Class::N, Class::B, Class::R, Class::Q, Class::K]
     }
 }
 
