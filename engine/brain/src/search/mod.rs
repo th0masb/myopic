@@ -85,7 +85,8 @@ mod searchoutcome_serialize_test {
 
     use serde_json;
 
-    use myopic_board::{CastleZone, Move, Piece, Square};
+    use myopic_board::{Corner, Move, Piece, Square};
+    use crate::{Flank, Side};
 
     use super::SearchOutcome;
 
@@ -94,7 +95,7 @@ mod searchoutcome_serialize_test {
         let search_outcome = SearchOutcome {
             best_move: Move::Castle {
                 source: 0,
-                corner: CastleZone::WK,
+                corner: Corner(Side::W, Flank::K),
             },
             relative_eval: -125,
             depth: 2,
@@ -102,7 +103,7 @@ mod searchoutcome_serialize_test {
             optimal_path: vec![
                 Move::Castle {
                     source: 0,
-                    corner: CastleZone::WK,
+                    corner: Corner(Side::W, Flank::K),
                 },
                 Move::Standard {
                     source: 1,

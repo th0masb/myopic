@@ -5,7 +5,9 @@ use anyhow::{anyhow, Error, Result};
 use myopic_core::*;
 
 use enum_map::{enum_map, EnumMap};
-use enumset::{enum_set, EnumSet};
+use enumset::EnumSet;
+#[cfg(test)]
+use enumset::enum_set;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Default)]
 pub struct Rights(pub EnumMap<Side, EnumSet<Flank>>);
@@ -45,24 +47,6 @@ impl FromStr for Rights {
 }
 
 impl Rights {
-    pub fn empty() -> Rights {
-        Rights(enum_map! { Side::W => EnumSet::empty(), Side::B => EnumSet::empty() })
-    }
-
-    pub fn all() -> Rights {
-        Rights(enum_map! { Side::W => EnumSet::all(), Side::B => EnumSet::all() })
-    }
-
-    pub fn flank(flank: Flank) -> Rights {
-        Rights(enum_map! { Side::W => enum_set!(flank), Side::B => enum_set!(flank) })
-    }
-
-    pub fn side(side: Side) -> Rights {
-        let mut rights = Rights::empty();
-        rights.0[side] = EnumSet::all();
-        rights
-    }
-
     pub fn corners(&self) -> impl Iterator<Item = Corner> + '_ {
         self.0.iter().flat_map(|(s, flanks)| flanks.iter().map(move |f| Corner(s, f)))
     }
@@ -83,5 +67,26 @@ impl Rights {
                 _ => {}
             }
         });
+    }
+}
+
+#[cfg(test)]
+impl Rights {
+    pub fn empty() -> Rights {
+        Rights(enum_map! { Side::W => EnumSet::empty(), Side::B => EnumSet::empty() })
+    }
+
+    pub fn all() -> Rights {
+        Rights(enum_map! { Side::W => EnumSet::all(), Side::B => EnumSet::all() })
+    }
+
+    pub fn flank(flank: Flank) -> Rights {
+        Rights(enum_map! { Side::W => enum_set!(flank), Side::B => enum_set!(flank) })
+    }
+
+    pub fn side(side: Side) -> Rights {
+        let mut rights = Rights::empty();
+        rights.0[side] = EnumSet::all();
+        rights
     }
 }

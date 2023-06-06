@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 use myopic_core::anyhow::{anyhow, Result};
-use myopic_core::{Piece, Square};
+use myopic_core::{Line, Piece, Square};
 
 use crate::parse::patterns::uci_move;
 use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
@@ -119,7 +119,7 @@ pub fn single_move<B: ChessBoard>(start: &B, uci_move: &str) -> Result<Move> {
             &Move::Standard { from, dest, .. } => from == f && dest == d,
             &Move::Enpassant { from, dest, .. } => from == f && dest == d,
             &Move::Castle { corner, .. } => {
-                let (_, king_src, king_dest) = crate::king_data(corner);
+                let Line(king_src, king_dest) = Line::king_castling(corner);
                 f == king_src && d == king_dest
             }
             &Move::Promotion {

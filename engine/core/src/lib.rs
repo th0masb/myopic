@@ -13,7 +13,6 @@ pub use reflectable::Reflectable;
 pub use square::Square;
 
 mod bitboard;
-mod castlezone;
 pub mod hash;
 mod pieces;
 mod reflectable;
@@ -30,6 +29,9 @@ pub enum Flank { K, Q }
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Corner(pub Side, pub Flank);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct Line(pub Square, pub Square);
+
 #[derive(Debug, PartialOrd, Ord, Hash, Enum, EnumSetType)]
 #[rustfmt::skip]
 pub enum PieceType { P, N, B, R, Q, K }
@@ -40,6 +42,26 @@ pub struct Piece2(pub Side, pub PieceType);
 #[derive(Debug, EnumSetType, Hash, PartialOrd, Ord)]
 #[rustfmt::skip]
 pub enum Dir { N, E, S, W, NE, SE, SW, NW, NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW }
+
+impl Line {
+    pub fn king_castling(Corner(side, flank): Corner) -> Line {
+        match (side, flank) {
+            (Side::W, Flank::K) => Line(Square::E1, Square::G1),
+            (Side::W, Flank::Q) => Line(Square::E1, Square::C1),
+            (Side::B, Flank::K) => Line(Square::E8, Square::G8),
+            (Side::B, Flank::Q) => Line(Square::E8, Square::C8),
+        }
+    }
+
+    pub fn rook_castling(Corner(side, flank): Corner) -> Line {
+        match (side, flank) {
+            (Side::W, Flank::K) => Line(Square::H1, Square::F1),
+            (Side::W, Flank::Q) => Line(Square::A1, Square::D1),
+            (Side::B, Flank::K) => Line(Square::H8, Square::F8),
+            (Side::B, Flank::Q) => Line(Square::A8, Square::D8),
+        }
+    }
+}
 
 impl Dir {
     fn dr_df(self) -> (i8, i8) {

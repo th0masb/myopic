@@ -1,13 +1,13 @@
 use enum_map::EnumMap;
 
-use crate::{CastleZone, Side};
+use crate::{Corner, Flank, Side};
 use crate::{ChessBoard, Move};
 use crate::enumset::EnumSet;
 use crate::eval::EvalFacet;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct CastlingFacet {
-    castling_status: EnumMap<Side, Option<CastleZone>>,
+    castling_status: EnumMap<Side, Option<Flank>>,
     penalty: i32,
 }
 
@@ -21,15 +21,11 @@ impl Default for CastlingFacet {
 }
 
 impl CastlingFacet {
-    fn penalty(&self, side: Side, rights: &EnumSet<CastleZone>) -> i32 {
+    fn penalty(&self, side: Side, rights: &EnumSet<Flank>) -> i32 {
         if self.castling_status[side].is_some() {
             0
         } else {
-            let rights_remaining = rights
-                .iter()
-                .filter(|z| z.side() == side)
-                .count() as i32;
-            (2i32 - rights_remaining) * self.penalty
+            (2i32 - rights.len() as i32) * self.penalty
         }
     }
 }
@@ -37,18 +33,18 @@ impl CastlingFacet {
 impl<B: ChessBoard> EvalFacet<B> for CastlingFacet {
     fn static_eval(&self, board: &B) -> i32 {
         let rights = board.remaining_rights();
-        self.penalty(Side::B, &rights) - self.penalty(Side::W, &rights)
+        self.penalty(Side::B, &rights[Side::B]) - self.penalty(Side::W, &rights[Side::W])
     }
 
     fn make(&mut self, mv: &Move, _: &B) {
-        if let Move::Castle { corner: zone, .. } = mv {
-            self.castling_status[zone.side()] = Some(*zone)
+        if let Move::Castle { corner: Corner(side, flank), .. } = mv {
+            self.castling_status[*side] = Some(*flank)
         }
     }
 
     fn unmake(&mut self, mv: &Move) {
-        if let Move::Castle { corner: zone, .. } = mv {
-            self.castling_status[zone.side()] = None
+        if let Move::Castle { corner: Corner(side, _), .. } = mv {
+            self.castling_status[*side] = None
         }
     }
 }
@@ -58,7 +54,7 @@ mod test {
     use enum_map::enum_map;
     use enumset::{EnumSet, enum_set};
 
-    use crate::{CastleZone, Side};
+    use crate::{Flank, Side};
     use crate::eval::castling::CastlingFacet;
     use crate::test::facets::test_facet_evolution;
 
@@ -72,11 +68,14 @@ mod test {
         assert_eq!(200, under_test.penalty(Side::W, &enum_set!()));
         assert_eq!(200, under_test.penalty(Side::B, &enum_set!()));
 
-        assert_eq!(100, under_test.penalty(Side::W, &enum_set!(CastleZone::WK)));
-        assert_eq!(200, under_test.penalty(Side::B, &enum_set!(CastleZone::WK)));
+        assert_eq!(100, under_test.penalty(Side::W, &enum_set!(Flank::K)));
+        assert_eq!(100, under_test.penalty(Side::B, &enum_set!(Flank::K)));
 
-        assert_eq!(200, under_test.penalty(Side::W, &enum_set!(CastleZone::BK)));
-        assert_eq!(100, under_test.penalty(Side::B, &enum_set!(CastleZone::BK)));
+        assert_eq!(100, under_test.penalty(Side::W, &enum_set!(Flank::Q)));
+        assert_eq!(100, under_test.penalty(Side::B, &enum_set!(Flank::Q)));
+
+        assert_eq!(0, under_test.penalty(Side::W, &enum_set!(Flank::K | Flank::Q)));
+        assert_eq!(0, under_test.penalty(Side::B, &enum_set!(Flank::K | Flank::Q)));
     }
 
     #[test]
@@ -109,16 +108,16 @@ mod test {
                     Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::W => Some(CastleZone::WQ), Side::B => None,
+                    Side::W => Some(Flank::Q), Side::B => None,
                 },
                 enum_map! {
-                    Side::W => Some(CastleZone::WQ), Side::B => Some(CastleZone::BQ),
+                    Side::W => Some(Flank::Q), Side::B => Some(Flank::Q),
                 },
                 enum_map! {
-                    Side::W => Some(CastleZone::WQ), Side::B => Some(CastleZone::BQ),
+                    Side::W => Some(Flank::Q), Side::B => Some(Flank::Q),
                 },
                 enum_map! {
-                    Side::W => Some(CastleZone::WQ), Side::B => Some(CastleZone::BQ),
+                    Side::W => Some(Flank::Q), Side::B => Some(Flank::Q),
                 },
             ].into_iter().map(|status| {
                 let mut facet = CastlingFacet::default();
@@ -152,16 +151,16 @@ mod test {
                     Side::W => None, Side::B => None,
                 },
                 enum_map! {
-                    Side::W => Some(CastleZone::WK), Side::B => None,
+                    Side::W => Some(Flank::K), Side::B => None,
                 },
                 enum_map! {
-                    Side::W => Some(CastleZone::WK), Side::B => Some(CastleZone::BK),
+                    Side::W => Some(Flank::K), Side::B => Some(Flank::K),
                 },
                 enum_map! {
-                    Side::W => Some(CastleZone::WK), Side::B => Some(CastleZone::BK),
+                    Side::W => Some(Flank::K), Side::B => Some(Flank::K),
                 },
                 enum_map! {
-                    Side::W => Some(CastleZone::WK), Side::B => Some(CastleZone::BK),
+                    Side::W => Some(Flank::K), Side::B => Some(Flank::K),
                 },
             ].into_iter().map(|status| {
                 let mut facet = CastlingFacet::default();

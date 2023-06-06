@@ -161,9 +161,10 @@ impl Board {
             .corners()
             .filter(|&c| p1(c) && p2(c))
             .filter(|&c| {
-                let (king, k_source, _) = crate::king_data(c);
-                let (rook, r_source, _) = crate::rook_data(c);
-                self.piece(k_source) == Some(king) && self.piece(r_source) == Some(rook)
+                let Line(k_source, _) = Line::king_castling(c);
+                let Line(r_source, _) = Line::rook_castling(c);
+                self.piece(k_source) == Some(Piece::king(c.0)) &&
+                    self.piece(r_source) == Some(Piece::rook(c.0))
             })
             .map(|corner| Move::Castle { source, corner })
             .collect()

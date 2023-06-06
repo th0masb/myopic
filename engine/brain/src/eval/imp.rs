@@ -1,8 +1,9 @@
 use std::str::FromStr;
+use enum_map::EnumMap;
 
 use myopic_board::anyhow::{Error, Result};
 use myopic_board::{
-    BitBoard, CastleZone, ChessBoard, FenPart, Move, MoveComputeType, Piece, Side, Square,
+    BitBoard, ChessBoard, FenPart, Move, MoveComputeType, Piece, Side, Square,
     TerminalState,
 };
 
@@ -12,7 +13,7 @@ use crate::eval::castling::CastlingFacet;
 use crate::eval::development::DevelopmentFacet;
 use crate::eval::material::MaterialFacet;
 use crate::eval::{EvalChessBoard, EvalFacet};
-use crate::{eval, Board, PieceValues, PositionTables};
+use crate::{eval, Board, PieceValues, PositionTables, Flank};
 
 pub struct EvalBoard<B: ChessBoard> {
     board: B,
@@ -187,7 +188,7 @@ impl<B: ChessBoard + Clone> ChessBoard for EvalBoard<B> {
         self.board.position_count()
     }
 
-    fn remaining_rights(&self) -> EnumSet<CastleZone> {
+    fn remaining_rights(&self) -> EnumMap<Side, EnumSet<Flank>> {
         self.board.remaining_rights()
     }
 
