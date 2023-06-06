@@ -72,7 +72,7 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
                 self.add(active_pawn, dest);
                 self.remove(active_pawn.reflect(), capture);
             }
-            &Move::Castle { zone, .. } => {
+            &Move::Castle { corner: zone, .. } => {
                 let (rook, r_src, r_target) = zone.rook_data();
                 let (king, k_src, k_target) = zone.king_data();
                 self.remove(rook, r_src);
@@ -121,7 +121,7 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
                 self.add(active_pawn, from);
                 self.add(passive_pawn, capture);
             }
-            &Move::Castle { zone, .. } => {
+            &Move::Castle { corner: zone, .. } => {
                 let (rook, r_src, r_target) = zone.rook_data();
                 let (king, k_src, k_target) = zone.king_data();
                 self.add(rook, r_src);

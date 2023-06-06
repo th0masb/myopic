@@ -1,9 +1,6 @@
 use regex::Regex;
 
-use myopic_core::{
-    anyhow::{anyhow, Result},
-    CastleZone, Piece, Square,
-};
+use myopic_core::{anyhow::{anyhow, Result}, Corner, Flank, Piece, Square};
 
 use crate::parse::patterns::*;
 use crate::{ChessBoard, Move, MoveComputeType};
@@ -32,7 +29,7 @@ fn parse_single_move<B: ChessBoard>(start: &mut B, pgn_move: &str) -> Result<Mov
         return legal
             .iter()
             .find(|&m| match m {
-                Move::Castle { zone, .. } => *zone == CastleZone::kingside(start.active()),
+                Move::Castle { corner, .. } => *corner == Corner(start.active(), Flank::K),
                 _ => false,
             })
             .cloned()
@@ -41,7 +38,7 @@ fn parse_single_move<B: ChessBoard>(start: &mut B, pgn_move: &str) -> Result<Mov
         return legal
             .iter()
             .find(|&m| match m {
-                Move::Castle { zone, .. } => *zone == CastleZone::queenside(start.active()),
+                Move::Castle { corner, .. } => *corner == Corner(start.active(), Flank::Q),
                 _ => false,
             })
             .cloned()

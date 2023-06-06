@@ -1,4 +1,5 @@
 use anyhow::Result;
+use enum_map::enum_map;
 
 use myopic_core::Square::*;
 use myopic_core::*;
@@ -7,6 +8,7 @@ use crate::enumset::EnumSet;
 use crate::imp::test::TestBoard;
 use crate::imp::Board;
 use crate::{ChessBoard, Move};
+use crate::imp::rights::Rights;
 
 #[derive(Debug, Clone)]
 struct TestCase {
@@ -49,7 +51,7 @@ fn test_white_kingside_castling() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: blacks.clone(),
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 20,
@@ -58,7 +60,7 @@ fn test_white_kingside_castling() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | F1, !!C2, !!G1],
             blacks: blacks.clone(),
-            castle_rights: CastleZone::BK | CastleZone::BQ,
+            castle_rights: Rights::side(Side::B),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -75,7 +77,7 @@ fn test_white_queenside_castling() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: blacks.clone(),
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 20,
@@ -84,7 +86,7 @@ fn test_white_queenside_castling() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, H1 | D1, !!C2, !!C1],
             blacks: blacks.clone(),
-            castle_rights: CastleZone::BK | CastleZone::BQ,
+            castle_rights: Rights::side(Side::B),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -101,7 +103,7 @@ fn test_black_kingside_castling() -> Result<()> {
         start: TestBoard {
             whites: whites.clone(),
             blacks: vec![A7 | C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 20,
@@ -110,7 +112,7 @@ fn test_black_kingside_castling() -> Result<()> {
         end: TestBoard {
             whites: whites.clone(),
             blacks: vec![A7 | C5 | E7 | F7, !!B6, !!D6, A8 | F8, !!D7, !!G8],
-            castle_rights: CastleZone::WK | CastleZone::WQ,
+            castle_rights: Rights::side(Side::W),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -127,7 +129,7 @@ fn test_black_queenside_castling() -> Result<()> {
         start: TestBoard {
             whites: whites.clone(),
             blacks: vec![A7 | C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 20,
@@ -136,7 +138,7 @@ fn test_black_queenside_castling() -> Result<()> {
         end: TestBoard {
             whites: whites.clone(),
             blacks: vec![A7 | C5 | E7 | F7, !!B6, !!D6, D8 | H8, !!D7, !!C8],
-            castle_rights: CastleZone::WK | CastleZone::WQ,
+            castle_rights: Rights::side(Side::W),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -152,7 +154,7 @@ fn test_white_rook_taking_black_rook_removing_kingside_rights() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -161,7 +163,7 @@ fn test_white_rook_taking_black_rook_removing_kingside_rights() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H8, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, !!A8, !!D7, !!E8],
-            castle_rights: CastleZone::WQ | CastleZone::BQ,
+            castle_rights: Rights::flank(Flank::Q),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -177,7 +179,7 @@ fn test_black_rook_taking_white_rook_removing_kingside_rights() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -186,7 +188,7 @@ fn test_black_rook_taking_white_rook_removing_kingside_rights() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, !!A1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H1, !!D7, !!E8],
-            castle_rights: CastleZone::WQ | CastleZone::BQ,
+            castle_rights: Rights::flank(Flank::Q),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -202,7 +204,7 @@ fn test_white_rook_taking_black_rook_removing_queenside_rights() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -211,7 +213,7 @@ fn test_white_rook_taking_black_rook_removing_queenside_rights() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A8 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, !!H8, !!D7, !!E8],
-            castle_rights: CastleZone::WK | CastleZone::BK,
+            castle_rights: Rights::flank(Flank::K),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -227,7 +229,7 @@ fn test_black_rook_taking_white_rook_removing_queenside_rights() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -236,7 +238,7 @@ fn test_black_rook_taking_white_rook_removing_queenside_rights() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, !!H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A1 | H8, !!D7, !!E8],
-            castle_rights: CastleZone::WK | CastleZone::BK,
+            castle_rights: Rights::flank(Flank::K),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -252,7 +254,7 @@ fn test_white_king_moving_removes_castling_rights() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -261,7 +263,10 @@ fn test_white_king_moving_removes_castling_rights() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!F1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: CastleZone::BK | CastleZone::BQ,
+            castle_rights: Rights(enum_map! {
+                Side::B => EnumSet::all(),
+                Side::W => EnumSet::empty()
+            }),
             active: Side::B,
             enpassant: None,
             clock: 22,
@@ -277,7 +282,7 @@ fn test_black_king_moving_removes_castling_rights() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -286,7 +291,10 @@ fn test_black_king_moving_removes_castling_rights() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!F8],
-            castle_rights: CastleZone::WK | CastleZone::WQ,
+            castle_rights: Rights(enum_map! {
+                Side::B => EnumSet::empty(),
+                Side::W => EnumSet::all()
+            }),
             active: Side::W,
             enpassant: None,
             clock: 22,
@@ -302,7 +310,7 @@ fn test_white_pawn_moves_forward_two() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -311,9 +319,9 @@ fn test_white_pawn_moves_forward_two() -> Result<()> {
         end: TestBoard {
             whites: vec![F4 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
-            enpassant: Some(Square::F3),
+            enpassant: Some(F3),
             clock: 0,
             history_count: 12,
         },
@@ -327,7 +335,7 @@ fn test_black_pawn_moves_forward_two() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -336,9 +344,9 @@ fn test_black_pawn_moves_forward_two() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F5, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
-            enpassant: Some(Square::F6),
+            enpassant: Some(F6),
             clock: 0,
             history_count: 12,
         },
@@ -352,7 +360,7 @@ fn test_white_pawn_moves_forward_one() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -361,7 +369,7 @@ fn test_white_pawn_moves_forward_one() -> Result<()> {
         end: TestBoard {
             whites: vec![F3 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -377,7 +385,7 @@ fn test_black_pawn_moves_forward_one() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -386,7 +394,7 @@ fn test_black_pawn_moves_forward_one() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F6, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -403,7 +411,7 @@ fn test_white_knight_takes_black_knight() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -412,7 +420,7 @@ fn test_white_knight_takes_black_knight() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B6, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, EMPTY, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -428,7 +436,7 @@ fn test_black_knight_takes_white_knight() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -437,7 +445,7 @@ fn test_black_knight_takes_white_knight() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, EMPTY, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B3, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -453,7 +461,7 @@ fn test_white_bishop_takes_black_bishop() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -462,7 +470,7 @@ fn test_white_bishop_takes_black_bishop() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!D6, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, EMPTY, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -478,7 +486,7 @@ fn test_black_bishop_takes_white_bishop() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -487,7 +495,7 @@ fn test_black_bishop_takes_white_bishop() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, EMPTY, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!C4, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -503,7 +511,7 @@ fn test_white_pawn_takes_black_pawn() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -512,7 +520,7 @@ fn test_white_pawn_takes_black_pawn() -> Result<()> {
         end: TestBoard {
             whites: vec![C5 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -528,7 +536,7 @@ fn test_black_pawn_takes_white_bishop() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -537,7 +545,7 @@ fn test_black_pawn_takes_white_bishop() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, EMPTY, A1 | H1, !!C2, !!E1],
             blacks: vec![C4 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -554,7 +562,7 @@ fn test_white_queen_takes_black_queen() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -563,7 +571,7 @@ fn test_white_queen_takes_black_queen() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!D7, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -579,7 +587,7 @@ fn test_black_queen_takes_white_queen() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -588,7 +596,7 @@ fn test_black_queen_takes_white_queen() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, EMPTY, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!C2, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -604,7 +612,7 @@ fn test_white_king_takes_black_king() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 21,
@@ -613,7 +621,7 @@ fn test_white_king_takes_black_king() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E8],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, EMPTY],
-            castle_rights: EnumSet::empty(),
+            castle_rights: Rights::empty(),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -629,7 +637,7 @@ fn test_black_king_takes_white_king() -> Result<()> {
         start: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, !!E1],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -638,7 +646,7 @@ fn test_black_king_takes_white_king() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, !!B3, !!C4, A1 | H1, !!C2, EMPTY],
             blacks: vec![C5 | E7 | F7, !!B6, !!D6, A8 | H8, !!D7, !!E1],
-            castle_rights: EnumSet::empty(),
+            castle_rights: Rights::empty(),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -654,7 +662,7 @@ fn test_white_enpassant() -> Result<()> {
         start: TestBoard {
             whites: vec![D5 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
             blacks: vec![E5 | F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: Some(E6),
             clock: 21,
@@ -663,7 +671,7 @@ fn test_white_enpassant() -> Result<()> {
         end: TestBoard {
             whites: vec![E6 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
             blacks: vec![F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -679,7 +687,7 @@ fn test_black_enpassant() -> Result<()> {
         start: TestBoard {
             whites: vec![D4 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
             blacks: vec![E4 | F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: Some(D3),
             clock: 21,
@@ -688,7 +696,7 @@ fn test_black_enpassant() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
             blacks: vec![D3 | F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 0,
@@ -704,7 +712,7 @@ fn test_white_promotion() -> Result<()> {
         start: TestBoard {
             whites: vec![C7 | F2 | G2, EMPTY, !!F3, !!B1, EMPTY, !!E1],
             blacks: vec![C2 | F7 | G7 | H7, EMPTY, !!G6, !!B8, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: Some(Square::D4),
             clock: 21,
@@ -713,7 +721,7 @@ fn test_white_promotion() -> Result<()> {
         end: TestBoard {
             whites: vec![F2 | G2, EMPTY, !!F3, !!B1, !!B8, !!E1],
             blacks: vec![C2 | F7 | G7 | H7, EMPTY, !!G6, EMPTY, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 0,
@@ -729,7 +737,7 @@ fn test_black_promotion() -> Result<()> {
         start: TestBoard {
             whites: vec![C7 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
             blacks: vec![C2 | F7 | G7 | H7, EMPTY, !!G6, !!B8, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::B,
             enpassant: None,
             clock: 21,
@@ -738,7 +746,7 @@ fn test_black_promotion() -> Result<()> {
         end: TestBoard {
             whites: vec![C7 | F2 | G2, EMPTY, !!F3, EMPTY, EMPTY, !!E1],
             blacks: vec![F7 | G7 | H7, !!B1, !!G6, !!B8, EMPTY, !!E8],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             active: Side::W,
             enpassant: None,
             clock: 0,

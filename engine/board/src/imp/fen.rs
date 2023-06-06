@@ -60,8 +60,8 @@ fn to_fen_side<B: ChessBoard>(board: &B) -> String {
 fn to_fen_castling_rights<B: ChessBoard>(board: &B) -> String {
     let rights = board
         .remaining_rights()
-        .iter()
-        .map(castlezone_to_fen)
+        .into_iter()
+        .map(corner_to_fen)
         .collect::<String>();
     if rights.is_empty() {
         format!("-")
@@ -85,12 +85,12 @@ fn to_fen_move_count<B: ChessBoard>(board: &B) -> String {
     (board.position_count() / 2 + 1).to_string()
 }
 
-fn castlezone_to_fen(zone: CastleZone) -> &'static str {
-    match zone {
-        CastleZone::WK => "K",
-        CastleZone::BK => "k",
-        CastleZone::WQ => "Q",
-        CastleZone::BQ => "q",
+fn corner_to_fen(Corner(side, flank): Corner) -> &'static str {
+    match (side, flank) {
+        (Side::W, Flank::K) => "K",
+        (Side::B, Flank::K) => "k",
+        (Side::W, Flank::Q) => "Q",
+        (Side::B, Flank::Q) => "q",
     }
 }
 

@@ -5,6 +5,7 @@ use crate::imp::Board;
 use crate::mv::Move;
 use crate::ChessBoard;
 use crate::MoveComputeType;
+use crate::Square::*;
 
 #[cfg(test)]
 mod test;
@@ -94,7 +95,7 @@ impl Board {
         let (source, active) = (self.hash(), self.active);
         for from in enpassant {
             let dest = self.enpassant.unwrap();
-            let capture = dest.next(active.pawn_dir().reflect()).unwrap();
+            let capture = dest.next(active.reflect().pawn_dir()).unwrap();
             if constraints.get(from).contains(capture)
                 && self.enpassant_doesnt_discover_attack(from)
             {
@@ -153,19 +154,36 @@ impl Board {
     fn compute_castle_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
         let king_constraint = constraints.get(self.king(self.active));
         let (whites, blacks) = self.sides();
-        let p1 = |z: CastleZone| king_constraint.subsumes(z.uncontrolled_requirement());
-        let p2 = |z: CastleZone| !(whites | blacks).intersects(z.unoccupied_requirement());
+        let p1 = |c: Corner| king_constraint.subsumes(uncontrolled_req(c));
+        let p2 = |c: Corner| !(whites | blacks).intersects(unoccupied_req(c));
         let source = self.hash();
         self.rights
-            .0
-            .iter()
-            .filter(|&z| p1(z) && p2(z))
-            .filter(|&z| {
-                let (king, k_source, _) = z.king_data();
-                let (rook, r_source, _) = z.rook_data();
+            .corners()
+            .filter(|&c| p1(c) && p2(c))
+            .filter(|&c| {
+                let (king, k_source, _) = crate::king_data(c);
+                let (rook, r_source, _) = crate::rook_data(c);
                 self.piece(k_source) == Some(king) && self.piece(r_source) == Some(rook)
             })
-            .map(|zone| Move::Castle { source, zone })
+            .map(|corner| Move::Castle { source, corner })
             .collect()
+    }
+}
+
+fn uncontrolled_req(Corner(side, flank): Corner) -> BitBoard {
+    match (side, flank) {
+        (Side::W, Flank::K) => E1 | F1 | G1,
+        (Side::W, Flank::Q) => E1 | D1 | C1,
+        (Side::B, Flank::K) => E8 | F8 | G8,
+        (Side::B, Flank::Q) => E8 | D8 | C8,
+    }
+}
+
+fn unoccupied_req(Corner(side, flank): Corner) -> BitBoard {
+    match (side, flank) {
+        (Side::W, Flank::K) => F1 | G1,
+        (Side::W, Flank::Q) => D1 | C1 | B1,
+        (Side::B, Flank::K) => F8 | G8,
+        (Side::B, Flank::Q) => D8 | C8 | B8,
     }
 }

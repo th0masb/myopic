@@ -42,10 +42,11 @@ impl Board {
 
 #[cfg(test)]
 mod test {
-    use crate::enumset::EnumSet;
+    
     use crate::imp::test::TestBoard;
     use crate::imp::Board;
     use crate::{Square::*, BitBoard, Side};
+    use crate::imp::rights::Rights;
 
     struct TestCase {
         board: TestBoard,
@@ -78,7 +79,7 @@ mod test {
                 !!F6,
                 !!E8,
             ],
-            castle_rights: EnumSet::all(),
+            castle_rights: Rights::all(),
             enpassant: None,
             active: Side::W,
             clock: 20,

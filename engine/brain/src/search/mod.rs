@@ -94,7 +94,7 @@ mod searchoutcome_serialize_test {
         let search_outcome = SearchOutcome {
             best_move: Move::Castle {
                 source: 0,
-                zone: CastleZone::WK,
+                corner: CastleZone::WK,
             },
             relative_eval: -125,
             depth: 2,
@@ -102,7 +102,7 @@ mod searchoutcome_serialize_test {
             optimal_path: vec![
                 Move::Castle {
                     source: 0,
-                    zone: CastleZone::WK,
+                    corner: CastleZone::WK,
                 },
                 Move::Standard {
                     source: 1,

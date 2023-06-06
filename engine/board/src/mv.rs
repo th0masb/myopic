@@ -1,12 +1,9 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use myopic_core::{
-    anyhow::{Error, Result},
-    Reflectable, Side,
-};
+use myopic_core::{anyhow::{Error, Result}, Corner, Reflectable, Side};
 
-use crate::{CastleZone, Piece, Square};
+use crate::{Piece, Square};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Move {
@@ -33,7 +30,7 @@ pub enum Move {
     },
     Castle {
         source: u64,
-        zone: CastleZone,
+        corner: Corner,
     },
 }
 
@@ -81,7 +78,7 @@ impl Display for Move {
                 capture,
                 ..
             } => write!(f, "e{}{}{}{}", side, from, dest, capture),
-            Move::Castle { zone, .. } => write!(f, "c{}", zone),
+            Move::Castle { corner, .. } => write!(f, "c{}{:?}", corner.0, corner.1),
         }
     }
 }
@@ -116,7 +113,7 @@ impl Move {
                 }),
                 'c' => Ok(Move::Castle {
                     source,
-                    zone: slice(s, 1, 2).parse()?,
+                    corner: Corner(slice(s, 1, 1).parse()?, slice(s, 2, 1).parse()?),
                 }),
                 _ => Err(anyhow!("Cannot parse {} as a move", s)),
             },
@@ -141,8 +138,9 @@ where
 
 #[cfg(test)]
 mod test {
+    use myopic_core::Flank;
     use crate::mv::Move;
-    use crate::{CastleZone, Piece, Square};
+    use crate::{Piece, Square};
 
     use super::*;
 
@@ -216,7 +214,7 @@ mod test {
         assert_eq!(
             Move::Castle {
                 source: 0,
-                zone: CastleZone::BK,
+                corner: Corner(Side::B, Flank::K),
             },
             Move::from("cbk", 0u64)?
         );
@@ -230,7 +228,7 @@ impl Move {
             &Move::Standard { moving, .. } => moving.side(),
             &Move::Enpassant { side, .. } => side,
             &Move::Promotion { promoted, .. } => promoted.side(),
-            &Move::Castle { zone, .. } => zone.side(),
+            &Move::Castle { corner: Corner(side, _), .. } => side,
         }
     }
 
@@ -248,8 +246,8 @@ impl Move {
         match self {
             Move::Standard { from, dest, .. } => format!("{}{}", from, dest),
             Move::Enpassant { from, dest, .. } => format!("{}{}", from, dest),
-            Move::Castle { zone, .. } => {
-                let (_, src, dest) = zone.king_data();
+            Move::Castle { corner, .. } => {
+                let (_, src, dest) = crate::king_data(*corner);
                 format!("{}{}", src, dest)
             }
             Move::Promotion {
@@ -314,9 +312,9 @@ impl Move {
                 dest: dest.reflect(),
                 capture: capture.reflect(),
             },
-            &Move::Castle { zone, .. } => Move::Castle {
+            &Move::Castle { corner: zone, .. } => Move::Castle {
                 source: new_source,
-                zone: zone.reflect(),
+                corner: zone.reflect(),
             },
         }
     }

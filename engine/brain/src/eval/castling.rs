@@ -41,13 +41,13 @@ impl<B: ChessBoard> EvalFacet<B> for CastlingFacet {
     }
 
     fn make(&mut self, mv: &Move, _: &B) {
-        if let Move::Castle { zone, .. } = mv {
+        if let Move::Castle { corner: zone, .. } = mv {
             self.castling_status[zone.side()] = Some(*zone)
         }
     }
 
     fn unmake(&mut self, mv: &Move) {
-        if let Move::Castle { zone, .. } = mv {
+        if let Move::Castle { corner: zone, .. } = mv {
             self.castling_status[zone.side()] = None
         }
     }
