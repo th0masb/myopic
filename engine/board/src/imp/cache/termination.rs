@@ -72,23 +72,17 @@ impl Board {
         }
     }
 
-    /// Assumes king is in check and cannot move out of it
+    // Assumes king is in check and cannot move out of it
     fn checked_termination(&self) -> Option<TerminalState> {
-        let constraints = self.move_constraints(MoveComputeType::All);
-        let (whites, blacks) = self.sides();
-        let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
-        for &class in qrbnp() {
-            let piece = Piece(self.active, class);
-            let locations = self.locs(&[piece]);
-            if locations.iter().any(|loc| moves(piece, loc).is_populated()) {
-                return None;
-            }
+        if self.compute_moves(MoveComputeType::All).len() > 0 {
+            None
+        } else {
+            // Checkmate
+            Some(TerminalState::Loss)
         }
-        // Mated
-        return Some(TerminalState::Loss);
     }
 
-    /// Assumes king cannot move but not in check
+    // Assumes king cannot move but not in check
     fn unchecked_termination(&self) -> Option<TerminalState> {
         let king = self.king(self.active);
         let pin_rays = Piece(Side::W, Class::Q).empty_control(king);
@@ -102,18 +96,12 @@ impl Board {
                 return None;
             }
         }
-        // Compute constraints as a last resort
-        let constraints = self.move_constraints(MoveComputeType::All);
-        let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
-        for &class in qrbnp() {
-            let piece = Piece(self.active, class);
-            let locations = self.locs(&[piece]) & pin_rays;
-            if locations.iter().any(|loc| moves2(piece, loc).is_populated()) {
-                return None;
-            }
+        if self.compute_moves(MoveComputeType::All).len() > 0 {
+            None
+        } else {
+            // Stalemate
+            Some(TerminalState::Draw)
         }
-        // Stalemate
-        return Some(TerminalState::Draw);
     }
 }
 

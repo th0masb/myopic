@@ -39,19 +39,17 @@ impl TranspositionTable {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum TreeNode {
-    Pv { depth: u8, eval: i32, optimal_path: Vec<Move> },
-    Cut { depth: u8, beta: i32, cutoff_move: Move },
-    All { depth: u8, eval: i32, best_move: Move },
+    Pv { hash: u64, depth: u8, eval: i32, optimal_path: Vec<Move> },
+    Cut { hash: u64, depth: u8, beta: i32, cutoff_move: Move },
+    All { hash: u64, depth: u8, eval: i32, best_move: Move },
 }
 
 impl TreeNode {
     fn matches(&self, hash: u64) -> bool {
         match self {
-            TreeNode::Cut { cutoff_move, .. } => cutoff_move.source() == hash,
-            TreeNode::All { best_move, .. } => best_move.source() == hash,
-            TreeNode::Pv { optimal_path, .. } => {
-                optimal_path.first().map(|m| m.source() == hash).unwrap_or(false)
-            }
+            TreeNode::Cut { hash: node_hash, .. } => *node_hash == hash,
+            TreeNode::All { hash: node_hash, .. } => *node_hash == hash,
+            TreeNode::Pv { hash: node_hash, .. } => *node_hash == hash,
         }
     }
 

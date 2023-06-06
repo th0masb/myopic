@@ -156,7 +156,7 @@ where
             let (hash, mut table_suggestion) = (root.hash(), None);
             match self.transposition_table.get(hash) {
                 None => {}
-                Some(TreeNode::Pv { depth, eval, optimal_path }) => {
+                Some(TreeNode::Pv { depth, eval, optimal_path, .. }) => {
                     if (*depth as usize) >= ctx.depth_remaining {
                         // We already searched this position fully at a sufficient depth
                         return Ok(SearchResponse { eval: *eval, path: optimal_path.clone() });
@@ -167,14 +167,14 @@ where
                             optimal_path.last().map(|m| TableSuggestion::Pv(*depth, m.clone()))
                     }
                 }
-                Some(TreeNode::Cut { depth, beta, cutoff_move }) => {
+                Some(TreeNode::Cut { depth, beta, cutoff_move, .. }) => {
                     if (*depth as usize) >= ctx.depth_remaining && ctx.beta <= *beta {
                         return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
                     } else {
                         table_suggestion = Some(TableSuggestion::Cut(cutoff_move.clone()));
                     }
                 }
-                Some(TreeNode::All { depth, eval, best_move }) => {
+                Some(TreeNode::All { depth, eval, best_move, .. }) => {
                     if (*depth as usize) >= ctx.depth_remaining && *eval <= ctx.alpha {
                         return Ok(SearchResponse { eval: *eval, path: vec![] });
                     } else {
@@ -225,6 +225,7 @@ where
                             depth: ctx.depth_remaining as u8,
                             beta: ctx.beta,
                             cutoff_move: evolve,
+                            hash,
                         },
                     );
                     return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
@@ -244,6 +245,7 @@ where
                             depth: ctx.depth_remaining as u8,
                             eval: result,
                             best_move: mv.clone(),
+                            hash,
                         },
                     ),
                 }
@@ -255,6 +257,7 @@ where
                         depth: ctx.depth_remaining as u8,
                         eval: result,
                         optimal_path: best_path.clone(),
+                        hash,
                     },
                 )
             }

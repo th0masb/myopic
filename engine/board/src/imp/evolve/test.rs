@@ -20,7 +20,7 @@ struct TestCase {
 fn check_case(test_case: TestCase) -> Result<()> {
     let start = Board::from(test_case.start.clone());
     let end = Board::from(test_case.end.clone());
-    let action = Move::from(test_case.mv, start.hash())?;
+    let action = Move::from(test_case.mv)?;
 
     let mut forward_subject = start.clone();
     forward_subject.make(action)?;

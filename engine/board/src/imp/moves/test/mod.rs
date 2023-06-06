@@ -6,7 +6,7 @@ use itertools::Itertools;
 use myopic_core::*;
 
 use crate::imp::Board;
-use crate::mv::Move;
+use crate::moves::Move;
 use crate::ChessBoard;
 use crate::MoveComputeType;
 
@@ -27,30 +27,26 @@ struct TestCase {
     expected_attacks: Vec<&'static str>,
 }
 
-fn parse_moves(source: u64, encoded: &Vec<&str>) -> Result<BTreeSet<Move>> {
+fn parse_moves(encoded: &Vec<&str>) -> Result<BTreeSet<Move>> {
     let mut dest = BTreeSet::new();
     for &s in encoded {
-        dest.insert(Move::from(s, source)?);
+        dest.insert(Move::from(s)?);
     }
     Ok(dest)
 }
 
 fn execute_test(case: TestCase) -> Result<()> {
     let board = case.board.parse::<Board>()?;
-    let board_hash = board.hash();
     let expected = vec![
-        (MoveComputeType::All, parse_moves(board_hash, &case.expected_all)?),
-        (MoveComputeType::Attacks, parse_moves(board_hash, &case.expected_attacks)?),
-        (MoveComputeType::AttacksChecks, parse_moves(board_hash, &case.expected_attacks_checks)?),
+        (MoveComputeType::All, parse_moves(&case.expected_all)?),
+        (MoveComputeType::Attacks, parse_moves(&case.expected_attacks)?),
+        (MoveComputeType::AttacksChecks, parse_moves(&case.expected_attacks_checks)?),
     ];
 
     let ref_board = board.reflect();
-    let ref_hash = ref_board.hash();
     let ref_moves = expected
         .iter()
-        .map(|(t, mvs)| {
-            (*t, mvs.into_iter().map(|m| m.reflect_for(ref_hash)).collect::<BTreeSet<_>>())
-        })
+        .map(|(t, mvs)| (*t, mvs.into_iter().map(|m| m.reflect()).collect::<BTreeSet<_>>()))
         .collect::<Vec<_>>();
 
     execute_test_impl(board, expected);

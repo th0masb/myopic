@@ -10,10 +10,10 @@ use crate::{Piece, Square};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Move {
-    Standard { source: u64, moving: Piece, from: Square, dest: Square, capture: Option<Piece> },
-    Enpassant { source: u64, side: Side, from: Square, dest: Square, capture: Square },
-    Promotion { source: u64, from: Square, dest: Square, promoted: Piece, capture: Option<Piece> },
-    Castle { source: u64, corner: Corner },
+    Standard { moving: Piece, from: Square, dest: Square, capture: Option<Piece> },
+    Enpassant { side: Side, from: Square, dest: Square, capture: Square },
+    Promotion { from: Square, dest: Square, promoted: Piece, capture: Option<Piece> },
+    Castle { corner: Corner },
 }
 
 impl Display for Move {
@@ -49,36 +49,58 @@ impl Display for Move {
     }
 }
 
+impl Reflectable for Move {
+    fn reflect(&self) -> Self {
+        match self {
+            &Move::Standard { moving, dest, from, capture, .. } => Move::Standard {
+                moving: moving.reflect(),
+                dest: dest.reflect(),
+                from: from.reflect(),
+                capture: capture.reflect(),
+            },
+            &Move::Promotion { from, dest, promoted, capture, .. } => Move::Promotion {
+                from: from.reflect(),
+                dest: dest.reflect(),
+                promoted: promoted.reflect(),
+                capture: capture.reflect(),
+            },
+            &Move::Enpassant { side, from, dest, capture, .. } => Move::Enpassant {
+                side: side.reflect(),
+                from: from.reflect(),
+                dest: dest.reflect(),
+                capture: capture.reflect(),
+            },
+            &Move::Castle { corner, .. } => Move::Castle { corner: corner.reflect() },
+        }
+    }
+}
+
 #[cfg(test)]
 impl Move {
-    pub fn from(s: &str, source: u64) -> Result<Move> {
+    pub fn from(s: &str) -> Result<Move> {
         use myopic_core::anyhow::anyhow;
         match s.chars().next() {
             None => Err(anyhow!("Cannot parse move from empty string!")),
             Some(t) => match t {
                 's' => Ok(Move::Standard {
-                    source,
                     moving: slice(s, 1, 2).parse()?,
                     from: slice(s, 3, 2).parse()?,
                     dest: slice(s, 5, 2).parse()?,
                     capture: parse_op(slice(s, 7, 2).as_str())?,
                 }),
                 'e' => Ok(Move::Enpassant {
-                    source,
                     side: slice(s, 1, 1).parse()?,
                     from: slice(s, 2, 2).parse()?,
                     dest: slice(s, 4, 2).parse()?,
                     capture: slice(s, 6, 2).parse()?,
                 }),
                 'p' => Ok(Move::Promotion {
-                    source,
                     from: slice(s, 1, 2).parse()?,
                     dest: slice(s, 3, 2).parse()?,
                     promoted: slice(s, 5, 2).parse()?,
                     capture: parse_op(slice(s, 7, 2).as_str())?,
                 }),
                 'c' => Ok(Move::Castle {
-                    source,
                     corner: Corner(slice(s, 1, 1).parse()?, slice(s, 2, 1).parse()?),
                 }),
                 _ => Err(anyhow!("Cannot parse {} as a move", s)),
@@ -104,9 +126,10 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::mv::Move;
-    use crate::{Piece, Square};
     use myopic_core::{Class, Flank};
+
+    use crate::moves::Move;
+    use crate::{Piece, Square};
 
     use super::*;
 
@@ -114,23 +137,21 @@ mod test {
     fn standard() -> Result<()> {
         assert_eq!(
             Move::Standard {
-                source: 0u64,
                 moving: Piece(Side::W, Class::P),
                 from: Square::E2,
                 dest: Square::E4,
                 capture: None,
             },
-            Move::from("swpe2e4-", 0u64)?
+            Move::from("swpe2e4-")?
         );
         assert_eq!(
             Move::Standard {
-                source: 1u64,
                 moving: Piece(Side::B, Class::R),
                 from: Square::C4,
                 dest: Square::C2,
                 capture: Some(Piece(Side::W, Class::P)),
             },
-            Move::from("sbrc4c2wp", 1u64)?
+            Move::from("sbrc4c2wp")?
         );
         Ok(())
     }
@@ -139,23 +160,21 @@ mod test {
     fn promotion() -> Result<()> {
         assert_eq!(
             Move::Promotion {
-                source: 0u64,
                 from: Square::E7,
                 dest: Square::E8,
                 promoted: Piece(Side::W, Class::Q),
                 capture: None,
             },
-            Move::from("pe7e8wq-", 0u64)?
+            Move::from("pe7e8wq-")?
         );
         assert_eq!(
             Move::Promotion {
-                source: 1u64,
                 from: Square::E7,
                 dest: Square::D8,
                 promoted: Piece(Side::W, Class::Q),
                 capture: Some(Piece(Side::B, Class::B)),
             },
-            Move::from("pe7d8wqbb", 1u64)?
+            Move::from("pe7d8wqbb")?
         );
         Ok(())
     }
@@ -164,23 +183,19 @@ mod test {
     fn enpassant() -> Result<()> {
         assert_eq!(
             Move::Enpassant {
-                source: 0,
                 side: Side::B,
                 from: Square::D4,
                 dest: Square::C3,
                 capture: Square::C4,
             },
-            Move::from("ebd4c3c4", 0u64)?
+            Move::from("ebd4c3c4")?
         );
         Ok(())
     }
 
     #[test]
     fn castle() -> Result<()> {
-        assert_eq!(
-            Move::Castle { source: 0, corner: Corner(Side::B, Flank::K) },
-            Move::from("cbk", 0u64)?
-        );
+        assert_eq!(Move::Castle { corner: Corner(Side::B, Flank::K) }, Move::from("cbk")?);
         Ok(())
     }
 }
@@ -195,15 +210,6 @@ impl Move {
         }
     }
 
-    pub fn source(&self) -> u64 {
-        *match self {
-            Move::Standard { source, .. } => source,
-            Move::Enpassant { source, .. } => source,
-            Move::Promotion { source, .. } => source,
-            Move::Castle { source, .. } => source,
-        }
-    }
-
     /// Convert this move into a human readable uci long format string.
     pub fn uci_format(&self) -> String {
         match self {
@@ -215,36 +221,6 @@ impl Move {
             }
             Move::Promotion { from, dest, promoted: Piece(_, class), .. } => {
                 format!("{}{}{}", from, dest, class)
-            }
-        }
-    }
-
-    // TODO move me somewhere better
-    pub(crate) fn reflect_for(&self, new_source: u64) -> Move {
-        match self {
-            &Move::Standard { moving, dest, from, capture, .. } => Move::Standard {
-                source: new_source,
-                moving: moving.reflect(),
-                dest: dest.reflect(),
-                from: from.reflect(),
-                capture: capture.reflect(),
-            },
-            &Move::Promotion { from, dest, promoted, capture, .. } => Move::Promotion {
-                source: new_source,
-                from: from.reflect(),
-                dest: dest.reflect(),
-                promoted: promoted.reflect(),
-                capture: capture.reflect(),
-            },
-            &Move::Enpassant { side, from, dest, capture, .. } => Move::Enpassant {
-                source: new_source,
-                side: side.reflect(),
-                from: from.reflect(),
-                dest: dest.reflect(),
-                capture: capture.reflect(),
-            },
-            &Move::Castle { corner: zone, .. } => {
-                Move::Castle { source: new_source, corner: zone.reflect() }
             }
         }
     }

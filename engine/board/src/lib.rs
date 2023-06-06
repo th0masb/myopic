@@ -1,16 +1,18 @@
-use crate::enumset::EnumSet;
+use std::fmt::Debug;
+
 use enum_map::EnumMap;
-pub use mv::Move;
+
+pub use moves::Move;
 use myopic_core::anyhow::Result;
 use myopic_core::enum_map::Enum;
 pub use myopic_core::*;
 pub use parse::uci::UciMove;
-use std::fmt::Debug;
 
+use crate::enumset::EnumSet;
 pub use crate::imp::Board;
 
 mod imp;
-mod mv;
+mod moves;
 mod parse;
 
 /// The start position of a chess game encoded in FEN format
@@ -165,14 +167,13 @@ pub trait ChessBoard {
 mod uci_conversion_test {
     use myopic_core::*;
 
-    use crate::mv::Move;
+    use crate::moves::Move;
 
     #[test]
     fn test_pawn_standard_conversion() {
         assert_eq!(
             "e2e4",
             Move::Standard {
-                source: 0u64,
                 moving: Piece(Side::W, Class::P),
                 from: Square::E2,
                 dest: Square::E4,
@@ -187,7 +188,6 @@ mod uci_conversion_test {
         assert_eq!(
             "h1h7",
             Move::Standard {
-                source: 0u64,
                 moving: Piece(Side::B, Class::R),
                 from: Square::H1,
                 dest: Square::H7,
@@ -199,22 +199,10 @@ mod uci_conversion_test {
 
     #[test]
     fn test_castling_conversion() {
-        assert_eq!(
-            "e1g1",
-            Move::Castle { source: 1u64, corner: Corner(Side::W, Flank::K) }.uci_format()
-        );
-        assert_eq!(
-            "e1c1",
-            Move::Castle { source: 1u64, corner: Corner(Side::W, Flank::Q) }.uci_format()
-        );
-        assert_eq!(
-            "e8g8",
-            Move::Castle { source: 8u64, corner: Corner(Side::B, Flank::K) }.uci_format()
-        );
-        assert_eq!(
-            "e8c8",
-            Move::Castle { source: 8u64, corner: Corner(Side::B, Flank::Q) }.uci_format()
-        );
+        assert_eq!("e1g1", Move::Castle { corner: Corner(Side::W, Flank::K) }.uci_format());
+        assert_eq!("e1c1", Move::Castle { corner: Corner(Side::W, Flank::Q) }.uci_format());
+        assert_eq!("e8g8", Move::Castle { corner: Corner(Side::B, Flank::K) }.uci_format());
+        assert_eq!("e8c8", Move::Castle { corner: Corner(Side::B, Flank::Q) }.uci_format());
     }
 
     #[test]
@@ -222,7 +210,6 @@ mod uci_conversion_test {
         assert_eq!(
             "e7d8q",
             Move::Promotion {
-                source: 9u64,
                 from: Square::E7,
                 dest: Square::D8,
                 promoted: Piece(Side::W, Class::Q),
@@ -237,7 +224,6 @@ mod uci_conversion_test {
         assert_eq!(
             "e5d6",
             Move::Enpassant {
-                source: 0u64,
                 side: Side::W,
                 from: Square::E5,
                 dest: Square::D6,

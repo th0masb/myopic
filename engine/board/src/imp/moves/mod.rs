@@ -2,7 +2,7 @@ use myopic_core::*;
 
 use crate::imp::cache::MoveConstraints;
 use crate::imp::Board;
-use crate::mv::Move;
+use crate::moves::Move;
 use crate::ChessBoard;
 use crate::MoveComputeType;
 use crate::Square::*;
@@ -44,21 +44,18 @@ impl Board {
     }
 
     fn standards(&self, moving: Piece, from: Square, dests: BitBoard) -> Vec<Move> {
-        let source = self.hash();
         dests
             .iter()
-            .map(|dest| Move::Standard { source, moving, from, dest, capture: self.piece(dest) })
+            .map(|dest| Move::Standard { moving, from, dest, capture: self.piece(dest) })
             .collect()
     }
 
     fn promotions(&self, side: Side, from: Square, dests: BitBoard) -> Vec<Move> {
-        let source = self.hash();
         dests
             .iter()
             .flat_map(|dest| {
                 [Class::Q, Class::R, Class::B, Class::N].iter().map(move |&promoted| {
                     Move::Promotion {
-                        source,
                         from,
                         dest,
                         promoted: Piece(side, promoted),
@@ -68,10 +65,6 @@ impl Board {
             })
             .collect()
     }
-
-    //fn promotion_targets<'a>() -> &'a [Class; 4] {
-    //    &[Class::Q, Class::R, Class::B, Class::N]
-    //}
 
     fn compute_pawn_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
         let mut moves: Vec<Move> = Vec::with_capacity(20);
@@ -84,14 +77,14 @@ impl Board {
             let targets = compute_moves(location) & constraints.get(location);
             moves.extend(self.standards(active_pawn, location, targets));
         }
-        let (source, active) = (self.hash(), self.active);
+        let active = self.active;
         for from in enpassant {
             let dest = self.enpassant.unwrap();
             let capture = dest.next(active.reflect().pawn_dir()).unwrap();
             if constraints.get(from).contains(capture)
                 && self.enpassant_doesnt_discover_attack(from)
             {
-                moves.push(Move::Enpassant { source, side: active, from, dest, capture });
+                moves.push(Move::Enpassant { side: active, from, dest, capture });
             }
         }
         for location in promotion {
@@ -141,7 +134,6 @@ impl Board {
         let (whites, blacks) = self.sides();
         let p1 = |c: Corner| king_constraint.subsumes(uncontrolled_req(c));
         let p2 = |c: Corner| !(whites | blacks).intersects(unoccupied_req(c));
-        let source = self.hash();
         self.rights
             .corners()
             .filter(|&c| p1(c) && p2(c))
@@ -151,7 +143,7 @@ impl Board {
                 self.piece(k_source).map(|p| p.1 == Class::K).unwrap_or(false)
                     && self.piece(r_source).map(|p| p.1 == Class::R).unwrap_or(false)
             })
-            .map(|corner| Move::Castle { source, corner })
+            .map(|corner| Move::Castle { corner })
             .collect()
     }
 }

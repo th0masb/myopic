@@ -11,7 +11,7 @@ use crate::imp::cache::CalculationCache;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;
 use crate::imp::rights::Rights;
-use crate::mv::{parse_op, Move};
+use crate::moves::{parse_op, Move};
 use crate::parse::patterns;
 use crate::ChessBoard;
 use crate::FenPart;
@@ -164,22 +164,33 @@ mod fen_test {
     }
 }
 
-// Trait implementations
 impl Reflectable for Board {
     fn reflect(&self) -> Self {
-        let pieces = self.pieces.reflect();
-        let rights = self.rights.reflect();
-        let active = self.active.reflect();
-        let enpassant = self.enpassant.reflect();
-        let hash = hash(&pieces, &rights, active, enpassant);
-        Board {
-            history: self.history.reflect_for(hash),
-            clock: self.clock,
-            pieces,
-            rights,
-            active,
-            enpassant,
-            cache: RefCell::new(CalculationCache::default()),
+        let start_hash = Board::default().hash();
+        if self.history.historical_positions().next() == Some(start_hash) {
+            // If we played from the start position we can reflect properly
+            let mut reflected = Board::default();
+            reflected.active = Side::B;
+            for m in self.history.historical_moves() {
+                reflected.make(m).unwrap()
+            }
+            reflected
+        } else {
+            // Otherwise we started from some intermediate position and we cannot keep our history
+            let pieces = self.pieces.reflect();
+            let rights = self.rights.reflect();
+            let active = self.active.reflect();
+            let enpassant = self.enpassant.reflect();
+            //let hash = hash(&pieces, &rights, active, enpassant);
+            Board {
+                history: History::default(),
+                clock: self.clock,
+                pieces,
+                rights,
+                active,
+                enpassant,
+                cache: RefCell::new(CalculationCache::default()),
+            }
         }
     }
 }
