@@ -51,6 +51,7 @@ fn gen_unique(seed: u64, count: usize) -> Vec<u64> {
 
 #[cfg(test)]
 mod test {
+    use crate::Flank;
     use crate::square::Square;
 
     use super::*;

@@ -61,6 +61,7 @@ fn to_fen_castling_rights<B: ChessBoard>(board: &B) -> String {
     let rights = board
         .remaining_rights()
         .into_iter()
+        .flat_map(|(s, fs)| fs.into_iter().map(move |f| Corner(s, f)))
         .map(corner_to_fen)
         .collect::<String>();
     if rights.is_empty() {

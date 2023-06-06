@@ -87,8 +87,10 @@ impl Board {
 
     fn make_castle(&mut self, corner: Corner) {
         self.rights.apply_castling(corner.0);
-        let (rook, r_source, r_target) = crate::rook_data(corner);
-        let (king, k_source, k_target) = crate::king_data(corner);
+        let Line(r_source, r_target) = Line::rook_castling(corner);
+        let Line(k_source, k_target) = Line::king_castling(corner);
+        let rook = Piece::rook(corner.0);
+        let king = Piece::king(corner.0);
         self.pieces.unset_piece(rook, r_source);
         self.pieces.unset_piece(king, k_source);
         self.pieces.set_piece(rook, r_target);
@@ -177,8 +179,10 @@ impl Board {
     }
 
     fn unmake_castle(&mut self, corner: Corner) {
-        let (rook, r_source, r_target) = crate::rook_data(corner);
-        let (king, k_source, k_target) = crate::king_data(corner);
+        let Line(r_source, r_target) = Line::rook_castling(corner);
+        let Line(k_source, k_target) = Line::king_castling(corner);
+        let rook = Piece::rook(corner.0);
+        let king = Piece::king(corner.0);
         self.pieces.set_piece(rook, r_source);
         self.pieces.set_piece(king, k_source);
         self.pieces.unset_piece(rook, r_target);

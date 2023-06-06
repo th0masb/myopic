@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::cmp::max;
 use std::str::FromStr;
+use enum_map::EnumMap;
 
 use myopic_core::anyhow::{anyhow, Error, Result};
 use myopic_core::*;
@@ -13,6 +14,7 @@ use crate::imp::rights::Rights;
 use crate::mv::{parse_op, Move};
 use crate::parse::patterns;
 use crate::ChessBoard;
+use crate::enumset::EnumSet;
 use crate::FenPart;
 use crate::MoveComputeType;
 use crate::TerminalState;
@@ -285,8 +287,8 @@ impl ChessBoard for Board {
         self.history.position_count()
     }
 
-    fn remaining_rights(&self) -> Vec<Corner> {
-        self.rights.corners().collect()
+    fn remaining_rights(&self) -> EnumMap<Side, EnumSet<Flank>> {
+        self.rights.0.clone()
     }
 
     fn parse_uci(&self, uci_move: &str) -> Result<Move, Error> {

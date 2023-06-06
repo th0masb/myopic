@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use myopic_core::{anyhow::{Error, Result}, Corner, Reflectable, Side};
+use myopic_core::{anyhow::{Error, Result}, Corner, Line, Reflectable, Side};
 
 use crate::{Piece, Square};
 
@@ -247,7 +247,7 @@ impl Move {
             Move::Standard { from, dest, .. } => format!("{}{}", from, dest),
             Move::Enpassant { from, dest, .. } => format!("{}{}", from, dest),
             Move::Castle { corner, .. } => {
-                let (_, src, dest) = crate::king_data(*corner);
+                let Line(src, dest) = Line::king_castling(*corner);
                 format!("{}{}", src, dest)
             }
             Move::Promotion {

@@ -1,5 +1,5 @@
 use crate::eval::EvalFacet;
-use crate::{ChessBoard, Move, Piece, Square};
+use crate::{ChessBoard, Line, Move, Piece, Square};
 use crate::{PieceValues, PositionTables, Reflectable};
 
 const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
@@ -72,9 +72,11 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
                 self.add(active_pawn, dest);
                 self.remove(active_pawn.reflect(), capture);
             }
-            &Move::Castle { corner: zone, .. } => {
-                let (rook, r_src, r_target) = zone.rook_data();
-                let (king, k_src, k_target) = zone.king_data();
+            &Move::Castle { corner, .. } => {
+                let Line(r_src, r_target) = Line::rook_castling(corner);
+                let Line(k_src, k_target) = Line::king_castling(corner);
+                let rook = Piece::rook(corner.0);
+                let king = Piece::king(corner.0);
                 self.remove(rook, r_src);
                 self.add(rook, r_target);
                 self.remove(king, k_src);
@@ -121,9 +123,11 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
                 self.add(active_pawn, from);
                 self.add(passive_pawn, capture);
             }
-            &Move::Castle { corner: zone, .. } => {
-                let (rook, r_src, r_target) = zone.rook_data();
-                let (king, k_src, k_target) = zone.king_data();
+            &Move::Castle { corner, .. } => {
+                let Line(r_src, r_target) = Line::rook_castling(corner);
+                let Line(k_src, k_target) = Line::king_castling(corner);
+                let rook = Piece::rook(corner.0);
+                let king = Piece::king(corner.0);
                 self.add(rook, r_src);
                 self.remove(rook, r_target);
                 self.add(king, k_src);
