@@ -10,8 +10,8 @@ use crate::{Corner, Side};
 const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
 
 /// Get the hash of the given piece sat on the given square
-pub fn piece(piece: Piece, square: Square) -> u64 {
-    FEATURES[(piece as usize) * 64 + (square as usize)]
+pub fn piece(Piece(side, class): Piece, square: Square) -> u64 {
+    FEATURES[((side as usize) * 6 + class as usize) * 64 + (square as usize)]
 }
 
 /// Get the hash of the given side to move
@@ -52,6 +52,7 @@ fn gen_unique(seed: u64, count: usize) -> Vec<u64> {
 #[cfg(test)]
 mod test {
     use crate::Flank;
+    use crate::pieces::Class;
     use crate::square::Square;
 
     use super::*;
@@ -60,10 +61,13 @@ mod test {
     fn test_uniqueness() {
         let mut dest: Vec<u64> = Vec::new();
         // add piece-square features
-        for p in Piece::all() {
-            for square in Square::iter() {
-                unique_add(&mut dest, piece(p, square));
+        for class in &[Class::P, Class::N, Class::B, Class::R, Class::Q, Class::K] {
+            for side in &[Side::W, Side::B] {
+                for square in Square::iter() {
+                    unique_add(&mut dest, piece(Piece(*side, *class), square));
+                }
             }
+
         }
         for side in &[Side::W, Side::B] {
             for flank in &[Flank::K, Flank::Q] {

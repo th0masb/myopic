@@ -6,18 +6,10 @@ use lazy_static::lazy_static;
 use crate::bitboard::BitBoard;
 use crate::square::Square;
 
-use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
+use super::{bishop_dirs, BISHOP_MASKS, compute_bishop_index, compute_control, compute_powerset};
 
-pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    MOVES[loc as usize][compute_bishop_index(loc, whites | blacks)]
-}
-
-pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    control(loc, whites, blacks) - whites
-}
-
-pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    control(loc, whites, blacks) - blacks
+pub fn control(loc: Square, occupied: BitBoard) -> BitBoard {
+    MOVES[loc as usize][compute_bishop_index(loc, occupied)]
 }
 
 /// Implementation and tests for the static magic move database.

@@ -1,16 +1,8 @@
 use crate::bitboard::BitBoard;
 use crate::square::Square;
 
-pub fn control(loc: Square, _whites: BitBoard, _blacks: BitBoard) -> BitBoard {
+pub fn control(loc: Square) -> BitBoard {
     CONTROL[loc as usize]
-}
-
-pub fn white_moves(loc: Square, whites: BitBoard, _blacks: BitBoard) -> BitBoard {
-    CONTROL[loc as usize] - whites
-}
-
-pub fn black_moves(loc: Square, _whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    CONTROL[loc as usize] - blacks
 }
 
 const CONTROL: [BitBoard; 64] = [
@@ -91,9 +83,9 @@ const CONTROL: [BitBoard; 64] = [
 
 #[cfg(test)]
 mod white_test {
-    
+    use crate::pieces::{Class, Piece};
+    use crate::Side;
     use crate::square::Square::*;
-    use crate::pieces::Piece;
 
     use super::*;
 
@@ -102,17 +94,17 @@ mod white_test {
         let zero = BitBoard::EMPTY;
         assert_eq!(
             D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3,
-            Piece::WK.control(E3, zero, zero)
+            Piece(Side::W, Class::K).control(E3, zero)
         );
         assert_eq!(
             B1 | B2 | C2 | D2 | D1,
-            Piece::WK.control(C1, zero, zero)
+            Piece(Side::W, Class::K).control(C1, zero)
         );
     }
 
     #[test]
     fn test_moves() {
-        assert_eq!(B2 | C2 | D2 | D1, Piece::WK.moves(C1, B1.into(), C2.into()));
+        assert_eq!(B2 | C2 | D2 | D1, Piece(Side::W, Class::K).moves(C1, B1.into(), C2.into()));
     }
 
     //    #[test]
@@ -124,7 +116,8 @@ mod white_test {
 
 #[cfg(test)]
 mod black_test {
-    use crate::pieces::Piece;
+    use crate::pieces::{Class, Piece};
+    use crate::Side;
     use crate::square::Square::*;
 
     use super::*;
@@ -134,14 +127,14 @@ mod black_test {
         let zero = BitBoard::EMPTY;
         assert_eq!(
             D2 | E2 | F2 | F3 | F4 | E4 | D4 | D3,
-            Piece::BK.control(E3, zero, zero)
+            Piece(Side::B, Class::K).control(E3, zero)
         );
-        assert_eq!(B1 | B2 | C2 | D2 | D1, Piece::BK.control(C1, zero, zero));
+        assert_eq!(B1 | B2 | C2 | D2 | D1, Piece(Side::B, Class::K).control(C1, zero));
     }
 
     #[test]
     fn test_moves() {
-        assert_eq!(B2 | B1 | D2 | D1, Piece::BK.moves(C1, B1.lift(), C2.lift()));
+        assert_eq!(B2 | B1 | D2 | D1, Piece(Side::B, Class::K).moves(C1, B1.lift(), C2.lift()));
     }
 
     //    #[test]

@@ -8,16 +8,8 @@ use crate::square::Square;
 
 use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, ROOK_MASKS};
 
-pub fn control(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    MOVES[loc as usize][compute_rook_index(loc, whites | blacks)]
-}
-
-pub fn white_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    control(loc, whites, blacks) - whites
-}
-
-pub fn black_moves(loc: Square, whites: BitBoard, blacks: BitBoard) -> BitBoard {
-    control(loc, whites, blacks) - blacks
+pub fn control(loc: Square, occupied: BitBoard) -> BitBoard {
+    MOVES[loc as usize][compute_rook_index(loc, occupied)]
 }
 
 /// Implementation and tests for the static magic move database.
