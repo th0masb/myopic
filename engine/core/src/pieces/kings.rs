@@ -91,7 +91,7 @@ const CONTROL: [BitBoard; 64] = [
 
 #[cfg(test)]
 mod white_test {
-    use std::ops::Not;
+    
     use crate::square::Square::*;
     use crate::pieces::Piece;
 

@@ -1,11 +1,10 @@
-use enumset::EnumSet;
+
 use rand::prelude::*;
 use rand_pcg::Mcg128Xsl64;
 
-use crate::castlezone::CastleZone;
 use crate::pieces::Piece;
 use crate::square::Square;
-use crate::Side;
+use crate::{Corner, Side};
 
 // Total number of hashing features
 const N_FEATURES: usize = 64 * 12 + 8 + 4 + 1;
@@ -29,13 +28,8 @@ pub fn enpassant(square: Square) -> u64 {
 }
 
 /// Get the hash of the given castling zone
-pub fn zone(zone: CastleZone) -> u64 {
-    FEATURES[N_FEATURES - 2 - zone as usize]
-}
-
-/// Get the combined hash of the given set of castling zones
-pub fn zones(zones: EnumSet<CastleZone>) -> u64 {
-    zones.iter().fold(0u64, |l, r| l ^ zone(r))
+pub fn zone(Corner(side, flank): Corner) -> u64 {
+    FEATURES[N_FEATURES - 2 - (2 * side as usize + flank as usize)]
 }
 
 pub fn gen_features(seed: u64) -> Vec<u64> {
@@ -70,9 +64,12 @@ mod test {
                 unique_add(&mut dest, piece(p, square));
             }
         }
-        for z in CastleZone::iter() {
-            unique_add(&mut dest, zone(z));
+        for side in &[Side::W, Side::B] {
+            for flank in &[Flank::K, Flank::Q] {
+                unique_add(&mut dest, zone(Corner(*side, *flank)));
+            }
         }
+
         for square in Square::iter().take(8) {
             unique_add(&mut dest, enpassant(square));
         }

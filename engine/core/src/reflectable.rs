@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use enumset::EnumSet;
 
-use crate::{BitBoard, CastleZone, Dir, Piece, Side, Square};
+use crate::{BitBoard, Corner, Piece, Side, Square};
 
 /// Chess is a symmetric game and this trait represents a component of
 /// the game which can be reflected to it's symmetric opposite component.
@@ -19,26 +19,9 @@ impl Reflectable for Side {
     }
 }
 
-impl Reflectable for Dir {
+impl Reflectable for Corner {
     fn reflect(&self) -> Self {
-        match self {
-            Dir::N => Dir::S,
-            Dir::E => Dir::W,
-            Dir::S => Dir::N,
-            Dir::W => Dir::E,
-            Dir::NE => Dir::SW,
-            Dir::SE => Dir::NW,
-            Dir::SW => Dir::NE,
-            Dir::NW => Dir::SE,
-            Dir::NNE => Dir::SSW,
-            Dir::NEE => Dir::SWW,
-            Dir::SEE => Dir::NWW,
-            Dir::SSE => Dir::NNW,
-            Dir::SSW => Dir::NNE,
-            Dir::SWW => Dir::NEE,
-            Dir::NWW => Dir::SEE,
-            Dir::NNW => Dir::SSE,
-        }
+        Corner(self.0.reflect(), self.1)
     }
 }
 
@@ -71,20 +54,6 @@ impl Reflectable for Piece {
             Piece::BR => Piece::WR,
             Piece::BQ => Piece::WQ,
             Piece::BK => Piece::WK,
-        }
-    }
-}
-
-/// A castle is reflected by it's side, i.e.
-///  - WK <==> BK
-///  - WQ <==> BQ
-impl Reflectable for CastleZone {
-    fn reflect(&self) -> Self {
-        match self {
-            CastleZone::WK => CastleZone::BK,
-            CastleZone::WQ => CastleZone::BQ,
-            CastleZone::BK => CastleZone::WK,
-            CastleZone::BQ => CastleZone::WQ,
         }
     }
 }
@@ -137,30 +106,5 @@ impl<T: Reflectable + Ord> Reflectable for BTreeSet<T> {
 impl<T: Reflectable + enumset::EnumSetType> Reflectable for EnumSet<T> {
     fn reflect(&self) -> Self {
         self.iter().map(|z| z.reflect()).collect()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_direction_reflection() {
-        assert_eq!(Dir::N, Dir::S.reflect());
-        assert_eq!(Dir::E, Dir::W.reflect());
-        assert_eq!(Dir::S, Dir::N.reflect());
-        assert_eq!(Dir::W, Dir::E.reflect());
-        assert_eq!(Dir::NE, Dir::SW.reflect());
-        assert_eq!(Dir::SE, Dir::NW.reflect());
-        assert_eq!(Dir::SW, Dir::NE.reflect());
-        assert_eq!(Dir::NW, Dir::SE.reflect());
-        assert_eq!(Dir::NNE, Dir::SSW.reflect());
-        assert_eq!(Dir::NEE, Dir::SWW.reflect());
-        assert_eq!(Dir::SEE, Dir::NWW.reflect());
-        assert_eq!(Dir::SSE, Dir::NNW.reflect());
-        assert_eq!(Dir::SSW, Dir::NNE.reflect());
-        assert_eq!(Dir::SWW, Dir::NEE.reflect());
-        assert_eq!(Dir::NWW, Dir::SEE.reflect());
-        assert_eq!(Dir::NNW, Dir::SSE.reflect());
     }
 }

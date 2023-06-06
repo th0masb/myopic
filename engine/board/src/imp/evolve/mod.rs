@@ -26,7 +26,7 @@ impl Board {
         self.history.push(
             mv.clone(),
             Discards {
-                rights: self.rights,
+                rights: self.rights.clone(),
                 enpassant: self.enpassant(),
                 half_move_clock: self.half_move_clock(),
             },
@@ -41,7 +41,7 @@ impl Board {
                 capture,
                 ..
             } => self.make_standard(moving, from, dest, capture),
-            Castle { zone, .. } => self.make_castle(zone),
+            Castle { corner: zone, .. } => self.make_castle(zone),
             Enpassant {
                 side,
                 from,
@@ -76,7 +76,7 @@ impl Board {
         }
         self.pieces.unset_piece(moving, source);
         self.pieces.set_piece(moving, target);
-        self.rights = self.rights.remove_rights(source | target);
+        self.rights.remove_rights(source | target);
         self.enpassant = Board::compute_enpassant(source, target, moving);
         self.clock = if captured.is_some() || moving.is_pawn() {
             0
@@ -85,10 +85,10 @@ impl Board {
         };
     }
 
-    fn make_castle(&mut self, zone: CastleZone) {
-        self.rights = self.rights.apply_castling(zone.side());
-        let (rook, r_source, r_target) = zone.rook_data();
-        let (king, k_source, k_target) = zone.king_data();
+    fn make_castle(&mut self, corner: Corner) {
+        self.rights.apply_castling(corner.0);
+        let (rook, r_source, r_target) = crate::rook_data(corner);
+        let (king, k_source, k_target) = crate::king_data(corner);
         self.pieces.unset_piece(rook, r_source);
         self.pieces.unset_piece(king, k_source);
         self.pieces.set_piece(rook, r_target);
@@ -151,7 +151,7 @@ impl Board {
                 capture,
                 ..
             } => self.unmake_enpassant(side, from, dest, capture),
-            &Castle { zone, .. } => self.unmake_castle(zone),
+            &Castle { corner: zone, .. } => self.unmake_castle(zone),
         };
 
         self.rights = state.rights;
@@ -176,9 +176,9 @@ impl Board {
         }
     }
 
-    fn unmake_castle(&mut self, zone: CastleZone) {
-        let (rook, r_source, r_target) = zone.rook_data();
-        let (king, k_source, k_target) = zone.king_data();
+    fn unmake_castle(&mut self, corner: Corner) {
+        let (rook, r_source, r_target) = crate::rook_data(corner);
+        let (king, k_source, k_target) = crate::king_data(corner);
         self.pieces.set_piece(rook, r_source);
         self.pieces.set_piece(king, k_source);
         self.pieces.unset_piece(rook, r_target);

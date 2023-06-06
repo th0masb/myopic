@@ -118,8 +118,8 @@ pub fn single_move<B: ChessBoard>(start: &B, uci_move: &str) -> Result<Move> {
         .find(|mv| match mv {
             &Move::Standard { from, dest, .. } => from == f && dest == d,
             &Move::Enpassant { from, dest, .. } => from == f && dest == d,
-            &Move::Castle { zone, .. } => {
-                let (_, king_src, king_dest) = zone.king_data();
+            &Move::Castle { corner, .. } => {
+                let (_, king_src, king_dest) = crate::king_data(corner);
                 f == king_src && d == king_dest
             }
             &Move::Promotion {

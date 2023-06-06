@@ -5,7 +5,7 @@ pub use myopic_core::*;
 pub use parse::uci::UciMove;
 use std::fmt::Debug;
 
-use crate::enumset::EnumSet;
+
 pub use crate::imp::Board;
 
 mod imp;
@@ -129,7 +129,7 @@ pub trait ChessBoard {
     fn position_count(&self) -> usize;
 
     /// Return the remaining castling rights from this position.
-    fn remaining_rights(&self) -> EnumSet<CastleZone>;
+    fn remaining_rights(&self) -> Vec<Corner>;
 
     /// Given a uci encoded move this method will attempt to match
     /// it to the unique matching legal move in this position if it
@@ -157,6 +157,24 @@ pub trait ChessBoard {
     fn all_pieces(&self) -> BitBoard {
         let (w, b) = self.sides();
         w | b
+    }
+}
+
+pub(crate) fn king_data(Corner(side, flank): Corner) -> (Piece, Square, Square) {
+    match (side, flank) {
+        (Side::W, Flank::K) => (Piece::WK, Square::E1, Square::G1),
+        (Side::W, Flank::Q) => (Piece::WK, Square::E1, Square::C1),
+        (Side::B, Flank::K) => (Piece::BK, Square::E8, Square::G8),
+        (Side::B, Flank::Q) => (Piece::BK, Square::E8, Square::C8),
+    }
+}
+
+pub(crate) fn rook_data(Corner(side, flank): Corner) -> (Piece, Square, Square) {
+    match (side, flank) {
+        (Side::W, Flank::K) => (Piece::WR, Square::H1, Square::F1),
+        (Side::W, Flank::Q) => (Piece::WR, Square::A1, Square::D1),
+        (Side::B, Flank::K) => (Piece::BR, Square::H8, Square::F8),
+        (Side::B, Flank::Q) => (Piece::BR, Square::A8, Square::D8),
     }
 }
 
@@ -202,7 +220,7 @@ mod uci_conversion_test {
             "e1g1",
             Move::Castle {
                 source: 1u64,
-                zone: CastleZone::WK,
+                corner: Corner(Side::W, Flank::K),
             }
             .uci_format()
         );
@@ -210,7 +228,7 @@ mod uci_conversion_test {
             "e1c1",
             Move::Castle {
                 source: 1u64,
-                zone: CastleZone::WQ,
+                corner: Corner(Side::W, Flank::Q),
             }
             .uci_format()
         );
@@ -218,7 +236,7 @@ mod uci_conversion_test {
             "e8g8",
             Move::Castle {
                 source: 8u64,
-                zone: CastleZone::BK,
+                corner: Corner(Side::B, Flank::K),
             }
             .uci_format()
         );
@@ -226,7 +244,7 @@ mod uci_conversion_test {
             "e8c8",
             Move::Castle {
                 source: 8u64,
-                zone: CastleZone::BQ,
+                corner: Corner(Side::B, Flank::Q),
             }
             .uci_format()
         );

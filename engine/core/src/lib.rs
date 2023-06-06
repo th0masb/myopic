@@ -8,7 +8,6 @@ pub use enumset;
 use enumset::EnumSetType;
 
 pub use bitboard::BitBoard;
-pub use castlezone::CastleZone;
 pub use pieces::Piece;
 pub use reflectable::Reflectable;
 pub use square::Square;
@@ -20,27 +19,27 @@ mod pieces;
 mod reflectable;
 mod square;
 
-/// Represents the two different teams in a game of chess.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Enum)]
-pub enum Side {
-    W,
-    B,
-}
+#[derive(Debug, PartialOrd, Ord, Hash, Enum, EnumSetType)]
+#[rustfmt::skip]
+pub enum Side { W, B }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Enum)]
-pub enum Flank {
-    K,
-    Q,
-}
+#[derive(Debug, PartialOrd, Ord, Hash, Enum, EnumSetType)]
+#[rustfmt::skip]
+pub enum Flank { K, Q }
 
-/// Type representing a square on a chessboard.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct Corner(pub Side, pub Flank);
+
+#[derive(Debug, PartialOrd, Ord, Hash, Enum, EnumSetType)]
+#[rustfmt::skip]
+pub enum PieceType { P, N, B, R, Q, K }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct Piece2(pub Side, pub PieceType);
+
 #[derive(Debug, EnumSetType, Hash, PartialOrd, Ord)]
 #[rustfmt::skip]
-pub enum Dir {
-    N, E, S, W,
-    NE, SE, SW, NW,
-    NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW,
-}
+pub enum Dir { N, E, S, W, NE, SE, SW, NW, NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW }
 
 impl Dir {
     fn dr_df(self) -> (i8, i8) {
@@ -86,7 +85,26 @@ impl FromStr for Side {
     }
 }
 
+impl FromStr for Flank {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "k" | "K" => Ok(Flank::K),
+            "q" | "Q" => Ok(Flank::Q),
+            _ => Err(anyhow::anyhow!("Cannot parse Side from {}", s)),
+        }
+    }
+}
+
 impl Side {
+    //pub fn king_start(self) -> Square {
+    //    match self {
+    //        Side::W => Square::E1,
+    //        Side::B => Square::E8,
+    //    }
+    //}
+
     /// Get the vertical direction in which a pawn on this side moves
     /// (north or south).
     pub fn pawn_dir(self) -> Dir {

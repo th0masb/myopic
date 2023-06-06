@@ -4,7 +4,8 @@ mod termination;
 use myopic_core::*;
 use std::cell::RefCell;
 
-use crate::enumset::EnumSet;
+
+
 use crate::imp::cache::CalculationCache;
 use crate::imp::history::History;
 use crate::imp::positions::Positions;
@@ -15,7 +16,7 @@ use crate::imp::Board;
 pub struct TestBoard {
     pub whites: Vec<BitBoard>,
     pub blacks: Vec<BitBoard>,
-    pub castle_rights: EnumSet<CastleZone>,
+    pub castle_rights: Rights,
     pub active: Side,
     pub clock: usize,
     pub enpassant: Option<Square>,
@@ -35,7 +36,7 @@ impl From<TestBoard> for Board {
         Board {
             history: History::new(test_board.history_count),
             pieces,
-            rights: Rights(test_board.castle_rights),
+            rights: test_board.castle_rights,
             active: test_board.active,
             enpassant: test_board.enpassant,
             clock: test_board.clock,

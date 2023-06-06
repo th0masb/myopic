@@ -36,21 +36,10 @@ fn compute_cord_cache() -> Vec<BitBoard> {
 }
 
 fn compute_cord_impl(source: Square, target: Square) -> BitBoard {
-    [
-        Dir::N,
-        Dir::NE,
-        Dir::E,
-        Dir::SE,
-        Dir::S,
-        Dir::SW,
-        Dir::W,
-        Dir::NW,
-    ]
+    [Dir::N, Dir::NE, Dir::E, Dir::SE, Dir::S, Dir::SW, Dir::W, Dir::NW]
     .iter()
     .find(|&d| source.search(*d).contains(target))
-    .map_or(BitBoard::EMPTY, |&d| {
-        takewhile_inc(source, target, d) | source
-    })
+    .map_or(BitBoard::EMPTY, |&d| { takewhile_inc(source, target, d) | source })
 }
 
 fn takewhile_inc(source: Square, target: Square, dir: Dir) -> BitBoard {

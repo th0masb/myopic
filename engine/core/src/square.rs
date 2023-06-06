@@ -62,14 +62,14 @@ impl Square {
 
     /// Find all squares in a given direction from this square and
     /// returns them as a set.
-    pub fn search(self, dir: Dir) -> BitBoard {
+    pub(crate) fn search(self, dir: Dir) -> BitBoard {
         self.search_vec(dir).into_iter().collect()
     }
 
     /// Find all squares in a given direction from this square and
     /// returns them as a vector where the squares are ordered in
     /// increasing distance from this square.
-    pub fn search_vec(self, dir: Dir) -> Vec<Square> {
+    pub(crate) fn search_vec(self, dir: Dir) -> Vec<Square> {
         itertools::iterate(Some(self), |op| op.and_then(|sq| sq.next(dir)))
             .skip(1)
             .take_while(|op| op.is_some())
@@ -79,13 +79,13 @@ impl Square {
 
     /// Find all squares in all directions in a given vector and
     /// returns them as a set.
-    pub fn search_all(self, dirs: &Vec<Dir>) -> BitBoard {
+    pub(crate) fn search_all(self, dirs: &Vec<Dir>) -> BitBoard {
         dirs.iter().flat_map(|&dir| self.search(dir)).collect()
     }
 
     /// Find the squares adjacent to this square in all of the
     /// given directions and returns them as a set.
-    pub fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
+    pub(crate) fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
         dirs.iter()
             .flat_map(|&dir| self.next(dir).into_iter())
             .collect()
