@@ -205,7 +205,7 @@ mod test_single_move {
         uci: &'static str,
     ) -> Result<()> {
         let mut board = start_fen.parse::<Board>()?;
-        let parsed_expected = Move::from(expected, board.hash())?;
+        let parsed_expected = Move::from(expected)?;
         let uci_parse = single_move(&mut board, uci)?;
         assert_eq!(parsed_expected, uci_parse);
         Ok(())

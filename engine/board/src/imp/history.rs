@@ -1,5 +1,5 @@
 use myopic_core::anyhow::{anyhow, Result};
-use myopic_core::{Reflectable, Square};
+use myopic_core::Square;
 
 use crate::imp::rights::Rights;
 use crate::Move;
@@ -9,6 +9,7 @@ pub struct Discards {
     pub rights: Rights,
     pub enpassant: Option<Square>,
     pub half_move_clock: usize,
+    pub hash: u64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
@@ -35,31 +36,15 @@ impl History {
         self.inner.push((mv, discards));
     }
 
+    pub fn historical_moves(&self) -> impl Iterator<Item = Move> + '_ {
+        self.inner.iter().map(|(m, _)| m.clone())
+    }
+
     pub fn historical_positions(&self) -> impl Iterator<Item = u64> + '_ {
-        self.inner.iter().map(|(m, _)| m.source())
+        self.inner.iter().map(|(_, d)| d.hash)
     }
 
     pub fn attempt_pop(&mut self) -> Result<(Move, Discards)> {
         self.inner.pop().ok_or(anyhow!("Empty history, could not pop last move!"))
-    }
-
-    pub(crate) fn reflect_for(&self, new_hash: u64) -> History {
-        History {
-            prev_position_count: self.prev_position_count,
-            inner: self
-                .inner
-                .iter()
-                .map(|(m, d)| {
-                    (
-                        m.reflect_for(new_hash),
-                        Discards {
-                            rights: d.rights.reflect(),
-                            enpassant: d.enpassant.reflect(),
-                            half_move_clock: d.half_move_clock,
-                        },
-                    )
-                })
-                .collect(),
-        }
     }
 }

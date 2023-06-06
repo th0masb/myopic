@@ -85,14 +85,13 @@ mod searchoutcome_serialize_test {
     #[test]
     fn test_json_serialize() {
         let search_outcome = SearchOutcome {
-            best_move: Move::Castle { source: 0, corner: Corner(Side::W, Flank::K) },
+            best_move: Move::Castle { corner: Corner(Side::W, Flank::K) },
             relative_eval: -125,
             depth: 2,
             time: Duration::from_millis(3000),
             optimal_path: vec![
-                Move::Castle { source: 0, corner: Corner(Side::W, Flank::K) },
+                Move::Castle { corner: Corner(Side::W, Flank::K) },
                 Move::Standard {
-                    source: 1,
                     moving: Piece(Side::B, Class::P),
                     from: Square::D7,
                     dest: Square::D5,
