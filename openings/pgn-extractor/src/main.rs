@@ -4,7 +4,7 @@ mod game_stream;
 
 use errors::Errors;
 use game_stream::GameStream;
-use myopic_board::{ChessBoard, FenPart, Move};
+use myopic_board::{FenPart, Move};
 use std::{collections::HashMap, error::Error, fs, fs::File, path::PathBuf};
 use structopt::StructOpt;
 

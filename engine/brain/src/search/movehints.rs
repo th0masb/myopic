@@ -3,10 +3,10 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 
+use crate::Evaluator;
 use myopic_board::{Move, MoveComputeType};
 
 use crate::search::negascout::SearchResponse;
-use crate::EvalChessBoard;
 
 const SHALLOW_EVAL_BRANCHING: usize = 5;
 
@@ -25,16 +25,11 @@ pub struct MoveOrderingHints {
 }
 
 impl MoveOrderingHints {
-    pub fn populate<B: EvalChessBoard>(&mut self, root: &mut B, depth: usize) {
+    pub fn populate(&mut self, root: &mut Evaluator, depth: usize) {
         self.populate_impl(root, depth, vec![])
     }
 
-    fn populate_impl<B: EvalChessBoard>(
-        &mut self,
-        root: &mut B,
-        depth: usize,
-        precursors: Vec<Move>,
-    ) {
+    fn populate_impl(&mut self, root: &mut Evaluator, depth: usize, precursors: Vec<Move>) {
         let curr_level = self.compute_shallow_eval(root);
         let next_paths =
             curr_level.iter().map(|m| m.mv.clone()).take(SHALLOW_EVAL_BRANCHING).collect_vec();
@@ -52,9 +47,9 @@ impl MoveOrderingHints {
         }
     }
 
-    fn compute_shallow_eval<B: EvalChessBoard>(&mut self, root: &mut B) -> Vec<SEMove> {
+    fn compute_shallow_eval(&mut self, root: &mut Evaluator) -> Vec<SEMove> {
         let mut dest = vec![];
-        for mv in root.compute_moves(MoveComputeType::All) {
+        for mv in root.board().compute_moves(MoveComputeType::All) {
             root.make(mv).unwrap();
             let SearchResponse { eval, .. } = -super::negascout::search(root, 0).unwrap();
             let mv_made = root.unmake().unwrap();

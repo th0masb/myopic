@@ -1,4 +1,3 @@
-use std::marker::PhantomData;
 use std::time::{Duration, Instant};
 
 use serde::ser::SerializeStruct;
@@ -9,13 +8,11 @@ use myopic_board::anyhow::{anyhow, Result};
 use myopic_board::Move;
 use terminator::SearchTerminator;
 
-use crate::eval;
-use crate::eval::EvalChessBoard;
 use crate::search::movequality::MaterialAndPositioningHeuristic;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::transpositions::TranspositionTable;
+use crate::{eval, Evaluator};
 
-pub mod interactive;
 mod movehints;
 mod movequality;
 pub mod negascout;
@@ -29,9 +26,8 @@ const SHALLOW_EVAL_DEPTH: usize = 1;
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
-pub fn search<B, T>(root: B, parameters: SearchParameters<T>) -> Result<SearchOutcome>
+pub fn search<T>(root: Evaluator, parameters: SearchParameters<T>) -> Result<SearchOutcome>
 where
-    B: EvalChessBoard,
     T: SearchTerminator,
 {
     Search { root, terminator: parameters.terminator }.search(parameters.table_size)
@@ -106,8 +102,8 @@ mod searchoutcome_serialize_test {
     }
 }
 
-struct Search<B: EvalChessBoard, T: SearchTerminator> {
-    root: B,
+struct Search<T: SearchTerminator> {
+    root: Evaluator,
     terminator: T,
 }
 
@@ -118,7 +114,7 @@ struct BestMoveResponse {
     depth: usize,
 }
 
-impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
+impl<T: SearchTerminator> Search<T> {
     pub fn search(&mut self, transposition_table_size: usize) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
@@ -170,7 +166,6 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
             ordering_hints,
             move_quality_estimator: MaterialAndPositioningHeuristic,
             transposition_table,
-            board_type: PhantomData,
         }
         .search(
             &mut self.root,
@@ -188,7 +183,7 @@ impl<B: EvalChessBoard, T: SearchTerminator> Search<B, T> {
         path.reverse();
         // If the path returned is empty then there must be no legal moves in this position
         if path.is_empty() {
-            Err(anyhow!("No moves found for position {} at depth {}", self.root.to_fen(), depth))
+            Err(anyhow!("No moves for position {} at depth {}", self.root.board().to_fen(), depth))
         } else {
             Ok(BestMoveResponse { best_move: path.get(0).unwrap().clone(), eval, path, depth })
         }

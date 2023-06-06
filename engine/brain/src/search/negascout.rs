@@ -1,5 +1,5 @@
 use core::cmp;
-use std::marker::PhantomData;
+
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -12,23 +12,19 @@ use crate::search::movehints::MoveOrderingHints;
 use crate::search::movequality::{BestMoveHeuristic, MaterialAndPositioningHeuristic};
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{TranspositionTable, TreeNode};
-use crate::{quiescent, EvalChessBoard};
+use crate::{quiescent, Evaluator};
 
 /// Performs a negascout search without any iterative deepening,
 /// we simply provide a depth to search to. The depth should be
 /// kept low otherwise ID is always preferable. In particular
 /// this function will support a depth 0 search which performs
 /// a quiescent search on the provided root.
-pub fn search<B>(root: &mut B, depth: usize) -> Result<SearchResponse>
-where
-    B: EvalChessBoard,
-{
+pub fn search(root: &mut Evaluator, depth: usize) -> Result<SearchResponse> {
     Scout {
         terminator: &depth,
         ordering_hints: &MoveOrderingHints::default(),
         transposition_table: &mut TranspositionTable::new(1)?,
         move_quality_estimator: MaterialAndPositioningHeuristic,
-        board_type: PhantomData,
     }
     .search(
         root,
@@ -89,11 +85,10 @@ impl Default for SearchResponse {
     }
 }
 
-pub struct Scout<'a, T, B, M>
+pub struct Scout<'a, T, M>
 where
     T: SearchTerminator,
-    B: EvalChessBoard,
-    M: BestMoveHeuristic<B>,
+    M: BestMoveHeuristic,
 {
     /// The terminator is responsible for deciding when the
     /// search is complete
@@ -114,9 +109,6 @@ where
     /// Used for performing an initial sort on the moves
     /// generated in each position for optimising the search
     pub move_quality_estimator: M,
-    /// Placeholder to satisfy the compiler because of the 'unused'
-    /// type parameter for the board
-    pub board_type: PhantomData<B>,
 }
 
 enum TableSuggestion {
@@ -135,25 +127,28 @@ impl TableSuggestion {
     }
 }
 
-impl<T, B, M> Scout<'_, T, B, M>
+impl<T, M> Scout<'_, T, M>
 where
     T: SearchTerminator,
-    B: EvalChessBoard,
-    M: BestMoveHeuristic<B>,
+    M: BestMoveHeuristic,
 {
     ///
-    pub fn search(&mut self, root: &mut B, mut ctx: SearchContext) -> Result<SearchResponse> {
+    pub fn search(
+        &mut self,
+        root: &mut Evaluator,
+        mut ctx: SearchContext,
+    ) -> Result<SearchResponse> {
         if self.terminator.should_terminate(&ctx) {
             Err(anyhow!("Terminated at depth {}", ctx.depth_remaining))
-        } else if ctx.depth_remaining == 0 || root.terminal_state().is_some() {
-            match root.terminal_state() {
+        } else if ctx.depth_remaining == 0 || root.board().terminal_state().is_some() {
+            match root.board().terminal_state() {
                 Some(TerminalState::Loss) => Ok(eval::LOSS_VALUE),
                 Some(TerminalState::Draw) => Ok(eval::DRAW_VALUE),
                 None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
             }
             .map(|eval| SearchResponse { eval, path: vec![] })
         } else {
-            let (hash, mut table_suggestion) = (root.hash(), None);
+            let (hash, mut table_suggestion) = (root.board().hash(), None);
             match self.transposition_table.get(hash) {
                 None => {}
                 Some(TreeNode::Pv { depth, eval, optimal_path, .. }) => {
@@ -266,15 +261,15 @@ where
         }
     }
 
-    fn compute_heuristically_ordered_moves(&self, board: &mut B) -> Vec<Move> {
-        let mut moves = board.compute_moves(MoveComputeType::All);
-        moves.sort_by_cached_key(|m| -self.move_quality_estimator.estimate(board, m));
+    fn compute_heuristically_ordered_moves(&self, node: &mut Evaluator) -> Vec<Move> {
+        let mut moves = node.board().compute_moves(MoveComputeType::All);
+        moves.sort_by_cached_key(|m| -self.move_quality_estimator.estimate(node, m));
         moves
     }
 
     fn compute_moves(
         &self,
-        board: &mut B,
+        node: &mut Evaluator,
         precursors: &Vec<Move>,
         table_suggestion: Option<TableSuggestion>,
     ) -> Vec<Move> {
@@ -282,13 +277,13 @@ where
         let evs = self.ordering_hints.get_evs(precursors);
         match (pvs, evs) {
             (None, None) => {
-                let mut mvs = self.compute_heuristically_ordered_moves(board);
+                let mut mvs = self.compute_heuristically_ordered_moves(node);
                 check_and_reposition_first(&mut mvs, table_suggestion);
                 mvs
             }
             (Some(pvs_ref), None) => {
                 let pvs = pvs_ref.iter().map(|m| m.mv.clone()).collect_vec();
-                let mut all_mvs = self.compute_heuristically_ordered_moves(board);
+                let mut all_mvs = self.compute_heuristically_ordered_moves(node);
                 check_and_reposition_first(&mut all_mvs, table_suggestion);
                 pvs.into_iter().chain(all_mvs.into_iter()).dedup().collect()
             }

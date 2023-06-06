@@ -4,7 +4,7 @@ use std::io::{BufRead, BufReader};
 use std::time::Instant;
 
 use crate::search::SearchParameters;
-use crate::{Board, EvalBoard};
+use crate::Evaluator;
 
 #[rustfmt::skip]
 /// Run on system76
@@ -63,7 +63,7 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
         .lines()
         .take(max_positions)
         .map(|l| l.unwrap())
-        .map(|l| match l.as_str().parse::<EvalBoard<Board>>() {
+        .map(|l| match l.as_str().parse::<Evaluator>() {
             Err(message) => panic!("{}", message),
             Ok(position) => position,
         })

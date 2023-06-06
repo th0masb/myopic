@@ -6,11 +6,11 @@ use myopic_core::{
 };
 
 use crate::parse::patterns::*;
-use crate::{ChessBoard, Move, MoveComputeType};
+use crate::{Board, Move, MoveComputeType};
 
 /// Extracts the moves encoded in standard pgn format starting at
 /// a custom board position.
-pub fn moves<B: ChessBoard + Clone>(start: &B, encoded: &str) -> Result<Vec<Move>> {
+pub fn moves(start: &Board, encoded: &str) -> Result<Vec<Move>> {
     let mut mutator_board = start.clone();
     let mut dest: Vec<Move> = Vec::new();
     for evolve in pgn_move().find_iter(encoded) {
@@ -25,7 +25,7 @@ pub fn moves<B: ChessBoard + Clone>(start: &B, encoded: &str) -> Result<Vec<Move
     Ok(dest)
 }
 
-fn parse_single_move<B: ChessBoard>(start: &mut B, pgn_move: &str) -> Result<Move> {
+fn parse_single_move(start: &mut Board, pgn_move: &str) -> Result<Move> {
     let legal = start.compute_moves(MoveComputeType::All);
     // If a castle move we can retrieve straight away
     if pgn_move == "O-O" {

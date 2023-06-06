@@ -4,11 +4,11 @@ mod termination;
 use myopic_core::*;
 use std::cell::RefCell;
 
-use crate::imp::cache::CalculationCache;
-use crate::imp::history::History;
-use crate::imp::positions::Positions;
-use crate::imp::rights::Rights;
-use crate::imp::Board;
+use crate::private::cache::CalculationCache;
+use crate::private::history::History;
+use crate::private::positions::Positions;
+use crate::private::rights::Rights;
+use crate::Board;
 
 #[derive(Debug, Clone)]
 pub struct TestBoard {

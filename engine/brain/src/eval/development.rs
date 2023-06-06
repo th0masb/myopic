@@ -2,9 +2,10 @@ use std::cmp::min;
 
 use enum_map::{enum_map, Enum, EnumMap};
 use lazy_static::lazy_static;
+use myopic_board::Board;
 
 use crate::eval::EvalFacet;
-use crate::{ChessBoard, Move};
+use crate::Move;
 use crate::{Side, Square};
 
 #[derive(Debug, Copy, Clone, PartialEq, Enum)]
@@ -85,12 +86,12 @@ impl DevelopmentFacet {
     }
 }
 
-impl<B: ChessBoard> EvalFacet<B> for DevelopmentFacet {
-    fn static_eval(&self, _: &B) -> i32 {
+impl EvalFacet for DevelopmentFacet {
+    fn static_eval(&self, _: &Board) -> i32 {
         self.penalty(Side::B) - self.penalty(Side::W)
     }
 
-    fn make(&mut self, mv: &Move, _: &B) {
+    fn make(&mut self, mv: &Move, _: &Board) {
         if let &Move::Standard { from, .. } = mv {
             if let Some((side, piece)) = START_LOCS[from] {
                 // Don't overwrite an existing entry as the piece was already moved

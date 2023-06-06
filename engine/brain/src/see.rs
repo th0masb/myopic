@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 use std::cmp;
 
 use crate::Class;
-use myopic_board::{BitBoard, ChessBoard, Piece, Reflectable, Side, Square};
+use myopic_board::{BitBoard, Board, Piece, Reflectable, Side, Square};
 
 /// API function for determining whether an exchange is good on the given
 /// board. The board must have a piece at both the source and target square
@@ -12,8 +12,8 @@ use myopic_board::{BitBoard, ChessBoard, Piece, Reflectable, Side, Square};
 /// the attacker, higher is good for the attacker. Positive means a good
 /// exchange, negative mean a bad one. If the pieces are on the same side the
 /// result is undefined.
-pub fn exchange_value<B: ChessBoard>(
-    board: &B,
+pub fn exchange_value(
+    board: &Board,
     source: Square,
     target: Square,
     piece_values: &[i32; 6],
@@ -24,8 +24,8 @@ pub fn exchange_value<B: ChessBoard>(
 type BitBoardPair = (BitBoard, BitBoard);
 
 /// Static exchange evaluator
-struct See<'a, B: ChessBoard> {
-    board: &'a B,
+struct See<'a> {
+    board: &'a Board,
     source: Square,
     target: Square,
     values: &'a [i32; 6],
@@ -36,7 +36,7 @@ lazy_static! {
         compute_attack_location_constraints();
 }
 
-impl<B: ChessBoard> See<'_, B> {
+impl See<'_> {
     fn value(&self, piece: Piece) -> i32 {
         self.values[piece.1 as usize]
     }
@@ -167,7 +167,7 @@ fn compute_attack_location_constraints() -> EnumMap<Square, BitBoard> {
 
 #[cfg(test)]
 mod test {
-    use myopic_board::{ChessBoard, Reflectable, Square};
+    use myopic_board::{Reflectable, Square};
 
     use crate::see::See;
     use crate::Board;
@@ -177,12 +177,12 @@ mod test {
     }
 
     #[derive(Clone, Debug)]
-    struct TestCase<B> {
-        board: B,
+    struct TestCase {
+        board: Board,
         expected: Vec<(Square, Square, i32)>,
     }
 
-    impl<B: ChessBoard + Reflectable + Clone> Reflectable for TestCase<B> {
+    impl Reflectable for TestCase {
         fn reflect(&self) -> Self {
             let mut reflected_expected = Vec::new();
             for (src, targ, result) in self.expected.iter() {
@@ -192,12 +192,12 @@ mod test {
         }
     }
 
-    fn execute_case<B: ChessBoard + Reflectable + Clone>(test_case: TestCase<B>) {
+    fn execute_case(test_case: TestCase) {
         execute_case_impl(test_case.clone());
         execute_case_impl(test_case.reflect())
     }
 
-    fn execute_case_impl<B: ChessBoard>(test_case: TestCase<B>) {
+    fn execute_case_impl(test_case: TestCase) {
         let board = test_case.board;
         for (source, target, expected_value) in test_case.expected.into_iter() {
             let see = See { board: &board, source, target, values: &dummy_values() };

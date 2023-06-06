@@ -3,9 +3,8 @@ use std::fmt::Debug;
 use myopic_core::*;
 
 use crate::enum_map::EnumMap;
-use crate::imp::cache::rays::RaySet;
-use crate::imp::Board;
-use crate::ChessBoard;
+use crate::private::cache::rays::RaySet;
+use crate::private::Board;
 use crate::MoveComputeType;
 
 #[derive(Debug, Clone, PartialEq)]

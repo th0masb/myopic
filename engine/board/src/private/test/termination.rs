@@ -1,4 +1,4 @@
-use crate::{Board, ChessBoard, TerminalState};
+use crate::{Board, TerminalState};
 use myopic_core::Reflectable;
 
 fn test_fen(expected: Option<TerminalState>, fen: &str) {

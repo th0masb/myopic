@@ -1,8 +1,9 @@
 use enum_map::EnumMap;
+use myopic_board::Board;
 
 use crate::enumset::EnumSet;
 use crate::eval::EvalFacet;
-use crate::{ChessBoard, Move};
+use crate::Move;
 use crate::{Corner, Flank, Side};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -27,13 +28,13 @@ impl CastlingFacet {
     }
 }
 
-impl<B: ChessBoard> EvalFacet<B> for CastlingFacet {
-    fn static_eval(&self, board: &B) -> i32 {
+impl EvalFacet for CastlingFacet {
+    fn static_eval(&self, board: &Board) -> i32 {
         let rights = board.remaining_rights();
         self.penalty(Side::B, &rights[Side::B]) - self.penalty(Side::W, &rights[Side::W])
     }
 
-    fn make(&mut self, mv: &Move, _: &B) {
+    fn make(&mut self, mv: &Move, _: &Board) {
         if let Move::Castle { corner: Corner(side, flank), .. } = mv {
             self.castling_status[*side] = Some(*flank)
         }

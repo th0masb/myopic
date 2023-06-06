@@ -2,14 +2,13 @@ use itertools::Itertools;
 use myopic_core::*;
 
 use crate::Board;
-use crate::ChessBoard;
 use crate::MoveComputeType;
 use crate::TerminalState;
 
 const HALF_MOVE_CLOCK_LIMIT: usize = 100;
 
 impl Board {
-    pub fn terminal_state(&self) -> Option<TerminalState> {
+    pub(crate) fn terminal_state_impl(&self) -> Option<TerminalState> {
         let cache = self.cache.borrow();
         let terminal_status = cache.termination_status;
         drop(cache);

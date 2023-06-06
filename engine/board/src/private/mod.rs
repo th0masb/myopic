@@ -1,4 +1,3 @@
-use enum_map::EnumMap;
 use std::cell::RefCell;
 use std::cmp::max;
 use std::str::FromStr;
@@ -6,44 +5,23 @@ use std::str::FromStr;
 use myopic_core::anyhow::{anyhow, Error, Result};
 use myopic_core::*;
 
-use crate::enumset::EnumSet;
-use crate::imp::cache::CalculationCache;
-use crate::imp::history::History;
-use crate::imp::positions::Positions;
-use crate::imp::rights::Rights;
-use crate::moves::{parse_op, Move};
+use crate::moves::parse_op;
 use crate::parse::patterns;
-use crate::ChessBoard;
-use crate::FenPart;
-use crate::MoveComputeType;
-use crate::TerminalState;
+use crate::private::cache::CalculationCache;
+use crate::private::history::History;
+use crate::private::positions::Positions;
+use crate::private::rights::Rights;
+use crate::Board;
 
-mod cache;
-mod evolve;
-mod fen;
-mod history;
-mod moves;
-mod positions;
-mod rights;
+pub(crate) mod cache;
+pub(crate) mod evolve;
+pub(crate) mod fen;
+pub(crate) mod history;
+pub(crate) mod moves;
+pub(crate) mod positions;
+pub(crate) mod rights;
 #[cfg(test)]
 mod test;
-
-#[derive(Debug, Clone)]
-pub struct Board {
-    history: History,
-    pieces: Positions,
-    rights: Rights,
-    active: Side,
-    enpassant: Option<Square>,
-    clock: usize,
-    cache: RefCell<CalculationCache>,
-}
-
-impl Default for Board {
-    fn default() -> Self {
-        crate::START_FEN.parse().unwrap()
-    }
-}
 
 impl FromStr for Board {
     type Err = Error;
@@ -69,7 +47,8 @@ impl FromStr for Board {
     }
 }
 
-fn hash(pos: &Positions, rights: &Rights, active: Side, ep: Option<Square>) -> u64 {
+// TODO move
+pub(crate) fn hash(pos: &Positions, rights: &Rights, active: Side, ep: Option<Square>) -> u64 {
     let mut result = pos.hash() ^ hash::side(active) ^ ep.map_or(0u64, |x| hash::enpassant(x));
     rights.corners().for_each(|c| result ^= hash::zone(c));
     result
@@ -78,7 +57,7 @@ fn hash(pos: &Positions, rights: &Rights, active: Side, ep: Option<Square>) -> u
 #[cfg(test)]
 mod fen_test {
 
-    use crate::imp::test::TestBoard;
+    use crate::private::test::TestBoard;
     use crate::Board;
     use crate::{Side, Square::*};
 
@@ -192,110 +171,5 @@ impl Reflectable for Board {
                 cache: RefCell::new(CalculationCache::default()),
             }
         }
-    }
-}
-
-impl PartialEq<Board> for Board {
-    fn eq(&self, other: &Board) -> bool {
-        self.pieces == other.pieces
-            && self.rights == other.rights
-            && self.enpassant == other.enpassant
-            && self.active == other.active
-            && self.half_move_clock() == other.half_move_clock()
-    }
-}
-
-impl ChessBoard for Board {
-    fn make(&mut self, mv: Move) -> Result<()> {
-        self.make(mv)
-    }
-
-    fn unmake(&mut self) -> Result<Move> {
-        self.unmake()
-    }
-
-    fn play_pgn(&mut self, moves: &str) -> Result<Vec<Move>> {
-        let mut dest = vec![];
-        for mv in crate::parse::pgn::moves(self, moves)? {
-            dest.push(mv.clone());
-            self.make(mv)?;
-        }
-        Ok(dest)
-    }
-
-    fn play_uci(&mut self, moves: &str) -> Result<Vec<Move>> {
-        let mut dest = vec![];
-        for mv in crate::parse::uci::move_sequence(self, moves)? {
-            dest.push(mv.clone());
-            self.make(mv)?;
-        }
-        Ok(dest)
-    }
-
-    fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
-        self.compute_moves(computation_type)
-    }
-
-    fn terminal_state(&self) -> Option<TerminalState> {
-        self.terminal_state()
-    }
-
-    fn in_check(&self) -> bool {
-        self.passive_control().contains(self.king(self.active))
-    }
-
-    fn side(&self, side: Side) -> BitBoard {
-        match side {
-            Side::W => self.pieces.whites(),
-            Side::B => self.pieces.blacks(),
-        }
-    }
-
-    fn sides(&self) -> (BitBoard, BitBoard) {
-        (self.pieces.side_locations(Side::W), self.pieces.side_locations(Side::B))
-    }
-
-    fn hash(&self) -> u64 {
-        hash(&self.pieces, &self.rights, self.active, self.enpassant)
-    }
-
-    fn active(&self) -> Side {
-        self.active
-    }
-
-    fn enpassant(&self) -> Option<Square> {
-        self.enpassant
-    }
-
-    fn locs(&self, pieces: &[Piece]) -> BitBoard {
-        pieces.into_iter().map(|&p| self.pieces.locs(p)).fold(BitBoard::EMPTY, |l, r| l | r)
-    }
-
-    fn king(&self, side: Side) -> Square {
-        self.pieces.locs(Piece(side, Class::K)).into_iter().next().unwrap()
-    }
-
-    fn piece(&self, location: Square) -> Option<Piece> {
-        self.pieces.piece_at(location)
-    }
-
-    fn half_move_clock(&self) -> usize {
-        self.clock
-    }
-
-    fn position_count(&self) -> usize {
-        self.history.position_count()
-    }
-
-    fn remaining_rights(&self) -> EnumMap<Side, EnumSet<Flank>> {
-        self.rights.0.clone()
-    }
-
-    fn parse_uci(&self, uci_move: &str) -> Result<Move, Error> {
-        crate::parse::uci::single_move(self, uci_move)
-    }
-
-    fn to_fen_parts(&self, cmps: &[FenPart]) -> String {
-        fen::to_fen_impl(self, cmps)
     }
 }

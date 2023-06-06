@@ -1,9 +1,10 @@
 use enum_map::{enum_map, Enum, EnumMap};
 use lazy_static::lazy_static;
+use myopic_board::Board;
 
 use crate::eval::EvalFacet;
+use crate::Move;
 use crate::{BitBoard, Side, Square};
-use crate::{ChessBoard, Move};
 
 #[derive(Debug, Copy, Clone, PartialEq, Enum)]
 enum Knight {
@@ -46,12 +47,12 @@ lazy_static! {
     };
 }
 
-impl<B: ChessBoard> EvalFacet<B> for KnightRimFacet {
-    fn static_eval(&self, _: &B) -> i32 {
+impl EvalFacet for KnightRimFacet {
+    fn static_eval(&self, _: &Board) -> i32 {
         self.penalty * (self.pattern_count(Side::B) - self.pattern_count(Side::W))
     }
 
-    fn make(&mut self, mv: &Move, _: &B) {
+    fn make(&mut self, mv: &Move, _: &Board) {
         if let Move::Standard { from, dest, .. } = mv {
             if let Some((side, knight)) = START_LOCS[*from] {
                 if self.first_move[side][knight].is_none() {

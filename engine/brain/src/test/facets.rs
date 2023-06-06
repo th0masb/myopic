@@ -1,11 +1,11 @@
 use std::fmt::Debug;
 
 use crate::eval::EvalFacet;
-use crate::{Board, ChessBoard};
+use crate::Board;
 
 pub fn test_facet_evolution<F>(pgn: &str, expected_states: Vec<F>)
 where
-    F: EvalFacet<Board> + Default + PartialEq + Debug + Clone,
+    F: EvalFacet + Default + PartialEq + Debug + Clone,
 {
     // Parse the pgn moves
     let mut board = Board::default();

@@ -1,4 +1,4 @@
-use crate::{Board, ChessBoard};
+use crate::Board;
 
 #[test]
 fn case_1() {

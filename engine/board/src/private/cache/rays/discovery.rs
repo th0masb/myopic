@@ -1,10 +1,10 @@
 use myopic_core::*;
 
-use crate::imp::cache::rays::RaySet;
-use crate::{Board, ChessBoard};
+use crate::private::cache::rays::RaySet;
+use crate::Board;
 
 impl Board {
-    pub fn compute_discoveries(&self) -> RaySet {
+    pub(crate) fn compute_discoveries(&self) -> RaySet {
         let active = self.side(self.active);
         let passive = self.side(self.active.reflect());
         let king_loc =
