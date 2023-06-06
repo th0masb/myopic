@@ -1,11 +1,10 @@
 use myopic_core::*;
 
-use crate::imp::cache::rays::RaySet;
-use crate::imp::Board;
-use crate::ChessBoard;
+use crate::private::cache::rays::RaySet;
+use crate::Board;
 
 impl Board {
-    pub fn pinned_set(&self) -> RaySet {
+    pub(crate) fn pinned_set(&self) -> RaySet {
         let mut cache = self.cache.borrow_mut();
         match &cache.pinned_set {
             Some(x) => x.clone(),

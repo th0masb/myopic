@@ -7,7 +7,7 @@ use log;
 use simple_logger::SimpleLogger;
 
 use lambda_payloads::chessmove::*;
-use myopic_brain::{anyhow, ChessBoard, EvalBoard, Move, SearchParameters};
+use myopic_brain::{anyhow, Board, Evaluator, Move, SearchParameters};
 
 use crate::endings::LichessEndgameService;
 use crate::openings::DynamoOpeningService;
@@ -20,8 +20,8 @@ mod timing;
 const TABLE_SIZE: usize = 10000;
 
 #[async_trait]
-pub trait LookupMoveService<B: ChessBoard + Send>: Display {
-    async fn lookup(&self, position: B) -> anyhow::Result<Option<Move>>;
+pub trait LookupMoveService: Display {
+    async fn lookup(&self, position: Board) -> anyhow::Result<Option<Move>>;
 }
 
 #[tokio::main]
@@ -35,21 +35,21 @@ async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveO
     let choose_move = &event.payload;
     let start = Instant::now();
     // Setup the current game position
-    let mut board = EvalBoard::default();
-    board.play_uci(choose_move.moves_played.as_str())?;
+    let mut eval = Evaluator::default();
+    eval.play_uci(choose_move.moves_played.as_str())?;
 
     let lookup_services = load_lookup_services(&choose_move.features);
-    match perform_lookups(board.clone_position(), lookup_services).await {
+    match perform_lookups(eval.board().clone(), lookup_services).await {
         Some(mv) => Ok(ChooseMoveOutput { best_move: mv.uci_format(), search_details: None }),
         None => {
             let lookup_duration = start.elapsed();
             let search_time = TimeAllocator::default().allocate(
-                board.position_count(),
+                eval.board().position_count(),
                 Duration::from_millis(choose_move.clock_millis.remaining) - lookup_duration,
                 Duration::from_millis(choose_move.clock_millis.increment),
             );
             let search_outcome = myopic_brain::search(
-                board,
+                eval,
                 SearchParameters { terminator: search_time, table_size: TABLE_SIZE },
             )?;
             Ok(ChooseMoveOutput {
@@ -64,11 +64,8 @@ async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveO
     }
 }
 
-fn load_lookup_services<B>(features: &Vec<ChooseMoveFeature>) -> Vec<Box<dyn LookupMoveService<B>>>
-where
-    B: 'static + ChessBoard + Clone + Send,
-{
-    let mut services: Vec<Box<dyn LookupMoveService<B>>> = vec![];
+fn load_lookup_services(features: &Vec<ChooseMoveFeature>) -> Vec<Box<dyn LookupMoveService>> {
+    let mut services: Vec<Box<dyn LookupMoveService>> = vec![];
     if !features.contains(&ChooseMoveFeature::DisableOpeningsLookup) {
         services.push(Box::new(DynamoOpeningService::default()));
     }
@@ -79,13 +76,10 @@ where
 }
 
 /// Attempt to lookup precomputed moves from various sources
-async fn perform_lookups<B>(
-    position: B,
-    services: Vec<Box<dyn LookupMoveService<B>>>,
-) -> Option<Move>
-where
-    B: 'static + ChessBoard + Clone + Send,
-{
+async fn perform_lookups(
+    position: Board,
+    services: Vec<Box<dyn LookupMoveService>>,
+) -> Option<Move> {
     for service in services.iter() {
         match service.lookup(position.clone()).await {
             Ok(None) => {

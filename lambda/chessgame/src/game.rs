@@ -6,7 +6,7 @@ use rusoto_core::Region;
 use tokio_util::sync::CancellationToken;
 
 use myopic_brain::anyhow::{anyhow, Result};
-use myopic_brain::{ChessBoard, EvalBoard, Side};
+use myopic_brain::{Board, Side};
 
 use crate::events::{Clock, GameEvent, GameFull, GameState};
 use crate::lichess::{LichessChatRoom, LichessService};
@@ -133,10 +133,9 @@ impl Game {
     }
 
     fn get_game_state(&self, moves: &str) -> Result<(Side, u32)> {
-        let mut state = EvalBoard::default();
+        let mut state = Board::default();
         state.play_uci(moves)?;
-        let pos_count = state.position_count();
-        Ok((state.active(), pos_count as u32))
+        Ok((state.active(), state.position_count() as u32))
     }
 
     async fn process_state(&mut self, state: GameState) -> Result<GameExecutionState> {

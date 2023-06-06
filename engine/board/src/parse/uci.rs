@@ -4,7 +4,7 @@ use myopic_core::anyhow::{anyhow, Result};
 use myopic_core::{Class, Line, Square};
 
 use crate::parse::patterns::uci_move;
-use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
+use crate::{Board, Move, MoveComputeType, Reflectable};
 
 /// String wrapper representing a chess move formatted
 /// using the uci standard. We can use this to reflect
@@ -88,7 +88,7 @@ mod uci_struct_test {
 
 /// Extracts the moves encoded in standard uci format starting at
 /// a custom board position.
-pub fn move_sequence<B: ChessBoard + Clone>(start: &B, encoded: &str) -> Result<Vec<Move>> {
+pub fn move_sequence(start: &Board, encoded: &str) -> Result<Vec<Move>> {
     let (mut mutator_board, mut dest) = (start.clone(), vec![]);
     for evolve in uci_move().find_iter(encoded) {
         match single_move(&mut mutator_board, evolve.as_str()) {
@@ -102,7 +102,7 @@ pub fn move_sequence<B: ChessBoard + Clone>(start: &B, encoded: &str) -> Result<
     Ok(dest)
 }
 
-pub fn single_move<B: ChessBoard>(start: &B, uci_move: &str) -> Result<Move> {
+pub fn single_move(start: &Board, uci_move: &str) -> Result<Move> {
     let (f, d, promoting) = extract_uci_component(uci_move)?;
     start
         .compute_moves(MoveComputeType::All)

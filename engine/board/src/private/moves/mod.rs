@@ -1,9 +1,8 @@
 use myopic_core::*;
 
-use crate::imp::cache::MoveConstraints;
-use crate::imp::Board;
 use crate::moves::Move;
-use crate::ChessBoard;
+use crate::private::cache::MoveConstraints;
+use crate::private::Board;
 use crate::MoveComputeType;
 use crate::Square::*;
 
@@ -13,7 +12,7 @@ mod test;
 mod enpassantsrc;
 
 impl Board {
-    pub(crate) fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
+    pub(crate) fn compute_moves_impl(&self, computation_type: MoveComputeType) -> Vec<Move> {
         let constraints = self.move_constraints(computation_type);
         let pawn_moves = self.compute_pawn_moves(&constraints);
         let nbrqk_moves = self.compute_nbrqk_moves(&constraints);

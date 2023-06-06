@@ -5,9 +5,8 @@ use itertools::Itertools;
 
 use myopic_core::*;
 
-use crate::imp::Board;
 use crate::moves::Move;
-use crate::ChessBoard;
+use crate::Board;
 use crate::MoveComputeType;
 
 type MoveSet = BTreeSet<Move>;

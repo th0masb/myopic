@@ -4,8 +4,6 @@ pub mod uci;
 
 #[cfg(test)]
 mod test {
-    use crate::ChessBoard;
-
     #[test]
     fn uci_position_1() {
         let mut board = crate::start();

@@ -1,4 +1,3 @@
-use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
@@ -8,10 +7,12 @@ use itertools::Itertools;
 use log::info;
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
+use serde_derive::{Deserialize, Serialize};
+
+use myopic_brain::{anyhow as ah, Board};
+use myopic_brain::{FenPart, Move};
 
 use crate::LookupMoveService;
-use myopic_brain::anyhow as ah;
-use myopic_brain::{ChessBoard, FenPart, Move};
 
 const TABLE_ENV_KEY: &'static str = "APP_CONFIG";
 
@@ -51,8 +52,8 @@ impl Display for DynamoOpeningService {
 }
 
 #[async_trait]
-impl<B: ChessBoard + Send + 'static> LookupMoveService<B> for DynamoOpeningService {
-    async fn lookup(&self, position: B) -> ah::Result<Option<Move>> {
+impl LookupMoveService for DynamoOpeningService {
+    async fn lookup(&self, position: Board) -> ah::Result<Option<Move>> {
         let pos_count = position.position_count();
         if pos_count > self.params.max_depth as usize {
             info!("No lookup as {} > {}", pos_count, self.params.max_depth);

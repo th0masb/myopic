@@ -1,7 +1,8 @@
+use myopic_board::{Board, Class};
+
 use crate::eval::EvalFacet;
-use crate::{ChessBoard, Line, Move, Piece, Square};
+use crate::{Line, Move, Piece, Square};
 use crate::{PieceValues, PositionTables, Reflectable};
-use myopic_board::Class;
 
 const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
 const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
@@ -29,14 +30,14 @@ impl Reflectable for MaterialFacet {
     }
 }
 
-impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
-    fn static_eval(&self, _: &B) -> i32 {
+impl EvalFacet for MaterialFacet {
+    fn static_eval(&self, _: &Board) -> i32 {
         let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
         let (mid, end) = (self.mid_eval, self.end_eval);
         ((mid * (256 - phase)) + end * phase) / 256
     }
 
-    fn make(&mut self, mv: &Move, _: &B) {
+    fn make(&mut self, mv: &Move, _: &Board) {
         match mv {
             &Move::Standard { moving, from, dest, capture, .. } => {
                 self.remove(moving, from);
@@ -103,11 +104,7 @@ impl<B: ChessBoard> EvalFacet<B> for MaterialFacet {
 }
 
 impl MaterialFacet {
-    pub fn new<B: ChessBoard>(
-        board: &B,
-        values: PieceValues,
-        tables: PositionTables,
-    ) -> MaterialFacet {
+    pub fn new(board: &Board, values: PieceValues, tables: PositionTables) -> MaterialFacet {
         MaterialFacet {
             mid_eval: compute_midgame(board, &values, &tables),
             end_eval: compute_endgame(board, &values, &tables),
@@ -150,7 +147,7 @@ impl MaterialFacet {
     }
 }
 
-pub fn compute_phase<B: ChessBoard>(board: &B) -> i32 {
+pub fn compute_phase(board: &Board) -> i32 {
     let phase_sub: i32 = Piece::all()
         .filter(|p| p.1 != Class::K)
         .map(|p| board.locs(&[p]).size() as i32 * PHASE_VALUES[p.1 as usize])
@@ -158,22 +155,14 @@ pub fn compute_phase<B: ChessBoard>(board: &B) -> i32 {
     TOTAL_PHASE - phase_sub
 }
 
-pub fn compute_midgame<B: ChessBoard>(
-    board: &B,
-    values: &PieceValues,
-    tables: &PositionTables,
-) -> i32 {
+pub fn compute_midgame(board: &Board, values: &PieceValues, tables: &PositionTables) -> i32 {
     Piece::all()
         .flat_map(|p| board.locs(&[p]).iter().map(move |loc| (p, loc)))
         .map(|(p, loc)| tables.midgame(p, loc) + values.midgame(p))
         .sum()
 }
 
-pub fn compute_endgame<B: ChessBoard>(
-    board: &B,
-    values: &PieceValues,
-    tables: &PositionTables,
-) -> i32 {
+pub fn compute_endgame(board: &Board, values: &PieceValues, tables: &PositionTables) -> i32 {
     Piece::all()
         .flat_map(|p| board.locs(&[p]).iter().map(move |loc| (p, loc)))
         .map(|(p, loc)| tables.endgame(p, loc) + values.endgame(p))

@@ -1,7 +1,7 @@
 use myopic_core::anyhow::{anyhow, Result};
 use myopic_core::Square;
 
-use crate::imp::rights::Rights;
+use crate::private::rights::Rights;
 use crate::Move;
 
 #[derive(Debug, Clone, Eq, PartialEq)]

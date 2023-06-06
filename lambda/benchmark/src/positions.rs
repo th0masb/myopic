@@ -1,9 +1,9 @@
-use myopic_brain::{anyhow, Board, EvalBoard};
+use myopic_brain::{anyhow, Evaluator};
 
-pub fn get(n: usize) -> anyhow::Result<Vec<EvalBoard<Board>>> {
+pub fn get(n: usize) -> anyhow::Result<Vec<Evaluator>> {
     let mut roots = vec![];
     for &fen in POSITIONS.iter().take(n) {
-        roots.push(fen.parse::<EvalBoard<Board>>()?);
+        roots.push(fen.parse::<Evaluator>()?);
     }
     Ok(roots)
 }

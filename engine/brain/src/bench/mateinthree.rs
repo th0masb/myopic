@@ -4,10 +4,10 @@ use std::time::Duration;
 
 use regex::Regex;
 
-use crate::eval::imp::EvalBoard;
+use crate::eval::Evaluator;
 use crate::eval::WIN_VALUE;
 use crate::search::{search, SearchParameters};
-use crate::{Board, ChessBoard, Move};
+use crate::{Board, Move};
 
 #[rustfmt::skip]
 ///
@@ -139,8 +139,8 @@ fn benchmark() {
         if i % 5 == 0 {
             print_progress(case_count, err_count, search_duration.clone());
         }
-        let board_fen = test_case.board.to_fen();
-        match search(test_case.board, SearchParameters { terminator: depth, table_size }) {
+        let board_fen = test_case.eval.board().to_fen();
+        match search(test_case.eval, SearchParameters { terminator: depth, table_size }) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 search_duration += outcome.time;
@@ -189,7 +189,7 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
                 }
                 Ok(moves) => {
                     let expected_move = moves.first().unwrap().to_owned();
-                    dest.push(TestCase { board: EvalBoard::from(board), expected_move });
+                    dest.push(TestCase { eval: Evaluator::from(board), expected_move });
                     if dest.len() == max_cases {
                         break;
                     }
@@ -202,6 +202,6 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
 
 //#[derive(Clone)]
 struct TestCase {
-    board: EvalBoard<Board>,
+    eval: Evaluator,
     expected_move: Move,
 }

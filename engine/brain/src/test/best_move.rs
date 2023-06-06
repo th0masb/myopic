@@ -1,8 +1,7 @@
-use myopic_board::{Board, ChessBoard, Reflectable};
+use myopic_board::{Board, Reflectable};
 
-use crate::eval::EvalChessBoard;
 use crate::search::SearchParameters;
-use crate::{eval, EvalBoard, UciMove};
+use crate::{eval, Evaluator, UciMove};
 
 const DEPTH: usize = 3;
 const TABLE_SIZE: usize = 10_000;
@@ -16,21 +15,21 @@ fn test(setup: Setup, expected_move_pool: Vec<UciMove>, is_won: bool) {
     match setup {
         Setup::Fen(fen_string) => {
             let base_board = fen_string.parse::<Board>().unwrap();
-            let ref_board = EvalBoard::from(base_board.reflect());
-            let board = EvalBoard::from(base_board);
+            let ref_board = Evaluator::from(base_board.reflect());
+            let board = Evaluator::from(base_board);
             let ref_move_pool = expected_move_pool.reflect();
             test_impl(board, expected_move_pool, is_won);
             test_impl(ref_board, ref_move_pool, is_won);
         }
         Setup::Pgn(pgn_string) => {
-            let mut board = EvalBoard::default();
+            let mut board = Evaluator::default();
             board.play_pgn(pgn_string).unwrap();
             test_impl(board, expected_move_pool, is_won)
         }
     }
 }
 
-fn test_impl<B: EvalChessBoard>(board: B, expected_move_pool: Vec<UciMove>, is_won: bool) {
+fn test_impl(board: Evaluator, expected_move_pool: Vec<UciMove>, is_won: bool) {
     match crate::search(board, SearchParameters { terminator: DEPTH, table_size: TABLE_SIZE }) {
         Err(message) => panic!("{}", message),
         Ok(outcome) => {

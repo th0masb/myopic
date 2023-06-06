@@ -2,12 +2,10 @@
 #[cfg(test)]
 extern crate lazy_static;
 
-pub use eval::imp::{BoardBuilder, EvalBoard};
 pub use eval::tables::PositionTables;
 pub use eval::values::PieceValues;
-pub use eval::{EvalChessBoard, MaterialParameters};
+pub use eval::Evaluator;
 pub use myopic_board::*;
-pub use search::interactive;
 pub use search::negascout;
 pub use search::search;
 pub use search::terminator::SearchTerminator;

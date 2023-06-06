@@ -1,10 +1,10 @@
 use myopic_core::*;
 
-use crate::{ChessBoard, FenPart};
+use crate::{Board, FenPart};
 
-pub(super) fn to_fen_impl<B: ChessBoard>(board: &B, cmps: &[FenPart]) -> String {
+pub(crate) fn to_fen_impl(board: &Board, parts: &[FenPart]) -> String {
     let mut dest = String::new();
-    for cmp in cmps {
+    for cmp in parts {
         let encoded_cmp = match *cmp {
             FenPart::Board => to_fen_board(board),
             FenPart::Active => to_fen_side(board),
@@ -22,7 +22,7 @@ pub(super) fn to_fen_impl<B: ChessBoard>(board: &B, cmps: &[FenPart]) -> String 
     dest
 }
 
-fn to_fen_board<B: ChessBoard>(board: &B) -> String {
+fn to_fen_board(board: &Board) -> String {
     let mut dest = String::new();
     let mut empty_count = 0;
     for i in 0..64 {
@@ -50,14 +50,14 @@ fn to_fen_board<B: ChessBoard>(board: &B) -> String {
     dest
 }
 
-fn to_fen_side<B: ChessBoard>(board: &B) -> String {
+fn to_fen_side(board: &Board) -> String {
     match board.active() {
         Side::W => "w".to_string(),
         Side::B => "b".to_string(),
     }
 }
 
-fn to_fen_castling_rights<B: ChessBoard>(board: &B) -> String {
+fn to_fen_castling_rights(board: &Board) -> String {
     let rights = board
         .remaining_rights()
         .into_iter()
@@ -71,18 +71,18 @@ fn to_fen_castling_rights<B: ChessBoard>(board: &B) -> String {
     }
 }
 
-fn to_fen_enpassant<B: ChessBoard>(board: &B) -> String {
+fn to_fen_enpassant(board: &Board) -> String {
     match board.enpassant() {
         None => format!("-"),
         Some(s) => format!("{}", s).to_lowercase(),
     }
 }
 
-fn to_fen_half_move_count<B: ChessBoard>(board: &B) -> String {
+fn to_fen_half_move_count(board: &Board) -> String {
     board.half_move_clock().to_string()
 }
 
-fn to_fen_move_count<B: ChessBoard>(board: &B) -> String {
+fn to_fen_move_count(board: &Board) -> String {
     (board.position_count() / 2 + 1).to_string()
 }
 
@@ -116,7 +116,7 @@ fn piece_to_fen(Piece(side, class): Piece) -> &'static str {
 mod test {
     use myopic_core::anyhow::Result;
 
-    use crate::{Board, ChessBoard, FenPart};
+    use crate::{Board, FenPart};
 
     use super::to_fen_impl;
 

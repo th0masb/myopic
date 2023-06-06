@@ -7,7 +7,7 @@ use serde_derive::Deserialize;
 use tokio::time::Duration;
 
 use myopic_brain::anyhow::{anyhow, Result};
-use myopic_brain::{ChessBoard, Move};
+use myopic_brain::{Board, Move};
 
 use crate::LookupMoveService;
 
@@ -27,8 +27,8 @@ impl Display for LichessEndgameService {
 }
 
 #[async_trait]
-impl<B: ChessBoard + Send + 'static> LookupMoveService<B> for LichessEndgameService {
-    async fn lookup(&self, position: B) -> Result<Option<Move>> {
+impl LookupMoveService for LichessEndgameService {
+    async fn lookup(&self, position: Board) -> Result<Option<Move>> {
         let query = position.to_fen().replace(" ", "_");
         let piece_count = position.all_pieces().size();
         if piece_count > MAX_PIECE_COUNT {
