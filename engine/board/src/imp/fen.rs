@@ -95,20 +95,20 @@ fn corner_to_fen(Corner(side, flank): Corner) -> &'static str {
     }
 }
 
-fn piece_to_fen(piece: Piece) -> &'static str {
-    match piece {
-        Piece::WP => "P",
-        Piece::BP => "p",
-        Piece::WN => "N",
-        Piece::BN => "n",
-        Piece::WB => "B",
-        Piece::BB => "b",
-        Piece::WR => "R",
-        Piece::BR => "r",
-        Piece::WQ => "Q",
-        Piece::BQ => "q",
-        Piece::WK => "K",
-        Piece::BK => "k",
+fn piece_to_fen(Piece(side, class): Piece) -> &'static str {
+    match (side, class) {
+        (Side::W, Class::P) => "P",
+        (Side::B, Class::P) => "p",
+        (Side::W, Class::N) => "N",
+        (Side::B, Class::N) => "n",
+        (Side::W, Class::B) => "B",
+        (Side::B, Class::B) => "b",
+        (Side::W, Class::R) => "R",
+        (Side::B, Class::R) => "r",
+        (Side::W, Class::Q) => "Q",
+        (Side::B, Class::Q) => "q",
+        (Side::W, Class::K) => "K",
+        (Side::B, Class::K) => "k",
     }
 }
 

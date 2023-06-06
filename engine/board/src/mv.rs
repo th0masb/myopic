@@ -138,7 +138,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use myopic_core::Flank;
+    use myopic_core::{Class, Flank};
     use crate::mv::Move;
     use crate::{Piece, Square};
 
@@ -149,7 +149,7 @@ mod test {
         assert_eq!(
             Move::Standard {
                 source: 0u64,
-                moving: Piece::WP,
+                moving: Piece(Side::W, Class::P),
                 from: Square::E2,
                 dest: Square::E4,
                 capture: None,
@@ -159,10 +159,10 @@ mod test {
         assert_eq!(
             Move::Standard {
                 source: 1u64,
-                moving: Piece::BR,
+                moving: Piece(Side::B, Class::R),
                 from: Square::C4,
                 dest: Square::C2,
-                capture: Some(Piece::WP),
+                capture: Some(Piece(Side::W, Class::P)),
             },
             Move::from("sbrc4c2wp", 1u64)?
         );
@@ -176,7 +176,7 @@ mod test {
                 source: 0u64,
                 from: Square::E7,
                 dest: Square::E8,
-                promoted: Piece::WQ,
+                promoted: Piece(Side::W, Class::Q),
                 capture: None,
             },
             Move::from("pe7e8wq-", 0u64)?
@@ -186,8 +186,8 @@ mod test {
                 source: 1u64,
                 from: Square::E7,
                 dest: Square::D8,
-                promoted: Piece::WQ,
-                capture: Some(Piece::BB),
+                promoted: Piece(Side::W, Class::Q),
+                capture: Some(Piece(Side::B, Class::B)),
             },
             Move::from("pe7d8wqbb", 1u64)?
         );
@@ -225,9 +225,9 @@ mod test {
 impl Move {
     pub fn moving_side(&self) -> Side {
         match self {
-            &Move::Standard { moving, .. } => moving.side(),
+            &Move::Standard { moving: Piece(side, _), .. } => side,
             &Move::Enpassant { side, .. } => side,
-            &Move::Promotion { promoted, .. } => promoted.side(),
+            &Move::Promotion { promoted: Piece(side, _), .. } => side,
             &Move::Castle { corner: Corner(side, _), .. } => side,
         }
     }
@@ -253,20 +253,9 @@ impl Move {
             Move::Promotion {
                 from,
                 dest,
-                promoted,
+                promoted: Piece(_, class),
                 ..
-            } => format!(
-                "{}{}{}",
-                from,
-                dest,
-                match promoted {
-                    Piece::WQ | Piece::BQ => "q",
-                    Piece::WR | Piece::BR => "r",
-                    Piece::WB | Piece::BB => "b",
-                    Piece::WN | Piece::BN => "n",
-                    _ => "",
-                }
-            ),
+            } => format!("{}{}{}", from, dest, class),
         }
     }
 

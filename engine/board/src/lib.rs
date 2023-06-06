@@ -174,7 +174,7 @@ mod uci_conversion_test {
             "e2e4",
             Move::Standard {
                 source: 0u64,
-                moving: Piece::WP,
+                moving: Piece(Side::W, Class::P),
                 from: Square::E2,
                 dest: Square::E4,
                 capture: None,
@@ -189,10 +189,10 @@ mod uci_conversion_test {
             "h1h7",
             Move::Standard {
                 source: 0u64,
-                moving: Piece::BR,
+                moving: Piece(Side::B, Class::R),
                 from: Square::H1,
                 dest: Square::H7,
-                capture: Some(Piece::WQ),
+                capture: Some(Piece(Side::W, Class::Q)),
             }
             .uci_format()
         );
@@ -242,8 +242,8 @@ mod uci_conversion_test {
                 source: 9u64,
                 from: Square::E7,
                 dest: Square::D8,
-                promoted: Piece::WQ,
-                capture: Some(Piece::BB),
+                promoted: Piece(Side::W, Class::Q),
+                capture: Some(Piece(Side::B, Class::B)),
             }
             .uci_format()
         )

@@ -28,7 +28,7 @@ impl Board {
         let active_king = self.king(active);
         let passive_control = self.passive_control();
         let (whites, blacks) = self.sides();
-        let king_moves = Piece::king(active).moves(active_king, whites, blacks);
+        let king_moves = Piece(active, Class::K).moves(active_king, whites, blacks);
         // If king can move somewhere which is usually the case then not terminal.
         if (king_moves - passive_control).is_populated() {
             None
@@ -71,7 +71,8 @@ impl Board {
         let constraints = self.move_constraints(MoveComputeType::All);
         let (whites, blacks) = self.sides();
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
-        for &piece in qrbnp(self.active) {
+        for &class in qrbnp() {
+            let piece = Piece(self.active, class);
             let locations = self.locs(&[piece]);
             if locations.iter().any(|loc| moves(piece, loc).is_populated()) {
                 return None;
@@ -84,11 +85,12 @@ impl Board {
     /// Assumes king cannot move but not in check
     fn unchecked_termination(&self) -> Option<TerminalState> {
         let king = self.king(self.active);
-        let pin_rays = Piece::WQ.control(king, BitBoard::EMPTY, BitBoard::EMPTY);
+        let pin_rays = Piece(Side::W, Class::Q).empty_control(king);
         let (whites, blacks) = self.sides();
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
         // These pieces have no constraints since not in check and not on pin rays
-        for &piece in qrbnp(self.active) {
+        for &class in qrbnp() {
+            let piece = Piece(self.active, class);
             let locations = self.locs(&[piece]) - pin_rays;
             if locations.iter().any(|loc| moves(piece, loc).is_populated()) {
                 return None;
@@ -97,7 +99,8 @@ impl Board {
         // Compute constraints as a last resort
         let constraints = self.move_constraints(MoveComputeType::All);
         let moves2 = |p: Piece, loc: Square| p.moves(loc, whites, blacks) & constraints.get(loc);
-        for &piece in qrbnp(self.active) {
+        for &class in qrbnp() {
+            let piece = Piece(self.active, class);
             let locations = self.locs(&[piece]) & pin_rays;
             if locations
                 .iter()
@@ -111,9 +114,6 @@ impl Board {
     }
 }
 
-fn qrbnp<'a>(side: Side) -> &'a [Piece] {
-    match side {
-        Side::W => &[Piece::WQ, Piece::WR, Piece::WB, Piece::WN, Piece::WP],
-        Side::B => &[Piece::BQ, Piece::BR, Piece::BB, Piece::BN, Piece::BP],
-    }
+fn qrbnp<'a>() -> &'a [Class] {
+    &[Class::Q, Class::R, Class::B, Class::N, Class::P]
 }

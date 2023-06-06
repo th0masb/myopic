@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 use myopic_core::anyhow::{anyhow, Result};
-use myopic_core::{Line, Piece, Square};
+use myopic_core::{Class, Line, Piece, Square};
 
 use crate::parse::patterns::uci_move;
 use crate::{ChessBoard, Move, MoveComputeType, Reflectable};
@@ -131,7 +131,7 @@ pub fn single_move<B: ChessBoard>(start: &B, uci_move: &str) -> Result<Move> {
                 from == f
                     && dest == d
                     && promoting
-                        .map(|c| piece_char(promoted) == c)
+                        .map(|c| piece_char(promoted.1) == c)
                         .unwrap_or(false)
             }
         })
@@ -155,12 +155,12 @@ fn extract_uci_component(pgn_move: &str) -> Result<(Square, Square, Option<char>
     Ok((from, dest, pgn_move.chars().skip(4).next()))
 }
 
-fn piece_char(piece: Piece) -> char {
+fn piece_char(piece: Class) -> char {
     match piece {
-        Piece::WQ | Piece::BQ => 'q',
-        Piece::WR | Piece::BR => 'r',
-        Piece::WB | Piece::BB => 'b',
-        Piece::WN | Piece::BN => 'n',
+        Class::Q => 'q',
+        Class::R => 'r',
+        Class::B => 'b',
+        Class::N => 'n',
         _ => 'x',
     }
 }

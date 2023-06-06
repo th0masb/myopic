@@ -92,12 +92,9 @@ impl Board {
         let enpassant_set = self.enpassant.map_or(BitBoard::EMPTY, |sq| sq.into());
         let passive_locs = self.side(passive);
         if !checks {
-            for piece in Piece::of(active) {
-                let enpassant = if piece.is_pawn() {
-                    enpassant_set
-                } else {
-                    BitBoard::EMPTY
-                };
+            for class in Class::all() {
+                let piece = Piece(active, class);
+                let enpassant = if piece.1 == Class::P { enpassant_set } else { BitBoard::EMPTY };
                 for loc in self.locs(&[piece]) {
                     constraints.intersect(loc, passive_locs | enpassant);
                 }
@@ -105,18 +102,15 @@ impl Board {
         } else {
             let discoveries = self.compute_discoveries();
             let passive_king = self.king(passive);
-            let promotion_rays = Piece::WQ.control(passive_king, whites, blacks);
-            let promotion_jumps = Piece::WN.empty_control(passive_king);
+            let promotion_rays = Piece(Side::W, Class::Q).control(passive_king, whites | blacks);
+            let promotion_jumps = Piece(Side::W, Class::N).empty_control(passive_king);
             let promotion_checks =
                 (promotion_rays | promotion_jumps) & active.pawn_promoting_dest_rank();
-            for piece in Piece::of(active) {
-                let is_pawn = piece.is_pawn();
-                let enpassant = if is_pawn {
-                    enpassant_set
-                } else {
-                    BitBoard::EMPTY
-                };
-                let check_squares = piece.reflect().control(passive_king, whites, blacks);
+            for class in Class::all() {
+                let piece = Piece(active, class);
+                let is_pawn = piece.1 == Class::P;
+                let enpassant = if is_pawn { enpassant_set } else { BitBoard::EMPTY };
+                let check_squares = piece.reflect().control(passive_king, whites | blacks);
                 let promotion = if is_pawn {
                     promotion_checks
                 } else {
@@ -144,7 +138,7 @@ impl Board {
             // except the king who can move anywhere out of the passive control
             // zone.
             let (piece, attack_location) = attackers[0];
-            let blocking_squares = if piece.is_knight() {
+            let blocking_squares = if piece.1 == Class::N {
                 attack_location.into()
             } else {
                 BitBoard::cord(attack_location, active_king_loc)
@@ -163,17 +157,14 @@ impl Board {
     fn compute_king_attackers(&self) -> Vec<(Piece, Square)> {
         let (whites, blacks) = self.sides();
         let king_loc = self.king(self.active);
-        pnbrq(self.active.reflect())
-            .iter()
-            .flat_map(|&p| self.pieces.locs(p).into_iter().map(move |s| (p, s)))
-            .filter(|(p, s)| p.control(*s, whites, blacks).contains(king_loc))
+        pnbrq().into_iter()
+            .map(|class| Piece(self.active.reflect(), class))
+            .flat_map(|p| self.pieces.locs(p).into_iter().map(move |s| (p, s)))
+            .filter(|(p, s)| p.control(*s, whites | blacks).contains(king_loc))
             .collect()
     }
 }
 
-fn pnbrq<'a>(side: Side) -> &'a [Piece; 5] {
-    match side {
-        Side::W => &[Piece::WP, Piece::WN, Piece::WB, Piece::WR, Piece::WQ],
-        Side::B => &[Piece::BP, Piece::BN, Piece::BB, Piece::BR, Piece::BQ],
-    }
+fn pnbrq() -> [Class; 5] {
+    [Class::P, Class::N, Class::B, Class::R, Class::Q]
 }

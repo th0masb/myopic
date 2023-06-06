@@ -78,7 +78,7 @@ impl Board {
         self.pieces.set_piece(moving, target);
         self.rights.remove_rights(source | target);
         self.enpassant = Board::compute_enpassant(source, target, moving);
-        self.clock = if captured.is_some() || moving.is_pawn() {
+        self.clock = if captured.is_some() || moving.1 == Class::P {
             0
         } else {
             self.clock + 1
@@ -89,8 +89,8 @@ impl Board {
         self.rights.apply_castling(corner.0);
         let Line(r_source, r_target) = Line::rook_castling(corner);
         let Line(k_source, k_target) = Line::king_castling(corner);
-        let rook = Piece::rook(corner.0);
-        let king = Piece::king(corner.0);
+        let rook = Piece(corner.0, Class::R);
+        let king = Piece(corner.0, Class::K);
         self.pieces.unset_piece(rook, r_source);
         self.pieces.unset_piece(king, k_source);
         self.pieces.set_piece(rook, r_target);
@@ -100,7 +100,7 @@ impl Board {
     }
 
     fn make_enpassant(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
-        let moving_pawn = Piece::pawn(side);
+        let moving_pawn = Piece(side, Class::P);
         self.pieces.unset_piece(moving_pawn.reflect(), capture);
         self.pieces.unset_piece(moving_pawn, from);
         self.pieces.set_piece(moving_pawn, dest);
@@ -118,7 +118,7 @@ impl Board {
         if let Some(p) = captured {
             self.pieces.unset_piece(p, dest);
         }
-        let moved = Piece::pawn(promoted.side());
+        let moved = Piece(promoted.0, Class::P);
         self.pieces.unset_piece(moved, from);
         self.pieces.set_piece(promoted, dest);
         self.enpassant = None;
@@ -181,8 +181,8 @@ impl Board {
     fn unmake_castle(&mut self, corner: Corner) {
         let Line(r_source, r_target) = Line::rook_castling(corner);
         let Line(k_source, k_target) = Line::king_castling(corner);
-        let rook = Piece::rook(corner.0);
-        let king = Piece::king(corner.0);
+        let rook = Piece(corner.0, Class::R);
+        let king = Piece(corner.0, Class::K);
         self.pieces.set_piece(rook, r_source);
         self.pieces.set_piece(king, k_source);
         self.pieces.unset_piece(rook, r_target);
@@ -190,7 +190,7 @@ impl Board {
     }
 
     fn unmake_enpassant(&mut self, side: Side, from: Square, dest: Square, capture: Square) {
-        let moving_pawn = Piece::pawn(side);
+        let moving_pawn = Piece(side, Class::P);
         self.pieces.unset_piece(moving_pawn, dest);
         self.pieces.set_piece(moving_pawn.reflect(), capture);
         self.pieces.set_piece(moving_pawn, from);
@@ -203,7 +203,7 @@ impl Board {
         promoted: Piece,
         captured: Option<Piece>,
     ) {
-        let moved = Piece::pawn(promoted.side());
+        let moved = Piece(promoted.0, Class::P);
         self.pieces.unset_piece(promoted, dest);
         self.pieces.set_piece(moved, from);
         if let Some(p) = captured {
@@ -213,9 +213,8 @@ impl Board {
 
     /// Determines the enpassant square for the next board state given a
     /// piece which has just moved from the source to the target.
-    fn compute_enpassant(source: Square, target: Square, piece: Piece) -> Option<Square> {
-        if piece.is_pawn() {
-            let side = piece.side();
+    fn compute_enpassant(source: Square, target: Square, Piece(side, class): Piece) -> Option<Square> {
+        if class == Class::P {
             if side.pawn_first_rank().contains(source) && side.pawn_third_rank().contains(target) {
                 source.next(side.pawn_dir())
             } else {

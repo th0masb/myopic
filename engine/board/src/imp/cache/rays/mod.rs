@@ -3,9 +3,6 @@ use std::iter::FromIterator;
 use myopic_core::enum_map::EnumMap;
 use myopic_core::*;
 
-pub const WHITE_SLIDERS: [Piece; 3] = [Piece::WB, Piece::WR, Piece::WQ];
-pub const BLACK_SLIDERS: [Piece; 3] = [Piece::BB, Piece::BR, Piece::BQ];
-
 pub mod discovery;
 pub mod pinning;
 

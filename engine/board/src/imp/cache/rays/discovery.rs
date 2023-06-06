@@ -7,7 +7,7 @@ impl Board {
     pub fn compute_discoveries(&self) -> RaySet {
         let active = self.side(self.active);
         let passive = self.side(self.active.reflect());
-        let king_loc = self.pieces.king_location(self.active.reflect());
+        let king_loc = self.pieces.locs(Piece(self.active.reflect(), Class::K)).into_iter().next().unwrap();
 
         self.compute_xrayers(king_loc)
             .iter()
@@ -21,14 +21,10 @@ impl Board {
     }
 
     fn compute_xrayers(&self, king_loc: Square) -> BitBoard {
-        let active_sliders = match self.active {
-            Side::W => super::WHITE_SLIDERS,
-            Side::B => super::BLACK_SLIDERS,
-        };
-        let locs = |p: Piece| self.locs(&[p]);
-        active_sliders
+        [Class::B, Class::R, Class::Q]
             .iter()
-            .flat_map(|&p| locs(p) & p.empty_control(king_loc))
+            .map(|&class| Piece(self.active, class))
+            .flat_map(|p| self.locs(&[p]) & p.empty_control(king_loc))
             .collect()
     }
 }
