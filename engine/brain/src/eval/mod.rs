@@ -9,6 +9,7 @@ use crate::eval::material::{MaterialFacet, PieceValues};
 use crate::eval::phase::Phase;
 use crate::eval::tables::PieceSquareTablesFacet;
 use myopic_board::{Board, Move, TerminalState};
+use crate::Square;
 
 mod antipattern;
 mod castling;
@@ -16,6 +17,7 @@ mod development;
 pub mod material;
 mod phase;
 pub mod tables;
+mod see;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -70,6 +72,11 @@ impl Evaluator {
     /// Get an immutable reference to the underlying board
     pub fn board(&self) -> &Board {
         &self.board
+    }
+
+    /// Add another evaluation facet to this instance
+    pub fn push_facet(&mut self, facet: Box<dyn EvalFacet>) {
+        self.facets.push(facet);
     }
 
     /// Make the given move on the underlying board and update all the internal
@@ -139,6 +146,17 @@ impl Evaluator {
                 parity * (material + facets)
             }
         }
+    }
+
+    /// API function for determining whether an exchange is good on this
+    /// board. The board must have a piece at both the source and target square
+    /// otherwise this function will panic. The pieces must be on opposing
+    /// sides and the quality of the return value is in relation to the side of
+    /// the attacker, higher is good for the attacker. Positive means a good
+    /// exchange, negative mean a bad one. If the pieces are on the same side the
+    /// result is undefined.
+    pub fn see(&self, source: Square, target: Square) -> i32 {
+        see::exchange_value(&self.board, source, target, self.piece_values())
     }
 
     // TODO For now we just use midgame values, should take into account phase

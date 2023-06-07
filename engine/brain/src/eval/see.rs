@@ -6,13 +6,6 @@ use crate::eval::material::PieceValues;
 use crate::Class;
 use myopic_board::{BitBoard, Board, Piece, Reflectable, Side, Square};
 
-/// API function for determining whether an exchange is good on the given
-/// board. The board must have a piece at both the source and target square
-/// otherwise this function will panic. The pieces must be on opposing
-/// sides and the quality of the return value is in relation to the side of
-/// the attacker, higher is good for the attacker. Positive means a good
-/// exchange, negative mean a bad one. If the pieces are on the same side the
-/// result is undefined.
 pub fn exchange_value(
     board: &Board,
     source: Square,
@@ -172,7 +165,7 @@ mod test {
     use myopic_board::{Reflectable, Square};
 
     use crate::eval::material::PieceValues;
-    use crate::see::See;
+    use super::See;
     use crate::Board;
     use crate::Class;
 

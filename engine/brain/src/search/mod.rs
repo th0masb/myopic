@@ -18,6 +18,7 @@ mod movequality;
 pub mod negascout;
 pub mod terminator;
 mod transpositions;
+mod quiescent;
 
 const DEPTH_UPPER_BOUND: usize = 10;
 const SHALLOW_EVAL_TRIGGER_DEPTH: usize = 2;
