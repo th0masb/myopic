@@ -1,4 +1,4 @@
-use myopic_board::{Board, Move, Move::*, Reflectable, Side, Square};
+use myopic_board::{Board, Move, Move::*, Reflectable, Square};
 
 use crate::{BitBoard, Class, Evaluator, Piece, PositionTables};
 
@@ -45,8 +45,7 @@ impl MaterialAndPositioningHeuristic {
             Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
             &Standard { moving: Piece(side, class), from, dest, .. } => {
                 if eval.board().side(side.reflect()).contains(dest) {
-                    let exchange_value =
-                        crate::see::exchange_value(eval.board(), from, dest, eval.piece_values());
+                    let exchange_value = eval.see(from, dest);
                     if exchange_value > 0 {
                         MoveCategory::GoodExchange(exchange_value)
                     } else {
@@ -57,9 +56,7 @@ impl MaterialAndPositioningHeuristic {
                         .map(|n| MoveCategory::BadExchange(n))
                         .unwrap_or_else(|| {
                             MoveCategory::Positional(
-                                parity(side)
-                                    * (self.tables.midgame(class, dest)
-                                        - self.tables.midgame(class, from)),
+                                self.tables.midgame(class, dest) - self.tables.midgame(class, from),
                             )
                         })
                 }
@@ -138,11 +135,4 @@ fn compute_control(board: &Board, piece: Piece) -> BitBoard {
         .iter()
         .map(|s| piece.control(s, white | black))
         .fold(BitBoard::EMPTY, |l, r| l | r)
-}
-
-fn parity(side: Side) -> i32 {
-    match side {
-        Side::W => 1,
-        Side::B => -1,
-    }
 }

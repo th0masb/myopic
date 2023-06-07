@@ -7,12 +7,12 @@ use itertools::Itertools;
 use myopic_board::anyhow::{anyhow, Result};
 use myopic_board::{Move, MoveComputeType, TerminalState};
 
-use crate::search::eval;
+use crate::search::{eval, quiescent};
 use crate::search::movehints::MoveOrderingHints;
 use crate::search::movequality::{BestMoveHeuristic, MaterialAndPositioningHeuristic};
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{TranspositionTable, TreeNode};
-use crate::{quiescent, Evaluator};
+use crate::Evaluator;
 
 /// Performs a negascout search without any iterative deepening,
 /// we simply provide a depth to search to. The depth should be

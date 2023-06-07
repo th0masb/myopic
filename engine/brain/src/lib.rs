@@ -13,9 +13,7 @@ pub use search::SearchParameters;
 
 mod eval;
 
-mod quiescent;
 mod search;
-mod see;
 
 #[cfg(test)]
 mod bench;

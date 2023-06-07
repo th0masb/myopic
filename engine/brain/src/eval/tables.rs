@@ -1,6 +1,5 @@
 use enum_map::{enum_map, EnumMap};
 
-
 use crate::eval::{EvalFacet, Evaluation};
 use crate::{Class, Corner, Line};
 use myopic_board::{Board, Move, Piece, Reflectable, Square};
@@ -246,7 +245,7 @@ const PAWN: CompleteTable = [
 
 #[cfg(test)]
 mod test {
-    use myopic_board::{Square::*};
+    use myopic_board::Square::*;
 
     use crate::{Class, PositionTables};
 

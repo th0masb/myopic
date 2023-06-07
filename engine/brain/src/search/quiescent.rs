@@ -4,7 +4,7 @@ use MoveComputeType::{Attacks, AttacksChecks};
 use myopic_board::anyhow::Result;
 use myopic_board::{Move, MoveComputeType, TerminalState};
 
-use crate::{eval, see, Evaluator};
+use crate::{eval, Evaluator};
 
 const Q_DEPTH_CAP: i32 = -8;
 const Q_CHECK_CAP: i32 = -2;
@@ -74,9 +74,7 @@ fn score(state: &mut Evaluator, mv: &Move) -> i32 {
         match mv {
             &Move::Enpassant { .. } => 10000,
             &Move::Promotion { .. } => 20000,
-            &Move::Standard { from, dest, .. } => {
-                see::exchange_value(state.board(), from, dest, state.piece_values())
-            }
+            &Move::Standard { from, dest, .. } => state.see(from, dest),
             // Should never get here
             _ => 0,
         }
