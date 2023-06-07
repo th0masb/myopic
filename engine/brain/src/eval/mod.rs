@@ -9,6 +9,7 @@ use crate::eval::tables::PositionTables;
 use crate::eval::values::PieceValues;
 use crate::{Piece, Square};
 use myopic_board::{Board, Move, TerminalState};
+use crate::eval::phase::Phase;
 
 mod antipattern;
 mod castling;
@@ -16,6 +17,7 @@ mod development;
 mod material;
 pub mod tables;
 pub mod values;
+mod phase;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -51,6 +53,7 @@ pub trait EvalFacet {
 /// The evaluation function is decomposed into orthogonal "facets".
 pub struct Evaluator {
     board: Board,
+    phase: Phase,
     material: MaterialFacet,
     facets: Vec<Box<dyn EvalFacet>>,
 }
@@ -65,6 +68,7 @@ impl Evaluator {
     /// facets
     pub fn make(&mut self, action: Move) -> Result<()> {
         self.material.make(&action, &self.board);
+        self.phase.make(&action);
         for cmp in self.facets.iter_mut() {
             cmp.make(&action, &self.board);
         }
@@ -76,6 +80,7 @@ impl Evaluator {
     pub fn unmake(&mut self) -> Result<Move> {
         let action = self.board.unmake()?;
         self.material.unmake(&action);
+        self.phase.unmake(&action);
         for cmp in self.facets.iter_mut() {
             cmp.unmake(&action);
         }
@@ -144,6 +149,7 @@ impl From<Board> for Evaluator {
     fn from(board: Board) -> Self {
         Evaluator {
             material: MaterialFacet::new(&board, PieceValues::default(), PositionTables::default()),
+            phase: Phase::from(&board),
             facets: if board.to_fen().as_str() == crate::START_FEN {
                 vec![
                     Box::new(CastlingFacet::default()),
@@ -173,6 +179,7 @@ mod test {
     use crate::eval::material::MaterialFacet;
     use crate::eval::{material, Evaluator};
     use crate::{Board, PieceValues, PositionTables};
+    use crate::eval::phase::Phase;
 
     #[derive(Clone)]
     struct TestCase {
@@ -196,6 +203,7 @@ mod test {
         let board = test_case.start_position;
         let mut start = Evaluator {
             material: MaterialFacet::new(&board, values.clone(), tables.clone()),
+            phase: Phase::from(&board),
             facets: vec![],
             board,
         };
