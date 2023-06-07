@@ -1,7 +1,104 @@
 use serde_derive::{Deserialize, Serialize};
 
-use crate::Class;
-use myopic_board::{Piece, Reflectable, Side, Square};
+use crate::eval::{EvalFacet, Evaluation};
+use crate::{Class, Corner, Line};
+use myopic_board::{Board, Move, Piece, Reflectable, Side, Square};
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PieceSquareTablesFacet {
+    tables: PositionTables,
+    mid_eval: i32,
+    end_eval: i32,
+}
+
+impl Default for PieceSquareTablesFacet {
+    fn default() -> Self {
+        PieceSquareTablesFacet { tables: PositionTables::default(), mid_eval: 0, end_eval: 0 }
+    }
+}
+
+impl<'a> From<&'a Board> for PieceSquareTablesFacet {
+    fn from(value: &Board) -> Self {
+        let mut facet = PieceSquareTablesFacet::default();
+        facet.mid_eval = facet.compute_midgame_eval(value);
+        facet.end_eval = facet.compute_endgame_eval(value);
+        facet
+    }
+}
+
+type UpdateFn = fn(&mut PieceSquareTablesFacet, Piece, Square) -> ();
+
+impl PieceSquareTablesFacet {
+    pub fn compute_midgame_eval(&self, board: &Board) -> i32 {
+        Square::iter()
+            .flat_map(|square| board.piece(square).map(|p| (p, square)))
+            .map(|(piece, square)| self.tables.midgame(piece, square))
+            .sum()
+    }
+
+    pub fn compute_endgame_eval(&self, board: &Board) -> i32 {
+        Square::iter()
+            .flat_map(|square| board.piece(square).map(|p| (p, square)))
+            .map(|(piece, square)| self.tables.endgame(piece, square))
+            .sum()
+    }
+
+    fn add(&mut self, piece: Piece, square: Square) {
+        self.mid_eval += self.tables.midgame(piece, square);
+        self.end_eval += self.tables.endgame(piece, square);
+    }
+
+    fn remove(&mut self, piece: Piece, square: Square) {
+        self.mid_eval -= self.tables.midgame(piece, square);
+        self.end_eval -= self.tables.endgame(piece, square);
+    }
+
+    fn make_impl(&mut self, mv: &Move, add: UpdateFn, remove: UpdateFn) {
+        match mv {
+            &Move::Castle { corner: Corner(side, flank) } => {
+                let Line(rook_start, rook_end) = Line::rook_castling(Corner(side, flank));
+                remove(self, Piece(side, Class::R), rook_start);
+                add(self, Piece(side, Class::R), rook_end);
+                let Line(king_start, king_end) = Line::king_castling(Corner(side, flank));
+                remove(self, Piece(side, Class::K), king_start);
+                add(self, Piece(side, Class::K), king_end);
+            }
+            &Move::Standard { moving, from, dest, capture } => {
+                remove(self, moving, from);
+                add(self, moving, dest);
+                if let Some(piece) = capture {
+                    remove(self, piece, from);
+                }
+            }
+            &Move::Enpassant { side, from, dest, capture } => {
+                remove(self, Piece(side, Class::P), from);
+                add(self, Piece(side, Class::P), dest);
+                remove(self, Piece(side.reflect(), Class::P), capture);
+            }
+            &Move::Promotion { from, dest, promoted: Piece(side, class), capture } => {
+                remove(self, Piece(side, Class::P), from);
+                add(self, Piece(side, class), dest);
+                if let Some(captured) = capture {
+                    remove(self, captured, from);
+                }
+            }
+        }
+    }
+}
+
+impl EvalFacet for PieceSquareTablesFacet {
+    fn static_eval(&self, _: &Board) -> Evaluation {
+        Evaluation::Phased { mid: self.mid_eval, end: self.end_eval }
+    }
+
+    fn make(&mut self, mv: &Move, _: &Board) {
+        self.make_impl(mv, PieceSquareTablesFacet::add, PieceSquareTablesFacet::remove);
+    }
+
+    fn unmake(&mut self, mv: &Move) {
+        self.make_impl(mv, PieceSquareTablesFacet::remove, PieceSquareTablesFacet::add);
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialOrd, PartialEq, Eq)]
 pub struct PositionTables {

@@ -164,7 +164,7 @@ impl<T: SearchTerminator> Search<T> {
         let SearchResponse { eval, mut path } = Scout {
             terminator: &self.terminator,
             ordering_hints,
-            move_quality_estimator: MaterialAndPositioningHeuristic,
+            move_quality_estimator: MaterialAndPositioningHeuristic::default(),
             transposition_table,
         }
         .search(

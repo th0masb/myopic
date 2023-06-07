@@ -2,7 +2,7 @@ use enum_map::{enum_map, Enum, EnumMap};
 use lazy_static::lazy_static;
 use myopic_board::Board;
 
-use crate::eval::EvalFacet;
+use crate::eval::{EvalFacet, Evaluation};
 use crate::Move;
 use crate::{BitBoard, Side, Square};
 
@@ -48,8 +48,10 @@ lazy_static! {
 }
 
 impl EvalFacet for KnightRimFacet {
-    fn static_eval(&self, _: &Board) -> i32 {
-        self.penalty * (self.pattern_count(Side::B) - self.pattern_count(Side::W))
+    fn static_eval(&self, _: &Board) -> Evaluation {
+        Evaluation::Single(
+            self.penalty * (self.pattern_count(Side::B) - self.pattern_count(Side::W)),
+        )
     }
 
     fn make(&mut self, mv: &Move, _: &Board) {
@@ -81,7 +83,7 @@ impl EvalFacet for KnightRimFacet {
 mod test {
     use super::Knight;
     use crate::eval::antipattern::{FirstMoveStore, KnightRimFacet};
-    use crate::eval::EvalFacet;
+    use crate::eval::{EvalFacet, Evaluation};
     use crate::test::facets::test_facet_evolution;
     use crate::{Side, Square};
     use enum_map::enum_map;
@@ -104,7 +106,7 @@ mod test {
             },
         };
 
-        assert_eq!(-75, facet.static_eval(&Board::default()));
+        assert_eq!(Evaluation::Single(-75), facet.static_eval(&Board::default()));
     }
 
     #[test]

@@ -3,7 +3,6 @@
 extern crate lazy_static;
 
 pub use eval::tables::PositionTables;
-pub use eval::values::PieceValues;
 pub use eval::Evaluator;
 pub use myopic_board::*;
 pub use search::negascout;
