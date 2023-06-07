@@ -89,7 +89,7 @@ async fn perform_lookups(
                 log::error!("Error during lookup for {}: {}", service, e);
             }
             Ok(Some(mv)) => {
-                log::info!("{} retrieved {}", service, mv);
+                log::info!("{} retrieved {}", service, mv.uci_format());
                 return Some(mv);
             }
         }

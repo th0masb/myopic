@@ -1,12 +1,13 @@
 use anyhow::Result;
 use enum_map::enum_map;
+use std::str::FromStr;
 
 use myopic_core::Square::*;
 use myopic_core::*;
 
 use crate::enumset::EnumSet;
-use crate::private::rights::Rights;
-use crate::private::test::TestBoard;
+use crate::rights::Rights;
+use crate::test::TestBoard;
 use crate::Board;
 use crate::Move;
 
@@ -20,7 +21,7 @@ struct TestCase {
 fn check_case(test_case: TestCase) -> Result<()> {
     let start = Board::from(test_case.start.clone());
     let end = Board::from(test_case.end.clone());
-    let action = Move::from(test_case.mv)?;
+    let action = Move::from_str(test_case.mv)?;
 
     let mut forward_subject = start.clone();
     forward_subject.make(action)?;

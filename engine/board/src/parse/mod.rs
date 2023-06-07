@@ -1,3 +1,6 @@
+use crate::anyhow::{Error, Result};
+use std::str::FromStr;
+
 pub(crate) mod patterns;
 pub mod pgn;
 pub mod uci;
@@ -17,5 +20,12 @@ mod test {
             "2kr1b1r/pp1q3p/2n1p1p1/8/2NpnB2/5N2/PPP2PPP/R2Q1RK1 w - - 4 13",
             board.to_fen().as_str()
         )
+    }
+}
+
+pub fn parse_option<F: FromStr<Err = Error>>(s: &str) -> Result<Option<F>> {
+    match s {
+        "-" => Ok(None),
+        _ => Ok(Some(FromStr::from_str(s)?)),
     }
 }

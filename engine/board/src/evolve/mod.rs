@@ -1,11 +1,10 @@
 use anyhow::Result;
 
+use crate::history::Discards;
 use myopic_core::*;
 
-use crate::moves::Move::*;
-use crate::private::history::Discards;
-use crate::private::Board;
-use crate::Move;
+use crate::Move::*;
+use crate::{Board, Move};
 
 #[cfg(test)]
 mod test;
@@ -16,7 +15,7 @@ impl Board {
     /// Public API for evolving a board. All that is required is a reference to
     /// a move which is assumed to be legal. The information required to reverse
     /// this same move is returned and the board is mutated to the next state.
-    pub(crate) fn make_impl(&mut self, mv: Move) -> Result<()> {
+    pub(super) fn make_impl(&mut self, mv: Move) -> Result<()> {
         // Preserve the current state
         self.history.push(
             mv.clone(),
@@ -82,7 +81,7 @@ impl Board {
 
     /// Public API for devolving a move, the information lost at evolve time is
     /// required as an input here to recover the lost state exactly.
-    pub(crate) fn unmake_impl(&mut self) -> Result<Move> {
+    pub(super) fn unmake_impl(&mut self) -> Result<Move> {
         let (mv, state) = self.history.attempt_pop()?;
 
         match &mv {

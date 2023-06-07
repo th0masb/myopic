@@ -2,9 +2,9 @@ use std::fmt::Debug;
 
 use myopic_core::*;
 
+use crate::cache::rays::RaySet;
 use crate::enum_map::EnumMap;
-use crate::private::cache::rays::RaySet;
-use crate::private::Board;
+use crate::Board;
 use crate::MoveComputeType;
 
 #[derive(Debug, Clone, PartialEq)]
