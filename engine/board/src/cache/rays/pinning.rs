@@ -1,6 +1,6 @@
 use myopic_core::*;
 
-use crate::private::cache::rays::RaySet;
+use super::RaySet;
 use crate::Board;
 
 impl Board {

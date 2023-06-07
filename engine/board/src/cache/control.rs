@@ -1,6 +1,6 @@
 use myopic_core::*;
 
-use crate::private::Board;
+use crate::Board;
 
 impl Board {
     pub fn passive_control(&self) -> BitBoard {
@@ -39,9 +39,9 @@ impl Board {
 #[cfg(test)]
 mod test {
 
-    use crate::private::rights::Rights;
-    use crate::private::test::TestBoard;
-    use crate::private::Board;
+    use crate::rights::Rights;
+    use crate::test::TestBoard;
+    use crate::Board;
     use crate::{BitBoard, Side, Square::*};
 
     struct TestCase {

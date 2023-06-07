@@ -164,8 +164,8 @@ mod test {
     use enum_map::enum_map;
     use myopic_board::{Reflectable, Square};
 
-    use crate::eval::material::PieceValues;
     use super::See;
+    use crate::eval::material::PieceValues;
     use crate::Board;
     use crate::Class;
 

@@ -207,6 +207,7 @@ mod test {
 #[cfg(test)]
 mod test_single_move {
     use crate::Board;
+    use std::str::FromStr;
 
     use super::*;
 
@@ -216,7 +217,7 @@ mod test_single_move {
         pgn: &'static str,
     ) -> Result<()> {
         let mut board = start_fen.parse::<Board>()?;
-        let parsed_expected = Move::from(expected)?;
+        let parsed_expected = Move::from_str(expected)?;
         let pgn_parse = parse_single_move(&mut board, pgn)?;
         assert_eq!(parsed_expected, pgn_parse);
         Ok(())

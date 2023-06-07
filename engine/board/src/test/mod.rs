@@ -1,13 +1,14 @@
 mod clock;
+mod moves;
 mod termination;
 
 use myopic_core::*;
 use std::cell::RefCell;
 
-use crate::private::cache::CalculationCache;
-use crate::private::history::History;
-use crate::private::positions::Positions;
-use crate::private::rights::Rights;
+use crate::cache::CalculationCache;
+use crate::history::History;
+use crate::positions::Positions;
+use crate::rights::Rights;
 use crate::Board;
 
 #[derive(Debug, Clone)]

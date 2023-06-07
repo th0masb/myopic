@@ -8,16 +8,16 @@ use crate::eval::material::{MaterialFacet, PieceValues};
 
 use crate::eval::phase::Phase;
 use crate::eval::tables::PieceSquareTablesFacet;
-use myopic_board::{Board, Move, TerminalState};
 use crate::Square;
+use myopic_board::{Board, Move, TerminalState};
 
 mod antipattern;
 mod castling;
 mod development;
 pub mod material;
 mod phase;
-pub mod tables;
 mod see;
+pub mod tables;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -200,97 +200,10 @@ impl FromStr for Evaluator {
 
 #[cfg(test)]
 mod test {
+    use myopic_board::Board;
 
-    //use crate::eval::{material, Evaluator};
-    //use crate::{Board, PositionTables};
-    //use crate::eval::material2::MaterialFacet;
-    //use crate::eval::phase::Phase;
-    //use crate::eval::tables::PieceSquareTablesFacet;
-
-    //#[derive(Clone)]
-    //struct TestCase {
-    //    start_position: Board,
-    //    moves: Vec<UciMove>,
-    //}
-
-    //impl Reflectable for TestCase {
-    //    fn reflect(&self) -> Self {
-    //        TestCase { start_position: self.start_position.reflect(), moves: self.moves.reflect() }
-    //    }
-    //}
-
-    //fn execute_test(test_case: TestCase) {
-    //    execute_test_impl(test_case.clone());
-    //    execute_test_impl(test_case.reflect());
-    //}
-    //
-    //fn compute_mid_eval(material: &MaterialFacet, pst: &PieceSquareTablesFacet) -> i32
-
-    //fn execute_test_impl(test_case: TestCase) {
-    //    let board = test_case.start_position;
-    //    let mut material = MaterialFacet::from(&board);
-    //    let mut pst = MaterialFacet::from(&board);
-
-    //    let mut start = Evaluator {
-    //        material: material.clone(),
-    //        phase: Phase::from(&board),
-    //        facets: vec![Box::new(pst.clone())],
-    //        board,
-    //    };
-
-    //    for uci_move in test_case.moves {
-    //        let move_to_make = start.board.parse_uci(uci_move.as_str()).unwrap();
-    //        start.make(move_to_make).unwrap();
-    //        assert_eq!(
-    //            material::compute_midgame(start.board(), &values, &tables),
-    //            start.material.mid_eval()
-    //        );
-    //        assert_eq!(
-    //            material::compute_endgame(start.board(), &values, &tables),
-    //            start.material.end_eval()
-    //        );
-    //        let move_made = start.unmake().unwrap();
-    //        assert_eq!(
-    //            material::compute_midgame(start.board(), &values, &tables),
-    //            start.material.mid_eval()
-    //        );
-    //        assert_eq!(
-    //            material::compute_endgame(start.board(), &values, &tables),
-    //            start.material.end_eval()
-    //        );
-    //        start.make(move_made).unwrap();
-    //    }
-    //}
-
-    //fn test(start_fen: &'static str, moves: Vec<UciMove>) {
-    //    execute_test(TestCase { start_position: start_fen.parse::<Board>().unwrap(), moves })
-    //}
-
-    //#[test]
-    //fn case_1() {
-    //    test(
-    //        "rnbqk1nr/pp1pppbp/6p1/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
-    //        vec![
-    //            UciMove::new("c2c3").unwrap(),
-    //            UciMove::new("g8f6").unwrap(),
-    //            UciMove::new("e1g1").unwrap(),
-    //            UciMove::new("b7b6").unwrap(),
-    //            UciMove::new("d2d3").unwrap(),
-    //            UciMove::new("c8b7").unwrap(),
-    //            UciMove::new("c1g5").unwrap(),
-    //            UciMove::new("b8c6").unwrap(),
-    //            UciMove::new("b1d2").unwrap(),
-    //            UciMove::new("d8c7").unwrap(),
-    //            UciMove::new("d1c2").unwrap(),
-    //            UciMove::new("e8c8").unwrap(),
-    //            UciMove::new("e4e5").unwrap(),
-    //            UciMove::new("d7d5").unwrap(),
-    //            UciMove::new("e5d6").unwrap(),
-    //            UciMove::new("c8b8").unwrap(),
-    //            UciMove::new("d6e7").unwrap(),
-    //            UciMove::new("h8g8").unwrap(),
-    //            UciMove::new("e7d8q").unwrap(),
-    //        ],
-    //    );
-    //}
+    #[test]
+    fn sanity() {
+        assert_eq!(crate::START_FEN, crate::START_FEN.parse::<Board>().unwrap().to_fen())
+    }
 }
