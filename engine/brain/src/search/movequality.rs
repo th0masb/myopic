@@ -43,8 +43,8 @@ impl MaterialAndPositioningHeuristic {
     fn get_category(&self, eval: &Evaluator, mv: &Move) -> MoveCategory {
         match mv {
             Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
-            &Standard { moving, from, dest, .. } => {
-                if eval.board().side(moving.0.reflect()).contains(dest) {
+            &Standard { moving: Piece(side, class), from, dest, .. } => {
+                if eval.board().side(side.reflect()).contains(dest) {
                     let exchange_value =
                         crate::see::exchange_value(eval.board(), from, dest, eval.piece_values());
                     if exchange_value > 0 {
@@ -53,13 +53,13 @@ impl MaterialAndPositioningHeuristic {
                         MoveCategory::BadExchange(exchange_value)
                     }
                 } else {
-                    get_lower_value_delta(eval, moving, dest)
+                    get_lower_value_delta(eval, Piece(side, class), dest)
                         .map(|n| MoveCategory::BadExchange(n))
                         .unwrap_or_else(|| {
                             MoveCategory::Positional(
-                                parity(moving.0)
-                                    * (self.tables.midgame(moving, dest)
-                                        - self.tables.midgame(moving, from)),
+                                parity(side)
+                                    * (self.tables.midgame(class, dest)
+                                        - self.tables.midgame(class, from)),
                             )
                         })
                 }
