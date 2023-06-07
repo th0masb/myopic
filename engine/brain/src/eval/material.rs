@@ -1,170 +1,107 @@
-use myopic_board::{Board, Class};
+use crate::eval::{EvalFacet, Evaluation};
+use crate::{Class, Piece, Reflectable, Square};
+use enum_map::{enum_map, EnumMap};
+use myopic_board::{Board, Move};
 
-use crate::eval::EvalFacet;
-use crate::{Line, Move, Piece, Square};
-use crate::{PieceValues, PositionTables, Reflectable};
+pub type PieceValues = EnumMap<Class, i32>;
 
-const PHASE_VALUES: [i32; 6] = [0, 1, 1, 2, 4, 0];
-const TOTAL_PHASE: i32 = 16 * PHASE_VALUES[0]
-    + 4 * (PHASE_VALUES[1] + PHASE_VALUES[2] + PHASE_VALUES[3])
-    + 2 * PHASE_VALUES[4];
-
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MaterialFacet {
-    piece_values: PieceValues,
-    table_values: PositionTables,
+    mid_values: PieceValues,
+    end_values: PieceValues,
     mid_eval: i32,
     end_eval: i32,
-    phase: i32,
 }
 
-impl Reflectable for MaterialFacet {
-    fn reflect(&self) -> Self {
+impl Default for MaterialFacet {
+    fn default() -> Self {
         MaterialFacet {
-            mid_eval: -self.mid_eval,
-            end_eval: -self.end_eval,
-            phase: self.phase,
-            piece_values: self.piece_values.clone(),
-            table_values: self.table_values.clone(),
+            mid_eval: 0,
+            end_eval: 0,
+            /// Values copied from Stockfish: https://github.com/official-stockfish/Stockfish/blob/master/src/types.h
+            mid_values: enum_map! {
+                Class::P => 128, Class::N => 782, Class::B => 830,
+                Class::R => 1289, Class::Q => 2529, Class::K => 100_000
+            },
+            end_values: enum_map! {
+                Class::P => 213, Class::N => 865, Class::B => 918,
+                Class::R => 1378, Class::Q => 2687, Class::K => 100_000
+            },
+        }
+    }
+}
+
+impl<'a> From<&'a Board> for MaterialFacet {
+    fn from(value: &Board) -> Self {
+        let mut facet = MaterialFacet::default();
+        facet.mid_eval = facet.compute_midgame_eval(value);
+        facet.end_eval = facet.compute_endgame_eval(value);
+        facet
+    }
+}
+
+type UpdateFn = fn(&mut MaterialFacet, Piece) -> ();
+
+impl MaterialFacet {
+    pub fn mid_values(&self) -> &PieceValues {
+        &self.mid_values
+    }
+
+    pub fn compute_midgame_eval(&self, board: &Board) -> i32 {
+        Square::iter()
+            .flat_map(|square| board.piece(square))
+            .map(|Piece(side, class)| side.parity() * self.mid_values[class])
+            .sum()
+    }
+
+    pub fn compute_endgame_eval(&self, board: &Board) -> i32 {
+        Square::iter()
+            .flat_map(|square| board.piece(square))
+            .map(|Piece(side, class)| side.parity() * self.end_values[class])
+            .sum()
+    }
+
+    fn remove(&mut self, Piece(side, class): Piece) {
+        let parity = side.parity();
+        self.mid_eval -= parity * self.mid_values[class];
+        self.end_eval -= parity * self.end_values[class];
+    }
+
+    fn add(&mut self, Piece(side, class): Piece) {
+        let parity = side.parity();
+        self.mid_eval += parity * self.mid_values[class];
+        self.end_eval += parity * self.end_values[class];
+    }
+
+    fn make_impl(&mut self, mv: &Move, add: UpdateFn, remove: UpdateFn) {
+        match mv {
+            Move::Castle { .. } => {}
+            Move::Standard { capture, .. } => {
+                if let Some(piece) = capture {
+                    remove(self, *piece);
+                }
+            }
+            Move::Enpassant { side, .. } => {
+                remove(self, Piece(side.reflect(), Class::P));
+            }
+            Move::Promotion { promoted: Piece(side, class), .. } => {
+                remove(self, Piece(*side, Class::P));
+                add(self, Piece(*side, *class));
+            }
         }
     }
 }
 
 impl EvalFacet for MaterialFacet {
-    fn static_eval(&self, _: &Board) -> i32 {
-        let phase: i32 = ((self.phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE) as i32;
-        let (mid, end) = (self.mid_eval, self.end_eval);
-        ((mid * (256 - phase)) + end * phase) / 256
+    fn static_eval(&self, _: &Board) -> Evaluation {
+        Evaluation::Phased { mid: self.mid_eval, end: self.end_eval }
     }
 
     fn make(&mut self, mv: &Move, _: &Board) {
-        match mv {
-            &Move::Standard { moving, from, dest, capture, .. } => {
-                self.remove(moving, from);
-                self.add(moving, dest);
-                capture.map(|taken| self.remove(taken, dest));
-            }
-            &Move::Promotion { from, dest, promoted, capture, .. } => {
-                let pawn = Piece(promoted.0, Class::P);
-                self.remove(pawn, from);
-                self.add(promoted, dest);
-                capture.map(|taken| self.remove(taken, dest));
-            }
-            &Move::Enpassant { side, from, dest, capture, .. } => {
-                let active_pawn = Piece(side, Class::P);
-                self.remove(active_pawn, from);
-                self.add(active_pawn, dest);
-                self.remove(active_pawn.reflect(), capture);
-            }
-            &Move::Castle { corner, .. } => {
-                let Line(r_src, r_target) = Line::rook_castling(corner);
-                let Line(k_src, k_target) = Line::king_castling(corner);
-                let rook = Piece(corner.0, Class::R);
-                let king = Piece(corner.0, Class::K);
-                self.remove(rook, r_src);
-                self.add(rook, r_target);
-                self.remove(king, k_src);
-                self.add(king, k_target);
-            }
-        };
+        self.make_impl(mv, MaterialFacet::add, MaterialFacet::remove)
     }
 
     fn unmake(&mut self, mv: &Move) {
-        match mv {
-            &Move::Standard { moving, from, dest, capture, .. } => {
-                self.remove(moving, dest);
-                self.add(moving, from);
-                capture.map(|taken| self.add(taken, dest));
-            }
-            &Move::Promotion { from, dest, promoted, capture, .. } => {
-                let pawn = Piece(promoted.0, Class::P);
-                self.add(pawn, from);
-                self.remove(promoted, dest);
-                capture.map(|taken| self.add(taken, dest));
-            }
-            &Move::Enpassant { side, from, dest, capture, .. } => {
-                let active_pawn = Piece(side, Class::P);
-                let passive_pawn = active_pawn.reflect();
-                self.remove(active_pawn, dest);
-                self.add(active_pawn, from);
-                self.add(passive_pawn, capture);
-            }
-            &Move::Castle { corner, .. } => {
-                let Line(r_src, r_target) = Line::rook_castling(corner);
-                let Line(k_src, k_target) = Line::king_castling(corner);
-                let rook = Piece(corner.0, Class::R);
-                let king = Piece(corner.0, Class::K);
-                self.add(rook, r_src);
-                self.remove(rook, r_target);
-                self.add(king, k_src);
-                self.remove(king, k_target);
-            }
-        };
+        self.make_impl(mv, MaterialFacet::remove, MaterialFacet::add)
     }
-}
-
-impl MaterialFacet {
-    pub fn new(board: &Board, values: PieceValues, tables: PositionTables) -> MaterialFacet {
-        MaterialFacet {
-            mid_eval: compute_midgame(board, &values, &tables),
-            end_eval: compute_endgame(board, &values, &tables),
-            phase: compute_phase(board),
-            piece_values: values,
-            table_values: tables,
-        }
-    }
-
-    pub fn tables(&self) -> &PositionTables {
-        &self.table_values
-    }
-
-    pub fn values(&self) -> &PieceValues {
-        &self.piece_values
-    }
-
-    #[cfg(test)]
-    pub fn mid_eval(&self) -> i32 {
-        self.mid_eval
-    }
-
-    #[cfg(test)]
-    pub fn end_eval(&self) -> i32 {
-        self.end_eval
-    }
-
-    fn remove(&mut self, piece: Piece, location: Square) {
-        let (tables, values) = (&self.table_values, &self.piece_values);
-        self.mid_eval -= tables.midgame(piece, location) + values.midgame(piece);
-        self.end_eval -= tables.endgame(piece, location) + values.endgame(piece);
-        self.phase += PHASE_VALUES[piece.1 as usize];
-    }
-
-    fn add(&mut self, piece: Piece, location: Square) {
-        let (tables, values) = (&self.table_values, &self.piece_values);
-        self.mid_eval += tables.midgame(piece, location) + values.midgame(piece);
-        self.end_eval += tables.endgame(piece, location) + values.endgame(piece);
-        self.phase -= PHASE_VALUES[piece.1 as usize];
-    }
-}
-
-pub fn compute_phase(board: &Board) -> i32 {
-    let phase_sub: i32 = Piece::all()
-        .filter(|p| p.1 != Class::K)
-        .map(|p| board.locs(&[p]).size() as i32 * PHASE_VALUES[p.1 as usize])
-        .sum();
-    TOTAL_PHASE - phase_sub
-}
-
-pub fn compute_midgame(board: &Board, values: &PieceValues, tables: &PositionTables) -> i32 {
-    Piece::all()
-        .flat_map(|p| board.locs(&[p]).iter().map(move |loc| (p, loc)))
-        .map(|(p, loc)| tables.midgame(p, loc) + values.midgame(p))
-        .sum()
-}
-
-pub fn compute_endgame(board: &Board, values: &PieceValues, tables: &PositionTables) -> i32 {
-    Piece::all()
-        .flat_map(|p| board.locs(&[p]).iter().map(move |loc| (p, loc)))
-        .map(|(p, loc)| tables.endgame(p, loc) + values.endgame(p))
-        .sum()
 }

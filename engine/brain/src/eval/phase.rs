@@ -2,13 +2,15 @@ use enum_map::{enum_map, EnumMap};
 
 use myopic_board::{Board, Move};
 
+use crate::eval::Evaluation;
 use crate::{Class, Piece, Square};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Phase {
-    phase: i32,
     phase_values: EnumMap<Class, i32>,
+    phase_counter: i32,
     total_phase: i32,
+    phase: i32,
 }
 
 impl Default for Phase {
@@ -18,65 +20,82 @@ impl Default for Phase {
             Class::R => 2i32, Class::Q => 4i32, Class::K => 0i32,
         };
         Phase {
+            phase_counter: 0,
             phase: 0,
-            total_phase: 16 * phase_values[Class::P] +
-                4 * (phase_values[Class::N] + phase_values[Class::B] + phase_values[Class::R]) +
-                2 * phase_values[Class::Q],
-            phase_values
+            total_phase: 16 * phase_values[Class::P]
+                + 4 * (phase_values[Class::N] + phase_values[Class::B] + phase_values[Class::R])
+                + 2 * phase_values[Class::Q],
+            phase_values,
         }
     }
 }
 
-impl <'a> From<&'a Board> for Phase {
+impl<'a> From<&'a Board> for Phase {
     fn from(value: &Board) -> Self {
         let mut phase = Phase::default();
-        phase.phase = phase.total_phase - Square::iter()
-            .flat_map(|sq| value.piece(sq))
-            .map(|Piece(_, class)| phase.phase_values[class])
-            .sum::<i32>();
+        phase.phase_counter = phase.total_phase
+            - Square::iter()
+                .flat_map(|sq| value.piece(sq))
+                .map(|Piece(_, class)| phase.phase_values[class])
+                .sum::<i32>();
+        phase.update_phase();
         phase
     }
 }
 
 impl Phase {
+    pub fn unwrap(&self, eval: Evaluation) -> i32 {
+        match eval {
+            Evaluation::Single(eval) => eval,
+            Evaluation::Phased { mid, end } => self.interpolate(mid, end),
+        }
+    }
+
     pub fn interpolate(&self, mid: i32, end: i32) -> i32 {
-        let phase = (self.phase * 256i32 + self.total_phase / 2i32) / self.total_phase;
-        ((mid * (256 - phase)) + end * phase) / 256
+        ((mid * (256 - self.phase)) + end * self.phase) / 256
+    }
+
+    fn update_phase(&mut self) {
+        self.phase = (self.phase_counter * 256i32 + self.total_phase / 2i32) / self.total_phase;
     }
 
     pub fn make(&mut self, mv: &Move) {
+        let counter_start = self.phase_counter;
         match mv {
             Move::Castle { .. } => {}
-            Move::Enpassant { .. } => {
-                self.phase += self.phase_values[Class::P]
-            }
+            Move::Enpassant { .. } => self.phase_counter += self.phase_values[Class::P],
             Move::Standard { capture, .. } => {
                 if let Some(Piece(_, class)) = capture {
-                    self.phase += self.phase_values[*class]
+                    self.phase_counter += self.phase_values[*class]
                 }
             }
             Move::Promotion { promoted, .. } => {
-                self.phase += self.phase_values[Class::P];
-                self.phase -= self.phase_values[promoted.1];
+                self.phase_counter += self.phase_values[Class::P];
+                self.phase_counter -= self.phase_values[promoted.1];
             }
+        }
+        if self.phase_counter != counter_start {
+            self.update_phase()
         }
     }
 
     pub fn unmake(&mut self, mv: &Move) {
+        let counter_start = self.phase_counter;
         match mv {
             Move::Castle { .. } => {}
-            Move::Enpassant { .. } => {
-                self.phase -= self.phase_values[Class::P]
-            }
+            Move::Enpassant { .. } => self.phase_counter -= self.phase_values[Class::P],
             Move::Standard { capture, .. } => {
                 if let Some(Piece(_, class)) = capture {
-                    self.phase -= self.phase_values[*class]
+                    self.phase_counter -= self.phase_values[*class]
                 }
             }
             Move::Promotion { promoted, .. } => {
-                self.phase -= self.phase_values[Class::P];
-                self.phase += self.phase_values[promoted.1];
+                self.phase_counter -= self.phase_values[Class::P];
+                self.phase_counter += self.phase_values[promoted.1];
             }
+        }
+        if self.phase_counter != counter_start {
+            self.update_phase()
         }
     }
 }

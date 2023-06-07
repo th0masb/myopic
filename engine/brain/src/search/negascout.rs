@@ -24,7 +24,7 @@ pub fn search(root: &mut Evaluator, depth: usize) -> Result<SearchResponse> {
         terminator: &depth,
         ordering_hints: &MoveOrderingHints::default(),
         transposition_table: &mut TranspositionTable::new(1)?,
-        move_quality_estimator: MaterialAndPositioningHeuristic,
+        move_quality_estimator: MaterialAndPositioningHeuristic::default(),
     }
     .search(
         root,

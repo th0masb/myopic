@@ -4,7 +4,7 @@ use enum_map::{enum_map, Enum, EnumMap};
 use lazy_static::lazy_static;
 use myopic_board::Board;
 
-use crate::eval::EvalFacet;
+use crate::eval::{EvalFacet, Evaluation};
 use crate::Move;
 use crate::{Side, Square};
 
@@ -87,8 +87,8 @@ impl DevelopmentFacet {
 }
 
 impl EvalFacet for DevelopmentFacet {
-    fn static_eval(&self, _: &Board) -> i32 {
-        self.penalty(Side::B) - self.penalty(Side::W)
+    fn static_eval(&self, _: &Board) -> Evaluation {
+        Evaluation::Single(self.penalty(Side::B) - self.penalty(Side::W))
     }
 
     fn make(&mut self, mv: &Move, _: &Board) {
@@ -116,7 +116,7 @@ mod test {
     use enum_map::enum_map;
 
     use crate::eval::development::DevelopmentFacet;
-    use crate::eval::EvalFacet;
+    use crate::eval::{EvalFacet, Evaluation};
     use crate::test::facets::test_facet_evolution;
     use crate::Board;
     use crate::Side;
@@ -147,7 +147,7 @@ mod test {
 
         assert_eq!(3 * 3 * 32, under_test.penalty(Side::W));
         assert_eq!(4 * 3 * 32, under_test.penalty(Side::B));
-        assert_eq!(1 * 3 * 32, under_test.static_eval(&Board::default()));
+        assert_eq!(Evaluation::Single(1 * 3 * 32), under_test.static_eval(&Board::default()));
     }
 
     #[test]

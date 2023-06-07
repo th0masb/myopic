@@ -1,6 +1,6 @@
 use myopic_board::{Board, Move, Move::*, Reflectable, Side, Square};
 
-use crate::{BitBoard, Class, Evaluator, Piece};
+use crate::{BitBoard, Class, Evaluator, Piece, PositionTables};
 
 /// A function which approximately evaluates the quality
 /// of a move within the context of the given position.
@@ -29,7 +29,44 @@ impl BestMoveHeuristic for AllMovesEqualHeuristic {
 /// it categorises moves into one of four subcategories from
 /// best (good exchanges) to worst (bad exchanges) and then
 /// also orders within those subcategories.
-pub struct MaterialAndPositioningHeuristic;
+pub struct MaterialAndPositioningHeuristic {
+    tables: PositionTables,
+}
+
+impl Default for MaterialAndPositioningHeuristic {
+    fn default() -> Self {
+        MaterialAndPositioningHeuristic { tables: PositionTables::default() }
+    }
+}
+
+impl MaterialAndPositioningHeuristic {
+    fn get_category(&self, eval: &Evaluator, mv: &Move) -> MoveCategory {
+        match mv {
+            Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
+            &Standard { moving, from, dest, .. } => {
+                if eval.board().side(moving.0.reflect()).contains(dest) {
+                    let exchange_value =
+                        crate::see::exchange_value(eval.board(), from, dest, eval.piece_values());
+                    if exchange_value > 0 {
+                        MoveCategory::GoodExchange(exchange_value)
+                    } else {
+                        MoveCategory::BadExchange(exchange_value)
+                    }
+                } else {
+                    get_lower_value_delta(eval, moving, dest)
+                        .map(|n| MoveCategory::BadExchange(n))
+                        .unwrap_or_else(|| {
+                            MoveCategory::Positional(
+                                parity(moving.0)
+                                    * (self.tables.midgame(moving, dest)
+                                        - self.tables.midgame(moving, from)),
+                            )
+                        })
+                }
+            }
+        }
+    }
+}
 
 // Idea is we split the moves into different categories which are ordered
 // so that if category A has more value than category B then all moves in
@@ -54,7 +91,7 @@ pub struct MaterialAndPositioningHeuristic;
 // potential pins.
 impl BestMoveHeuristic for MaterialAndPositioningHeuristic {
     fn estimate(&self, board: &Evaluator, mv: &Move) -> i32 {
-        match get_category(board, mv) {
+        match self.get_category(board, mv) {
             MoveCategory::GoodExchange(n) => 30_000 + n,
             MoveCategory::Special => 20_000,
             MoveCategory::Positional(n) => 10_000 + n,
@@ -73,41 +110,14 @@ enum MoveCategory {
     BadExchange(i32),
 }
 
-fn get_category(eval: &Evaluator, mv: &Move) -> MoveCategory {
-    match mv {
-        Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
-        &Standard { moving, from, dest, .. } => {
-            if eval.board().side(moving.0.reflect()).contains(dest) {
-                let exchange_value =
-                    crate::see::exchange_value(eval.board(), from, dest, eval.piece_values());
-                if exchange_value > 0 {
-                    MoveCategory::GoodExchange(exchange_value)
-                } else {
-                    MoveCategory::BadExchange(exchange_value)
-                }
-            } else {
-                get_lower_value_delta(eval, moving, dest)
-                    .map(|n| MoveCategory::BadExchange(n))
-                    .unwrap_or_else(|| {
-                        MoveCategory::Positional(
-                            parity(moving.0)
-                                * (eval.positional_eval(moving, dest)
-                                    - eval.positional_eval(moving, from)),
-                        )
-                    })
-            }
-        }
-    }
-}
-
 fn get_lower_value_delta(eval: &Evaluator, piece: Piece, dst: Square) -> Option<i32> {
-    let piece_values = eval.piece_values().clone();
-    let moving_value = piece_values[piece.1 as usize];
+    let piece_values = eval.piece_values();
+    let moving_value = piece_values[piece.1];
     get_lower_value_pieces(piece.1)
         .into_iter()
         .map(|&class| Piece(piece.0.reflect(), class))
         .filter(|p| compute_control(eval.board(), *p).contains(dst))
-        .map(|p| piece_values[p.1 as usize] - moving_value)
+        .map(|p| piece_values[p.1] - moving_value)
         .min()
 }
 

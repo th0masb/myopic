@@ -2,6 +2,7 @@ use enum_map::EnumMap;
 use lazy_static::lazy_static;
 use std::cmp;
 
+use crate::eval::material::PieceValues;
 use crate::Class;
 use myopic_board::{BitBoard, Board, Piece, Reflectable, Side, Square};
 
@@ -16,7 +17,7 @@ pub fn exchange_value(
     board: &Board,
     source: Square,
     target: Square,
-    piece_values: &[i32; 6],
+    piece_values: &PieceValues,
 ) -> i32 {
     See { board, source, target, values: piece_values }.exchange_value()
 }
@@ -28,7 +29,7 @@ struct See<'a> {
     board: &'a Board,
     source: Square,
     target: Square,
-    values: &'a [i32; 6],
+    values: &'a PieceValues,
 }
 
 lazy_static! {
@@ -38,7 +39,7 @@ lazy_static! {
 
 impl See<'_> {
     fn value(&self, piece: Piece) -> i32 {
-        self.values[piece.1 as usize]
+        self.values[piece.1]
     }
 
     fn exchange_value(&self) -> i32 {
@@ -167,13 +168,19 @@ fn compute_attack_location_constraints() -> EnumMap<Square, BitBoard> {
 
 #[cfg(test)]
 mod test {
+    use enum_map::enum_map;
     use myopic_board::{Reflectable, Square};
 
+    use crate::eval::material::PieceValues;
     use crate::see::See;
     use crate::Board;
+    use crate::Class;
 
-    fn dummy_values() -> [i32; 6] {
-        [1, 3, 3, 5, 9, 1000]
+    fn dummy_values() -> PieceValues {
+        enum_map! {
+            Class::P => 1, Class::N => 3, Class::B => 3,
+            Class::R => 5, Class::Q => 9, Class::K => 1000,
+        }
     }
 
     #[derive(Clone, Debug)]

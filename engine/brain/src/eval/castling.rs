@@ -2,7 +2,7 @@ use enum_map::EnumMap;
 use myopic_board::Board;
 
 use crate::enumset::EnumSet;
-use crate::eval::EvalFacet;
+use crate::eval::{EvalFacet, Evaluation};
 use crate::Move;
 use crate::{Corner, Flank, Side};
 
@@ -29,9 +29,11 @@ impl CastlingFacet {
 }
 
 impl EvalFacet for CastlingFacet {
-    fn static_eval(&self, board: &Board) -> i32 {
+    fn static_eval(&self, board: &Board) -> Evaluation {
         let rights = board.remaining_rights();
-        self.penalty(Side::B, &rights[Side::B]) - self.penalty(Side::W, &rights[Side::W])
+        Evaluation::Single(
+            self.penalty(Side::B, &rights[Side::B]) - self.penalty(Side::W, &rights[Side::W]),
+        )
     }
 
     fn make(&mut self, mv: &Move, _: &Board) {
