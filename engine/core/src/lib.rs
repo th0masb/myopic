@@ -14,6 +14,7 @@ pub use square::Square;
 
 mod bitboard;
 pub mod hash;
+pub mod magic;
 mod pieces;
 mod reflectable;
 mod square;

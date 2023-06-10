@@ -77,18 +77,6 @@ impl Square {
             .collect()
     }
 
-    /// Find all squares in all directions in a given vector and
-    /// returns them as a set.
-    pub(crate) fn search_all(self, dirs: &Vec<Dir>) -> BitBoard {
-        dirs.iter().flat_map(|&dir| self.search(dir)).collect()
-    }
-
-    /// Find the squares adjacent to this square in all of the
-    /// given directions and returns them as a set.
-    pub(crate) fn search_one(self, dirs: &Vec<Dir>) -> BitBoard {
-        dirs.iter().flat_map(|&dir| self.next(dir).into_iter()).collect()
-    }
-
     pub(crate) const fn lift(self) -> BitBoard {
         BitBoard(1u64 << (self as u64))
     }
@@ -226,17 +214,6 @@ mod test {
     #[test]
     fn test_search_vec() {
         assert_eq!(D3.search_vec(S), vec![D2, D1])
-    }
-
-    #[test]
-    fn test_search_one() {
-        assert_eq!(D3.search_one(&vec!(S, E)), D2 | E3);
-        assert_eq!(A8.search_one(&vec!(N, NWW, SE)), B7.into());
-    }
-
-    #[test]
-    fn test_search_all() {
-        assert_eq!(C3.search_all(&vec!(SSW, SWW, S)), B1 | A2 | C2 | C1);
     }
 
     #[test]

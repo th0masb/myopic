@@ -4,9 +4,11 @@ use itertools::izip;
 use lazy_static::lazy_static;
 
 use crate::bitboard::BitBoard;
+use crate::magic::compute_powerset;
 use crate::square::Square;
+use crate::Dir;
 
-use super::{compute_control, compute_powerset, compute_rook_index, rook_dirs, ROOK_MASKS};
+use super::{compute_control, compute_rook_index, ROOK_MASKS};
 
 pub fn control(loc: Square, occupied: BitBoard) -> BitBoard {
     MOVES[loc as usize][compute_rook_index(loc, occupied)]
@@ -21,7 +23,7 @@ lazy_static! {
 
 fn compute_move_database() -> Moves {
     let mut dest = Vec::with_capacity(64);
-    let dirs = rook_dirs();
+    let dirs = [Dir::N, Dir::E, Dir::S, Dir::W];
     for (sq, bb) in izip!(Square::iter(), ROOK_MASKS.iter().map(|&m| BitBoard(m))) {
         let dest_size = 1 << bb.size();
         let mut sq_dest: Vec<BitBoard> = repeat(BitBoard::ALL).take(dest_size).collect();

@@ -75,8 +75,8 @@ impl Evaluator {
     }
 
     /// Add another evaluation facet to this instance
-    pub fn push_facet(&mut self, facet: Box<dyn EvalFacet>) {
-        self.facets.push(facet);
+    pub fn push_facet<F: EvalFacet + 'static>(&mut self, facet: F) {
+        self.facets.push(Box::new(facet));
     }
 
     /// Make the given move on the underlying board and update all the internal
