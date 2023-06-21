@@ -12,6 +12,7 @@ use crate::search::movequality::MaterialAndPositioningHeuristic;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::transpositions::TranspositionTable;
 use crate::{eval, Evaluator};
+use crate::search::pv::PrincipleVariation;
 
 mod movehints;
 mod movequality;
@@ -19,6 +20,7 @@ pub mod negascout;
 mod quiescent;
 pub mod terminator;
 mod transpositions;
+mod pv;
 
 const DEPTH_UPPER_BOUND: usize = 10;
 const SHALLOW_EVAL_TRIGGER_DEPTH: usize = 2;
@@ -119,22 +121,22 @@ impl<T: SearchTerminator> Search<T> {
     pub fn search(&mut self, transposition_table_size: usize) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
+        let mut pv = PrincipleVariation::default();
         let mut ordering_hints = MoveOrderingHints::default();
-        // TODO inject desired size
-        let mut transposition_table = TranspositionTable::new(transposition_table_size)?;
+        let mut transposition_table = TranspositionTable::new(transposition_table_size);
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
-            match self.best_move(i, search_start, &ordering_hints, &mut transposition_table) {
+            match self.best_move(i, search_start, &pv, &ordering_hints, &mut transposition_table) {
                 Err(message) => {
                     break_err = anyhow!("{}", message);
                     break;
                 }
                 Ok(response) => {
-                    ordering_hints.add_pv(i, &response.path);
+                    pv.set(response.path.as_slice());
                     best_response = Some(response);
                     // Only fill in the shallow eval when we get deep
-                    // enough to male it worthwhile
+                    // enough to make it worthwhile
                     if i == SHALLOW_EVAL_TRIGGER_DEPTH {
                         ordering_hints.populate(&mut self.root, SHALLOW_EVAL_DEPTH);
                     }
@@ -155,6 +157,7 @@ impl<T: SearchTerminator> Search<T> {
         &mut self,
         depth: usize,
         search_start: Instant,
+        pv: &PrincipleVariation,
         ordering_hints: &MoveOrderingHints,
         transposition_table: &mut TranspositionTable,
     ) -> Result<BestMoveResponse> {
@@ -162,8 +165,9 @@ impl<T: SearchTerminator> Search<T> {
             return Err(anyhow!("Cannot iteratively deepen with depth 0"));
         }
 
-        let SearchResponse { eval, mut path } = Scout {
+        let SearchResponse { eval, path } = Scout {
             terminator: &self.terminator,
+            pv,
             ordering_hints,
             move_quality_estimator: MaterialAndPositioningHeuristic::default(),
             transposition_table,
@@ -179,9 +183,6 @@ impl<T: SearchTerminator> Search<T> {
             },
         )?;
 
-        // The path returned from the negamax function is ordered deepest move -> shallowest
-        // so we reverse as the shallowest move is the one we make in this position.
-        path.reverse();
         // If the path returned is empty then there must be no legal moves in this position
         if path.is_empty() {
             Err(anyhow!("No moves for position {} at depth {}", self.root.board().to_fen(), depth))
