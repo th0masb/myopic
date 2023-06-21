@@ -1,25 +1,12 @@
-use myopic_board::anyhow::{anyhow, Result};
-
 use crate::Move;
-
-// Let's estimate 24 bytes per table entry
-const MAX_ENTRIES: usize = 30_000_000;
 
 pub struct TranspositionTable {
     inner: Vec<Option<TreeNode>>,
 }
 
 impl TranspositionTable {
-    pub fn new(n_entries: usize) -> Result<TranspositionTable> {
-        if n_entries == 0 || n_entries > MAX_ENTRIES {
-            Err(anyhow!("Cannot create table with {} entries", n_entries))
-        } else {
-            let mut inner = Vec::with_capacity(n_entries);
-            for _ in 0..n_entries {
-                inner.push(None)
-            }
-            Ok(TranspositionTable { inner })
-        }
+    pub fn new(n_entries: usize) -> TranspositionTable {
+        TranspositionTable { inner: vec![None; n_entries] }
     }
 
     pub fn get(&self, k: u64) -> Option<&TreeNode> {

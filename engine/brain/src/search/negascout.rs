@@ -13,6 +13,7 @@ use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{TranspositionTable, TreeNode};
 use crate::search::{eval, quiescent};
 use crate::Evaluator;
+use crate::search::pv::PrincipleVariation;
 
 /// Performs a negascout search without any iterative deepening,
 /// we simply provide a depth to search to. The depth should be
@@ -22,8 +23,9 @@ use crate::Evaluator;
 pub fn search(root: &mut Evaluator, depth: usize) -> Result<SearchResponse> {
     Scout {
         terminator: &depth,
+        pv: &PrincipleVariation::default(),
         ordering_hints: &MoveOrderingHints::default(),
-        transposition_table: &mut TranspositionTable::new(1)?,
+        transposition_table: &mut TranspositionTable::new(1),
         move_quality_estimator: MaterialAndPositioningHeuristic::default(),
     }
     .search(
@@ -93,6 +95,7 @@ where
     /// The terminator is responsible for deciding when the
     /// search is complete
     pub terminator: &'a T,
+    pub pv: &'a PrincipleVariation,
     /// Precomputed hints for helping to order moves
     /// generated for positions in the search tree.
     /// These can be thought of as 'pure' hints which
@@ -118,7 +121,7 @@ enum TableSuggestion {
 }
 
 impl TableSuggestion {
-    pub fn mv(self) -> Move {
+    pub fn mv(&self) -> &Move {
         match self {
             TableSuggestion::Pv(_, mv) => mv,
             TableSuggestion::Cut(mv) => mv,
@@ -132,7 +135,6 @@ where
     T: SearchTerminator,
     M: BestMoveHeuristic,
 {
-    ///
     pub fn search(
         &mut self,
         root: &mut Evaluator,
@@ -208,7 +210,7 @@ where
                 if response.eval > result {
                     result = response.eval;
                     best_path = response.path;
-                    best_path.push(evolve.clone());
+                    best_path.insert(0, evolve.clone());
                 }
 
                 ctx.alpha = cmp::max(ctx.alpha, result);
@@ -273,44 +275,38 @@ where
         precursors: &Vec<Move>,
         table_suggestion: Option<TableSuggestion>,
     ) -> Vec<Move> {
-        let pvs = self.ordering_hints.get_pvs(precursors);
+        let pvs = self.pv.get_next_move(precursors.as_slice());
         let evs = self.ordering_hints.get_evs(precursors);
         match (pvs, evs) {
             (None, None) => {
                 let mut mvs = self.compute_heuristically_ordered_moves(node);
-                check_and_reposition_first(&mut mvs, table_suggestion);
+                table_suggestion.map(|t| reposition_first(&mut mvs, t.mv()));
                 mvs
             }
-            (Some(pvs_ref), None) => {
-                let pvs = pvs_ref.iter().map(|m| m.mv.clone()).collect_vec();
-                let mut all_mvs = self.compute_heuristically_ordered_moves(node);
-                check_and_reposition_first(&mut all_mvs, table_suggestion);
-                pvs.into_iter().chain(all_mvs.into_iter()).dedup().collect()
+            (Some(pv_next), None) => {
+                let mut mvs = self.compute_heuristically_ordered_moves(node);
+                table_suggestion.map(|t| reposition_first(&mut mvs, t.mv()));
+                reposition_first(&mut mvs, &pv_next);
+                mvs
             }
             (None, Some(evs)) => {
                 let mut mvs = evs.into_iter().map(|sm| sm.mv.clone()).collect_vec();
-                check_and_reposition_first(&mut mvs, table_suggestion);
+                table_suggestion.map(|t| reposition_first(&mut mvs, t.mv()));
                 mvs
             }
-            (Some(pvs_ref), Some(evs_ref)) => {
-                let pvs = pvs_ref.iter().map(|m| m.mv.clone()).collect_vec();
-                let mut evs = evs_ref.iter().map(|m| m.mv.clone()).collect_vec();
-                check_and_reposition_first(&mut evs, table_suggestion);
-                pvs.into_iter().chain(evs.into_iter()).dedup().collect()
+            (Some(pv_next), Some(evs_ref)) => {
+                let mut mvs = evs_ref.iter().map(|m| m.mv.clone()).collect_vec();
+                table_suggestion.map(|t| reposition_first(&mut mvs, t.mv()));
+                reposition_first(&mut mvs, &pv_next);
+                mvs
             }
         }
     }
 }
 
-fn check_and_reposition_first(dest: &mut Vec<Move>, to_insert: Option<TableSuggestion>) {
-    match to_insert.map(|ts| ts.mv()) {
-        None => {}
-        Some(mv) => match dest.iter().position(|m| m == &mv) {
-            None => {}
-            Some(index) => {
-                dest.remove(index);
-                dest.insert(0, mv);
-            }
-        },
+fn reposition_first(dest: &mut Vec<Move>, new_first: &Move) {
+    if let Some(index) = dest.iter().position(|m| m == new_first) {
+        let removed = dest.remove(index);
+        dest.insert(0, removed);
     }
 }
