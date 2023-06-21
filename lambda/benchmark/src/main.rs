@@ -17,7 +17,7 @@ async fn main() -> Result<(), Error> {
     SimpleLogger::new().with_level(log::LevelFilter::Info).without_timestamps().init()?;
     if let Ok(_) = std::env::var(RUN_LOCALLY_VAR) {
         let output = handler(LambdaEvent::new(
-            BenchStartEvent { positions: 200, depth: 5, table_size: 10_000_000 },
+            BenchStartEvent { positions: 200, depth: 5, table_size: 100_000 },
             Context::default(),
         ))
         .await?;
