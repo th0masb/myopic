@@ -117,6 +117,10 @@ export const BotConfigValues: BotConfig[] = [
     {
         name: "Myopic",
         authTokenVar: "MYOPIC_TOKEN",
+        challengerConfig: {
+            ourUserId: "myopic-bot",
+            token: process.env["MYOPIC_TOKEN"]!,
+        },
         eventStreamConfig: {
             gameFunction: {
                 id: { name: "MyopicGameLambda" },
