@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use crate::config::AppConfig;
+use crate::ratings::{OnlineBot, UserDetails};
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use rand::prelude::SliceRandom;
 use simple_logger::SimpleLogger;
-use crate::config::AppConfig;
-use crate::ratings::{OnlineBot, UserDetails};
+use std::collections::HashMap;
 
 mod config;
 mod ratings;
@@ -17,8 +17,7 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn game_handler(_event: LambdaEvent<()>) -> Result<(), Error> {
-    let config: AppConfig =
-        serde_json::from_str(std::env::var(APP_CONFIG_VAR)?.as_str())?;
+    let config: AppConfig = serde_json::from_str(std::env::var(APP_CONFIG_VAR)?.as_str())?;
 
     let chosen_time_limit = config
         .time_limit_options
@@ -71,7 +70,8 @@ async fn game_handler(_event: LambdaEvent<()>) -> Result<(), Error> {
         params.insert("rated", "true".to_owned());
         params.insert("clock.limit", chosen_time_limit.limit.to_string());
         params.insert("clock.increment", chosen_time_limit.increment.to_string());
-        client.post(format!("https://lichess.org/api/challenge/{}", opponent.id))
+        client
+            .post(format!("https://lichess.org/api/challenge/{}", opponent.id))
             .bearer_auth(config.token.as_str())
             .form(&params)
             .send()
