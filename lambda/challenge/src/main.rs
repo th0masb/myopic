@@ -1,9 +1,12 @@
+use std::iter::repeat;
+use std::time::Duration;
 use crate::client::{ChallengeRequest, LichessClient};
 use crate::config::{ChallengeEvent, KnownUserChallenge, TimeLimits, UserConfig};
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use rand::prelude::SliceRandom;
 use simple_logger::SimpleLogger;
+use tokio::time::sleep;
 
 mod client;
 mod config;
@@ -36,19 +39,20 @@ async fn specific_challenge_handler(
     let client = LichessClient::default();
     for challenge in challenges {
         let target_id = challenge.user_id.as_str();
-        let status = client
-            .create_challenge(ChallengeRequest {
-                token: config.token.clone(),
-                rated: challenge.rated,
-                time_limit: challenge.time_limits,
-                target_user_id: target_id.to_string(),
-            })
-            .await?;
-
-        if status.is_success() {
-            log::info!("Successfully created challenge for {}", target_id);
-        } else {
-            log::error!("Status {} for challenge creation for {}", status, target_id);
+        let request = ChallengeRequest {
+            token: config.token.clone(),
+            rated: challenge.rated,
+            time_limit: challenge.time_limits.clone(),
+            target_user_id: target_id.to_string(),
+        };
+        for r in repeat(request).take(challenge.repeat) {
+            let status = client.create_challenge(r).await?;
+            if status.is_success() {
+                log::info!("Successfully created challenge for {}", target_id);
+            } else {
+                log::error!("Status {} for challenge creation for {}", status, target_id);
+            }
+            sleep(Duration::from_secs(3)).await;
         }
     }
     Ok(())

@@ -1,0 +1,14 @@
+{
+  "type": "Specific",
+  "challenges": [
+    {
+      "userId": "myopic-bot",
+      "rated": false,
+      "repeat": 5,
+      "timeLimits": {
+        "limit": 120,
+        "increment": 1
+      }
+    }
+  ]
+}
