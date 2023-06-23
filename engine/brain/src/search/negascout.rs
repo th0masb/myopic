@@ -95,6 +95,7 @@ where
     /// The terminator is responsible for deciding when the
     /// search is complete
     pub terminator: &'a T,
+    /// Reference to the current principle search variation
     pub pv: &'a PrincipleVariation,
     /// Precomputed hints for helping to order moves
     /// generated for positions in the search tree.
@@ -146,7 +147,7 @@ where
             match root.board().terminal_state() {
                 Some(TerminalState::Loss) => Ok(eval::LOSS_VALUE),
                 Some(TerminalState::Draw) => Ok(eval::DRAW_VALUE),
-                None => quiescent::search(root, -eval::INFTY, eval::INFTY, -1),
+                None => quiescent::search(root, ctx.alpha, ctx.beta, -1),
             }
             .map(|eval| SearchResponse { eval, path: vec![] })
         } else {

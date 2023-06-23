@@ -3,7 +3,7 @@ use myopic_board::{Board, Reflectable};
 use crate::search::SearchParameters;
 use crate::{eval, Evaluator, UciMove};
 
-const DEPTH: usize = 3;
+const DEPTH: usize = 4;
 const TABLE_SIZE: usize = 10_000;
 
 enum Setup {
