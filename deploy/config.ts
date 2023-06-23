@@ -71,6 +71,7 @@ export type BotConfig = {
             challengeTable: { name: string }
             maxDailyChallenges: number
             maxDailyUserChallenges: number
+            excluded?: string[]
         }
     }
 }
@@ -99,11 +100,17 @@ export const BotConfigValues: BotConfig[] = [
             },
             lichessBot: {
                 botId: "Hyperopic",
+                userMatchers: [
+                    {
+                        include: true,
+                        pattern: "^th0masb$"
+                    }
+                ]
             },
             rateLimits: {
                 challengeTable: { name: "HyperopicChallenges" },
                 maxDailyChallenges: 100,
-                maxDailyUserChallenges: 5,
+                maxDailyUserChallenges: 100,
             }
         }
     },
@@ -121,17 +128,12 @@ export const BotConfigValues: BotConfig[] = [
             },
             lichessBot: {
                 botId: "myopic-bot",
-                userMatchers: [
-                    {
-                        include: true,
-                        pattern: "^th0masb$"
-                    }
-                ]
             },
             rateLimits: {
                 challengeTable: { name: "MyopicChallenges" },
                 maxDailyChallenges: 100,
-                maxDailyUserChallenges: 100,
+                maxDailyUserChallenges: 5,
+                excluded: ["hyperopic"]
             }
         }
     }
