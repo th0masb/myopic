@@ -9,6 +9,7 @@ pub struct LichessClient {
     inner: reqwest::Client,
 }
 
+#[derive(Debug, Clone)]
 pub struct ChallengeRequest {
     pub token: String,
     pub rated: bool,

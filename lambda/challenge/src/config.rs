@@ -18,8 +18,10 @@ pub enum ChallengeEvent {
 pub struct KnownUserChallenge {
     #[serde(rename = "userId")]
     pub user_id: String,
+    #[serde(rename = "timeLimits")]
     pub time_limits: TimeLimits,
     pub rated: bool,
+    pub repeat: usize,
 }
 
 #[derive(Debug, Deserialize, Clone)]
