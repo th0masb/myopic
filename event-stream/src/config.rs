@@ -88,6 +88,8 @@ pub struct RateLimitConfig {
     pub max_daily_challenges: usize,
     #[serde(rename = "maxDailyUserChallenges")]
     pub max_daily_user_challenges: usize,
+    #[serde(default)]
+    pub excluded: Vec<String>,
 }
 
 impl Default for AppConfig {

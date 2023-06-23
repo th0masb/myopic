@@ -11,6 +11,7 @@ pub struct ChallengeService {
     validity_checks: Vec<Box<dyn ValidityCheck + Send + Sync>>,
     max_daily_challenges: usize,
     max_daily_user_challenges: usize,
+    rate_limit_exclusions: Vec<String>,
     our_id: String,
 }
 
@@ -21,6 +22,7 @@ impl ChallengeService {
             challenge_table: ChallengeTableClient::new(&parameters.rate_limits.challenge_table),
             max_daily_challenges: parameters.rate_limits.max_daily_challenges,
             max_daily_user_challenges: parameters.rate_limits.max_daily_user_challenges,
+            rate_limit_exclusions: parameters.rate_limits.excluded.clone(),
             our_id: parameters.lichess_bot.bot_id.to_lowercase(),
             validity_checks: vec![
                 Box::new(parameters.time_constraints.clone()),
@@ -40,7 +42,7 @@ impl ChallengeService {
             let passes_static_checks =
                 self.validity_checks.iter().all(|check| check.accepts(&challenge));
 
-            if passes_static_checks && self.passes_table_checks(&challenge).await? {
+            if passes_static_checks && self.passes_rate_limit_checks(&challenge).await? {
                 self.challenge_table
                     .insert_challenge(challenge.challenger.id.as_str(), challenge_id)
                     .await?;
@@ -64,7 +66,7 @@ impl ChallengeService {
             .map(|status| format!("{} from challenge {}", status, decision))
     }
 
-    async fn passes_table_checks(&self, challenge: &Challenge) -> Result<bool> {
+    async fn passes_rate_limit_checks(&self, challenge: &Challenge) -> Result<bool> {
         let all_challenges_today = self.challenge_table.fetch_challenges_today().await?;
         let user_id = challenge.challenger.id.as_str();
         let user_challenges_today =
@@ -77,9 +79,11 @@ impl ChallengeService {
             user_id
         );
 
-        Ok(all_challenges_today.len() < self.max_daily_challenges
-            // Rate limit users per day
-            && user_challenges_today < self.max_daily_user_challenges
+        let is_excluded = self.rate_limit_exclusions.contains(&challenge.challenger.id);
+        let under_rate_limit = all_challenges_today.len() < self.max_daily_challenges
+            && user_challenges_today < self.max_daily_user_challenges;
+
+        Ok((is_excluded || under_rate_limit)
             // Don't accept duplicated challenge ids
             && !all_challenges_today.iter().any(|c| c.challenge_id == challenge.id))
     }
