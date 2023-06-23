@@ -1,5 +1,5 @@
-use serde_derive::Deserialize;
 use crate::config::TimeLimitType;
+use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct UserDetails {
@@ -31,4 +31,3 @@ pub struct OnlineBot {
     pub id: String,
     pub perfs: UserDetailsPerfs,
 }
-

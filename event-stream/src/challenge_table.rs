@@ -54,11 +54,7 @@ impl ChallengeTableClient {
             r.table_name = self.table_name.clone();
             r.key = create_search_key(challenger_id, challenge_id);
         });
-        let response = self
-            .client
-            .get_item(request)
-            .await
-            .map_err(|e| anyhow!(e))?;
+        let response = self.client.get_item(request).await.map_err(|e| anyhow!(e))?;
 
         match response.item {
             None => Ok(None),
@@ -71,7 +67,8 @@ impl ChallengeTableClient {
         let request = init(|r: &mut PutItemInput| {
             r.table_name = self.table_name.clone();
             // Don't overwite existing challenges!
-            r.condition_expression = Some(format!("attribute_not_exists({})", attribute_keys::EPOCH_DAY));
+            r.condition_expression =
+                Some(format!("attribute_not_exists({})", attribute_keys::EPOCH_DAY));
             r.item = init(|dest: &mut HashMap<String, AttributeValue>| {
                 dest.insert(
                     attribute_keys::CHALLENGER.to_owned(),
@@ -116,18 +113,14 @@ impl ChallengeTableClient {
                 );
             }))
         });
-        self.client
-            .update_item(request)
-            .await
-            .map_err(|e| anyhow!(e))
-            .and_then(|response| {
-                response
-                    .attributes
-                    .and_then(|attr| attr.get(attribute_keys::STARTED).cloned())
-                    .and_then(|started| started.bool)
-                    .map(|started| !started)
-                    .ok_or(anyhow!("Unknown flag change for {}-{}", challenger_id, challenge_id))
-            })
+        self.client.update_item(request).await.map_err(|e| anyhow!(e)).and_then(|response| {
+            response
+                .attributes
+                .and_then(|attr| attr.get(attribute_keys::STARTED).cloned())
+                .and_then(|started| started.bool)
+                .map(|started| !started)
+                .ok_or(anyhow!("Unknown flag change for {}-{}", challenger_id, challenge_id))
+        })
     }
 
     pub async fn fetch_challenges_today(&self) -> Result<Vec<ChallengeTableEntry>> {

@@ -34,15 +34,11 @@ impl ChallengeService {
         let challenge_id = challenge.id.as_str();
         log::info!("Processing challenge {}", challenge_id);
         if challenge.challenger.id == self.our_id {
-            self.challenge_table
-                .insert_challenge(self.our_id.as_str(), challenge_id)
-                .await?;
+            self.challenge_table.insert_challenge(self.our_id.as_str(), challenge_id).await?;
             Ok(format!("Added entry for our challenge {}", challenge_id))
         } else {
-            let passes_static_checks = self
-                .validity_checks
-                .iter()
-                .all(|check| check.accepts(&challenge));
+            let passes_static_checks =
+                self.validity_checks.iter().all(|check| check.accepts(&challenge));
 
             if passes_static_checks && self.passes_table_checks(&challenge).await? {
                 self.challenge_table

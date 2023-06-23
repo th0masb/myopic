@@ -36,7 +36,7 @@ impl GameStartService {
         }
 
         if table_client.get_entry(challenger_id, game_id).await?.is_none() {
-            return Err(anyhow!("No challenge entry found for {}", game_id))
+            return Err(anyhow!("No challenge entry found for {}", game_id));
         }
 
         if table_client.set_started(challenger_id, game_id).await? {
