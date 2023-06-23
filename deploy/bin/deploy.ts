@@ -14,6 +14,7 @@ import {
 } from "../config";
 import {EventStreamStack} from "../lib/EventStreamStack";
 import {ChallengesTableStack} from "../lib/ChallengesTableStack";
+import {ChallengerStack} from "../lib/ChallengerStack";
 
 const app = new App();
 
@@ -61,4 +62,12 @@ BotConfigValues.forEach((config) => {
         challengesTable.tableArn,
         config,
     )
+    if (config.challengerConfig !== undefined) {
+        new ChallengerStack(
+            app,
+            `${config.name}Challenger`,
+            AccountAndRegionValues,
+            config.challengerConfig
+        )
+    }
 })
