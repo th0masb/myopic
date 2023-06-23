@@ -6,15 +6,12 @@ use myopic_board::{Move, MoveComputeType, TerminalState};
 
 use crate::{eval, Evaluator};
 
-const Q_DEPTH_CAP: i32 = -8;
-const Q_CHECK_CAP: i32 = -2;
-
-// TODO Do we want the quiescent search to have interruption finishing checks too?
+const Q_CHECK_CAP: i32 = -1;
 
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
 pub fn search(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
-    if depth == Q_DEPTH_CAP || root.board().terminal_state().is_some() {
+    if root.board().terminal_state().is_some() {
         return Ok(match root.board().terminal_state() {
             Some(TerminalState::Loss) => eval::LOSS_VALUE,
             Some(TerminalState::Draw) => eval::DRAW_VALUE,
