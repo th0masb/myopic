@@ -1,6 +1,6 @@
 import {aws_lambda as lambda, Duration, Stack} from "aws-cdk-lib";
 import {Construct} from "constructs";
-import {AccountAndRegion, BotConfig} from "../config";
+import {AccountAndRegion, BotChallengerConfig} from "../config";
 import * as path from "path";
 
 export class ChallengerStack extends Stack {
@@ -8,12 +8,11 @@ export class ChallengerStack extends Stack {
         scope: Construct,
         id: string,
         accountAndRegion: AccountAndRegion,
-        botConfig: BotConfig,
+        config: BotChallengerConfig,
     ) {
         super(scope, id, {env: accountAndRegion});
-
-        const challengeFn = new lambda.DockerImageFunction(this, id, {
-            functionName: `${botConfig.name}Challenger`,
+        new lambda.DockerImageFunction(this, id, {
+            functionName: id,
             retryAttempts: 0,
             memorySize: 128,
             timeout: Duration.minutes(3),
@@ -24,17 +23,12 @@ export class ChallengerStack extends Stack {
                     buildArgs: {
                         APP_NAME: "challenge",
                         APP_CONFIG: JSON.stringify({
-
-
+                            token: config.token,
+                            ourUserId: config.ourUserId
                         })
                     },
                 }
             ),
         });
-
-
-
-
-
     }
 }

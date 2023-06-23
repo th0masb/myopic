@@ -47,15 +47,7 @@ export const AccountAndRegionValues: AccountAndRegion = {
 export type BotConfig = {
     name: string
     authTokenVar: string
-    challengerConfig?: {
-        ourUserId: string,
-        token: string,
-        challengeCount: number,
-        timeLimitOptions: {
-            limit: number,
-            increment: number
-        }[]
-    }
+    challengerConfig?: BotChallengerConfig
     eventStreamConfig: {
         gameFunction: {
             id: { name: string }
@@ -83,6 +75,11 @@ export type BotConfig = {
     }
 }
 
+export type BotChallengerConfig = {
+    ourUserId: string,
+    token: string,
+}
+
 export const BotConfigValues: BotConfig[] = [
     {
         name: "Hyperopic",
@@ -90,8 +87,6 @@ export const BotConfigValues: BotConfig[] = [
         challengerConfig: {
             ourUserId: "hyperopic",
             token: process.env["HYPEROPIC_TOKEN"]!,
-            challengeCount: 24,
-            timeLimitOptions: []
         },
         eventStreamConfig: {
             gameFunction: {
