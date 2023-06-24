@@ -18,14 +18,21 @@ impl Default for MaterialFacet {
         MaterialFacet {
             mid_eval: 0,
             end_eval: 0,
-            /// Values copied from Stockfish: https://github.com/official-stockfish/Stockfish/blob/master/src/types.h
             mid_values: enum_map! {
-                Class::P => 128, Class::N => 782, Class::B => 830,
-                Class::R => 1289, Class::Q => 2529, Class::K => 100_000
+                Class::P => 128,
+                Class::N => 782,
+                Class::B => 830,
+                Class::R => 1289,
+                Class::Q => 2529,
+                Class::K => 100_000
             },
             end_values: enum_map! {
-                Class::P => 213, Class::N => 865, Class::B => 918,
-                Class::R => 1378, Class::Q => 2687, Class::K => 100_000
+                Class::P => 213,
+                Class::N => 865,
+                Class::B => 918,
+                Class::R => 1378,
+                Class::Q => 2687,
+                Class::K => 100_000
             },
         }
     }
@@ -84,9 +91,12 @@ impl MaterialFacet {
             Move::Enpassant { side, .. } => {
                 remove(self, Piece(side.reflect(), Class::P));
             }
-            Move::Promotion { promoted: Piece(side, class), .. } => {
+            Move::Promotion { promoted: Piece(side, class), capture, .. } => {
                 remove(self, Piece(*side, Class::P));
                 add(self, Piece(*side, *class));
+                if let Some(p) = capture {
+                    remove(self, *p)
+                }
             }
         }
     }

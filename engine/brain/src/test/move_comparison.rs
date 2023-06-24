@@ -34,6 +34,16 @@ fn development_preferred_black() {
     )
 }
 
+#[test]
+fn promotion_eval_bug() {
+    assert_move_better(
+        "1. d4 d5 2. e3 Nf6 3. c4 c6 4. Nc3 e6 5. Bd3 dxc4 6. Bxc4 b5 7. Be2 Bd6 8. e4 b4 9. e5 bxc3 10. exf6 O-O 11. fxg7",
+        "f8e8",
+        "c3b2",
+        4
+    )
+}
+
 const TABLE_SIZE: usize = 10000;
 
 fn assert_move_better(
@@ -48,11 +58,9 @@ fn assert_move_better(
     // These are measurements of how good the move is for the opponent, so we want to minimise
     if outcome_from_better_move.relative_eval > outcome_from_worse_move.relative_eval {
         panic!(
-            "{} vs {}\n{:?} vs {:?}",
-            outcome_from_better_move.relative_eval,
-            outcome_from_worse_move.relative_eval,
-            outcome_from_better_move.optimal_path,
-            outcome_from_worse_move.optimal_path
+            "After better: {}\nAfter worse:  {}",
+            serde_json::to_string(&outcome_from_better_move).unwrap(),
+            serde_json::to_string(&outcome_from_worse_move).unwrap(),
         )
     }
 }

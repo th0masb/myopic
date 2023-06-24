@@ -2,7 +2,7 @@ use myopic_board::Move;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct PrincipleVariation {
-    path: Vec<Move>
+    path: Vec<Move>,
 }
 
 impl PrincipleVariation {

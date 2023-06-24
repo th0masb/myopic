@@ -1,11 +1,11 @@
-use std::iter::repeat;
-use std::time::Duration;
 use crate::client::{ChallengeRequest, LichessClient};
 use crate::config::{ChallengeEvent, KnownUserChallenge, TimeLimits, UserConfig};
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 use rand::prelude::SliceRandom;
 use simple_logger::SimpleLogger;
+use std::iter::repeat;
+use std::time::Duration;
 use tokio::time::sleep;
 
 mod client;

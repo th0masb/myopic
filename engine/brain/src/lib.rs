@@ -6,6 +6,7 @@ pub use eval::tables::PositionTables;
 pub use eval::Evaluator;
 pub use myopic_board::*;
 pub use search::negascout;
+pub use search::quiescent;
 pub use search::search;
 pub use search::terminator::SearchTerminator;
 pub use search::SearchOutcome;

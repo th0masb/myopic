@@ -406,3 +406,24 @@ fn case_20() -> Result<()> {
         ],
     })
 }
+
+#[test]
+fn case_21() {
+    execute_test(TestCase {
+        board: "5rk1/5pPp/8/8/8/8/8/4K3 w - - 0 11",
+        expected_all: vec![
+            "swke1f1-",
+            "swke1f2-",
+            "swke1e2-",
+            "swke1d2-",
+            "swke1d1-",
+            "pg7f8wqbr",
+            "pg7f8wrbr",
+            "pg7f8wbbr",
+            "pg7f8wnbr",
+        ],
+        expected_attacks: vec!["pg7f8wqbr", "pg7f8wrbr", "pg7f8wbbr", "pg7f8wnbr"],
+        expected_attacks_checks: vec!["pg7f8wqbr", "pg7f8wrbr", "pg7f8wbbr", "pg7f8wnbr"],
+    })
+    .unwrap();
+}

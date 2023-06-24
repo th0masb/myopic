@@ -9,11 +9,11 @@ use myopic_board::{Move, MoveComputeType, TerminalState};
 
 use crate::search::movehints::MoveOrderingHints;
 use crate::search::movequality::{BestMoveHeuristic, MaterialAndPositioningHeuristic};
+use crate::search::pv::PrincipleVariation;
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{TranspositionTable, TreeNode};
 use crate::search::{eval, quiescent};
 use crate::Evaluator;
-use crate::search::pv::PrincipleVariation;
 
 /// Performs a negascout search without any iterative deepening,
 /// we simply provide a depth to search to. The depth should be
@@ -147,7 +147,7 @@ where
             match root.board().terminal_state() {
                 Some(TerminalState::Loss) => Ok(eval::LOSS_VALUE),
                 Some(TerminalState::Draw) => Ok(eval::DRAW_VALUE),
-                None => quiescent::search(root, ctx.alpha, ctx.beta, -1),
+                None => quiescent::search(root, ctx.alpha, ctx.beta),
             }
             .map(|eval| SearchResponse { eval, path: vec![] })
         } else {

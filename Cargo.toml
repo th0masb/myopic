@@ -3,6 +3,7 @@ members = [
     "engine/board",
     "engine/brain",
     "engine/core",
+    "engine/debug",
     "event-stream",
     "lambda/benchmark",
     "lambda/chessgame",
