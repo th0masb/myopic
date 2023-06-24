@@ -5,6 +5,8 @@ use myopic_board::{Board, Move};
 use crate::eval::Evaluation;
 use crate::{Class, Piece, Square};
 
+const MAX_PHASE: i32 = 256;
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Phase {
     phase_values: EnumMap<Class, i32>,
@@ -51,12 +53,16 @@ impl Phase {
         }
     }
 
+    pub fn phase_progression(&self) -> f32 {
+        (self.phase as f32) / (MAX_PHASE as f32)
+    }
+
     pub fn interpolate(&self, mid: i32, end: i32) -> i32 {
-        ((mid * (256 - self.phase)) + end * self.phase) / 256
+        ((mid * (MAX_PHASE - self.phase)) + end * self.phase) / MAX_PHASE
     }
 
     fn update_phase(&mut self) {
-        self.phase = (self.phase_counter * 256i32 + self.total_phase / 2i32) / self.total_phase;
+        self.phase = (self.phase_counter * MAX_PHASE + self.total_phase / 2i32) / self.total_phase;
     }
 
     pub fn make(&mut self, mv: &Move) {

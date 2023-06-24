@@ -10,6 +10,7 @@ use crate::{eval, Evaluator, Piece};
 
 const Q_CHECK_CAP: i32 = -1;
 const DELTA_SKIP_MARGIN: i32 = 200;
+const DELTA_SKIP_MAX_PHASE: f32 = 0.9;
 
 pub fn full_search(root: &mut Evaluator) -> Result<i32> {
     search(root, -eval::INFTY, eval::INFTY)
@@ -44,6 +45,8 @@ fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> R
         alpha = result;
     }
 
+    let phase = root.phase_progression();
+
     for (category, evolve) in compute_quiescent_moves(root, depth) {
         match category {
             MoveCategory::Special => {}
@@ -56,6 +59,7 @@ fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> R
             MoveCategory::GoodExchange { optimistic_delta, .. } => {
                 if !in_check &&
                     depth < Q_CHECK_CAP &&
+                    phase < DELTA_SKIP_MAX_PHASE &&
                     result + optimistic_delta + DELTA_SKIP_MARGIN < alpha {
                     continue
                 }

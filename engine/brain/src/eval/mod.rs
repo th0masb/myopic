@@ -163,6 +163,10 @@ impl Evaluator {
     pub fn piece_values(&self) -> &PieceValues {
         &self.material.mid_values()
     }
+
+    pub fn phase_progression(&self) -> f32 {
+        self.phase.phase_progression()
+    }
 }
 
 impl Default for Evaluator {
