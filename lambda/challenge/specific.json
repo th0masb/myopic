@@ -4,10 +4,10 @@
     {
       "userId": "myopic-bot",
       "rated": false,
-      "repeat": 5,
+      "repeat": 10,
       "timeLimits": {
-        "limit": 120,
-        "increment": 1
+        "limit": 180,
+        "increment": 3
       }
     }
   ]
