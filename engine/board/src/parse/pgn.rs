@@ -321,4 +321,24 @@ mod test_single_move {
             "O-O-O",
         )
     }
+
+    #[test]
+    fn case_12() {
+        execute_success_test(
+            "pg7f8wqbr",
+            "rnbq1rk1/p4pPp/2pbp3/8/3P4/8/Pp2BPPP/R1BQK1NR w KQ - 0 12",
+            "gxf8=Q+",
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn case_13() {
+        execute_success_test(
+            "sbqd8f8wq",
+            "rnbq1Qk1/p4p1p/2pbp3/8/3P4/8/Pp2BPPP/R1BQK1NR b KQ - 0 12",
+            "Qxf8",
+        )
+        .unwrap()
+    }
 }

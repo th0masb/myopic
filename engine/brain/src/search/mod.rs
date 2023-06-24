@@ -10,17 +10,17 @@ use terminator::SearchTerminator;
 
 use crate::search::movequality::MaterialAndPositioningHeuristic;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
+use crate::search::pv::PrincipleVariation;
 use crate::search::transpositions::TranspositionTable;
 use crate::{eval, Evaluator};
-use crate::search::pv::PrincipleVariation;
 
 mod movehints;
 mod movequality;
 pub mod negascout;
-mod quiescent;
+mod pv;
+pub mod quiescent;
 pub mod terminator;
 mod transpositions;
-mod pv;
 
 const DEPTH_UPPER_BOUND: usize = 10;
 const SHALLOW_EVAL_TRIGGER_DEPTH: usize = 2;

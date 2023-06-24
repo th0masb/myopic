@@ -8,9 +8,17 @@ use crate::{eval, Evaluator};
 
 const Q_CHECK_CAP: i32 = -1;
 
+pub fn full_search(root: &mut Evaluator) -> Result<i32> {
+    search(root, -eval::INFTY, eval::INFTY)
+}
+
+pub fn search(root: &mut Evaluator, alpha: i32, beta: i32) -> Result<i32> {
+    search_impl(root, alpha, beta, -1)
+}
+
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
-pub fn search(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
+fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
     if root.board().terminal_state().is_some() {
         return Ok(match root.board().terminal_state() {
             Some(TerminalState::Loss) => eval::LOSS_VALUE,
@@ -36,7 +44,7 @@ pub fn search(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> Re
 
     for evolve in compute_quiescent_moves(root, depth) {
         root.make(evolve)?;
-        let next_result = -search(root, -beta, -alpha, depth - 1)?;
+        let next_result = -search_impl(root, -beta, -alpha, depth - 1)?;
         root.unmake()?;
         result = cmp::max(result, next_result);
         alpha = cmp::max(alpha, result);
