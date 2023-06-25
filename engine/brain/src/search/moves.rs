@@ -1,27 +1,44 @@
-use myopic_board::{Board, Move, Move::*, Reflectable, Square};
+use myopic_board::{Board, Move, Move::*, MoveComputeType, Reflectable, Square};
 
 use crate::{BitBoard, Class, Evaluator, Piece, PositionTables};
+use crate::negascout::SearchContext;
+use crate::search::pv::PrincipleVariation;
 
-/// A function which approximately evaluates the quality
-/// of a move within the context of the given position.
-/// It can be used to decide the search order of legal
-/// moves for a position.
-pub trait BestMoveHeuristic {
-    /// Assign a heuristic score to the given move in the
-    /// context of the given position. The score is agnostic
-    /// of the side to move, i.e. high magnitude positive
-    /// score is always better and high magnitude negative
-    /// score is always worse.
-    fn estimate(&self, board: &Evaluator, mv: &Move) -> i32;
+pub struct MoveGenerator<'a> {
+    pv: &'a PrincipleVariation,
+    estimator: MaterialAndPositioningHeuristic,
 }
 
-/// Simplest estimator which simply evaluates all moves
-/// as equal.
-pub struct AllMovesEqualHeuristic;
+impl <'a> From<&'a PrincipleVariation> for MoveGenerator<'a> {
+    fn from(value: &'a PrincipleVariation) -> Self {
+        MoveGenerator {
+            pv: value,
+            estimator: Default::default(),
+        }
+    }
+}
 
-impl BestMoveHeuristic for AllMovesEqualHeuristic {
-    fn estimate(&self, _board: &Evaluator, _mv: &Move) -> i32 {
-        0
+impl MoveGenerator<'_> {
+    pub fn generate(
+        &self,
+        state: &Evaluator,
+        ctx: &SearchContext,
+        table: Option<&Move>,
+    ) -> impl Iterator<Item = Move> {
+        let mut moves = state.board().compute_moves(MoveComputeType::All);
+        moves.sort_by_cached_key(|m| self.estimator.estimate(state, m));
+        table.map(|t| reposition_last(&mut moves, t));
+        if let Some(pv) = self.pv.get_next_move(ctx.precursors.as_slice()) {
+            reposition_last(&mut moves, &pv);
+        }
+        moves.into_iter().rev()
+    }
+}
+
+fn reposition_last(dest: &mut Vec<Move>, new_first: &Move) {
+    if let Some(index) = dest.iter().position(|m| m == new_first) {
+        let removed = dest.remove(index);
+        dest.push(removed);
     }
 }
 
@@ -29,17 +46,21 @@ impl BestMoveHeuristic for AllMovesEqualHeuristic {
 /// it categorises moves into one of four subcategories from
 /// best (good exchanges) to worst (bad exchanges) and then
 /// also orders within those subcategories.
-pub struct MaterialAndPositioningHeuristic {
+#[derive(Default)]
+struct MaterialAndPositioningHeuristic {
     tables: PositionTables,
 }
 
-impl Default for MaterialAndPositioningHeuristic {
-    fn default() -> Self {
-        MaterialAndPositioningHeuristic { tables: PositionTables::default() }
-    }
-}
-
 impl MaterialAndPositioningHeuristic {
+    fn estimate(&self, board: &Evaluator, mv: &Move) -> i32 {
+        match self.get_category(board, mv) {
+            MoveCategory::GoodExchange(n) => 30_000 + n,
+            MoveCategory::Special => 20_000,
+            MoveCategory::Positional(n) => 10_000 + n,
+            MoveCategory::BadExchange(n) => n,
+        }
+    }
+
     fn get_category(&self, eval: &Evaluator, mv: &Move) -> MoveCategory {
         match mv {
             Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
@@ -61,38 +82,6 @@ impl MaterialAndPositioningHeuristic {
                         })
                 }
             }
-        }
-    }
-}
-
-// Idea is we split the moves into different categories which are ordered
-// so that if category A has more value than category B then all moves in
-// A are assigned a greater value than those in B. There is then further
-// ordering within categories so certain moves in A can be better than others.
-// The categories are (in order best to worst):
-//
-// 1 Good exchanges
-// 2 Special moves
-// 3 Positional moves
-// 4 Move to an area of control of lower value piece | bad exchanges
-//
-// The positional moves are those left over when other categories are computed
-// and their sub-ordering is according to the delta in position value according
-// to the tables.
-//
-// Special moves (castling, enpassant, promotions) don't really need sub-ordering
-//
-// Exchanges are ordering according to the resulting material delta as
-// computed by the SEE. Moving to an area of control for a lower value piece
-// is scored according to the delta between the piece values. For now ignore
-// potential pins.
-impl BestMoveHeuristic for MaterialAndPositioningHeuristic {
-    fn estimate(&self, board: &Evaluator, mv: &Move) -> i32 {
-        match self.get_category(board, mv) {
-            MoveCategory::GoodExchange(n) => 30_000 + n,
-            MoveCategory::Special => 20_000,
-            MoveCategory::Positional(n) => 10_000 + n,
-            MoveCategory::BadExchange(n) => n,
         }
     }
 }
