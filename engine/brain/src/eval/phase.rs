@@ -19,7 +19,7 @@ impl Default for Phase {
     fn default() -> Self {
         let phase_values = enum_map! {
             Class::P => 0i32, Class::N => 1i32, Class::B => 1i32,
-            Class::R => 2i32, Class::Q => 4i32, Class::K => 0i32,
+            Class::R => 2i32, Class::Q => 6i32, Class::K => 0i32,
         };
         Phase {
             phase_counter: 0,
