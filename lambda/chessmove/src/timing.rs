@@ -3,6 +3,7 @@ use tokio::time::Duration;
 
 const DEFAULT_MOVE_LATENCY_MS: u64 = 200;
 const DEFAULT_MIN_COMPUTE_TIME_MS: u64 = 200;
+const INCREMENT_ONLY_THRESHOLD_MS: u64 = 5000;
 
 pub struct TimeAllocator {
     /// Given the number of moves played return the expected value of moves
@@ -11,6 +12,7 @@ pub struct TimeAllocator {
     /// Any time added to computing a move which is not spent thinking
     latency: Duration,
     min_compute_time: Duration,
+    increment_only_threshold: Duration,
 }
 
 impl Default for TimeAllocator {
@@ -19,6 +21,7 @@ impl Default for TimeAllocator {
             half_moves_remaining: expected_half_moves_remaining,
             latency: Duration::from_millis(DEFAULT_MOVE_LATENCY_MS),
             min_compute_time: Duration::from_millis(DEFAULT_MIN_COMPUTE_TIME_MS),
+            increment_only_threshold: Duration::from_millis(INCREMENT_ONLY_THRESHOLD_MS),
         }
     }
 }
@@ -30,11 +33,16 @@ impl TimeAllocator {
         remaining_time: Duration,
         increment: Duration,
     ) -> Duration {
+        if remaining_time < self.increment_only_threshold && increment > Duration::default() {
+            return std::cmp::max(self.min_compute_time, increment - self.latency)
+        }
+
         let remaining_including_latency = if remaining_time < self.latency {
             Duration::from_millis(0)
         } else {
             remaining_time - self.latency
         };
+
         // Divide by two because we need to think for half of the remaining moves
         let exp_remaining = (self.half_moves_remaining)(half_moves_played) / 2f64;
         info!("Played {} half moves and expect {} more", half_moves_played / 2, exp_remaining);
@@ -72,11 +80,26 @@ mod test {
     }
 
     #[test]
+    fn remaining_less_than_increment_threshold() {
+        let timing = TimeAllocator {
+            half_moves_remaining: dummy_half_moves_remaining,
+            min_compute_time: Duration::from_millis(500),
+            latency: Duration::from_millis(200),
+            increment_only_threshold: Duration::from_millis(5000),
+        };
+        assert_eq!(
+            Duration::from_millis(800),
+            timing.allocate(20, Duration::from_millis(4999), Duration::from_millis(1000))
+        )
+    }
+
+    #[test]
     fn remaining_less_than_latency() {
         let timing = TimeAllocator {
             half_moves_remaining: dummy_half_moves_remaining,
             min_compute_time: Duration::from_millis(1100),
             latency: Duration::from_millis(200),
+            increment_only_threshold: Duration::from_millis(100),
         };
         assert_eq!(
             Duration::from_millis(1100),
@@ -90,6 +113,7 @@ mod test {
             half_moves_remaining: dummy_half_moves_remaining,
             min_compute_time: Duration::from_millis(1100),
             latency: Duration::from_millis(200),
+            increment_only_threshold: Duration::from_millis(100),
         };
 
         assert_eq!(
@@ -104,6 +128,7 @@ mod test {
             half_moves_remaining: dummy_half_moves_remaining,
             min_compute_time: Duration::from_millis(1100),
             latency: Duration::from_millis(200),
+            increment_only_threshold: Duration::from_millis(100),
         };
 
         assert_eq!(
