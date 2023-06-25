@@ -8,12 +8,11 @@ use myopic_board::Move;
 use terminator::SearchTerminator;
 
 use crate::{eval, Evaluator};
-use crate::search::movequality::MaterialAndPositioningHeuristic;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::pv::PrincipleVariation;
 use crate::search::transpositions::Transpositions;
 
-mod movequality;
+mod moves;
 pub mod negascout;
 mod pv;
 pub mod quiescent;
@@ -115,11 +114,11 @@ struct BestMoveResponse {
 }
 
 impl<T: SearchTerminator> Search<T> {
-    pub fn search(&mut self, transposition_table_size: usize) -> Result<SearchOutcome> {
+    pub fn search(&mut self, table_size: usize) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
         let mut pv = PrincipleVariation::default();
-        let mut transposition_table = Transpositions::new(transposition_table_size);
+        let mut transposition_table = Transpositions::new(table_size);
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
@@ -157,9 +156,8 @@ impl<T: SearchTerminator> Search<T> {
 
         let SearchResponse { eval, path } = Scout {
             terminator: &self.terminator,
-            pv,
-            move_quality_estimator: MaterialAndPositioningHeuristic::default(),
             transpositions: transposition_table,
+            moves: pv.into(),
         }
         .search(
             &mut self.root,
