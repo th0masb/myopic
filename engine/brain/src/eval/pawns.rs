@@ -1,5 +1,9 @@
+use enum_map::{Enum, enum_map, EnumMap};
 use itertools::Itertools;
-use crate::BitBoard;
+use Feature::{Backward, Doubled, Isolated, Passed};
+use myopic_board::{Board, Class, Move};
+use crate::{BitBoard, Piece, Side};
+use crate::eval::{EvalFacet, Evaluation};
 
 const ADJACENT_FILES: [BitBoard; 8] = [
     BitBoard::FILES[1],
@@ -11,6 +15,62 @@ const ADJACENT_FILES: [BitBoard; 8] = [
     BitBoard(BitBoard::FILES[5].0 | BitBoard::FILES[7].0),
     BitBoard::FILES[6],
 ];
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash, Enum)]
+enum Feature {
+    Passed,
+    Doubled,
+    Isolated,
+    Backward,
+}
+
+type FeatureScores = EnumMap<Feature, (i32, i32)>;
+type FeatureCounts = EnumMap<Feature, fn(BitBoard, BitBoard) -> i32>;
+
+pub struct PawnStructureFacet {
+    scores: FeatureScores,
+    counts: FeatureCounts,
+}
+
+impl Default for PawnStructureFacet {
+    fn default() -> Self {
+        PawnStructureFacet {
+            scores: enum_map! {
+                Passed => (100, 200),
+                Doubled => (-75, -75),
+                Isolated => (-70, -30),
+                Backward => (-15, 0),
+            },
+            counts: enum_map! {
+                Passed => count_passed_pawns,
+                Doubled => count_doubled_pawns,
+                Isolated => count_isolated_pawns,
+                Backward => count_backward_pawns,
+            }
+        }
+    }
+}
+
+impl EvalFacet for PawnStructureFacet {
+    fn static_eval(&self, board: &Board) -> Evaluation {
+        let whites = board.locs(&[Piece(Side::W, Class::P)]);
+        let blacks = board.locs(&[Piece(Side::B, Class::P)]);
+        let (mut mid, mut end) = (0, 0);
+        for &f in &[Passed, Doubled, Isolated, Backward] {
+            let count = self.counts[f](whites, blacks);
+            let (m, e) = self.scores[f];
+            mid += count * m;
+            end += count * e;
+        }
+        Evaluation::Phased { mid, end }
+    }
+
+    fn make(&mut self, _: &Move, _: &Board) {
+    }
+
+    fn unmake(&mut self, _: &Move) {
+    }
+}
 
 fn count_passed_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
     let mut count = 0i32;
