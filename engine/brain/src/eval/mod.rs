@@ -18,6 +18,7 @@ pub mod material;
 mod phase;
 mod see;
 pub mod tables;
+mod pawns;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
