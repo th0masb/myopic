@@ -10,6 +10,7 @@ use crate::eval::phase::Phase;
 use crate::eval::tables::PieceSquareTablesFacet;
 use crate::Square;
 use myopic_board::{Board, Move, TerminalState};
+use crate::eval::pawns::PawnStructureFacet;
 
 mod antipattern;
 mod castling;
@@ -187,6 +188,7 @@ impl From<Board> for Evaluator {
                 break;
             }
         }
+        facets.push(Box::new(PawnStructureFacet::default()));
 
         if board_clone.to_fen().as_str() == crate::START_FEN {
             let mut eval = Evaluator {
