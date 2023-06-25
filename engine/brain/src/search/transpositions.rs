@@ -1,12 +1,12 @@
 use crate::Move;
 
-pub struct TranspositionTable {
+pub struct Transpositions {
     inner: Vec<Option<TreeNode>>,
 }
 
-impl TranspositionTable {
-    pub fn new(n_entries: usize) -> TranspositionTable {
-        TranspositionTable { inner: vec![None; n_entries] }
+impl Transpositions {
+    pub fn new(n_entries: usize) -> Transpositions {
+        Transpositions { inner: vec![None; n_entries] }
     }
 
     pub fn get(&self, k: u64) -> Option<&TreeNode> {

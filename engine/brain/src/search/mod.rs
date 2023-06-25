@@ -3,18 +3,16 @@ use std::time::{Duration, Instant};
 use serde::ser::SerializeStruct;
 use serde::Serializer;
 
-use movehints::MoveOrderingHints;
 use myopic_board::anyhow::{anyhow, Result};
 use myopic_board::Move;
 use terminator::SearchTerminator;
 
+use crate::{eval, Evaluator};
 use crate::search::movequality::MaterialAndPositioningHeuristic;
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::pv::PrincipleVariation;
-use crate::search::transpositions::TranspositionTable;
-use crate::{eval, Evaluator};
+use crate::search::transpositions::Transpositions;
 
-mod movehints;
 mod movequality;
 pub mod negascout;
 mod pv;
@@ -22,9 +20,7 @@ pub mod quiescent;
 pub mod terminator;
 mod transpositions;
 
-const DEPTH_UPPER_BOUND: usize = 10;
-const SHALLOW_EVAL_TRIGGER_DEPTH: usize = 2;
-const SHALLOW_EVAL_DEPTH: usize = 1;
+const DEPTH_UPPER_BOUND: usize = 20;
 
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
@@ -76,8 +72,9 @@ mod searchoutcome_serialize_test {
 
     use serde_json;
 
-    use crate::{Class, Flank, Side};
     use myopic_board::{Corner, Move, Piece, Square};
+
+    use crate::{Class, Flank, Side};
 
     use super::SearchOutcome;
 
@@ -122,12 +119,11 @@ impl<T: SearchTerminator> Search<T> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
         let mut pv = PrincipleVariation::default();
-        let mut ordering_hints = MoveOrderingHints::default();
-        let mut transposition_table = TranspositionTable::new(transposition_table_size);
+        let mut transposition_table = Transpositions::new(transposition_table_size);
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
-            match self.best_move(i, search_start, &pv, &ordering_hints, &mut transposition_table) {
+            match self.best_move(i, search_start, &pv, &mut transposition_table) {
                 Err(message) => {
                     break_err = anyhow!("{}", message);
                     break;
@@ -135,11 +131,6 @@ impl<T: SearchTerminator> Search<T> {
                 Ok(response) => {
                     pv.set(response.path.as_slice());
                     best_response = Some(response);
-                    // Only fill in the shallow eval when we get deep
-                    // enough to make it worthwhile
-                    if i == SHALLOW_EVAL_TRIGGER_DEPTH {
-                        ordering_hints.populate(&mut self.root, SHALLOW_EVAL_DEPTH);
-                    }
                 }
             }
         }
@@ -158,8 +149,7 @@ impl<T: SearchTerminator> Search<T> {
         depth: usize,
         search_start: Instant,
         pv: &PrincipleVariation,
-        ordering_hints: &MoveOrderingHints,
-        transposition_table: &mut TranspositionTable,
+        transposition_table: &mut Transpositions,
     ) -> Result<BestMoveResponse> {
         if depth < 1 {
             return Err(anyhow!("Cannot iteratively deepen with depth 0"));
@@ -168,9 +158,8 @@ impl<T: SearchTerminator> Search<T> {
         let SearchResponse { eval, path } = Scout {
             terminator: &self.terminator,
             pv,
-            ordering_hints,
             move_quality_estimator: MaterialAndPositioningHeuristic::default(),
-            transposition_table,
+            transpositions: transposition_table,
         }
         .search(
             &mut self.root,
