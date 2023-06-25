@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use crate::BitBoard;
 
 const ADJACENT_FILES: [BitBoard; 8] = [
@@ -10,6 +11,57 @@ const ADJACENT_FILES: [BitBoard; 8] = [
     BitBoard(BitBoard::FILES[5].0 | BitBoard::FILES[7].0),
     BitBoard::FILES[6],
 ];
+
+fn count_passed_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
+    let mut count = 0i32;
+    for file_index in 0..8 {
+        let file = BitBoard::FILES[file_index];
+        let adj_files = ADJACENT_FILES[file_index];
+
+        let last_black_def = (adj_files & blacks).iter().last()
+            .map(|s| s.rank_index()).unwrap_or(0);
+        count += (file & whites).iter()
+            .filter(|s| s.rank_index() >= last_black_def).count() as i32;
+
+        let last_white_def = (adj_files & whites).iter().last()
+            .map(|s| s.rank_index()).unwrap_or(10);
+        count -= (file & blacks).iter()
+            .filter(|s| s.rank_index() <= last_white_def).count() as i32;
+    }
+    count
+}
+
+fn count_doubled_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
+    let mut count = 0i32;
+    for file_index in 0..8 {
+        let file = BitBoard::FILES[file_index];
+        count += count_doubling(file & whites);
+        count -= count_doubling(file & blacks);
+    }
+    count
+}
+
+fn count_doubling(board: BitBoard) -> i32 {
+    board.iter()
+        .tuple_windows::<(_, _)>()
+        .filter(|(a, b)| b.file_index() == a.file_index() + 1)
+        .count() as i32
+}
+
+fn count_isolated_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
+    let mut count = 0i32;
+    for file_index in 0..8 {
+        let file = BitBoard::FILES[file_index];
+        let adj_files = ADJACENT_FILES[file_index];
+        if (adj_files & whites).first().is_none() && (file & whites).size() == 1 {
+            count += 1
+        }
+        if (adj_files & blacks).first().is_none() && (file & blacks).size() == 1 {
+            count -= 1
+        }
+    }
+    count
+}
 
 fn count_backward_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
     let mut count = 0i32;
