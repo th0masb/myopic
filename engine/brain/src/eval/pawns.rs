@@ -36,9 +36,9 @@ impl Default for PawnStructureFacet {
     fn default() -> Self {
         PawnStructureFacet {
             scores: enum_map! {
-                Passed => (100, 200),
-                Doubled => (-75, -75),
-                Isolated => (-70, -30),
+                Passed => (80, 200),
+                Doubled => (-70, -75),
+                Isolated => (-60, -30),
                 Backward => (-15, 0),
             },
             counts: enum_map! {
