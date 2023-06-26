@@ -19,7 +19,7 @@ impl Default for MaterialFacet {
             mid_eval: 0,
             end_eval: 0,
             mid_values: enum_map! {
-                Class::P => 200,
+                Class::P => 150,
                 Class::N => 782,
                 Class::B => 830,
                 Class::R => 1289,
@@ -27,7 +27,7 @@ impl Default for MaterialFacet {
                 Class::K => 100_000
             },
             end_values: enum_map! {
-                Class::P => 293,
+                Class::P => 230,
                 Class::N => 865,
                 Class::B => 918,
                 Class::R => 1378,
