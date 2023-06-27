@@ -1,10 +1,12 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
+use async_trait::async_trait;
 
 use bytes::Bytes;
 use rusoto_core::Region;
 use rusoto_lambda::{InvocationRequest, Lambda, LambdaClient};
 
-use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveOutput};
+use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveEventClock, ChooseMoveOutput};
+use lichess_game::MoveChooser;
 use myopic_brain::anyhow::{anyhow, Result};
 
 pub struct MoveLambdaClient {
@@ -18,15 +20,29 @@ impl From<(Region, String)> for MoveLambdaClient {
     }
 }
 
-impl MoveLambdaClient {
-    pub(crate) async fn compute_move(&self, payload: ChooseMoveEvent) -> Result<String> {
-        log::info!("Request payload {:?}", payload);
+#[async_trait]
+impl MoveChooser for MoveLambdaClient {
+    async fn choose(
+        &self,
+        moves_played: &str,
+        remaining: Duration,
+        increment: Duration,
+    ) -> Result<String> {
         let timer = Instant::now();
+        let request = ChooseMoveEvent {
+            moves_played: moves_played.to_owned(),
+            features: vec![],
+            clock_millis: ChooseMoveEventClock {
+                increment: increment.as_millis() as u64,
+                remaining: remaining.as_millis() as u64,
+            },
+        };
+        log::info!("Request payload {:?}", request);
         let response = self
             .client
             .invoke(InvocationRequest {
                 function_name: self.function_name.clone(),
-                payload: Some(Bytes::from(serde_json::to_string(&payload)?)),
+                payload: Some(Bytes::from(serde_json::to_string(&request)?)),
                 client_context: None,
                 invocation_type: None,
                 log_type: None,

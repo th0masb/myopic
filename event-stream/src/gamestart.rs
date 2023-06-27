@@ -26,7 +26,7 @@ impl GameStartService {
         }
     }
 
-    pub async fn process_event(&mut self, event: GameStart) -> Result<String> {
+    pub async fn process_event(&self, event: GameStart) -> Result<String> {
         let (game_id, mut challenger_id) = (event.id.as_str(), event.opponent.id.as_str());
         log::info!("Processing GameStart {} against {}", game_id, challenger_id);
         let table_client = &self.challenge_table;

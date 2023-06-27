@@ -1,16 +1,16 @@
 use std::cmp::max;
+use std::time::Duration;
 
-use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveEventClock};
 use reqwest::StatusCode;
-use rusoto_core::Region;
 use tokio_util::sync::CancellationToken;
 
-use myopic_brain::anyhow::{anyhow, Result};
 use myopic_brain::{Board, Side};
+use myopic_brain::anyhow::{anyhow, Result};
 
+use crate::compute::MoveChooser;
 use crate::events::{Clock, GameEvent, GameFull, GameState};
 use crate::lichess::{LichessChatRoom, LichessService};
-use crate::{messages, MoveLambdaClient};
+use crate::messages;
 
 const STARTED_STATUS: &'static str = "started";
 const CREATED_STATUS: &'static str = "created";
@@ -24,20 +24,19 @@ struct InferredGameMetadata {
 }
 
 #[derive(Debug, Clone)]
-pub struct GameConfig {
+pub struct GameConfig<M : MoveChooser> {
     pub game_id: String,
     pub bot_name: String,
-    pub lichess_auth_token: String,
-    pub move_region: Region,
-    pub move_function_name: String,
+    pub auth_token: String,
+    pub moves: M,
     pub cancel_token: CancellationToken,
 }
 
-pub struct Game {
+pub struct Game<M : MoveChooser> {
     bot_name: String,
     inferred_metadata: Option<InferredGameMetadata>,
     lichess_service: LichessService,
-    move_client: MoveLambdaClient,
+    move_client: M,
     halfmove_count: usize,
     cancel_token: CancellationToken,
 }
@@ -49,11 +48,11 @@ pub enum GameExecutionState {
     Cancelled,
 }
 
-impl From<GameConfig> for Game {
-    fn from(conf: GameConfig) -> Self {
+impl <M : MoveChooser> From<GameConfig<M>> for Game<M> {
+    fn from(conf: GameConfig<M>) -> Self {
         Game {
-            lichess_service: LichessService::new(conf.lichess_auth_token, conf.game_id),
-            move_client: (conf.move_region, conf.move_function_name).into(),
+            lichess_service: LichessService::new(conf.auth_token, conf.game_id),
+            move_client: conf.moves,
             bot_name: conf.bot_name,
             inferred_metadata: None,
             halfmove_count: 0,
@@ -62,7 +61,7 @@ impl From<GameConfig> for Game {
     }
 }
 
-impl Game {
+impl <M : MoveChooser> Game<M> {
     pub fn halfmove_count(&self) -> usize {
         self.halfmove_count
     }
@@ -154,17 +153,11 @@ impl Game {
                             log::info!("Move selection cancelled!");
                             Ok(GameExecutionState::Cancelled)
                         },
-                        computed_move_result = self
-                        .move_client
-                        .compute_move(ChooseMoveEvent {
-                            moves_played: state.moves.clone(),
-                            clock_millis: ChooseMoveEventClock {
-                                increment,
-                                // Take into account the network latency for calling the lambda
-                                remaining: max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS),
-                            },
-                            features: vec![],
-                        }) => {
+                        computed_move_result = self.move_client.choose(
+                            state.moves.as_str(),
+                            Duration::from_millis(max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS)),
+                            Duration::from_millis(increment)
+                        ) => {
                             let computed_move = computed_move_result?;
                             self.lichess_service.post_move(computed_move).await?;
                             Ok(GameExecutionState::Running)

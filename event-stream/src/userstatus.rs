@@ -23,13 +23,14 @@ impl StatusService {
         }
     }
 
-    pub async fn user_status(&mut self) -> Result<Option<UserStatus>> {
-        if self.status_checkpoint.elapsed() > self.status_poll_gap {
-            self.status_checkpoint = Instant::now();
-            self.client.user_status(self.user_id.as_str()).await.map(|status| Some(status))
-        } else {
-            Ok(None)
-        }
+    pub async fn user_status(&self) -> Result<Option<UserStatus>> {
+        todo!()
+        //if self.status_checkpoint.elapsed() > self.status_poll_gap {
+        //    self.status_checkpoint = Instant::now();
+        //    self.client.user_status(self.user_id.as_str()).await.map(|status| Some(status))
+        //} else {
+        //    Ok(None)
+        //}
     }
 }
 
