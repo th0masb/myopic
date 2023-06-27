@@ -4,7 +4,7 @@ use std::ops::Sub;
 use std::str::FromStr;
 use std::time::{Duration, Instant, SystemTime};
 
-use lambda_runtime::{Error, LambdaEvent, service_fn};
+use lambda_runtime::{service_fn, Context, Error, LambdaEvent};
 use myopic_brain::anyhow::{anyhow, Result};
 use reqwest::Response;
 use rusoto_core::Region;
@@ -14,10 +14,10 @@ use simple_logger::SimpleLogger;
 use lambda_payloads::chessgame::*;
 use response_stream::{LoopAction, StreamHandler};
 
-use crate::moves::{MoveLambdaClient};
-use tokio_util::sync::CancellationToken;
+use crate::moves::MoveLambdaClient;
 use lichess_game::game::{Game, GameConfig, GameExecutionState};
 use lichess_game::MoveChooser;
+use tokio_util::sync::CancellationToken;
 
 mod moves;
 
@@ -37,49 +37,73 @@ pub trait CancellationHook {
 }
 
 async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutput, Error> {
-    let cancel_wait = event
-        .context
+    let e = event.payload;
+    let region = Region::from_str(e.move_function_region.as_str())?;
+    play_game(
+        compute_wait_until_cancel(&event.context)?,
+        MoveLambdaClient::from((region.clone(), e.move_function_name.clone())),
+        Metadata {
+            game_id: e.lichess_game_id.clone(),
+            our_bot_id: e.lichess_bot_id.clone(),
+            auth_token: e.lichess_auth_token.clone(),
+        },
+        RecursionHook {
+            client: LambdaClient::new(region),
+            payload: e.clone(),
+            function_arn: event.context.invoked_function_arn,
+        },
+    )
+    .await
+    .map_err(Error::from)
+    .map(|m| PlayGameOutput { message: m })
+}
+
+fn compute_wait_until_cancel(ctx: &Context) -> Result<Duration, Error> {
+    Ok(ctx
         .deadline()
         .sub(Duration::from_secs(CANCEL_PERIOD_SECS))
-        .duration_since(SystemTime::now())?;
-    let e = event.payload;
+        .duration_since(SystemTime::now())?)
+}
 
-    play_game(
-        MoveLambdaClient::from((Region::from_str(e.move_function_region.as_str())?, e.move_function_name.clone())),
-        e.lichess_game_id,
-        e.lichess_bot_id,
-        e.lichess_auth_token,
-        cancel_wait,
-        EmptyHandler,
-    ).await.map_err(Error::from).map(|m| PlayGameOutput { message: m })
+struct RecursionHook {
+    client: LambdaClient,
+    payload: PlayGameEvent,
+    function_arn: String,
+}
+
+#[async_trait]
+impl CancellationHook for RecursionHook {
+    async fn run(&self) -> Result<String> {
+        log::info!("Recursively calling this function");
+        let mut payload = self.payload.clone();
+        payload.current_depth += 1;
+        if payload.current_depth >= payload.max_depth {
+            Err(anyhow!("Can not recurse any further!"))
+        } else {
+            let response = self
+                .client
+                .invoke_async(InvokeAsyncRequest {
+                    function_name: self.function_arn.clone(),
+                    invoke_args: Bytes::from(serde_json::to_string(&payload)?),
+                })
+                .await?;
+
+            if let Some(202) = response.status {
+                Ok(format!("Successfully continued {}", self.payload.lichess_game_id))
+            } else {
+                Err(anyhow!(
+                    "Recursion status {:?} for game {}",
+                    response.status,
+                    self.payload.lichess_game_id
+                ))
+            }
+        }
+    }
 }
 
 //
 
 //
-// log::info!("Recursively calling this function");
-//let mut payload = event.payload.clone();
-//payload.current_depth += 1;
-//if payload.current_depth >= payload.max_depth {
-//    Err(anyhow!("Can not recurse any further!"))
-//} else {
-//    let region = Region::from_str(event.payload.move_function_region.as_str())?;
-//    let response = LambdaClient::new(region)
-//        .invoke_async(InvokeAsyncRequest {
-//            function_name: event.context.invoked_function_arn.clone(),
-//            invoke_args: Bytes::from(serde_json::to_string(&payload)?),
-//        })
-//        .await?;
-
-//    if let Some(202) = response.status {
-//        Ok(format!("Successfully continued {}", e.lichess_game_id))
-//    } else {
-//        Err(anyhow!(
-//            "Recursion status {:?} for game {}",
-//            response.status, e.lichess_game_id
-//        ))
-//    }
-//}
 
 //if e.current_depth == 0 {
 //    game.post_introduction().await;
@@ -94,17 +118,22 @@ impl CancellationHook for EmptyHandler {
     }
 }
 
-async fn play_game<M, C>(
-    moves: M,
+#[derive(Debug, Clone)]
+pub struct Metadata {
     game_id: String,
-    bot_name: String,
-    lichess_auth_token: String,
+    our_bot_id: String,
+    auth_token: String,
+}
+
+async fn play_game<M, C>(
     cancel_after: Duration,
+    moves: M,
+    metadata: Metadata,
     on_cancellation: C,
 ) -> Result<String>
-    where
-        M: MoveChooser + Send + Sync,
-        C: CancellationHook,
+where
+    M: MoveChooser + Send + Sync,
+    C: CancellationHook,
 {
     let token = CancellationToken::new();
     let cloned_token = token.clone();
@@ -118,12 +147,11 @@ async fn play_game<M, C>(
 
     // Run the game loop
     log::info!("Initializing game loop");
-    //let e = &event.payload;
     let game = init_game(
         moves,
-        game_id.clone(),
-        bot_name.clone(),
-        lichess_auth_token.clone(),
+        metadata.game_id.clone(),
+        metadata.our_bot_id.clone(),
+        metadata.auth_token.clone(),
         token.child_token(),
     )?;
     let mut handler = GameStreamHandler {
@@ -132,15 +160,15 @@ async fn play_game<M, C>(
         max_wait: Duration::from_secs(30),
         cancel: token.child_token(),
     };
-    let game_stream = open_game_stream(&game_id, &lichess_auth_token).await?;
+    let game_stream = open_game_stream(&metadata.game_id, &metadata.auth_token).await?;
     match response_stream::handle(game_stream, &mut handler).await? {
         None => Err(anyhow!("Game stream ended unexpectedly!")),
-        Some(CompletionType::GameFinished) => Ok(format!("Game {} completed", game_id)),
+        Some(CompletionType::GameFinished) => Ok(format!("Game {} completed", metadata.game_id)),
         Some(CompletionType::Cancelled) => on_cancellation.run().await,
     }
 }
 
-struct GameStreamHandler<M : MoveChooser> {
+struct GameStreamHandler<M: MoveChooser> {
     game: Game<M>,
     start: Instant,
     max_wait: Duration,
@@ -153,7 +181,7 @@ enum CompletionType {
 }
 
 #[async_trait]
-impl <M : MoveChooser + Send + Sync> StreamHandler<CompletionType> for GameStreamHandler<M> {
+impl<M: MoveChooser + Send + Sync> StreamHandler<CompletionType> for GameStreamHandler<M> {
     async fn handle(&mut self, line: String) -> Result<LoopAction<CompletionType>> {
         log::info!("Stream heartbeat");
         if self.cancel.is_cancelled() {
@@ -183,12 +211,12 @@ impl <M : MoveChooser + Send + Sync> StreamHandler<CompletionType> for GameStrea
     }
 }
 
-fn init_game<M : MoveChooser>(
+fn init_game<M: MoveChooser>(
     moves: M,
     game_id: String,
     bot_name: String,
     auth_token: String,
-    cancel_token: CancellationToken
+    cancel_token: CancellationToken,
 ) -> Result<Game<M>> {
     Ok(GameConfig { game_id, bot_name, auth_token, moves, cancel_token }.into())
 }
