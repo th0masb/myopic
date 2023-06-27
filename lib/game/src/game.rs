@@ -35,8 +35,8 @@ pub struct GameConfig<M : MoveChooser> {
 pub struct Game<M : MoveChooser> {
     bot_name: String,
     inferred_metadata: Option<InferredGameMetadata>,
-    lichess_service: LichessService,
-    move_client: M,
+    lichess: LichessService,
+    moves: M,
     halfmove_count: usize,
     cancel_token: CancellationToken,
 }
@@ -51,8 +51,8 @@ pub enum GameExecutionState {
 impl <M : MoveChooser> From<GameConfig<M>> for Game<M> {
     fn from(conf: GameConfig<M>) -> Self {
         Game {
-            lichess_service: LichessService::new(conf.auth_token, conf.game_id),
-            move_client: conf.moves,
+            lichess: LichessService::new(conf.auth_token, conf.game_id),
+            moves: conf.moves,
             bot_name: conf.bot_name,
             inferred_metadata: None,
             halfmove_count: 0,
@@ -67,7 +67,7 @@ impl <M : MoveChooser> Game<M> {
     }
 
     pub async fn abort(&self) -> Result<StatusCode> {
-        self.lichess_service.abort().await
+        self.lichess.abort().await
     }
 
     pub async fn post_introduction(&self) {
@@ -76,7 +76,7 @@ impl <M : MoveChooser> Game<M> {
     }
 
     async fn post_chat(&self, text: &str, room: LichessChatRoom) {
-        match self.lichess_service.post_chatline(text, room).await {
+        match self.lichess.post_chatline(text, room).await {
             Err(err) => {
                 log::warn!("Failed to post chatline {} in {:?}: {}", text, room, err)
             }
@@ -153,13 +153,13 @@ impl <M : MoveChooser> Game<M> {
                             log::info!("Move selection cancelled!");
                             Ok(GameExecutionState::Cancelled)
                         },
-                        computed_move_result = self.move_client.choose(
+                        computed_move_result = self.moves.choose(
                             state.moves.as_str(),
                             Duration::from_millis(max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS)),
                             Duration::from_millis(increment)
                         ) => {
                             let computed_move = computed_move_result?;
-                            self.lichess_service.post_move(computed_move).await?;
+                            self.lichess.post_move(computed_move).await?;
                             Ok(GameExecutionState::Running)
                         }
                     }

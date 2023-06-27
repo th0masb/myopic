@@ -5,7 +5,7 @@ use async_trait::async_trait;
 #[async_trait]
 pub trait MoveChooser {
     async fn choose(
-        &self,
+        &mut self,
         moves_played: &str,
         remaining: Duration,
         increment: Duration,

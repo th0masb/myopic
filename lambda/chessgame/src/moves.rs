@@ -1,5 +1,5 @@
-use std::time::{Duration, Instant};
 use async_trait::async_trait;
+use std::time::{Duration, Instant};
 
 use bytes::Bytes;
 use rusoto_core::Region;
@@ -23,7 +23,7 @@ impl From<(Region, String)> for MoveLambdaClient {
 #[async_trait]
 impl MoveChooser for MoveLambdaClient {
     async fn choose(
-        &self,
+        &mut self,
         moves_played: &str,
         remaining: Duration,
         increment: Duration,
