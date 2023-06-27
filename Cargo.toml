@@ -13,6 +13,7 @@ members = [
     "openings/dynamodb-uploader",
     "openings/pgn-extractor",
     "lib/response-stream",
+    "lib/game",
 ]
 exclude = [
     "uci-client"

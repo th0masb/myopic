@@ -1112,11 +1112,13 @@ checksum = "2b00cc1c228a6782d0f076e7b232802e0c5689d41bb5df366f2a6b6621cfdfe1"
 name = "lichess-game-lambda"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "async-trait",
  "bytes",
  "itertools",
  "lambda-payloads",
  "lambda_runtime",
+ "lichess_game",
  "log",
  "myopic-brain",
  "rand",
@@ -1129,6 +1131,22 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "simple_logger",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "lichess_game"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "log",
+ "myopic-brain",
+ "reqwest",
+ "serde",
+ "serde_derive",
+ "serde_json",
  "tokio",
  "tokio-util",
 ]
