@@ -68,7 +68,7 @@ export class EventStreamStack extends Stack {
     private eventStreamImage() {
         return ecs.ContainerImage.fromDockerImageAsset(
             new DockerImageAsset(this, `EventStreamImage`, {
-                directory: path.join(__dirname, "..", ".."),
+                directory: path.join(__dirname, "..", "..", ".."),
                 file: path.join("tools", "workspace.dockerfile"),
                 buildArgs: {
                     APP_DIR: "event-stream",

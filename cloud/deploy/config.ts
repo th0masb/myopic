@@ -100,17 +100,11 @@ export const BotConfigValues: BotConfig[] = [
             },
             lichessBot: {
                 botId: "Hyperopic",
-                userMatchers: [
-                    {
-                        include: true,
-                        pattern: "^th0masb$"
-                    }
-                ]
             },
             rateLimits: {
                 challengeTable: { name: "HyperopicChallenges" },
                 maxDailyChallenges: 100,
-                maxDailyUserChallenges: 100,
+                maxDailyUserChallenges: 5,
             }
         }
     },
