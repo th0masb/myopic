@@ -4,5 +4,5 @@
 **/target
 .github
 **/README.md
-deploy
+cloud/deploy
 **/docker-compose.yaml
