@@ -1,0 +1,12 @@
+[package]
+name = "testing"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+myopic-brain = { path = "../brain" }
+lichess_api = { path = "../../lib/lichess" }
+lichess_events = { path = "../../lib/events" }
+lichess_game = { path = "../../lib/game" }

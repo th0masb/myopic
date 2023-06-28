@@ -2102,6 +2102,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "testing"
+version = "0.1.0"
+dependencies = [
+ "lichess_api",
+ "lichess_events",
+ "lichess_game",
+ "myopic-brain",
+]
+
+[[package]]
 name = "textwrap"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

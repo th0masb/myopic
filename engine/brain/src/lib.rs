@@ -11,6 +11,7 @@ pub use search::search;
 pub use search::terminator::SearchTerminator;
 pub use search::SearchOutcome;
 pub use search::SearchParameters;
+pub use timing::TimeAllocator;
 
 mod eval;
 
@@ -20,3 +21,4 @@ mod search;
 mod bench;
 #[cfg(test)]
 mod test;
+mod timing;

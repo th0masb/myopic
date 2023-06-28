@@ -1,5 +1,4 @@
-use log::info;
-use tokio::time::Duration;
+use std::time::Duration;
 
 const DEFAULT_MOVE_LATENCY_MS: u64 = 200;
 const DEFAULT_MIN_COMPUTE_TIME_MS: u64 = 200;
@@ -45,21 +44,10 @@ impl TimeAllocator {
 
         // Divide by two because we need to think for half of the remaining moves
         let exp_remaining = (self.half_moves_remaining)(half_moves_played) / 2f64;
-        info!("Played {} half moves and expect {} more", half_moves_played / 2, exp_remaining);
         let estimated_no_inc =
             ((remaining_including_latency.as_millis() as f64) / exp_remaining).round() as u64;
         let estimated = Duration::from_millis(estimated_no_inc) + increment;
-        if estimated > self.min_compute_time {
-            info!("Spending {}ms thinking", estimated.as_millis());
-            estimated
-        } else {
-            info!(
-                "{}ms is below min threshold, defaulting to {}ms",
-                estimated.as_millis(),
-                self.min_compute_time.as_millis()
-            );
-            self.min_compute_time
-        }
+        std::cmp::max(estimated, self.min_compute_time)
     }
 }
 
@@ -71,7 +59,7 @@ fn expected_half_moves_remaining(moves_played: usize) -> f64 {
 
 #[cfg(test)]
 mod test {
-    use tokio::time::Duration;
+    use std::time::Duration;
 
     use crate::timing::TimeAllocator;
 

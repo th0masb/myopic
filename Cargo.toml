@@ -4,6 +4,7 @@ members = [
     "engine/brain",
     "engine/core",
     "engine/debug",
+    "engine/testing",
     "cloud/event-stream",
     "cloud/benchmark",
     "cloud/chessgame",
