@@ -4,8 +4,8 @@ use std::time::Duration;
 use reqwest::StatusCode;
 use tokio_util::sync::CancellationToken;
 
-use myopic_brain::{Board, Side};
 use myopic_brain::anyhow::{anyhow, Result};
+use myopic_brain::{Board, Side};
 
 use crate::compute::MoveChooser;
 use crate::events::{Clock, GameEvent, GameFull, GameState};
@@ -24,7 +24,7 @@ struct InferredGameMetadata {
 }
 
 #[derive(Debug, Clone)]
-pub struct GameConfig<M : MoveChooser> {
+pub struct GameConfig<M: MoveChooser> {
     pub game_id: String,
     pub bot_name: String,
     pub auth_token: String,
@@ -32,7 +32,7 @@ pub struct GameConfig<M : MoveChooser> {
     pub cancel_token: CancellationToken,
 }
 
-pub struct Game<M : MoveChooser> {
+pub struct Game<M: MoveChooser> {
     bot_name: String,
     inferred_metadata: Option<InferredGameMetadata>,
     lichess: LichessService,
@@ -48,7 +48,7 @@ pub enum GameExecutionState {
     Cancelled,
 }
 
-impl <M : MoveChooser> From<GameConfig<M>> for Game<M> {
+impl<M: MoveChooser> From<GameConfig<M>> for Game<M> {
     fn from(conf: GameConfig<M>) -> Self {
         Game {
             lichess: LichessService::new(conf.auth_token, conf.game_id),
@@ -61,7 +61,7 @@ impl <M : MoveChooser> From<GameConfig<M>> for Game<M> {
     }
 }
 
-impl <M : MoveChooser> Game<M> {
+impl<M: MoveChooser> Game<M> {
     pub fn halfmove_count(&self) -> usize {
         self.halfmove_count
     }

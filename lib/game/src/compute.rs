@@ -1,6 +1,6 @@
-use std::time::Duration;
 use anyhow::Result;
 use async_trait::async_trait;
+use std::time::Duration;
 
 #[async_trait]
 pub trait MoveChooser {
