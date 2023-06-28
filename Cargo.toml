@@ -15,6 +15,7 @@ members = [
     "lib/response-stream",
     "lib/game",
     "lib/events",
+    "lib/lichess",
 ]
 exclude = [
     "uci-client"

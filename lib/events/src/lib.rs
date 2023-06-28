@@ -10,9 +10,8 @@ use crate::processor::StreamLineProcessor;
 use crate::userstatus::StatusService;
 
 pub mod events;
-pub mod lichess;
-pub mod processor;
-pub mod userstatus;
+mod processor;
+mod userstatus;
 
 const EVENT_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/stream/event";
 
