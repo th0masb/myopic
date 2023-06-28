@@ -7,10 +7,10 @@ use myopic_board::anyhow::{anyhow, Result};
 use myopic_board::Move;
 use terminator::SearchTerminator;
 
-use crate::{eval, Evaluator};
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::pv::PrincipleVariation;
 use crate::search::transpositions::Transpositions;
+use crate::{eval, Evaluator};
 
 mod moves;
 pub mod negascout;

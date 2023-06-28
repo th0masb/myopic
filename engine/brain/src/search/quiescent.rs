@@ -1,5 +1,5 @@
-use std::cmp;
 use itertools::Itertools;
+use std::cmp;
 use Move::{Castle, Enpassant, Promotion, Standard};
 use MoveFacet::{Attacking, Checking, Promoting};
 
@@ -54,15 +54,16 @@ fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> R
             MoveCategory::Other | MoveCategory::Promotion { .. } => {}
             MoveCategory::BadExchange { .. } => {
                 if !in_check {
-                    continue
+                    continue;
                 }
             }
             MoveCategory::GoodExchange { optimistic_delta, .. } => {
-                if !in_check &&
-                    depth < Q_CHECK_CAP &&
-                    phase < DELTA_SKIP_MAX_PHASE &&
-                    result + optimistic_delta + DELTA_SKIP_MARGIN < alpha {
-                    continue
+                if !in_check
+                    && depth < Q_CHECK_CAP
+                    && phase < DELTA_SKIP_MAX_PHASE
+                    && result + optimistic_delta + DELTA_SKIP_MARGIN < alpha
+                {
+                    continue;
                 }
             }
         };
@@ -126,7 +127,7 @@ fn categorise(state: &mut Evaluator, mv: &Move) -> MoveCategory {
                     }
                 }
             }
-        }
+        },
     }
 }
 
@@ -143,7 +144,7 @@ impl MoveCategory {
             MoveCategory::BadExchange { see } => *see,
             MoveCategory::Promotion { optimistic_delta } => 20000 + optimistic_delta,
             MoveCategory::Other => 5000,
-            MoveCategory::GoodExchange { see, .. } => 20000 + see
+            MoveCategory::GoodExchange { see, .. } => 20000 + see,
         }
     }
 }

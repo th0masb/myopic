@@ -34,7 +34,7 @@ impl TimeAllocator {
         increment: Duration,
     ) -> Duration {
         if remaining_time < self.increment_only_threshold && increment > Duration::default() {
-            return std::cmp::max(self.min_compute_time, increment - self.latency)
+            return std::cmp::max(self.min_compute_time, increment - self.latency);
         }
 
         let remaining_including_latency = if remaining_time < self.latency {

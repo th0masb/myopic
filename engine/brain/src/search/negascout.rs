@@ -1,14 +1,14 @@
 use core::cmp;
 use std::time::Instant;
 
-use myopic_board::{Move, TerminalState};
 use myopic_board::anyhow::{anyhow, Result};
+use myopic_board::{Move, TerminalState};
 
-use crate::Evaluator;
-use crate::search::{eval, quiescent};
 use crate::search::moves::MoveGenerator;
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{Transpositions, TreeNode};
+use crate::search::{eval, quiescent};
+use crate::Evaluator;
 
 /// Provides relevant callstack information for the search to
 /// use during the traversal of the tree.
@@ -60,15 +60,20 @@ pub struct Scout<'a, T: SearchTerminator> {
 }
 
 impl<T: SearchTerminator> Scout<'_, T> {
-    pub fn search(&mut self, root: &mut Evaluator, mut ctx: SearchContext) -> Result<SearchResponse> {
+    pub fn search(
+        &mut self,
+        root: &mut Evaluator,
+        mut ctx: SearchContext,
+    ) -> Result<SearchResponse> {
         if self.terminator.should_terminate(&ctx) {
-            return Err(anyhow!("Terminated at depth {}", ctx.depth_remaining))
+            return Err(anyhow!("Terminated at depth {}", ctx.depth_remaining));
         } else if ctx.depth_remaining == 0 || root.board().terminal_state().is_some() {
             return match root.board().terminal_state() {
                 Some(TerminalState::Loss) => Ok(eval::LOSS_VALUE),
                 Some(TerminalState::Draw) => Ok(eval::DRAW_VALUE),
                 None => quiescent::search(root, ctx.alpha, ctx.beta),
-            }.map(|eval| SearchResponse { eval, path: vec![] })
+            }
+            .map(|eval| SearchResponse { eval, path: vec![] });
         }
 
         let (hash, mut table_move) = (root.board().hash(), None);

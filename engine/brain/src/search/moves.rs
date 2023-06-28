@@ -1,20 +1,17 @@
 use myopic_board::{Board, Move, Move::*, Moves, Reflectable, Square};
 
-use crate::{BitBoard, Class, Evaluator, Piece, PositionTables};
 use crate::negascout::SearchContext;
 use crate::search::pv::PrincipleVariation;
+use crate::{BitBoard, Class, Evaluator, Piece, PositionTables};
 
 pub struct MoveGenerator<'a> {
     pv: &'a PrincipleVariation,
     estimator: MaterialAndPositioningHeuristic,
 }
 
-impl <'a> From<&'a PrincipleVariation> for MoveGenerator<'a> {
+impl<'a> From<&'a PrincipleVariation> for MoveGenerator<'a> {
     fn from(value: &'a PrincipleVariation) -> Self {
-        MoveGenerator {
-            pv: value,
-            estimator: Default::default(),
-        }
+        MoveGenerator { pv: value, estimator: Default::default() }
     }
 }
 
