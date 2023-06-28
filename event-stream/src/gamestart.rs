@@ -3,10 +3,10 @@ use std::str::FromStr;
 use anyhow::{anyhow, Error, Result};
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
+use lichess_events::events::GameStart;
 
 use crate::challenge_table::ChallengeTableClient;
 use crate::config::AppConfig;
-use crate::events::GameStart;
 use crate::lichess::LichessClient;
 
 pub struct GameStartService {

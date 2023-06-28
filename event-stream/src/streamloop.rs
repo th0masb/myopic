@@ -2,21 +2,26 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Error, Result};
 use async_trait::async_trait;
+use lichess_events::userstatus::StatusService;
 
 use crate::challenge::ChallengeService;
 use crate::config::AppConfig;
-use crate::eventprocessor::EventProcessor;
 use crate::gamestart::GameStartService;
-use crate::userstatus::StatusService;
 use response_stream::LoopAction;
+use crate::eventprocessor::{EventProcessor, EventProcessorImpl, StreamLineProcessor};
 
 const EVENT_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/stream/event";
 
 pub async fn stream(params: AppConfig) {
-    let mut event_processor = EventProcessor {
-        challenge_service: ChallengeService::new(&params),
-        gamestart_service: GameStartService::new(&params),
-        status_service: StatusService::new(&params),
+    let mut event_processor = StreamLineProcessor {
+        status_service: StatusService::new(
+            params.lichess_bot.bot_id.as_str(),
+            params.event_loop.status_poll_gap()
+        ),
+        event_processor: EventProcessorImpl {
+            challenge_service: ChallengeService::new(&params),
+            gamestart_service: GameStartService::new(&params),
+        }
     };
     loop {
         log::info!("Opening event stream");
@@ -43,14 +48,14 @@ pub async fn stream(params: AppConfig) {
     }
 }
 
-struct StreamRefreshHandler<'a> {
+struct StreamRefreshHandler<'a, E: EventProcessor> {
     start: Instant,
     max_duration: Duration,
-    processor: &'a mut EventProcessor,
+    processor: &'a mut StreamLineProcessor<E>,
 }
 
 #[async_trait]
-impl response_stream::StreamHandler<()> for StreamRefreshHandler<'_> {
+impl <E: EventProcessor + Sync + Send> response_stream::StreamHandler<()> for StreamRefreshHandler<'_, E> {
     async fn handle(&mut self, line: String) -> Result<LoopAction<()>> {
         let elapsed = self.start.elapsed();
         Ok(if elapsed > self.max_duration {

@@ -1,7 +1,7 @@
 use anyhow::{Error, Result};
 use reqwest::StatusCode;
+use lichess_events::events::Challenge;
 
-use crate::events::Challenge;
 use crate::ChallengeRequest;
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";

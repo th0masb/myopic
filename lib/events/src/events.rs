@@ -1,3 +1,5 @@
+use serde_derive::Deserialize;
+
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "type")]
 pub enum LichessEvent {

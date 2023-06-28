@@ -14,6 +14,7 @@ members = [
     "openings/pgn-extractor",
     "lib/response-stream",
     "lib/game",
+    "lib/events",
 ]
 exclude = [
     "uci-client"

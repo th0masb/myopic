@@ -1,8 +1,8 @@
 use crate::challenge_table::ChallengeTableClient;
 use anyhow::Result;
+use lichess_events::events::{Challenge, TimeControl};
 
 use crate::config::{AppConfig, StringMatcher, TimeConstraints};
-use crate::events::{Challenge, TimeControl};
 use crate::lichess::LichessClient;
 
 pub struct ChallengeService {
