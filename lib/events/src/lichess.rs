@@ -1,8 +1,7 @@
+use crate::events::Challenge;
 use anyhow::{Error, Result};
 use reqwest::StatusCode;
-use lichess_events::events::Challenge;
-
-use crate::ChallengeRequest;
+use serde_derive::Deserialize;
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
@@ -25,23 +24,6 @@ impl LichessClient {
             .await
             .map(|response| response.status())
             .map_err(Error::from)
-    }
-
-    pub async fn post_challenge(
-        &self,
-        username: &str,
-        challenge_params: &ChallengeRequest,
-    ) -> Result<(StatusCode, String)> {
-        let response = self
-            .client
-            .post(format!("{}/{}", CHALLENGE_ENDPOINT, username))
-            .bearer_auth(&self.auth_token)
-            .form(challenge_params)
-            .send()
-            .await?;
-        let status = response.status();
-        let body = response.text().await?;
-        Ok((status, body))
     }
 
     pub async fn post_challenge_response(

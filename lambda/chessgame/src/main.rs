@@ -4,7 +4,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 use async_trait::async_trait;
 use bytes::Bytes;
-use lambda_runtime::{Context, Error, LambdaEvent, service_fn};
+use lambda_runtime::{service_fn, Context, Error, LambdaEvent};
 use rusoto_core::Region;
 use rusoto_lambda::{InvocationRequest, InvokeAsyncRequest, Lambda, LambdaClient};
 use simple_logger::SimpleLogger;

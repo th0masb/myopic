@@ -1,13 +1,13 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
+use lichess_events::events::GameStart;
+use lichess_events::lichess::LichessClient;
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
-use lichess_events::events::GameStart;
 
 use crate::challenge_table::ChallengeTableClient;
 use crate::config::AppConfig;
-use crate::lichess::LichessClient;
 
 pub struct GameStartService {
     client: LichessClient,

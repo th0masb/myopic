@@ -613,7 +613,6 @@ dependencies = [
  "log",
  "regex",
  "reqwest",
- "response_stream",
  "rusoto_core",
  "rusoto_dynamodb",
  "rusoto_lambda",
@@ -1140,7 +1139,10 @@ name = "lichess_events"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
+ "log",
  "reqwest",
+ "response_stream",
  "serde",
  "serde_derive",
  "serde_json",

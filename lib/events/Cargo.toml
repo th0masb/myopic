@@ -13,3 +13,6 @@ serde_derive = "1.0.163"
 serde_json = "1.0.96"
 simple_logger = "4.1.0"
 anyhow = "1.0.71"
+async-trait = "^0.1.68"
+response_stream = { path = "../response-stream" }
+log = "0.4.17"
