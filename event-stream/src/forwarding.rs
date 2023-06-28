@@ -1,8 +1,9 @@
 use std::convert::Infallible;
 
+use anyhow::Result;
 use warp::http::StatusCode;
 
-use crate::lichess::LichessClient;
+const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
 
 #[derive(Deserialize, Serialize)]
 pub struct ChallengeRequest {
@@ -31,16 +32,17 @@ impl Default for ColourOption {
 }
 
 pub async fn challenge(
-    client: &LichessClient,
+    client: &reqwest::Client,
+    auth_token: &str,
     user: String,
     params: ChallengeRequest,
 ) -> Result<impl warp::Reply, Infallible> {
     log::info!("Challenging {} with game params {}", user, serde_json::to_string(&params).unwrap());
-    let forward_response = client.post_challenge(user.as_str(), &params).await;
-    let response = match forward_response {
-        Ok((code, body)) => {
-            log::info!("Received Lichess response code:{}, body:{}", code, body);
-            warp::reply::with_status(body, code)
+    //let forward_response = client.post_challenge(user.as_str(), &params).await;
+    Ok(match create_challenge(client, auth_token, user, params).await {
+        Ok((status, body)) => {
+            log::info!("Received Lichess response code:{}, body:{}", status, body);
+            warp::reply::with_status(body, status)
         }
         Err(e) => {
             log::error!("Error trying to contact Lichess: {}", e);
@@ -49,6 +51,28 @@ pub async fn challenge(
                 StatusCode::INTERNAL_SERVER_ERROR,
             )
         }
-    };
-    Ok(response)
+    })
 }
+
+async fn create_challenge(
+    client: &reqwest::Client,
+    auth_token: &str,
+    user: String,
+    params: ChallengeRequest,
+) -> Result<(StatusCode, String)> {
+    let response = client
+        .post(format!("{}/{}", CHALLENGE_ENDPOINT, user))
+        .bearer_auth(auth_token)
+        .form(&params)
+        .send()
+        .await?;
+    Ok((response.status(), response.text().await?))
+}
+
+//pub async fn post_challenge(
+//    &self,
+//    username: &str,
+//    challenge_params: &ChallengeRequest,
+//) -> Result<(StatusCode, String)> {
+//    Ok((status, body))
+//}

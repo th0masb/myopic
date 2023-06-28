@@ -21,7 +21,6 @@ async-trait = "^0.1.68"
 futures-util = "0.3.28"
 tokio = { version = "1.28.1", features = ["full"] }
 warp = "0.3.5"
-response_stream = { path = "../lib/response-stream" }
 lambda_payloads = { path = "../lib/payloads" }
 lichess_events = { path = "../lib/events" }
 reqwest = { version = "0.11.18", default_features = false, features = ["rustls-tls", "json", "stream"] }

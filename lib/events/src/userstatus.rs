@@ -1,5 +1,5 @@
-use std::time::Instant;
 use serde_derive::Deserialize;
+use std::time::Instant;
 
 use anyhow::{anyhow, Error, Result};
 use tokio::time::Duration;
@@ -14,10 +14,7 @@ pub struct StatusService {
 }
 
 impl StatusService {
-    pub fn new(
-        our_bot_id: &str,
-        status_poll_frequency: Duration,
-    ) -> StatusService {
+    pub fn new(our_bot_id: &str, status_poll_frequency: Duration) -> StatusService {
         StatusService {
             client: StatusClient::default(),
             status_poll_gap: status_poll_frequency,

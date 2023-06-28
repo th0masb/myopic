@@ -11,12 +11,12 @@ use response_stream::{LoopAction, StreamHandler};
 
 use crate::game::{Game, GameConfig, GameExecutionState};
 
+mod cancel;
 mod compute;
 mod events;
 mod game;
 mod lichess;
 mod messages;
-mod cancel;
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
 

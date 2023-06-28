@@ -10,13 +10,16 @@ extern crate tokio;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use crate::challenge::ChallengeService;
+use lichess_events::StreamParams;
 use simple_logger::SimpleLogger;
 use tokio::try_join;
 use warp::Filter;
 
 use crate::config::AppConfig;
+use crate::eventprocessor::EventProcessorImpl;
 use crate::forwarding::ChallengeRequest;
-use crate::lichess::LichessClient;
+use crate::gamestart::GameStartService;
 
 mod challenge;
 mod challenge_table;
@@ -24,8 +27,6 @@ mod config;
 mod eventprocessor;
 mod forwarding;
 mod gamestart;
-mod lichess;
-mod streamloop;
 
 #[tokio::main]
 async fn main() {
@@ -41,7 +42,7 @@ async fn main() {
     let server_addr = params.challenge_server_address.clone();
 
     // Client instance responsible for all forwarded requests to Lichess
-    let client = Arc::new(LichessClient::new(auth));
+    let client = Arc::new(reqwest::Client::new());
 
     // Create the http endpoint for creating challenges more ergonomically
     let challenge_forwarding = warp::post()
@@ -52,13 +53,30 @@ async fn main() {
         .and(warp::body::json())
         .and_then(move |user: String, req: ChallengeRequest| {
             let c = client.clone();
-            async move { forwarding::challenge(c.as_ref(), user, req).await }
+            let auth = auth.clone();
+            async move { forwarding::challenge(c.as_ref(), auth.clone().as_str(), user, req).await }
         });
 
     // Concurrently run both the event stream loop and the challenge web server terminating the
     // entire program if either task panics.
     try_join!(
-        tokio::task::spawn(async move { streamloop::stream(params).await }),
+        tokio::task::spawn(async move {
+            let params = params.clone();
+            lichess_events::stream(
+                params.lichess_bot.bot_id.clone(),
+                StreamParams {
+                    retry_wait: params.event_loop.stream_retry_wait(),
+                    max_lifespan: params.event_loop.max_stream_life(),
+                    status_poll_frequency: params.event_loop.status_poll_gap(),
+                },
+                EventProcessorImpl {
+                    challenge_service: ChallengeService::new(&params),
+                    gamestart_service: GameStartService::new(&params),
+                },
+            )
+            .await
+            //streamloop::stream(params).await
+        }),
         tokio::task::spawn(async move {
             warp::serve(challenge_forwarding).run(server_addr.parse::<SocketAddr>().unwrap()).await
         })
