@@ -1,16 +1,48 @@
-use crate::challenge::ChallengeService;
-use crate::events::LichessEvent;
-use crate::gamestart::GameStartService;
-use crate::userstatus::StatusService;
+use async_trait::async_trait;
+
+use lichess_events::events::LichessEvent;
+use lichess_events::userstatus::StatusService;
 use response_stream::LoopAction;
 
-pub struct EventProcessor {
-    pub challenge_service: ChallengeService,
-    pub gamestart_service: GameStartService,
-    pub status_service: StatusService,
+use crate::challenge::ChallengeService;
+use crate::gamestart::GameStartService;
+
+#[async_trait]
+pub trait EventProcessor {
+    async fn process(&mut self, event: LichessEvent);
 }
 
-impl EventProcessor {
+pub struct EventProcessorImpl {
+    pub challenge_service: ChallengeService,
+    pub gamestart_service: GameStartService,
+}
+
+#[async_trait]
+impl EventProcessor for EventProcessorImpl {
+    async fn process(&mut self, event: LichessEvent) {
+        match event {
+            LichessEvent::Challenge { challenge } => {
+                match self.challenge_service.process_challenge(challenge).await {
+                    Ok(message) => log::info!("Processed challenge with message: {}", message),
+                    Err(error) => log::warn!("Error processing challenge: {}", error),
+                }
+            }
+            LichessEvent::GameStart { game } => {
+                match self.gamestart_service.process_event(game).await {
+                    Ok(message) => log::info!("Processed gamestart with message: {}", message),
+                    Err(error) => log::warn!("Error processing gamestart: {}", error),
+                }
+            }
+        }
+    }
+}
+
+pub struct StreamLineProcessor<E: EventProcessor> {
+    pub status_service: StatusService,
+    pub event_processor: E,
+}
+
+impl <E: EventProcessor> StreamLineProcessor<E> {
     pub async fn handle_stream_read(&mut self, line: &str) -> LoopAction<()> {
         if line.is_empty() {
             self.user_status().await
@@ -19,7 +51,7 @@ impl EventProcessor {
                 Err(parse_error) => log::warn!("Parse error: {}", parse_error),
                 Ok(event) => {
                     log::info!("Received event: {}", line);
-                    self.handle_event(event).await
+                    self.event_processor.process(event).await
                 }
             };
             LoopAction::Continue
@@ -38,23 +70,6 @@ impl EventProcessor {
                     LoopAction::Continue
                 } else {
                     LoopAction::Break(())
-                }
-            }
-        }
-    }
-
-    async fn handle_event(&self, event: LichessEvent) {
-        match event {
-            LichessEvent::Challenge { challenge } => {
-                match self.challenge_service.process_challenge(challenge).await {
-                    Ok(message) => log::info!("Processed challenge with message: {}", message),
-                    Err(error) => log::warn!("Error processing challenge: {}", error),
-                }
-            }
-            LichessEvent::GameStart { game } => {
-                match self.gamestart_service.process_event(game).await {
-                    Ok(message) => log::info!("Processed gamestart with message: {}", message),
-                    Err(error) => log::warn!("Error processing gamestart: {}", error),
                 }
             }
         }

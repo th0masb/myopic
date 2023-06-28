@@ -223,7 +223,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "itertools",
- "lambda-payloads",
+ "lambda_payloads",
  "lambda_runtime",
  "log",
  "myopic-brain",
@@ -244,7 +244,7 @@ name = "chessmove-benchmark-lambda"
 version = "0.0.0"
 dependencies = [
  "itertools",
- "lambda-payloads",
+ "lambda_payloads",
  "lambda_runtime",
  "log",
  "myopic-brain",
@@ -608,11 +608,12 @@ dependencies = [
  "bytes",
  "dotenv",
  "futures-util",
- "lambda-payloads",
+ "lambda_payloads",
+ "lichess_events",
  "log",
  "regex",
  "reqwest",
- "response-stream",
+ "response_stream",
  "rusoto_core",
  "rusoto_dynamodb",
  "rusoto_lambda",
@@ -1056,7 +1057,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "lambda-payloads"
+name = "lambda_payloads"
 version = "0.0.0"
 dependencies = [
  "serde",
@@ -1116,7 +1117,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "itertools",
- "lambda-payloads",
+ "lambda_payloads",
  "lambda_runtime",
  "lichess_game",
  "log",
@@ -1135,6 +1136,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "lichess_events"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "simple_logger",
+ "tokio",
+]
+
+[[package]]
 name = "lichess_game"
 version = "0.1.0"
 dependencies = [
@@ -1143,7 +1157,7 @@ dependencies = [
  "log",
  "myopic-brain",
  "reqwest",
- "response-stream",
+ "response_stream",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1601,7 +1615,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "response-stream"
+name = "response_stream"
 version = "0.0.0"
 dependencies = [
  "anyhow",

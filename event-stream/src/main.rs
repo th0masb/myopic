@@ -22,12 +22,10 @@ mod challenge;
 mod challenge_table;
 mod config;
 mod eventprocessor;
-mod events;
 mod forwarding;
 mod gamestart;
 mod lichess;
 mod streamloop;
-mod userstatus;
 
 #[tokio::main]
 async fn main() {

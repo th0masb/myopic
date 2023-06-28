@@ -124,7 +124,7 @@ impl EventLoopConfig {
         Duration::from_secs(self.retry_wait_duration_secs as u64)
     }
 
-    pub fn status_pool_gap(&self) -> Duration {
+    pub fn status_poll_gap(&self) -> Duration {
         Duration::from_secs(self.status_poll_gap_secs as u64)
     }
 }

@@ -1,6 +1,6 @@
 use std::time::Instant;
+use serde_derive::Deserialize;
 
-use crate::config::AppConfig;
 use anyhow::{anyhow, Error, Result};
 use tokio::time::Duration;
 
@@ -14,12 +14,15 @@ pub struct StatusService {
 }
 
 impl StatusService {
-    pub fn new(parameters: &AppConfig) -> StatusService {
+    pub fn new(
+        our_bot_id: &str,
+        status_poll_frequency: Duration,
+    ) -> StatusService {
         StatusService {
             client: StatusClient::default(),
-            status_poll_gap: parameters.event_loop.status_pool_gap(),
+            status_poll_gap: status_poll_frequency,
             status_checkpoint: Instant::now(),
-            user_id: parameters.lichess_bot.bot_id.to_string(),
+            user_id: our_bot_id.to_owned(),
         }
     }
 
