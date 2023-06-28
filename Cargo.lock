@@ -1167,6 +1167,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "lichess_api",
  "log",
  "myopic-brain",
  "reqwest",

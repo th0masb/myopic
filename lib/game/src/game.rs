@@ -3,13 +3,14 @@ use std::time::Duration;
 
 use reqwest::StatusCode;
 use tokio_util::sync::CancellationToken;
+use lichess_api::LichessChatRoom;
 
 use myopic_brain::anyhow::{anyhow, Result};
 use myopic_brain::{Board, Side};
 
 use crate::compute::MoveChooser;
 use crate::events::{Clock, GameEvent, GameFull, GameState};
-use crate::lichess::{LichessChatRoom, LichessService};
+use crate::lichess::LichessService;
 use crate::messages;
 
 const STARTED_STATUS: &'static str = "started";
@@ -67,7 +68,7 @@ impl<M: MoveChooser> Game<M> {
     }
 
     pub async fn abort(&self) -> Result<StatusCode> {
-        self.lichess.abort().await
+        self.lichess.client.abort_game(self.lichess.game_id.as_str()).await
     }
 
     pub async fn post_introduction(&self) {
@@ -76,7 +77,7 @@ impl<M: MoveChooser> Game<M> {
     }
 
     async fn post_chat(&self, text: &str, room: LichessChatRoom) {
-        match self.lichess.post_chatline(text, room).await {
+        match self.lichess.client.post_chatline(self.lichess.game_id.as_str(), text, room).await {
             Err(err) => {
                 log::warn!("Failed to post chatline {} in {:?}: {}", text, room, err)
             }
@@ -158,8 +159,10 @@ impl<M: MoveChooser> Game<M> {
                             Duration::from_millis(max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS)),
                             Duration::from_millis(increment)
                         ) => {
-                            let computed_move = computed_move_result?;
-                            self.lichess.post_move(computed_move).await?;
+                            self.lichess.client.post_move(
+                                self.lichess.game_id.as_str(),
+                                computed_move_result?.as_str()
+                            ).await?;
                             Ok(GameExecutionState::Running)
                         }
                     }
