@@ -1,4 +1,3 @@
-use crate::events::Challenge;
 use anyhow::{Error, Result};
 use reqwest::StatusCode;
 use serde_derive::Deserialize;
@@ -28,11 +27,11 @@ impl LichessClient {
 
     pub async fn post_challenge_response(
         &self,
-        challenge: &Challenge,
+        challenge_id: &str,
         decision: &str,
     ) -> Result<StatusCode> {
         self.client
-            .post(format!("{}/{}/{}", CHALLENGE_ENDPOINT, challenge.id, decision).as_str())
+            .post(format!("{}/{}/{}", CHALLENGE_ENDPOINT, challenge_id, decision).as_str())
             .bearer_auth(&self.auth_token)
             .send()
             .await

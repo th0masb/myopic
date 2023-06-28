@@ -1,7 +1,7 @@
 use crate::challenge_table::ChallengeTableClient;
 use anyhow::Result;
+use lichess_api::LichessClient;
 use lichess_events::events::{Challenge, TimeControl};
-use lichess_events::lichess::LichessClient;
 
 use crate::config::{AppConfig, StringMatcher, TimeConstraints};
 
@@ -61,7 +61,7 @@ impl ChallengeService {
     ) -> Result<String> {
         log::info!("Posting {} response for challenge {}", decision, challenge.id);
         self.lichess
-            .post_challenge_response(&challenge, decision)
+            .post_challenge_response(challenge.id.as_str(), decision)
             .await
             .map(|status| format!("{} from challenge {}", status, decision))
     }

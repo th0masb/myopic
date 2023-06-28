@@ -609,6 +609,7 @@ dependencies = [
  "dotenv",
  "futures-util",
  "lambda_payloads",
+ "lichess_api",
  "lichess_events",
  "log",
  "regex",
@@ -1132,6 +1133,16 @@ dependencies = [
  "simple_logger",
  "tokio",
  "tokio-util",
+]
+
+[[package]]
+name = "lichess_api"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]
