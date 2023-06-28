@@ -24,7 +24,7 @@ export class GameLambdaStack extends Stack {
             memorySize: lambdaConfig.memoryMB,
             timeout: lambdaConfig.timeout,
             code: lambda.DockerImageCode.fromImageAsset(
-                path.join(__dirname, "..", ".."),
+                path.join(__dirname, "..", "..", ".."),
                 {
                     file: path.join("tools", "workspace.dockerfile"),
                     buildArgs: {

@@ -17,7 +17,7 @@ export class ChallengerStack extends Stack {
             memorySize: 128,
             timeout: Duration.minutes(3),
             code: lambda.DockerImageCode.fromImageAsset(
-                path.join(__dirname, "..", ".."),
+                path.join(__dirname, "..", "..", ".."),
                 {
                     file: path.join("tools", "workspace.dockerfile"),
                     buildArgs: {
