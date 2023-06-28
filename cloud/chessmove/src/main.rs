@@ -7,15 +7,13 @@ use log;
 use simple_logger::SimpleLogger;
 
 use lambda_payloads::chessmove::*;
-use myopic_brain::{anyhow, Board, Evaluator, Move, SearchParameters};
+use myopic_brain::{anyhow, Board, Evaluator, Move, SearchParameters, TimeAllocator};
 
 use crate::endings::LichessEndgameService;
 use crate::openings::DynamoOpeningService;
-use crate::timing::TimeAllocator;
 
 mod endings;
 mod openings;
-mod timing;
 
 const TABLE_SIZE: usize = 10000;
 
