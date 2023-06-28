@@ -1,19 +1,22 @@
+use std::time::{Duration, Instant};
+
+use anyhow::{anyhow, Result};
+use async_trait::async_trait;
+use reqwest::Response;
+use tokio_util::sync::CancellationToken;
+
+pub use cancel::{CancellationHook, EmptyCancellationHook};
+pub use compute::MoveChooser;
+use response_stream::{LoopAction, StreamHandler};
+
+use crate::game::{Game, GameConfig, GameExecutionState};
+
 mod compute;
 mod events;
 mod game;
 mod lichess;
 mod messages;
 mod cancel;
-
-use crate::game::{Game, GameConfig, GameExecutionState};
-use anyhow::{anyhow, Result};
-use async_trait::async_trait;
-pub use compute::MoveChooser;
-pub use cancel::{CancellationHook, EmptyCancellationHook};
-use reqwest::Response;
-use response_stream::{LoopAction, StreamHandler};
-use std::time::{Duration, Instant};
-use tokio_util::sync::CancellationToken;
 
 const GAME_STREAM_ENDPOINT: &'static str = "https://lichess.org/api/bot/game/stream";
 
@@ -24,7 +27,7 @@ pub struct Metadata {
     pub auth_token: String,
 }
 
-pub async fn play_game<M, C>(
+pub async fn play<M, C>(
     cancel_after: Duration,
     moves: M,
     metadata: Metadata,
@@ -44,8 +47,6 @@ where
         cloned_token.cancel();
     });
 
-    // Run the game loop
-    log::info!("Initializing game loop");
     let game = init_game(
         moves,
         metadata.game_id.clone(),
@@ -53,6 +54,10 @@ where
         metadata.auth_token.clone(),
         token.child_token(),
     )?;
+
+    game.post_introduction().await;
+
+    log::info!("Initializing game loop");
     let mut handler = GameStreamHandler {
         game,
         start: Instant::now(),

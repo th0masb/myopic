@@ -5,19 +5,14 @@ use std::time::{Duration, Instant, SystemTime};
 use async_trait::async_trait;
 use bytes::Bytes;
 use lambda_runtime::{Context, Error, LambdaEvent, service_fn};
-use reqwest::Response;
 use rusoto_core::Region;
-use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
+use rusoto_lambda::{InvocationRequest, InvokeAsyncRequest, Lambda, LambdaClient};
 use simple_logger::SimpleLogger;
-use tokio_util::sync::CancellationToken;
 
 use lambda_payloads::chessgame::*;
+use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveEventClock, ChooseMoveOutput};
 use lichess_game::{CancellationHook, MoveChooser};
 use myopic_brain::anyhow::{anyhow, Result};
-
-use crate::moves::MoveLambdaClient;
-
-mod moves;
 
 const CANCEL_PERIOD_SECS: u64 = 60;
 
@@ -31,7 +26,7 @@ async fn main() -> Result<(), Error> {
 async fn game_handler(event: LambdaEvent<PlayGameEvent>) -> Result<PlayGameOutput, Error> {
     let e = event.payload;
     let region = Region::from_str(e.move_function_region.as_str())?;
-    lichess_game::play_game(
+    lichess_game::play(
         compute_wait_until_cancel(&event.context)?,
         MoveLambdaClient::from((region.clone(), e.move_function_name.clone())),
         lichess_game::Metadata {
@@ -93,11 +88,56 @@ impl CancellationHook for RecursionHook {
     }
 }
 
-//
+pub struct MoveLambdaClient {
+    client: LambdaClient,
+    function_name: String,
+}
 
-//
+impl From<(Region, String)> for MoveLambdaClient {
+    fn from((region, name): (Region, String)) -> Self {
+        MoveLambdaClient { function_name: name, client: LambdaClient::new(region) }
+    }
+}
 
-//if e.current_depth == 0 {
-//    game.post_introduction().await;
-//}
-
+#[async_trait]
+impl MoveChooser for MoveLambdaClient {
+    async fn choose(
+        &mut self,
+        moves_played: &str,
+        remaining: Duration,
+        increment: Duration,
+    ) -> Result<String> {
+        let timer = Instant::now();
+        let request = ChooseMoveEvent {
+            moves_played: moves_played.to_owned(),
+            features: vec![],
+            clock_millis: ChooseMoveEventClock {
+                increment: increment.as_millis() as u64,
+                remaining: remaining.as_millis() as u64,
+            },
+        };
+        log::info!("Request payload {:?}", request);
+        let response = self
+            .client
+            .invoke(InvocationRequest {
+                function_name: self.function_name.clone(),
+                payload: Some(Bytes::from(serde_json::to_string(&request)?)),
+                client_context: None,
+                invocation_type: None,
+                log_type: None,
+                qualifier: None,
+            })
+            .await?;
+        log::info!("Response status: {:?}", response.status_code);
+        log::info!("Invocation took {}ms", timer.elapsed().as_millis());
+        match response.payload {
+            None => Err(anyhow!("Missing response payload!")),
+            Some(raw_bytes) => {
+                let decoded = String::from_utf8(raw_bytes.to_vec())?;
+                log::info!("Response payload: {}", decoded);
+                let response = serde_json::from_str::<ChooseMoveOutput>(decoded.as_str())?;
+                Ok(response.best_move)
+            }
+        }
+    }
+}
