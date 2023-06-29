@@ -19,6 +19,8 @@ pub struct StreamParams {
     pub status_poll_frequency: Duration,
     pub max_lifespan: Duration,
     pub retry_wait: Duration,
+    pub our_bot_id: String,
+    pub auth_token: String,
 }
 
 #[async_trait]
@@ -26,15 +28,11 @@ pub trait EventProcessor {
     async fn process(&mut self, event: LichessEvent);
 }
 
-pub async fn stream<E: EventProcessor + Send + Sync>(
-    our_bot_id: String,
-    stream_params: StreamParams,
-    processor: E,
-) {
+pub async fn stream<E: EventProcessor + Send + Sync>(params: StreamParams, processor: E) {
     let mut event_processor = StreamLineProcessor {
         status_service: StatusService::new(
-            our_bot_id.as_str(),
-            stream_params.status_poll_frequency,
+            params.our_bot_id.as_str(),
+            params.status_poll_frequency,
         ),
         event_processor: processor,
     };
@@ -43,11 +41,11 @@ pub async fn stream<E: EventProcessor + Send + Sync>(
 
         let mut handler = StreamRefreshHandler {
             start: Instant::now(),
-            max_duration: stream_params.max_lifespan,
+            max_duration: params.max_lifespan,
             processor: &mut event_processor,
         };
 
-        match open_event_stream(our_bot_id.as_str()).await {
+        match open_event_stream(params.auth_token.as_str()).await {
             Err(e) => log::warn!("Cannot connect to event stream {}", e),
             Ok(response) => match response_stream::handle(response, &mut handler).await {
                 Ok(_) => {}
@@ -57,8 +55,8 @@ pub async fn stream<E: EventProcessor + Send + Sync>(
             },
         }
 
-        log::info!("Sleeping for {} seconds", stream_params.retry_wait.as_secs());
-        tokio::time::sleep(stream_params.retry_wait).await;
+        log::info!("Sleeping for {} seconds", params.retry_wait.as_secs());
+        tokio::time::sleep(params.retry_wait).await;
     }
 }
 

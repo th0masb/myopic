@@ -220,18 +220,13 @@ dependencies = [
 name = "chessmove"
 version = "0.0.0"
 dependencies = [
- "async-trait",
- "bytes",
- "itertools",
  "lambda_payloads",
  "lambda_runtime",
+ "lichess_api",
  "log",
  "myopic-brain",
- "rand",
- "reqwest",
+ "openings",
  "rusoto_core",
- "rusoto_dynamodb",
- "rusoto_lambda",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1140,6 +1135,8 @@ name = "lichess_api"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "log",
+ "myopic-brain",
  "reqwest",
  "serde",
  "serde_derive",
@@ -1362,6 +1359,24 @@ name = "opaque-debug"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
+
+[[package]]
+name = "openings"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "futures",
+ "itertools",
+ "log",
+ "myopic-brain",
+ "rand",
+ "rusoto_core",
+ "rusoto_dynamodb",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
 
 [[package]]
 name = "openssl-probe"

@@ -4,18 +4,18 @@ extern crate lazy_static;
 
 use std::time::{Duration, Instant};
 
-pub use eval::Evaluator;
+pub use crate::search::{InputTable, Transpositions};
+use anyhow::Result;
 pub use eval::tables::PositionTables;
+pub use eval::Evaluator;
 pub use myopic_board::*;
 pub use search::negascout;
 pub use search::quiescent;
 pub use search::search;
+pub use search::terminator::SearchTerminator;
 pub use search::SearchOutcome;
 pub use search::SearchParameters;
-pub use search::terminator::SearchTerminator;
 pub use timing::TimeAllocator;
-use crate::search::Transpositions;
-use anyhow::Result;
 
 mod eval;
 
@@ -27,21 +27,21 @@ mod bench;
 mod test;
 mod timing;
 
-const TABLE_SIZE: usize = 100_000;
-
 pub trait LookupMoveService {
     fn lookup(&mut self, position: Board) -> Result<Option<Move>>;
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct ComputeMoveInput {
-    position: Board,
-    remaining: Duration,
-    increment: Duration,
+    pub position: Board,
+    pub remaining: Duration,
+    pub increment: Duration,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ComputeMoveOutput {
-    best_move: Move,
-    search_details: Option<SearchOutcome>,
+    pub best_move: Move,
+    pub search_details: Option<SearchOutcome>,
 }
 
 pub struct Engine {
@@ -51,9 +51,17 @@ pub struct Engine {
 }
 
 impl Engine {
+    pub fn new(table_size: usize, lookups: Vec<Box<dyn LookupMoveService>>) -> Engine {
+        Engine {
+            transpositions: Transpositions::new(table_size),
+            lookups,
+            timing: TimeAllocator::default(),
+        }
+    }
+
     pub fn compute_move(&mut self, input: ComputeMoveInput) -> Result<ComputeMoveOutput> {
         let start = Instant::now();
-        let mut eval: Evaluator = input.position.into();
+        let eval: Evaluator = input.position.into();
         match self.perform_lookups(eval.board().clone()) {
             Some(mv) => Ok(ComputeMoveOutput { best_move: mv, search_details: None }),
             None => {
@@ -61,18 +69,18 @@ impl Engine {
                 crate::search(
                     eval,
                     SearchParameters {
-                        table_size: TABLE_SIZE,
+                        // Reuse the same transposition table across different moves
+                        table: InputTable::Existing(&mut self.transpositions),
                         terminator: self.timing.allocate(
                             position_count,
                             input.remaining - start.elapsed(),
                             input.increment,
                         ),
                     },
-                ).map(|outcome| {
-                    ComputeMoveOutput {
-                        best_move: outcome.best_move.clone(),
-                        search_details: Some(outcome),
-                    }
+                )
+                .map(|outcome| ComputeMoveOutput {
+                    best_move: outcome.best_move.clone(),
+                    search_details: Some(outcome),
                 })
             }
         }
@@ -81,10 +89,9 @@ impl Engine {
     fn perform_lookups(&mut self, position: Board) -> Option<Move> {
         for service in self.lookups.iter_mut() {
             if let Ok(Some(m)) = service.lookup(position.clone()) {
-                return Some(m)
+                return Some(m);
             }
         }
         None
     }
 }
-

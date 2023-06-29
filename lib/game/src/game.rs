@@ -1,9 +1,9 @@
 use std::cmp::max;
 use std::time::Duration;
 
+use lichess_api::LichessChatRoom;
 use reqwest::StatusCode;
 use tokio_util::sync::CancellationToken;
-use lichess_api::LichessChatRoom;
 
 use myopic_brain::anyhow::{anyhow, Result};
 use myopic_brain::{Board, Side};

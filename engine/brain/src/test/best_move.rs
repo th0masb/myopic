@@ -1,6 +1,7 @@
 use myopic_board::{Board, Reflectable};
+use InputTable::Blank;
 
-use crate::search::SearchParameters;
+use crate::search::{InputTable, SearchParameters};
 use crate::{eval, Evaluator, UciMove};
 
 const DEPTH: usize = 4;
@@ -30,7 +31,7 @@ fn test(setup: Setup, expected_move_pool: Vec<UciMove>, is_won: bool) {
 }
 
 fn test_impl(board: Evaluator, expected_move_pool: Vec<UciMove>, is_won: bool) {
-    match crate::search(board, SearchParameters { terminator: DEPTH, table_size: TABLE_SIZE }) {
+    match crate::search(board, SearchParameters { terminator: DEPTH, table: Blank(TABLE_SIZE) }) {
         Err(message) => panic!("{}", message),
         Ok(outcome) => {
             assert!(
