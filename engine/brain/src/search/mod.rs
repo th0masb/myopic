@@ -9,7 +9,7 @@ use terminator::SearchTerminator;
 
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::pv::PrincipleVariation;
-use crate::search::transpositions::Transpositions;
+pub use crate::search::transpositions::Transpositions;
 use crate::{eval, Evaluator};
 
 mod moves;
