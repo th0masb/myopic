@@ -63,11 +63,12 @@ async fn main() {
         tokio::task::spawn(async move {
             let params = params.clone();
             lichess_events::stream(
-                params.lichess_bot.bot_id.clone(),
                 StreamParams {
                     retry_wait: params.event_loop.stream_retry_wait(),
                     max_lifespan: params.event_loop.max_stream_life(),
                     status_poll_frequency: params.event_loop.status_poll_gap(),
+                    our_bot_id: params.lichess_bot.bot_id.clone(),
+                    auth_token: params.lichess_bot.auth_token.clone(),
                 },
                 EventProcessorImpl {
                     challenge_service: ChallengeService::new(&params),
@@ -75,7 +76,6 @@ async fn main() {
                 },
             )
             .await
-            //streamloop::stream(params).await
         }),
         tokio::task::spawn(async move {
             warp::serve(challenge_forwarding).run(server_addr.parse::<SocketAddr>().unwrap()).await

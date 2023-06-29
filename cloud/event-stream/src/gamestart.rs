@@ -1,10 +1,10 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
+use lichess_api::LichessClient;
 use lichess_events::events::GameStart;
 use rusoto_core::Region;
 use rusoto_lambda::{InvokeAsyncRequest, Lambda, LambdaClient};
-use lichess_api::LichessClient;
 
 use crate::challenge_table::ChallengeTableClient;
 use crate::config::AppConfig;

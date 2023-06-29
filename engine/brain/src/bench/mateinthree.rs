@@ -3,10 +3,11 @@ use std::io::{BufRead, BufReader};
 use std::time::Duration;
 
 use regex::Regex;
+use InputTable::Blank;
 
 use crate::eval::Evaluator;
 use crate::eval::WIN_VALUE;
-use crate::search::{search, SearchParameters};
+use crate::search::{search, InputTable, SearchParameters};
 use crate::{Board, Move};
 
 #[rustfmt::skip]
@@ -140,7 +141,7 @@ fn benchmark() {
             print_progress(case_count, err_count, search_duration.clone());
         }
         let board_fen = test_case.eval.board().to_fen();
-        match search(test_case.eval, SearchParameters { terminator: depth, table_size }) {
+        match search(test_case.eval, SearchParameters { terminator: depth, table: Blank(table_size) }) {
             Err(message) => panic!("{}", message),
             Ok(outcome) => {
                 search_duration += outcome.time;

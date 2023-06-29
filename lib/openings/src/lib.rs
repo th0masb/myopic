@@ -1,23 +1,18 @@
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use async_trait::async_trait;
+use anyhow::{anyhow, Error, Result};
 use itertools::Itertools;
 use log::info;
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use serde_derive::{Deserialize, Serialize};
 
-use myopic_brain::{anyhow as ah, Board};
+use myopic_brain::{Board, LookupMoveService};
 use myopic_brain::{FenPart, Move};
 
-use crate::LookupMoveService;
-
-const TABLE_ENV_KEY: &'static str = "APP_CONFIG";
-
-#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
-struct OpeningTable {
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+pub struct OpeningTable {
     pub name: String,
     pub region: String,
     #[serde(rename = "positionKey")]
@@ -33,53 +28,48 @@ pub struct DynamoOpeningService {
     client: DynamoDbClient,
 }
 
-impl Default for DynamoOpeningService {
-    fn default() -> Self {
-        let table_var = std::env::var(TABLE_ENV_KEY)
-            .expect(format!("No value found for env var {}", TABLE_ENV_KEY).as_str());
-        let table = serde_json::from_str::<OpeningTable>(table_var.as_str())
-            .expect(format!("Could not parse table config {}", table_var).as_str());
-        let region = Region::from_str(table.region.as_str())
-            .expect(format!("Could not parse {} as region", table.region).as_str());
-        DynamoOpeningService { params: table, client: DynamoDbClient::new(region) }
+impl TryFrom<OpeningTable> for DynamoOpeningService {
+    type Error = Error;
+
+    fn try_from(value: OpeningTable) -> std::result::Result<Self, Self::Error> {
+        let region = Region::from_str(value.region.as_str())?;
+        Ok(DynamoOpeningService { client: DynamoDbClient::new(region), params: value })
     }
 }
 
-impl Display for DynamoOpeningService {
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.params.name.as_str())
-    }
-}
-
-#[async_trait]
 impl LookupMoveService for DynamoOpeningService {
-    async fn lookup(&self, position: Board) -> ah::Result<Option<Move>> {
-        let pos_count = position.position_count();
-        if pos_count > self.params.max_depth as usize {
-            info!("No lookup as {} > {}", pos_count, self.params.max_depth);
-            Ok(None)
-        } else {
-            let fen =
-                position.to_fen_parts(&[FenPart::Board, FenPart::Active, FenPart::CastlingRights]);
-            info!("Querying table {} for position {}", self.params.name, fen);
-            self.client
-                .get_item(self.create_request(fen))
-                .await
-                .map_err(|err| ah::anyhow!("{}", err))
-                .and_then(|response| match response.item {
-                    None => {
-                        info!("No match found!");
-                        Ok(None)
-                    }
-                    Some(attributes) => self
-                        .try_extract_move(attributes)
-                        .and_then(|mv| position.parse_uci(mv.as_str()))
-                        .map(|mv| {
-                            info!("Found opening move {}", mv.uci_format());
-                            Some(mv)
-                        }),
-                })
-        }
+    fn lookup(&mut self, position: Board) -> Result<Option<Move>> {
+        futures::executor::block_on(async {
+            let pos_count = position.position_count();
+            if pos_count > self.params.max_depth as usize {
+                info!("No lookup as {} > {}", pos_count, self.params.max_depth);
+                Ok(None)
+            } else {
+                let fen = position.to_fen_parts(&[
+                    FenPart::Board,
+                    FenPart::Active,
+                    FenPart::CastlingRights,
+                ]);
+                info!("Querying table {} for position {}", self.params.name, fen);
+                self.client
+                    .get_item(self.create_request(fen))
+                    .await
+                    .map_err(|err| anyhow!("{}", err))
+                    .and_then(|response| match response.item {
+                        None => {
+                            info!("No match found!");
+                            Ok(None)
+                        }
+                        Some(attributes) => self
+                            .try_extract_move(attributes)
+                            .and_then(|mv| position.parse_uci(mv.as_str()))
+                            .map(|mv| {
+                                info!("Found opening move {}", mv.uci_format());
+                                Some(mv)
+                            }),
+                    })
+            }
+        })
     }
 }
 impl DynamoOpeningService {
@@ -96,11 +86,11 @@ impl DynamoOpeningService {
         request
     }
 
-    fn try_extract_move(&self, attributes: HashMap<String, AttributeValue>) -> ah::Result<String> {
+    fn try_extract_move(&self, attributes: HashMap<String, AttributeValue>) -> Result<String> {
         match attributes.get(&self.params.move_key) {
-            None => Err(ah::anyhow!("Position exists but missing recommended move attribute")),
+            None => Err(anyhow!("Position exists but missing recommended move attribute")),
             Some(attribute) => match &attribute.ss {
-                None => Err(ah::anyhow!(
+                None => Err(anyhow!(
                     "Position and recommended move attribute exist but not string set type"
                 )),
                 Some(move_set) => {
@@ -114,7 +104,7 @@ impl DynamoOpeningService {
     }
 }
 
-fn choose_move(available: &Vec<String>, f: impl Fn() -> usize) -> ah::Result<String> {
+fn choose_move(available: &Vec<String>, f: impl Fn() -> usize) -> Result<String> {
     let records = available
         .into_iter()
         .filter_map(|s| MoveRecord::from_str(s.as_str()).ok())
@@ -124,7 +114,7 @@ fn choose_move(available: &Vec<String>, f: impl Fn() -> usize) -> ah::Result<Str
     let frequency_sum = records.iter().map(|r| r.freq).sum::<usize>();
 
     if frequency_sum == 0 {
-        Err(ah::anyhow!("Freq is 0 for {:?}", available))
+        Err(anyhow!("Freq is 0 for {:?}", available))
     } else {
         let record_choice = f() % frequency_sum;
         let mut sum = 0usize;
@@ -146,16 +136,13 @@ struct MoveRecord {
 }
 
 impl FromStr for MoveRecord {
-    type Err = ah::Error;
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let split = s.split(MOVE_FREQ_SEPARATOR).map(|s| s.to_string()).collect::<Vec<_>>();
         Ok(MoveRecord {
-            mv: split.get(0).ok_or(ah::anyhow!("Cannot parse move from {}", s))?.clone(),
-            freq: split
-                .get(1)
-                .ok_or(ah::anyhow!("Cannot parse freq from {}", s))?
-                .parse::<usize>()?,
+            mv: split.get(0).ok_or(anyhow!("Cannot parse move from {}", s))?.clone(),
+            freq: split.get(1).ok_or(anyhow!("Cannot parse freq from {}", s))?.parse::<usize>()?,
         })
     }
 }

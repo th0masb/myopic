@@ -177,19 +177,37 @@ impl Default for Evaluator {
 
 impl From<Board> for Evaluator {
     fn from(board: Board) -> Self {
-        let mut facets: Vec<Box<dyn EvalFacet>> = Vec::new();
-        facets.push(Box::new(PieceSquareTablesFacet::from(&board)));
-        if board.to_fen().as_str() == crate::START_FEN {
-            facets.push(Box::new(CastlingFacet::default()));
-            facets.push(Box::new(DevelopmentFacet::default()));
-            facets.push(Box::new(KnightRimFacet::default()));
+        let mut board_clone = board.clone();
+        let mut moves = vec![];
+        loop {
+            if let Ok(m) = board_clone.unmake() {
+                moves.push(m)
+            } else {
+                break;
+            }
         }
 
-        Evaluator {
-            material: MaterialFacet::from(&board),
-            phase: Phase::from(&board),
-            facets,
-            board,
+        if board_clone.to_fen().as_str() == crate::START_FEN {
+            let mut eval = Evaluator {
+                board: Board::default(),
+                phase: Default::default(),
+                material: Default::default(),
+                facets: vec![
+                    Box::new(CastlingFacet::default()),
+                    Box::new(DevelopmentFacet::default()),
+                    Box::new(KnightRimFacet::default()),
+                    Box::new(PieceSquareTablesFacet::default()),
+                ],
+            };
+            moves.into_iter().rev().for_each(|m| eval.make(m).unwrap());
+            eval
+        } else {
+            Evaluator {
+                material: MaterialFacet::from(&board),
+                phase: Phase::from(&board),
+                facets: vec![Box::new(PieceSquareTablesFacet::default())],
+                board,
+            }
         }
     }
 }
@@ -204,10 +222,31 @@ impl FromStr for Evaluator {
 
 #[cfg(test)]
 mod test {
+    use crate::Evaluator;
     use myopic_board::Board;
+    use std::str::FromStr;
 
     #[test]
     fn sanity() {
         assert_eq!(crate::START_FEN, crate::START_FEN.parse::<Board>().unwrap().to_fen())
+    }
+
+    #[test]
+    fn from_board_from_start() {
+        let pgn = "1. e4 e5 2. f4 exf4 3. Nf3 g5 4. Nc3 Nc6 5. g3 g4 6. Nh4 Nd4 7. Bc4 Be7";
+        let mut board = Board::default();
+        board.play_pgn(pgn).unwrap();
+        let eval = Evaluator::from(board.clone());
+        assert_eq!(board, eval.board().clone());
+        assert_eq!(4, eval.facets.len());
+    }
+
+    #[test]
+    fn from_board_from_position() {
+        let fen = "r5k1/pb4pp/1pn1pq2/5B2/2Pr4/B7/PP3RPP/R4QK1 b - - 0 23";
+        let board = Board::from_str(fen).unwrap();
+        let eval = Evaluator::from(board.clone());
+        assert_eq!(board, eval.board().clone());
+        assert_eq!(1, eval.facets.len());
     }
 }

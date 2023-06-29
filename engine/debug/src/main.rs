@@ -1,5 +1,6 @@
 use clap::Parser;
-use myopic_brain::{Board, Evaluator, SearchParameters};
+use myopic_brain::{Board, Evaluator, InputTable, SearchParameters};
+use InputTable::Blank;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -22,7 +23,7 @@ fn main() {
     } else {
         let outcome = myopic_brain::search(
             state,
-            SearchParameters { terminator: args.depth, table_size: args.table_size },
+            SearchParameters { terminator: args.depth, table: Blank(args.table_size) },
         )
         .unwrap();
         println!("{}", serde_json::to_string_pretty(&outcome).unwrap());

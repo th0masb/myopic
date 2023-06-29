@@ -1,7 +1,10 @@
-use std::collections::HashMap;
+mod endings;
+
 use anyhow::{anyhow, Error, Result};
+pub use endings::LichessEndgameClient;
 use reqwest::StatusCode;
 use serde_derive::Deserialize;
+use std::collections::HashMap;
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
@@ -70,7 +73,7 @@ impl LichessClient {
         &self,
         game_id: &str,
         text: &str,
-        room: LichessChatRoom
+        room: LichessChatRoom,
     ) -> Result<StatusCode> {
         let mut params = HashMap::new();
         params.insert(

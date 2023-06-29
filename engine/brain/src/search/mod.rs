@@ -24,16 +24,31 @@ const DEPTH_UPPER_BOUND: usize = 20;
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
-pub fn search<T>(root: Evaluator, parameters: SearchParameters<T>) -> Result<SearchOutcome>
-where
-    T: SearchTerminator,
-{
-    Search { root, terminator: parameters.terminator }.search(parameters.table_size)
+pub fn search<T: SearchTerminator>(
+    root: Evaluator,
+    parameters: SearchParameters<T>,
+) -> Result<SearchOutcome> {
+    match parameters.table {
+        InputTable::Blank(size) => Search {
+            root,
+            terminator: parameters.terminator,
+            transpositions: &mut Transpositions::new(size),
+        }
+        .search(),
+        InputTable::Existing(table) => {
+            Search { root, terminator: parameters.terminator, transpositions: table }.search()
+        }
+    }
 }
 
-pub struct SearchParameters<T: SearchTerminator> {
+pub enum InputTable<'a> {
+    Blank(usize),
+    Existing(&'a mut Transpositions),
+}
+
+pub struct SearchParameters<'a, T: SearchTerminator> {
     pub terminator: T,
-    pub table_size: usize,
+    pub table: InputTable<'a>,
 }
 
 /// Data class composing information/result about/of a best move search.
@@ -101,9 +116,10 @@ mod searchoutcome_serialize_test {
     }
 }
 
-struct Search<T: SearchTerminator> {
+struct Search<'a, T: SearchTerminator> {
     root: Evaluator,
     terminator: T,
+    transpositions: &'a mut Transpositions,
 }
 
 struct BestMoveResponse {
@@ -113,16 +129,15 @@ struct BestMoveResponse {
     depth: usize,
 }
 
-impl<T: SearchTerminator> Search<T> {
-    pub fn search(&mut self, table_size: usize) -> Result<SearchOutcome> {
+impl<T: SearchTerminator> Search<'_, T> {
+    pub fn search(&mut self) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
         let mut pv = PrincipleVariation::default();
-        let mut transposition_table = Transpositions::new(table_size);
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
-            match self.best_move(i, search_start, &pv, &mut transposition_table) {
+            match self.best_move(i, search_start, &pv) {
                 Err(message) => {
                     break_err = anyhow!("{}", message);
                     break;
@@ -148,7 +163,6 @@ impl<T: SearchTerminator> Search<T> {
         depth: usize,
         search_start: Instant,
         pv: &PrincipleVariation,
-        transposition_table: &mut Transpositions,
     ) -> Result<BestMoveResponse> {
         if depth < 1 {
             return Err(anyhow!("Cannot iteratively deepen with depth 0"));
@@ -156,7 +170,7 @@ impl<T: SearchTerminator> Search<T> {
 
         let SearchResponse { eval, path } = Scout {
             terminator: &self.terminator,
-            transpositions: transposition_table,
+            transpositions: self.transpositions,
             moves: pv.into(),
         }
         .search(

@@ -3,9 +3,10 @@ use std::time::Instant;
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Context, Error, LambdaEvent};
 use simple_logger::SimpleLogger;
+use InputTable::Blank;
 
 use lambda_payloads::benchmark::*;
-use myopic_brain::SearchParameters;
+use myopic_brain::{InputTable, SearchParameters};
 
 mod positions;
 
@@ -40,7 +41,7 @@ async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Err
         }
         moves.push(myopic_brain::search(
             root,
-            SearchParameters { terminator: e.depth, table_size: e.table_size },
+            SearchParameters { terminator: e.depth, table: Blank(e.table_size) },
         )?);
     }
 

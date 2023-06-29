@@ -1,20 +1,20 @@
 [package]
-name = "chessmove"
-version = "0.0.0"
+name = "openings"
+version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 myopic-brain = { path = "../../engine/brain" }
-lambda_payloads = { path = "../payloads" }
-lambda_runtime = "0.8.0"
-tokio = "1.0"
+futures = { version = "0.3.28", features = ["executor"] }
 serde_derive = "1.0.163"
 serde = "1.0.163"
 serde_json = "1.0.96"
-simple_logger = "4.1.0"
 log = "0.4.17"
+bytes = "1.4.0"
+itertools = "0.10.5"
+anyhow = "1.0.71"
+rand = "0.8.5"
 rusoto_core = { version = "0.48.0", default_features = false, features = ["rustls"] }
-lichess_api = { path = "../../lib/lichess" }
-openings = { path = "../../lib/openings" }
+rusoto_dynamodb = { version = "0.48.0", default_features = false, features = ["rustls"] }

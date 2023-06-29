@@ -14,7 +14,7 @@ impl<E: EventProcessor> StreamLineProcessor<E> {
             self.user_status().await
         } else {
             match serde_json::from_str::<LichessEvent>(line) {
-                Err(parse_error) => log::warn!("Parse error: {}", parse_error),
+                Err(e) => log::warn!("Parse error: {} for \"{}\"", e, line),
                 Ok(event) => {
                     log::info!("Received event: {}", line);
                     self.event_processor.process(event).await
