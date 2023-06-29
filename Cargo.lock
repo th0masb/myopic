@@ -226,9 +226,6 @@ dependencies = [
  "log",
  "myopic-brain",
  "openings",
- "rusoto_core",
- "serde",
- "serde_derive",
  "serde_json",
  "simple_logger",
  "tokio",
@@ -602,7 +599,6 @@ dependencies = [
  "async-trait",
  "bytes",
  "dotenv",
- "futures-util",
  "lambda_payloads",
  "lichess_api",
  "lichess_events",
@@ -1111,23 +1107,18 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bytes",
- "itertools",
  "lambda_payloads",
  "lambda_runtime",
  "lichess_game",
  "log",
  "myopic-brain",
- "rand",
- "reqwest",
  "rusoto_core",
- "rusoto_dynamodb",
  "rusoto_lambda",
  "serde",
  "serde_derive",
  "serde_json",
  "simple_logger",
  "tokio",
- "tokio-util",
 ]
 
 [[package]]
@@ -1154,7 +1145,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "simple_logger",
  "tokio",
 ]
 
@@ -1365,7 +1355,6 @@ name = "openings"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bytes",
  "futures",
  "itertools",
  "log",
@@ -1419,7 +1408,6 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
- "dotenv",
  "indicatif",
  "itertools",
  "lazy_static",
