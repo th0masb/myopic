@@ -76,9 +76,10 @@ impl MaterialAndPositioningHeuristic {
                     get_lower_value_delta(eval, Piece(side, class), dest)
                         .map(|n| MoveCategory::BadExchange(n))
                         .unwrap_or_else(|| {
-                            MoveCategory::Positional(
-                                self.tables.midgame(class, dest) - self.tables.midgame(class, from),
-                            )
+                            let moving = Piece(side, class);
+                            let from_value = self.tables.midgame(moving, from);
+                            let dest_value = self.tables.midgame(moving, dest);
+                            MoveCategory::Positional(side.parity() * (dest_value - from_value))
                         })
                 }
             }
