@@ -205,7 +205,7 @@ impl From<Board> for Evaluator {
             Evaluator {
                 material: MaterialFacet::from(&board),
                 phase: Phase::from(&board),
-                facets: vec![Box::new(PieceSquareTablesFacet::default())],
+                facets: vec![Box::new(PieceSquareTablesFacet::from(&board))],
                 board,
             }
         }
