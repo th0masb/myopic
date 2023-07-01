@@ -7,6 +7,25 @@ use crate::enum_map::EnumMap;
 use crate::Board;
 use crate::MoveComputeType;
 
+//impl Board {
+//    fn compute_pins_on(&self, piece: Piece) -> EnumMap<Square, BitBoard> {
+//        todo!()
+//    }
+//
+//    fn compute_discoveries_on(&self, piece: Piece) -> EnumMap<Square, BitBoard> {
+//        todo!()
+//    }
+//}
+
+//pub struct PinsAndDiscoveries {
+//    pin_constraints: EnumMap<Square, BitBoard>,
+//    discovery_opportunities: EnumMap<Square, BitBoard>,
+//}
+//
+//impl PinsAndDiscoveries {
+//
+//}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct MoveConstraints {
     data: EnumMap<Square, BitBoard>,
@@ -97,7 +116,7 @@ impl Board {
                 }
             }
         } else {
-            let discoveries = self.compute_discoveries();
+            let discoveries = self.compute_discoveries_on(Piece(passive, Class::K)).unwrap();
             let passive_king = self.king(passive);
             let promotion_rays = Piece(Side::W, Class::Q).control(passive_king, whites | blacks);
             let promotion_jumps = Piece(Side::W, Class::N).empty_control(passive_king);

@@ -45,6 +45,12 @@ pub enum Move {
     Castle { corner: Corner },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct CheckAwareMove {
+    pub m: Move,
+    pub is_checking: bool,
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash, Enum)]
 pub enum MoveComputeType {
     All,
