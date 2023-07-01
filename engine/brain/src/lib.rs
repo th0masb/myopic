@@ -27,7 +27,7 @@ mod bench;
 mod test;
 mod timing;
 
-pub trait LookupMoveService {
+pub trait LookupMoveService: Send + Sync {
     fn lookup(&mut self, position: Board) -> Result<Option<Move>>;
 }
 

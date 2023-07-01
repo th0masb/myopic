@@ -1,4 +1,5 @@
 use serde_derive::Deserialize;
+use lichess_api::ratings::TimeLimits;
 
 #[derive(Debug, Deserialize)]
 pub struct UserConfig {
@@ -24,26 +25,3 @@ pub struct KnownUserChallenge {
     pub repeat: usize,
 }
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct TimeLimits {
-    pub limit: u32,
-    pub increment: u32,
-}
-
-#[derive(Copy, Clone)]
-pub enum TimeLimitType {
-    Blitz,
-    Bullet,
-}
-
-impl TimeLimits {
-    const BLITZ_THRESHOLD: u32 = 180;
-
-    pub fn get_type(&self) -> TimeLimitType {
-        if self.limit < TimeLimits::BLITZ_THRESHOLD {
-            TimeLimitType::Bullet
-        } else {
-            TimeLimitType::Blitz
-        }
-    }
-}

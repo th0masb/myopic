@@ -118,11 +118,11 @@ impl<M: MoveChooser + Send + Sync> StreamHandler<CompletionType> for GameStreamH
 fn init_game<M: MoveChooser>(
     moves: M,
     game_id: String,
-    bot_name: String,
+    bot_id: String,
     auth_token: String,
     cancel_token: CancellationToken,
 ) -> Result<Game<M>> {
-    Ok(GameConfig { game_id, bot_name, auth_token, moves, cancel_token }.into())
+    Ok(GameConfig { game_id, bot_id, auth_token, moves, cancel_token }.into())
 }
 
 async fn open_game_stream(game_id: &String, auth_token: &String) -> Result<Response> {

@@ -206,6 +206,7 @@ version = "0.0.0"
 dependencies = [
  "itertools",
  "lambda_runtime",
+ "lichess_api",
  "log",
  "rand",
  "reqwest",
@@ -1131,6 +1132,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -1920,9 +1922,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.96"
+version = "1.0.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "057d394a50403bcac12672b2b18fb387ab6d289d957dab67dd201875391e52f1"
+checksum = "46266871c240a00b8f503b877622fe33430b3c7d963bdc0f2adc511e54a1eae3"
 dependencies = [
  "itoa",
  "ryu",
@@ -2108,10 +2110,17 @@ dependencies = [
 name = "testing"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap 4.3.8",
  "lichess_api",
  "lichess_events",
  "lichess_game",
+ "log",
  "myopic-brain",
+ "openings",
+ "simple_logger",
+ "tokio",
 ]
 
 [[package]]
