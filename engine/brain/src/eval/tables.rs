@@ -1,7 +1,7 @@
 use enum_map::{enum_map, EnumMap};
 
 use crate::eval::{EvalFacet, Evaluation};
-use crate::{Class, Corner, Line};
+use crate::{Class, Corner, Line, Side};
 use myopic_board::{Board, Move, Piece, Reflectable, Square};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -32,27 +32,25 @@ impl PieceSquareTablesFacet {
     pub fn compute_midgame_eval(&self, board: &Board) -> i32 {
         Square::iter()
             .flat_map(|square| board.piece(square).map(|p| (p, square)))
-            .map(|(Piece(side, class), square)| side.parity() * self.tables.midgame(class, square))
+            .map(|(piece, square)| self.tables.midgame(piece, square))
             .sum()
     }
 
     pub fn compute_endgame_eval(&self, board: &Board) -> i32 {
         Square::iter()
             .flat_map(|square| board.piece(square).map(|p| (p, square)))
-            .map(|(Piece(side, class), square)| side.parity() * self.tables.endgame(class, square))
+            .map(|(piece, square)| self.tables.endgame(piece, square))
             .sum()
     }
 
-    fn add(&mut self, Piece(side, class): Piece, square: Square) {
-        let parity = side.parity();
-        self.mid_eval += parity * self.tables.midgame(class, square);
-        self.end_eval += parity * self.tables.endgame(class, square);
+    fn add(&mut self, piece: Piece, square: Square) {
+        self.mid_eval += self.tables.midgame(piece, square);
+        self.end_eval += self.tables.endgame(piece, square);
     }
 
-    fn remove(&mut self, Piece(side, class): Piece, square: Square) {
-        let parity = side.parity();
-        self.mid_eval -= parity * self.tables.midgame(class, square);
-        self.end_eval -= parity * self.tables.endgame(class, square);
+    fn remove(&mut self, piece: Piece, square: Square) {
+        self.mid_eval -= self.tables.midgame(piece, square);
+        self.end_eval -= self.tables.endgame(piece, square);
     }
 
     fn make_impl(&mut self, mv: &Move, add: UpdateFn, remove: UpdateFn) {
@@ -69,7 +67,7 @@ impl PieceSquareTablesFacet {
                 remove(self, moving, from);
                 add(self, moving, dest);
                 if let Some(piece) = capture {
-                    remove(self, piece, from);
+                    remove(self, piece, dest);
                 }
             }
             &Move::Enpassant { side, from, dest, capture } => {
@@ -81,7 +79,7 @@ impl PieceSquareTablesFacet {
                 remove(self, Piece(side, Class::P), from);
                 add(self, Piece(side, class), dest);
                 if let Some(captured) = capture {
-                    remove(self, captured, from);
+                    remove(self, captured, dest);
                 }
             }
         }
@@ -102,22 +100,23 @@ impl EvalFacet for PieceSquareTablesFacet {
     }
 }
 
+type SideTables = EnumMap<Class, SquareTable>;
+
 #[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
 pub struct PositionTables {
-    tables: EnumMap<Class, EnumMap<Square, (i32, i32)>>,
+    tables: EnumMap<Side, SideTables>,
 }
 
 impl PositionTables {
-    /// API method for retrieving the evaluation for a piece at a given location
-    /// in the midgame.
-    pub fn midgame(&self, class: Class, location: Square) -> i32 {
-        self.tables[class][location].0
+    /// API method for indexing the midgame table, +ve better for white, -ve better for black
+    pub fn midgame(&self, Piece(side, class): Piece, location: Square) -> i32 {
+        self.tables[side][class].0[location].0
     }
 
     /// API method for retrieving the evaluation for a piece at a given location
     /// in the midgame.
-    pub fn endgame(&self, class: Class, location: Square) -> i32 {
-        self.tables[class][location].1
+    pub fn endgame(&self, Piece(side, class): Piece, location: Square) -> i32 {
+        self.tables[side][class].0[location].1
     }
 }
 
@@ -125,36 +124,57 @@ impl Default for PositionTables {
     fn default() -> Self {
         PositionTables {
             tables: enum_map! {
-                Class::P => parse_full(PAWN),
-                Class::N => parse_symmetric(KNIGHT),
-                Class::B => parse_symmetric(BISHOP),
-                Class::R => parse_symmetric(ROOK),
-                Class::Q => parse_symmetric(QUEEN),
-                Class::K => parse_symmetric(KING),
-            },
+                Side::W => enum_map! {
+                    Class::P => parse_full(PAWN),
+                    Class::N => parse_symmetric(KNIGHT),
+                    Class::B => parse_symmetric(BISHOP),
+                    Class::R => parse_symmetric(ROOK),
+                    Class::Q => parse_symmetric(QUEEN),
+                    Class::K => parse_symmetric(KING),
+                },
+                Side::B => enum_map! {
+                    Class::P => parse_full(PAWN).reflect(),
+                    Class::N => parse_symmetric(KNIGHT).reflect(),
+                    Class::B => parse_symmetric(BISHOP).reflect(),
+                    Class::R => parse_symmetric(ROOK).reflect(),
+                    Class::Q => parse_symmetric(QUEEN).reflect(),
+                    Class::K => parse_symmetric(KING).reflect(),
+                },
+            }
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq)]
+struct SquareTable(EnumMap<Square, (i32, i32)>);
+
+impl Reflectable for SquareTable {
+    fn reflect(&self) -> Self {
+        let mut dest: EnumMap<Square, (i32, i32)> = enum_map! { _ => (0, 0) };
+        Square::iter().for_each(|sq| dest[sq.reflect()] = self.0[sq].reflect());
+        SquareTable(dest)
     }
 }
 
 type SymmetricTable = [(i32, i32); 32];
 type CompleteTable = [(i32, i32); 64];
 
-fn parse_symmetric(raw: SymmetricTable) -> EnumMap<Square, (i32, i32)> {
+fn parse_symmetric(raw: SymmetricTable) -> SquareTable {
     let mut table = enum_map! { _ => (0, 0) };
     Square::iter().for_each(|square| {
         let (rank, file) = (square.rank_index(), square.file_index());
         let column = if file < 4 { file } else { 7 - file };
         table[square] = raw[4 * rank + column];
     });
-    table
+    SquareTable(table)
 }
 
-fn parse_full(raw: CompleteTable) -> EnumMap<Square, (i32, i32)> {
+fn parse_full(raw: CompleteTable) -> SquareTable {
     let mut table = enum_map! { _ => (0, 0) };
     Square::iter().for_each(|square| {
         table[square] = raw[8 * square.rank_index() + square.file_index()];
     });
-    table
+    SquareTable(table)
 }
 
 /// Tables lifted from stockfish here: https://github.com/official-stockfish/Stockfish/blob/master/src/psqt.cpp
@@ -245,29 +265,62 @@ const PAWN: CompleteTable = [
 
 #[cfg(test)]
 mod test {
+    use myopic_board::Board;
     use myopic_board::Square::*;
 
-    use crate::{Class, PositionTables};
+    use crate::{Class, Piece, PositionTables, Side};
+    use crate::eval::EvalFacet;
+    use crate::eval::tables::PieceSquareTablesFacet;
+
+    #[test]
+    fn zero_eval_for_start() {
+        let pst = PieceSquareTablesFacet::from(&Board::default());
+        assert_eq!(0, pst.mid_eval);
+        assert_eq!(0, pst.end_eval);
+    }
 
     #[test]
     fn test_midgame() {
         let tables = PositionTables::default();
-        assert_eq!(-7, tables.midgame(Class::P, C6));
-        assert_eq!(19, tables.midgame(Class::N, D3));
-        assert_eq!(26, tables.midgame(Class::B, C4));
-        assert_eq!(-5, tables.midgame(Class::R, F2));
-        assert_eq!(6, tables.midgame(Class::Q, B3));
-        assert_eq!(325, tables.midgame(Class::K, B1));
+        assert_eq!(-7, tables.midgame(Piece(Side::W, Class::P), C6));
+        assert_eq!(7, tables.midgame(Piece(Side::B, Class::P), C3));
+        assert_eq!(69, tables.midgame(Piece(Side::W, Class::K), D5));
+        assert_eq!(-69, tables.midgame(Piece(Side::B, Class::K), D4));
     }
 
     #[test]
     fn test_endgame() {
         let tables = PositionTables::default();
-        assert_eq!(21, tables.endgame(Class::P, C6));
-        assert_eq!(-18, tables.endgame(Class::N, E1));
-        assert_eq!(16, tables.endgame(Class::B, D4));
-        assert_eq!(-2, tables.endgame(Class::R, D3));
-        assert_eq!(-23, tables.endgame(Class::Q, A4));
-        assert_eq!(141, tables.endgame(Class::K, D7));
+        assert_eq!(21, tables.endgame(Piece(Side::W, Class::P), C6));
+        assert_eq!(-21, tables.endgame(Piece(Side::B, Class::P), C3));
+        assert_eq!(194, tables.endgame(Piece(Side::W, Class::K), D5));
+        assert_eq!(-194, tables.endgame(Piece(Side::B, Class::K), D4));
+    }
+
+    #[test]
+    fn test_evolution() {
+        let pgn = "1. e4 c5 2. Nc3 Nc6 3. Nf3 e6 4. Bc4 d6 5. d4 cxd4 6. Nxd4 Nxd4 \
+        7. Qxd4 Ne7 8. Bg5 Nc6 9. Qd2 f6 10. Be3 Be7 11. O-O-O Ne5 12. Be2 Bd7 13. Nb5 Bxb5 \
+        14. Bxb5+ Nc6 15. Bc4 Qd7 16. Qe2 O-O 17. Qg4 f5 18. exf5 Ne5 19. Bxe6+ Qxe6 20. Qxg7+ Kxg7 \
+        21. fxe6 Kf6 22. Rhe1 Kxe6 23. f4 Nc6 24. g4 Kf7 25. f5 Ne5 26. g5 Rfe8 27. f6 Bf8 \
+        28. Bf4 Kg6 29. h4 a6 30. Bxe5 dxe5 31. Rd5 e4 32. Rd7 b6 33. Re2 h5 34. a3 Re6 \
+        35. Kb1 Bd6 36. Rg7+ Kf5 37. f7 Kg4 38. Rh7 Bg3 39. g6 Be5 40. Rxe4+ Kf5 41. Rxe5+ Rxe5 \
+        42. g7 Ree8 43. fxe8=Q Rxe8 44. Rh8 Re1+ 45. Ka2 Rg1 46. g8=Q Rxg8 47. Rxg8 Kf4 \
+        48. Kb3 Kf5 49. Rg5+ Ke6 50. Rxh5 Kd7";
+
+        let mut board = Board::default();
+        let moves = board.play_pgn(pgn).unwrap();
+        let mut board = Board::default();
+        let mut pst = PieceSquareTablesFacet::default();
+        for m in moves {
+            pst.make(&m, &board);
+            board.make(m.clone()).unwrap();
+            assert_eq!(PieceSquareTablesFacet::from(&board), pst);
+            pst.unmake(&m);
+            board.unmake().unwrap();
+            assert_eq!(PieceSquareTablesFacet::from(&board), pst);
+            pst.make(&m, &board);
+            board.make(m.clone()).unwrap();
+        }
     }
 }
