@@ -62,10 +62,13 @@ impl Board {
     }
 
     pub(crate) fn compute_discoveries_on(&self, piece: Piece) -> Result<RaySet> {
-        let Piece(discovered_side, _) = piece;
+        let Piece(discovered_side, class) = piece;
         let discoverer_side = discovered_side.reflect();
-        let discovered_loc = self.locs(&[piece]).first()
-            .ok_or(anyhow!("{:?} not on the board", piece))?;
+        let discovered_loc = match class {
+            Class::K => self.king(discovered_side),
+            _ => self.locs(&[piece]).first()
+                .ok_or(anyhow!("{:?} not on the board", piece))?
+        };
 
         let discoverer_locs = self.side(discoverer_side);
         let discovered_locs = self.side(discovered_side);
@@ -80,10 +83,13 @@ impl Board {
 
     /// Compute all the pieces which are pinned to the given piece
     pub(crate) fn compute_pinned_on(&self, piece: Piece) -> Result<RaySet> {
-        let Piece(pinned_side, _) = piece;
+        let Piece(pinned_side, class) = piece;
         let pinner_side = pinned_side.reflect();
-        let pinned_loc = self.locs(&[piece]).first()
-            .ok_or(anyhow!("{:?} not on the board", piece))?;
+        let pinned_loc = match class {
+            Class::K => self.king(pinned_side),
+            _ => self.locs(&[piece]).first()
+                .ok_or(anyhow!("{:?} not on the board", piece))?
+        };
 
         let pinner_locs = self.side(pinner_side);
         let pinned_locs = self.side(pinned_side);
