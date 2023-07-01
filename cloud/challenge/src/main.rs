@@ -1,16 +1,15 @@
-use crate::client::{ChallengeRequest, LichessClient};
-use crate::config::{ChallengeEvent, KnownUserChallenge, TimeLimits, UserConfig};
+use crate::config::{ChallengeEvent, KnownUserChallenge, UserConfig};
 use itertools::Itertools;
-use lambda_runtime::{service_fn, Error, LambdaEvent};
+use lambda_runtime::{Error, LambdaEvent, service_fn};
 use rand::prelude::SliceRandom;
 use simple_logger::SimpleLogger;
 use std::iter::repeat;
 use std::time::Duration;
 use tokio::time::sleep;
+use lichess_api::LichessClient;
+use lichess_api::ratings::{ChallengeRequest, TimeLimits};
 
-mod client;
 mod config;
-mod ratings;
 
 const APP_CONFIG_VAR: &str = "APP_CONFIG";
 
@@ -36,7 +35,7 @@ async fn specific_challenge_handler(
     config: &UserConfig,
     challenges: Vec<KnownUserChallenge>,
 ) -> Result<(), Error> {
-    let client = LichessClient::default();
+    let client = LichessClient::new(config.token.clone());
     for challenge in challenges {
         let target_id = challenge.user_id.as_str();
         let request = ChallengeRequest {
@@ -67,7 +66,7 @@ async fn random_challenge_handler(
     let chosen_time_limit =
         time_limit_options.choose(&mut rand::thread_rng()).expect("No time limit options given!");
 
-    let client = LichessClient::default();
+    let client = LichessClient::new(config.token.clone());
 
     let our_rating =
         client.fetch_rating(config.our_user_id.as_str(), chosen_time_limit.get_type()).await?;

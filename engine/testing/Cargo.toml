@@ -10,3 +10,10 @@ myopic-brain = { path = "../brain" }
 lichess_api = { path = "../../lib/lichess" }
 lichess_events = { path = "../../lib/events" }
 lichess_game = { path = "../../lib/game" }
+openings = { path = "../../lib/openings" }
+async-trait = "0.1.68"
+tokio = { version = "1.28.1", features = ["full"] }
+clap = { version = "^4.3.0", features = ["derive"] }
+log = "0.4.17"
+simple_logger = "4.1.0"
+anyhow = "1.0.71"

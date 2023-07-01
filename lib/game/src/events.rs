@@ -64,7 +64,7 @@ pub struct GameState {
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct Player {
-    pub name: String,
+    pub id: String,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
@@ -232,8 +232,8 @@ mod test {
             Err(error) => panic!("Parse error {:?}", error),
             Ok(event) => match event {
                 GameEvent::GameFull { content } => {
-                    assert_eq!(Player { name: format!("th0masb") }, content.white);
-                    assert_eq!(Player { name: format!("myopic-bot") }, content.black);
+                    assert_eq!(Player { id: format!("th0masb") }, content.white);
+                    assert_eq!(Player { id: format!("myopic-bot") }, content.black);
                     assert_eq!(Clock { initial: 1200000, increment: 10000 }, content.clock);
                     assert_eq!(
                         GameState {

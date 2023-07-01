@@ -1,13 +1,16 @@
 mod endings;
+pub mod ratings;
 
 use anyhow::{anyhow, Error, Result};
 pub use endings::LichessEndgameClient;
 use reqwest::StatusCode;
 use serde_derive::Deserialize;
 use std::collections::HashMap;
+use crate::ratings::{ChallengeRequest, OnlineBot, TimeLimitType, UserDetails};
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
+const ACCOUNT_ENDPOINT: &'static str = "https://lichess.org/api/account";
 
 pub struct LichessClient {
     auth_token: String,
@@ -23,6 +26,16 @@ pub enum LichessChatRoom {
 impl LichessClient {
     pub fn new(auth_token: String) -> LichessClient {
         LichessClient { auth_token, client: reqwest::Client::new() }
+    }
+
+    pub async fn get_our_profile(&self) -> Result<Account> {
+        let response = self.client
+            .get(ACCOUNT_ENDPOINT)
+            .bearer_auth(self.auth_token.as_str())
+            .send()
+            .await
+            .map_err(Error::from)?;
+        response.json().await.map_err(Error::from)
     }
 
     pub async fn post_challenge_response(
@@ -93,6 +106,57 @@ impl LichessClient {
             .map_err(|error| anyhow!("Error posting chatline: {}", error))
             .map(|response| response.status())
     }
+
+    pub async fn create_challenge(&self, request: ChallengeRequest) -> Result<StatusCode> {
+        let mut params: HashMap<&str, String> = HashMap::new();
+        params.insert("rated", request.rated.to_string());
+        params.insert("clock.limit", request.time_limit.limit.to_string());
+        params.insert("clock.increment", request.time_limit.increment.to_string());
+        self.client
+            .post(format!("https://lichess.org/api/challenge/{}", request.target_user_id))
+            .bearer_auth(request.token.as_str())
+            .form(&params)
+            .send()
+            .await
+            .map(|r| r.status())
+            .map_err(|e| {
+                anyhow!("Error challenging {}: {}", request.target_user_id, e)
+            })
+    }
+
+    pub async fn fetch_rating(
+        &self,
+        user_id: &str,
+        time_limit_type: TimeLimitType,
+    ) -> Result<u32, Error> {
+        Ok(self
+            .client
+            .get(format!("https://lichess.org/api/user/{}", user_id))
+            .send()
+            .await?
+            .json::<UserDetails>()
+            .await?
+            .perfs
+            .rating_for(time_limit_type))
+    }
+
+    pub async fn fetch_online_bots(&self) -> Result<Vec<OnlineBot>, Error> {
+        Ok(self
+            .client
+            .get(format!("https://lichess.org/api/bot/online"))
+            .send()
+            .await?
+            .text()
+            .await?
+            .split('\n')
+            .filter_map(|s| serde_json::from_str::<OnlineBot>(s).ok())
+            .collect::<Vec<_>>())
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct Account {
+    pub id: String,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]

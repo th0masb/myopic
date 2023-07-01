@@ -27,14 +27,14 @@ struct InferredGameMetadata {
 #[derive(Debug, Clone)]
 pub struct GameConfig<M: MoveChooser> {
     pub game_id: String,
-    pub bot_name: String,
+    pub bot_id: String,
     pub auth_token: String,
     pub moves: M,
     pub cancel_token: CancellationToken,
 }
 
 pub struct Game<M: MoveChooser> {
-    bot_name: String,
+    bot_id: String,
     inferred_metadata: Option<InferredGameMetadata>,
     lichess: LichessService,
     moves: M,
@@ -54,7 +54,7 @@ impl<M: MoveChooser> From<GameConfig<M>> for Game<M> {
         Game {
             lichess: LichessService::new(conf.auth_token, conf.game_id),
             moves: conf.moves,
-            bot_name: conf.bot_name,
+            bot_id: conf.bot_id,
             inferred_metadata: None,
             halfmove_count: 0,
             cancel_token: conf.cancel_token,
@@ -110,18 +110,18 @@ impl<M: MoveChooser> Game<M> {
         // Track info required for playing future gamestates
         self.inferred_metadata = Some(InferredGameMetadata {
             clock: game.clock,
-            lambda_side: if self.bot_name == game.white.name {
+            lambda_side: if self.bot_id == game.white.id {
                 log::info!("Detected lambda is playing as white");
                 Side::W
-            } else if self.bot_name == game.black.name {
+            } else if self.bot_id == game.black.id {
                 log::info!("Detected lambda is playing as black");
                 Side::B
             } else {
                 return Err(anyhow!(
                     "Name not matched, us: {} w: {} b: {}",
-                    self.bot_name,
-                    game.white.name,
-                    game.black.name
+                    self.bot_id,
+                    game.white.id,
+                    game.black.id
                 ));
             },
         });
