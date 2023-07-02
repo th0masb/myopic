@@ -1,16 +1,18 @@
 use std::cmp;
 use itertools::Itertools;
 use Move::{Castle, Enpassant, Promotion, Standard};
-use MoveComputeType::{Attacks, AttacksChecks};
+use MoveFacet::{Attacking, Checking, Promoting};
 
 use myopic_board::anyhow::Result;
-use myopic_board::{Move, MoveComputeType, TerminalState};
+use myopic_board::{Move, MoveFacet, Moves, TerminalState};
 
 use crate::{eval, Evaluator, Piece};
 
 const Q_CHECK_CAP: i32 = -1;
 const DELTA_SKIP_MARGIN: i32 = 200;
 const DELTA_SKIP_MAX_PHASE: f32 = 0.9;
+const SHALLOW_MOVE_FACETS: [MoveFacet; 2] = [Attacking, Checking];
+const DEEP_MOVE_FACETS: [MoveFacet; 1] = [Attacking];
 
 pub fn full_search(root: &mut Evaluator) -> Result<i32> {
     search(root, -eval::INFTY, eval::INFTY)
@@ -47,7 +49,7 @@ fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> R
 
     let phase = root.phase_progression();
 
-    for (category, evolve) in compute_quiescent_moves(root, depth) {
+    for (category, m) in compute_quiescent_moves(root, in_check, depth) {
         match category {
             MoveCategory::Special => {}
             MoveCategory::Other => {}
@@ -65,7 +67,7 @@ fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> R
                 }
             }
         };
-        root.make(evolve)?;
+        root.make(m)?;
         let next_result = -search_impl(root, -beta, -alpha, depth - 1)?;
         root.unmake()?;
         result = cmp::max(result, next_result);
@@ -77,10 +79,21 @@ fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> R
     return Ok(result);
 }
 
-fn compute_quiescent_moves(state: &mut Evaluator, depth: i32) -> Vec<(MoveCategory, Move)> {
+fn compute_quiescent_moves(
+    state: &mut Evaluator,
+    in_check: bool,
+    depth: i32,
+) -> Vec<(MoveCategory, Move)> {
+    let moves_selector = if in_check {
+        Moves::All
+    } else if depth < Q_CHECK_CAP {
+        Moves::AreAny(&DEEP_MOVE_FACETS)
+    } else {
+        Moves::AreAny(&SHALLOW_MOVE_FACETS)
+    };
     let mut moves = state
         .board()
-        .moves(if depth < Q_CHECK_CAP { Attacks } else { AttacksChecks })
+        .moves(moves_selector)
         .into_iter()
         .map(|mv| (categorise(state, &mv), mv))
         .collect_vec();
