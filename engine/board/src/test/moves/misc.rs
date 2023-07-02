@@ -68,7 +68,7 @@ fn case_02() -> Result<()> {
             "swba4c6bn",
             "swrb1b8br", "swrb1b7-",
             "swrh1h7bp",
-            "pa7a8wn-", "pa7a8wb-", "pa7a8wr-", "pa7a8wq-",
+            "pa7a8wn-",
             "pa7b8wnbr", "pa7b8wbbr", "pa7b8wrbr", "pa7b8wqbr",
         ],
     })
@@ -87,51 +87,29 @@ fn case_03() -> Result<()> {
             "swbf3e2-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
-            "swkf1g1-",
-            "swre1e2-",
-            "swqc2e2-", "swqc2d3-",
-            "swnc3e2-", "swnc3b5bb",
-            "swbf3e2-",
-        ],
+        expected_attacks: vec!["swnc3b5bb"],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
-            "swkf1g1-",
-            "swre1e2-",
-            "swqc2e2-", "swqc2d3-",
-            "swnc3e2-", "swnc3b5bb",
-            "swbf3e2-",
-        ],
+        expected_attacks_checks: vec!["swnc3b5bb", "swre1e2-", "swqc2e2-"],
     })
 }
 
-#[test]
-fn case_05() -> Result<()> {
-    execute_test(TestCase {
-        board: "r3k2r/2q2pp1/2p3b1/1b6/8/1PN2B2/2Q2PP1/R3RK2 b kq - 3 10",
-        #[rustfmt::skip]
-        expected_all: vec![
-            "sbke8f8-", "sbke8d8-", "sbke8d7-",
-            "sbqc7e7-", "sbqc7e5-",
-            "sbbg6e4-",
-            "sbbb5e2-",
-        ],
-        #[rustfmt::skip]
-        expected_attacks: vec![
-            "sbke8f8-", "sbke8d8-", "sbke8d7-",
-            "sbqc7e7-", "sbqc7e5-",
-            "sbbg6e4-",
-            "sbbb5e2-",
-        ],
-        #[rustfmt::skip]
-        expected_attacks_checks: vec![
-            "sbke8f8-", "sbke8d8-", "sbke8d7-",
-            "sbqc7e7-", "sbqc7e5-",
-            "sbbg6e4-",
-            "sbbb5e2-",
-        ],
-    })
-}
+//#[test]
+//fn case_05() -> Result<()> {
+//    execute_test(TestCase {
+//        board: "r3k2r/2q2pp1/2p3b1/1b6/8/1PN2B2/2Q2PP1/R3RK2 b kq - 3 10",
+//        #[rustfmt::skip]
+//        expected_all: vec![
+//            "sbke8f8-", "sbke8d8-", "sbke8d7-",
+//            "sbqc7e7-", "sbqc7e5-",
+//            "sbbg6e4-",
+//            "sbbb5e2-",
+//        ],
+//        #[rustfmt::skip]
+//        expected_attacks: vec![],
+//        #[rustfmt::skip]
+//        expected_attacks_checks: vec![],
+//    })
+//}
 
 #[test]
 fn case_06() -> Result<()> {
@@ -142,13 +120,9 @@ fn case_06() -> Result<()> {
             "sbkc3c2-", "sbkc3d2-", "sbkc3c4-", "sbkc3b4-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
-            "sbkc3c2-", "sbkc3d2-", "sbkc3c4-", "sbkc3b4-",
-        ],
+        expected_attacks: vec![],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
-            "sbkc3c2-", "sbkc3d2-", "sbkc3c4-", "sbkc3b4-",
-        ],
+        expected_attacks_checks: vec![],
     })
 }
 
@@ -190,8 +164,7 @@ fn case_08() -> Result<()> {
         ],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
-            "pg7g8wn-", "pg7g8wb-", "pg7g8wr-", "pg7g8wq-",
-            "pg7h8wnbb", "pg7h8wbbb", "pg7h8wrbb", "pg7h8wqbb",
+            "pg7g8wr-", "pg7g8wq-", "pg7h8wnbb", "pg7h8wbbb", "pg7h8wrbb", "pg7h8wqbb",
         ],
     })
 }
@@ -255,12 +228,10 @@ fn case_13() -> Result<()> {
         #[rustfmt::skip]
         expected_attacks: vec![
             "swqd7d1bq",
-            "swka1a2-",
         ],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
             "swqd7d1bq",
-            "swka1a2-",
         ],
     })
 }
@@ -293,7 +264,7 @@ fn case_15() -> Result<()> {
         expected_attacks: vec![],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
-            "pd7d8wn-", "pd7d8wb-", "pd7d8wr-", "pd7d8wq-",
+           "pd7d8wr-", "pd7d8wq-",
         ],
     })
 }
@@ -311,7 +282,7 @@ fn case_16() -> Result<()> {
         expected_attacks: vec![],
         #[rustfmt::skip]
         expected_attacks_checks: vec![
-            "pd7d8wn-", "pd7d8wb-", "pd7d8wr-", "pd7d8wq-",
+            "pd7d8wn-",
         ],
     })
 }

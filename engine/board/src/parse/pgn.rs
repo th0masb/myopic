@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use regex::Regex;
 
 use myopic_core::{
@@ -6,7 +7,7 @@ use myopic_core::{
 };
 
 use crate::parse::patterns::*;
-use crate::{Board, Move, MoveComputeType};
+use crate::{Board, Move, Moves};
 
 /// Extracts the moves encoded in standard pgn format starting at
 /// a custom board position.
@@ -26,7 +27,7 @@ pub fn moves(start: &Board, encoded: &str) -> Result<Vec<Move>> {
 }
 
 fn parse_single_move(start: &mut Board, pgn_move: &str) -> Result<Move> {
-    let legal = start.compute_moves(MoveComputeType::All);
+    let legal = start.moves(Moves::All);
     // If a castle move we can retrieve straight away
     if pgn_move == "O-O" {
         return legal
@@ -40,6 +41,7 @@ fn parse_single_move(start: &mut Board, pgn_move: &str) -> Result<Move> {
     } else if pgn_move == "O-O-O" {
         return legal
             .iter()
+            .map(|m| m)
             .find(|&m| match m {
                 Move::Castle { corner, .. } => *corner == Corner(start.active(), Flank::Q),
                 _ => false,

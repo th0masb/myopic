@@ -1,8 +1,10 @@
 use std::collections::btree_set::BTreeSet;
 use std::fmt::{Display, Formatter};
+use std::io::Read;
 use std::str::FromStr;
 
 use itertools::Itertools;
+use MoveFacet::Attacking;
 
 use myopic_core::anyhow::{anyhow, Result};
 use myopic_core::Corner;
@@ -10,9 +12,9 @@ use myopic_core::*;
 
 use crate::anyhow::Error;
 use crate::parse::parse_option;
-use crate::Board;
+use crate::{Board, MoveFacet, Moves};
 use crate::Move;
-use crate::MoveComputeType;
+use crate::MoveFacet::Checking;
 
 mod misc;
 mod szukstra_tal;
@@ -76,7 +78,10 @@ fn slice(s: &str, skip: usize, take: usize) -> String {
     s.chars().skip(skip).take(take).collect()
 }
 
-type ExpectedMoves = Vec<(MoveComputeType, MoveSet)>;
+#[derive(Debug, Copy, Clone)]
+enum MoveType { All, Attacks, AttacksChecks }
+
+type ExpectedMoves = Vec<(MoveType, MoveSet)>;
 
 #[derive(Debug, Clone)]
 struct TestCase {
@@ -96,10 +101,11 @@ fn parse_moves(encoded: &Vec<&str>) -> Result<BTreeSet<Move>> {
 
 fn execute_test(case: TestCase) -> Result<()> {
     let board = case.board.parse::<Board>()?;
+
     let expected = vec![
-        (MoveComputeType::All, parse_moves(&case.expected_all)?),
-        (MoveComputeType::Attacks, parse_moves(&case.expected_attacks)?),
-        (MoveComputeType::AttacksChecks, parse_moves(&case.expected_attacks_checks)?),
+        (MoveType::All, parse_moves(&case.expected_all)?),
+        (MoveType::Attacks, parse_moves(&case.expected_attacks)?),
+        (MoveType::AttacksChecks, parse_moves(&case.expected_attacks_checks)?),
     ];
 
     let ref_board = board.reflect();
@@ -115,13 +121,17 @@ fn execute_test(case: TestCase) -> Result<()> {
 
 fn execute_test_impl(board: Board, moves: ExpectedMoves) {
     for (computation_type, expected_moves) in moves.into_iter() {
-        let actual_moves: MoveSet = board.compute_moves(computation_type).into_iter().collect();
+        let under_test: MoveSet = match computation_type {
+            MoveType::All => board.moves(Moves::All).into_iter().collect(),
+            MoveType::Attacks => board.moves(Moves::Are(Attacking)).into_iter().collect(),
+            MoveType::AttacksChecks => board.moves(Moves::AreAny(&[Attacking, Checking])).into_iter().collect(),
+        };
         assert_eq!(
             expected_moves.clone(),
-            actual_moves.clone(),
+            under_test.clone(),
             "Differences for {:?} are: {}",
             computation_type,
-            format_difference(expected_moves, actual_moves)
+            format_difference(expected_moves, under_test)
         );
     }
 }

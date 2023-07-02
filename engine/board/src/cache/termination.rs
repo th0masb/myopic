@@ -1,8 +1,7 @@
 use itertools::Itertools;
 use myopic_core::*;
 
-use crate::Board;
-use crate::MoveComputeType;
+use crate::{Board, Moves};
 use crate::TerminalState;
 
 const HALF_MOVE_CLOCK_LIMIT: usize = 100;
@@ -73,12 +72,7 @@ impl Board {
 
     // Assumes king is in check and cannot move out of it
     fn checked_termination(&self) -> Option<TerminalState> {
-        if self.compute_moves(MoveComputeType::All).len() > 0 {
-            None
-        } else {
-            // Checkmate
-            Some(TerminalState::Loss)
-        }
+        if self.moves(Moves::All).len() > 0 { None } else { Some(TerminalState::Loss) }
     }
 
     // Assumes king cannot move but not in check
@@ -95,12 +89,7 @@ impl Board {
                 return None;
             }
         }
-        if self.compute_moves(MoveComputeType::All).len() > 0 {
-            None
-        } else {
-            // Stalemate
-            Some(TerminalState::Draw)
-        }
+        if self.moves(Moves::All).len() > 0 { None } else { Some(TerminalState::Draw) }
     }
 }
 

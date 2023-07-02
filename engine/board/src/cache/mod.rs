@@ -3,20 +3,21 @@ use myopic_core::enum_map::EnumMap;
 use myopic_core::BitBoard;
 
 use crate::TerminalState;
-use crate::{Board, MoveComputeType};
-use rays::RaySet;
+use crate::Board;
+pub use rays::RaySet;
 
 mod constraints;
 mod control;
 mod rays;
 mod termination;
 
+
 #[derive(Debug, Clone, Default)]
 pub struct CalculationCache {
     termination_status: Option<Option<TerminalState>>,
     passive_control: Option<BitBoard>,
-    pinned_set: Option<RaySet>,
-    move_constraints: EnumMap<MoveComputeType, Option<MoveConstraints>>,
+    pinned: Option<RaySet>,
+    discoveries: Option<RaySet>,
 }
 
 impl Board {
@@ -24,7 +25,7 @@ impl Board {
         let mut cache = self.cache.borrow_mut();
         cache.termination_status = None;
         cache.passive_control = None;
-        cache.pinned_set = None;
-        cache.move_constraints = EnumMap::default();
+        cache.pinned = None;
+        cache.discoveries = None;
     }
 }
