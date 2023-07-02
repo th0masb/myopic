@@ -17,7 +17,6 @@ use positions::Positions;
 use rights::Rights;
 
 use crate::anyhow::{anyhow, Error};
-use crate::cache::RaySet;
 
 mod cache;
 mod evolve;
@@ -154,7 +153,7 @@ impl Board {
     /// move vector. If we are in check then the type is ignored and all
     /// legal moves are returned.
     pub fn moves(&self, moves: Moves) -> Vec<Move> {
-        let all = self.compute_moves_impl();
+        let all = self.all_moves_impl();
         match moves {
             Moves::All => all,
             Moves::Are(facet) => self.moves_impl(all, &[facet]).collect(),

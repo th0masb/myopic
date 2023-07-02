@@ -18,8 +18,7 @@ impl Board {
     /// Computes the total area of control on the board for a given side. Note
     /// that the passive king is treated as invisible so that if it is in
     /// check it cannot create it's own escape squares by blocking the
-    /// control ray of an attacking slider. TODO Improve efficiency by
-    /// treated all pawns as a block
+    /// control ray of an attacking slider.
     fn compute_control(&self, side: Side) -> BitBoard {
         let pieces = &self.pieces;
         let (whites, blacks) = match side {
@@ -28,11 +27,19 @@ impl Board {
         };
         let locs = |piece: Piece| pieces.locs(piece);
         let control = |piece: Piece, square: Square| piece.control(square, whites | blacks);
-        Class::all()
+
+        [Class::N, Class::B, Class::R, Class::Q, Class::K]
             .into_iter()
             .map(|class| Piece(side, class))
             .flat_map(|p| locs(p).into_iter().map(move |sq| control(p, sq)))
-            .collect()
+            .collect::<BitBoard>() | Board::pawn_control(side, locs(Piece(side, Class::P)))
+    }
+
+    fn pawn_control(side: Side, pawns: BitBoard) -> BitBoard {
+        match side {
+            Side::W => ((pawns - BitBoard::FILES[7]) << 9) | ((pawns - BitBoard::FILES[0]) << 7),
+            Side::B => ((pawns - BitBoard::FILES[0]) >> 9) | ((pawns - BitBoard::FILES[7]) >> 7),
+        }
     }
 }
 

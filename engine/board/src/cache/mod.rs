@@ -1,8 +1,7 @@
 pub use constraints::MoveConstraints;
-use myopic_core::enum_map::EnumMap;
 use myopic_core::BitBoard;
 
-use crate::TerminalState;
+use crate::{Move, TerminalState};
 use crate::Board;
 pub use rays::RaySet;
 
@@ -14,10 +13,11 @@ mod termination;
 
 #[derive(Debug, Clone, Default)]
 pub struct CalculationCache {
-    termination_status: Option<Option<TerminalState>>,
-    passive_control: Option<BitBoard>,
-    pinned: Option<RaySet>,
-    discoveries: Option<RaySet>,
+    pub termination_status: Option<Option<TerminalState>>,
+    pub passive_control: Option<BitBoard>,
+    pub pinned: Option<RaySet>,
+    pub discoveries: Option<RaySet>,
+    pub moves: Option<Vec<Move>>,
 }
 
 impl Board {
@@ -27,5 +27,6 @@ impl Board {
         cache.passive_control = None;
         cache.pinned = None;
         cache.discoveries = None;
+        cache.moves = None;
     }
 }

@@ -1,4 +1,3 @@
-use std::iter::FromIterator;
 use crate::Board;
 use anyhow::Result;
 use enum_map::enum_map;

@@ -1,7 +1,7 @@
 use myopic_core::*;
 
 use crate::{Board, Move};
-use crate::cache::{MoveConstraints, RaySet};
+use crate::cache::MoveConstraints;
 use crate::Square::*;
 
 impl Reflectable for Move {
@@ -57,15 +57,26 @@ impl Move {
 }
 
 impl Board {
-    pub(crate) fn compute_moves_impl(&self) -> Vec<Move> {
-        let king = Piece(self.active, Class::K);
+    pub(crate) fn all_moves_impl(&self) -> Vec<Move> {
+        let moves = { self.cache.borrow().moves.clone() };
+        match moves {
+            Some(mvs) => mvs,
+            None => {
+                let result = self.compute_all_moves_impl();
+                self.cache.borrow_mut().moves = Some(result.clone());
+                result
+            }
+        }
+    }
+
+    fn compute_all_moves_impl(&self) -> Vec<Move> {
         let king_loc = self.king(self.active);
         let passive_control = self.passive_control();
-        let pins = self.compute_pinned_on(king).unwrap();
+        let pins = self.compute_pinned();
         let constraints = if self.in_check() {
             self.compute_check_constraints(passive_control, &pins)
         } else {
-            let mut result = MoveConstraints::all_universal();
+            let mut result = MoveConstraints::all(BitBoard::ALL);
             result.intersect(king_loc, !passive_control);
             result.intersect_pins(&pins);
             result
