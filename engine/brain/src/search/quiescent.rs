@@ -6,7 +6,7 @@ use MoveFacet::{Attacking, Checking, Promoting};
 use myopic_board::anyhow::Result;
 use myopic_board::{Move, MoveFacet, Moves, TerminalState};
 
-use crate::{eval, Evaluator, Piece};
+use crate::{Class, eval, Evaluator, Piece};
 
 const Q_CHECK_CAP: i32 = -1;
 const DELTA_SKIP_MARGIN: i32 = 200;
@@ -51,8 +51,7 @@ fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> R
 
     for (category, m) in compute_quiescent_moves(root, in_check, depth) {
         match category {
-            MoveCategory::Special => {}
-            MoveCategory::Other => {}
+            MoveCategory::Other | MoveCategory::Promotion { .. } => {}
             MoveCategory::BadExchange { .. } => {
                 if !in_check {
                     continue
@@ -104,7 +103,14 @@ fn compute_quiescent_moves(
 
 fn categorise(state: &mut Evaluator, mv: &Move) -> MoveCategory {
     match mv {
-        Enpassant { .. } | Promotion { .. } | Castle { .. } => MoveCategory::Special,
+        Enpassant { .. } | Castle { .. } => MoveCategory::Other,
+        Promotion { promoted, capture, .. } => {
+            let values = state.piece_values();
+            MoveCategory::Promotion {
+                optimistic_delta: values[promoted.1] - values[Class::P] +
+                    capture.map(|p| values[p.1]).unwrap_or(0)
+            }
+        }
         Standard { from, dest, capture, .. } => {
             match capture {
                 None => MoveCategory::Other,
@@ -126,7 +132,7 @@ fn categorise(state: &mut Evaluator, mv: &Move) -> MoveCategory {
 
 enum MoveCategory {
     BadExchange { see: i32 },
-    Special,
+    Promotion { optimistic_delta: i32 },
     Other,
     GoodExchange { see: i32, optimistic_delta: i32 },
 }
@@ -135,7 +141,7 @@ impl MoveCategory {
     fn score(&self) -> i32 {
         match self {
             MoveCategory::BadExchange { see } => *see,
-            MoveCategory::Special => 10000,
+            MoveCategory::Promotion { optimistic_delta } => 20000 + optimistic_delta,
             MoveCategory::Other => 5000,
             MoveCategory::GoodExchange { see, .. } => 20000 + see
         }
