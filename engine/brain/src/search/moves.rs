@@ -1,4 +1,4 @@
-use myopic_board::{Board, Move, Move::*, MoveComputeType, Reflectable, Square};
+use myopic_board::{Board, Move, Move::*, Moves, Reflectable, Square};
 
 use crate::{BitBoard, Class, Evaluator, Piece, PositionTables};
 use crate::negascout::SearchContext;
@@ -25,7 +25,7 @@ impl MoveGenerator<'_> {
         ctx: &SearchContext,
         table: Option<&Move>,
     ) -> impl Iterator<Item = Move> {
-        let mut moves = state.board().moves(MoveComputeType::All);
+        let mut moves = state.board().moves(Moves::All);
         moves.sort_by_cached_key(|m| self.estimator.estimate(state, m));
         table.map(|t| reposition_last(&mut moves, t));
         if let Some(pv) = self.pv.get_next_move(ctx.precursors.as_slice()) {
