@@ -17,6 +17,7 @@ use positions::Positions;
 use rights::Rights;
 
 use crate::anyhow::{anyhow, Error};
+use crate::cache::RaySet;
 
 mod cache;
 mod evolve;
@@ -174,32 +175,44 @@ impl Board {
                 match f {
                     MoveFacet::Attacking => m.is_attack(),
                     MoveFacet::Promoting => if let Promotion { .. } = m { true } else { false },
-                    MoveFacet::Checking => {
-                        match m {
-                            Move::Castle { .. } => false,
-                            Move::Enpassant { side, from, dest, capture } => {
-                                discoveries.constraints[*from].contains(*dest) ||
-                                    Piece(*side, Class::P)
-                                        .control(*dest, occupied - *from - *capture)
-                                        .contains(king_loc)
-                            },
-                            Promotion { from, dest, promoted, .. } => {
-                                discoveries.constraints[*from].contains(*dest) ||
-                                    promoted
-                                        .control(*dest, occupied - *from)
-                                        .contains(king_loc)
-                            },
-                            Move::Standard { moving, from, dest, .. } => {
-                                discoveries.constraints[*from].contains(*dest) ||
-                                    moving
-                                        .control(*dest, occupied - *from)
-                                        .contains(king_loc)
-                            },
-                        }
-                    },
+                    MoveFacet::Checking => Board::is_checking(m, &discoveries, occupied, king_loc),
                 }
             })
         })
+    }
+
+    pub fn is_checking(
+        m: &Move,
+        discoveries: &RaySet,
+        occupied: BitBoard,
+        king_loc: Square
+    ) -> bool {
+        match m {
+            Move::Castle { corner } => {
+                let Line(_, dest) = Line::rook_castling(*corner);
+                Piece(corner.0, Class::R)
+                    .control(dest, occupied)
+                    .contains(king_loc)
+            },
+            Move::Enpassant { side, from, dest, capture } => {
+                discoveries.constraints[*from].contains(*dest) ||
+                    Piece(*side, Class::P)
+                        .control(*dest, occupied - *from - *capture)
+                        .contains(king_loc)
+            },
+            Promotion { from, dest, promoted, .. } => {
+                discoveries.constraints[*from].contains(*dest) ||
+                    promoted
+                        .control(*dest, occupied - *from)
+                        .contains(king_loc)
+            },
+            Move::Standard { moving, from, dest, .. } => {
+                discoveries.constraints[*from].contains(*dest) ||
+                    moving
+                        .control(*dest, occupied - *from)
+                        .contains(king_loc)
+            },
+        }
     }
 
     /// Compute the termination state of this node. If it is not terminal

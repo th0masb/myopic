@@ -37,6 +37,7 @@ fn case_01() -> Result<()> {
             "swqc2d2-",
             "swqc2d3-",
             "swba3e7-",
+            "cwq"
         ],
     })
 }
