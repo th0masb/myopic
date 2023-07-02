@@ -3,13 +3,13 @@ use std::cmp::max;
 use std::fmt::Debug;
 use std::str::FromStr;
 
-use enum_map::EnumMap;
+use enum_map::{Enum, EnumMap};
 use enumset::EnumSet;
 
 use cache::CalculationCache;
 use history::History;
+use Move::Promotion;
 use myopic_core::anyhow::Result;
-use myopic_core::enum_map::Enum;
 pub use myopic_core::*;
 use parse::patterns;
 pub use parse::uci::UciMove;
@@ -17,6 +17,7 @@ use positions::Positions;
 use rights::Rights;
 
 use crate::anyhow::{anyhow, Error};
+use crate::cache::RaySet;
 
 mod cache;
 mod evolve;
@@ -45,19 +46,29 @@ pub enum Move {
     Castle { corner: Corner },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct CheckAwareMove {
-    pub m: Move,
-    pub is_checking: bool,
+impl Move {
+    pub fn is_attack(&self) -> bool {
+        match self {
+            Move::Standard { capture, .. } => capture.is_some(),
+            Promotion { capture, .. } => capture.is_some(),
+            Move::Enpassant { .. } => true,
+            Move::Castle { .. } => false,
+        }
+    }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash, Enum)]
-pub enum MoveComputeType {
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum Moves<'a> {
     All,
-    Attacks,
-    /// If a promoting move causes check then all promoting moves for
-    /// the four different target pieces will be included for that pawn.
-    AttacksChecks,
+    Are(MoveFacet),
+    AreAny(&'a [MoveFacet]),
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Enum)]
+pub enum MoveFacet {
+    Checking,
+    Attacking,
+    Promoting,
 }
 
 /// Represents the possible ways a game can be terminated, we only
@@ -142,8 +153,54 @@ impl Board {
     /// given computation type. Note there is no particular ordering to the
     /// move vector. If we are in check then the type is ignored and all
     /// legal moves are returned.
-    pub fn compute_moves(&self, computation_type: MoveComputeType) -> Vec<Move> {
-        self.compute_moves_impl(computation_type)
+    pub fn moves(&self, moves: Moves) -> Vec<Move> {
+        let all = self.compute_moves_impl();
+        match moves {
+            Moves::All => all,
+            Moves::Are(facet) => self.moves_impl(all, &[facet]).collect(),
+            Moves::AreAny(facets) => self.moves_impl(all, facets).collect(),
+        }
+    }
+
+    fn moves_impl<'a>(
+        &'a self,
+        all: Vec<Move>,
+        facets: &'a [MoveFacet]
+    ) -> impl Iterator<Item=Move> + 'a {
+        let discoveries = self.compute_discoveries();
+        let occupied = self.side(Side::W) | self.side(Side::B);
+        let king_loc = self.king(self.active.reflect());
+        all.into_iter().filter(move |m| {
+            facets.iter().any(|&f| {
+                match f {
+                    MoveFacet::Attacking => m.is_attack(),
+                    MoveFacet::Promoting => if let Promotion { .. } = m { true } else { false },
+                    MoveFacet::Checking => {
+                        match m {
+                            Move::Castle { .. } => false,
+                            Move::Enpassant { side, from, dest, capture } => {
+                                discoveries.constraints[*from].contains(*dest) ||
+                                    Piece(*side, Class::P)
+                                        .control(*dest, occupied - *from - *capture)
+                                        .contains(king_loc)
+                            },
+                            Promotion { from, dest, promoted, .. } => {
+                                discoveries.constraints[*from].contains(*dest) ||
+                                    promoted
+                                        .control(*dest, occupied - *from)
+                                        .contains(king_loc)
+                            },
+                            Move::Standard { moving, from, dest, .. } => {
+                                discoveries.constraints[*from].contains(*dest) ||
+                                    moving
+                                        .control(*dest, occupied - *from)
+                                        .contains(king_loc)
+                            },
+                        }
+                    },
+                }
+            })
+        })
     }
 
     /// Compute the termination state of this node. If it is not terminal

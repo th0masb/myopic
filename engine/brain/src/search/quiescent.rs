@@ -80,7 +80,7 @@ fn search_impl(root: &mut Evaluator, mut alpha: i32, beta: i32, depth: i32) -> R
 fn compute_quiescent_moves(state: &mut Evaluator, depth: i32) -> Vec<(MoveCategory, Move)> {
     let mut moves = state
         .board()
-        .compute_moves(if depth < Q_CHECK_CAP { Attacks } else { AttacksChecks })
+        .moves(if depth < Q_CHECK_CAP { Attacks } else { AttacksChecks })
         .into_iter()
         .map(|mv| (categorise(state, &mv), mv))
         .collect_vec();
