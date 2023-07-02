@@ -34,7 +34,7 @@ fn create_board(args: &Args) -> Board {
         args.position.parse().unwrap()
     } else {
         let mut board = Board::default();
-        board.play_pgn(args.pgn.as_str());
+        board.play_pgn(args.pgn.as_str()).unwrap();
         board
     }
 }

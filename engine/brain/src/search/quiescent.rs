@@ -11,8 +11,8 @@ use crate::{eval, Evaluator, Piece};
 const Q_CHECK_CAP: i32 = -1;
 const DELTA_SKIP_MARGIN: i32 = 200;
 const DELTA_SKIP_MAX_PHASE: f32 = 0.9;
-const SHALLOW_MOVE_FACETS: [MoveFacet; 2] = [Attacking, Checking];
-const DEEP_MOVE_FACETS: [MoveFacet; 1] = [Attacking];
+const SHALLOW_MOVE_FACETS: [MoveFacet; 3] = [Attacking, Checking, Promoting];
+const DEEP_MOVE_FACETS: [MoveFacet; 2] = [Attacking, Promoting];
 
 pub fn full_search(root: &mut Evaluator) -> Result<i32> {
     search(root, -eval::INFTY, eval::INFTY)

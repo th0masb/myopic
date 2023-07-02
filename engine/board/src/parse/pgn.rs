@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use regex::Regex;
 
 use myopic_core::{

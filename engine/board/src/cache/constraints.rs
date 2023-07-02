@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use enum_map::enum_map;
 
 use myopic_core::*;
 
@@ -16,16 +17,8 @@ impl MoveConstraints {
         self.data[location]
     }
 
-    pub fn all_universal() -> MoveConstraints {
-        MoveConstraints::all(BitBoard::ALL)
-    }
-
-    pub fn all_empty() -> MoveConstraints {
-        MoveConstraints::all(BitBoard::EMPTY)
-    }
-
     pub fn all(bitboard: BitBoard) -> MoveConstraints {
-        MoveConstraints { data: EnumMap::from_array([bitboard; 64]) }
+        MoveConstraints { data: enum_map! { _ => bitboard } }
     }
 
     pub fn intersect(&mut self, location: Square, constraint: BitBoard) {
@@ -37,10 +30,6 @@ impl MoveConstraints {
         for loc in pinned.points {
             self.intersect(loc, pinned.constraints[loc])
         }
-    }
-
-    pub fn set(&mut self, location: Square, constraint: BitBoard) {
-        self.data[location] = constraint;
     }
 }
 
@@ -64,11 +53,11 @@ impl Board {
             };
             let mut constraint = MoveConstraints::all(blocking_squares);
             constraint.intersect_pins(pinned);
-            constraint.set(active_king_loc, !passive_control);
+            constraint.data[active_king_loc] = !passive_control;
             constraint
         } else {
-            let mut constraint = MoveConstraints::all_empty();
-            constraint.set(active_king_loc, !passive_control);
+            let mut constraint = MoveConstraints::all(BitBoard::EMPTY);
+            constraint.data[active_king_loc] = !passive_control;
             constraint
         }
     }
