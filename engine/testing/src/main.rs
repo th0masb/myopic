@@ -7,12 +7,15 @@ use lichess_game::{EmptyCancellationHook, Metadata};
 use myopic_brain::Engine;
 use openings::{DynamoOpeningService, OpeningTable};
 use std::collections::{HashMap, HashSet};
+use std::ops::{Range, RangeInclusive};
 use std::time::Duration;
 use simple_logger::SimpleLogger;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 use lichess_api::ratings::{ChallengeRequest, OnlineBot, TimeLimits, TimeLimitType};
 use anyhow::{anyhow, Result};
+use chrono::{DateTime, Timelike, Utc};
+use log::LevelFilter;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
@@ -22,6 +25,12 @@ const TABLE_SIZE: usize = 1_000_000;
 struct Args {
     #[arg(long)]
     auth_token: String,
+    #[arg(long)]
+    start_hour: u32,
+    #[arg(long)]
+    end_hour: u32,
+    #[arg(long)]
+    log_level: LevelFilter,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -32,8 +41,8 @@ struct GameStarted {
 
 #[tokio::main]
 async fn main() {
-    SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
     let args = Args::parse();
+    SimpleLogger::new().with_level(args.log_level).init().unwrap();
     let client = LichessClient::new(args.auth_token.clone());
     let bot_id = client.get_our_profile().await.expect("").id;
     log::info!("Our id is \"{}\"", bot_id.as_str());
@@ -42,7 +51,7 @@ async fn main() {
     let (tx, rx) = tokio::sync::mpsc::channel::<GameStarted>(32);
     tokio::spawn(async move { run_event_stream(cloned_token, cloned_id, tx).await });
     search_for_game(
-        args.auth_token,
+        &args,
         bot_id.clone(),
         RatingRange { offset_below: 200, offset_above: 100 },
         2,
@@ -63,14 +72,14 @@ struct RatingRange {
 }
 
 async fn search_for_game(
-    auth_token: String,
+    args: &Args,
     bot_id: String,
     rating_range: RatingRange,
     max_concurrent_games: usize,
     time_limit: TimeLimits,
     mut rx: Receiver<GameStarted>,
 ) {
-    let client = LichessClient::new(auth_token);
+    let client = LichessClient::new(args.auth_token.clone());
     let mut poll_interval = tokio::time::interval(Duration::from_secs(45));
     let mut flush_interval = tokio::time::interval(Duration::from_secs(3600));
     let mut tracker = BotTracker::default();
@@ -85,6 +94,7 @@ async fn search_for_game(
             }
             _ = poll_interval.tick() => {
                 if let Err(e) = execute_challenge_poll(
+                    args,
                     &mut tracker,
                     bot_id.as_str(),
                     &client,
@@ -99,13 +109,41 @@ async fn search_for_game(
     }
 }
 
+fn get_active_time_range(args: &Args) -> Vec<Range<DateTime<Utc>>> {
+    let (lo, hi) = (args.start_hour, args.end_hour);
+    let now: DateTime<Utc> = Utc::now();
+    if hi > lo {
+        vec![change_time(now, lo, 0, 0)..change_time(now, hi, 0, 0)]
+    } else {
+        vec![
+            change_time(now, 0, 0, 0)..change_time(now, hi, 0, 0),
+            change_time(now, lo, 0, 0)..change_time(now, 23, 59, 59),
+        ]
+    }
+}
+
+fn change_time(date_time: DateTime<Utc>, hour: u32, min: u32, sec: u32) -> DateTime<Utc> {
+    date_time.with_hour(hour)
+        .unwrap()
+        .with_minute(min)
+        .unwrap()
+        .with_second(sec)
+        .unwrap()
+}
+
 async fn execute_challenge_poll(
+    args: &Args,
     tracker: &mut BotTracker,
     bot_id: &str,
     client: &LichessClient,
     rating_range: &RatingRange,
     time_limit: TimeLimits,
 ) -> Result<()> {
+    let now = Utc::now();
+    if !get_active_time_range(args).into_iter().any(|r| r.contains(&now)) {
+        log::debug!("{} not in active range", now);
+        return Ok(());
+    }
     let exclusions = vec!["hyperopic", "myopic-bot"];
     let time_limit_type = time_limit.get_type();
     let BotState { rating, online_bots, games_in_progress } =
