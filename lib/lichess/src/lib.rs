@@ -11,6 +11,7 @@ use crate::ratings::{ChallengeRequest, OnlineBot, TimeLimitType, UserDetails};
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
 const ACCOUNT_ENDPOINT: &'static str = "https://lichess.org/api/account";
+const STATUS_ENDPOINT: &'static str = "https://lichess.org/api/users/status";
 
 pub struct LichessClient {
     auth_token: String,
@@ -114,7 +115,7 @@ impl LichessClient {
         params.insert("clock.increment", request.time_limit.increment.to_string());
         self.client
             .post(format!("https://lichess.org/api/challenge/{}", request.target_user_id))
-            .bearer_auth(request.token.as_str())
+            .bearer_auth(self.auth_token.as_str())
             .form(&params)
             .send()
             .await
@@ -152,6 +153,16 @@ impl LichessClient {
             .filter_map(|s| serde_json::from_str::<OnlineBot>(s).ok())
             .collect::<Vec<_>>())
     }
+
+    pub async fn get_our_live_games(&self) -> Result<OngoingGames> {
+        let response = self.client
+            .get("https://lichess.org/api/account/playing")
+            .bearer_auth(self.auth_token.as_str())
+            .send()
+            .await
+            .map_err(Error::from)?;
+        response.json().await.map_err(Error::from)
+    }
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
@@ -170,4 +181,16 @@ struct Clock {
     initial_millis: u32,
     #[serde(rename = "increment")]
     increment_millis: u32,
+}
+
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct OngoingGames {
+    #[serde(rename = "nowPlaying")]
+    pub now_playing: Vec<OngoingGame>
+}
+
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct OngoingGame {
+    #[serde(rename = "gameId")]
+    pub game_id: String,
 }

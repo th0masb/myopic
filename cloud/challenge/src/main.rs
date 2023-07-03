@@ -39,7 +39,6 @@ async fn specific_challenge_handler(
     for challenge in challenges {
         let target_id = challenge.user_id.as_str();
         let request = ChallengeRequest {
-            token: config.token.clone(),
             rated: challenge.rated,
             time_limit: challenge.time_limits.clone(),
             target_user_id: target_id.to_string(),
@@ -99,7 +98,6 @@ async fn random_challenge_handler(
     for opponent in opponents {
         let status = client
             .create_challenge(ChallengeRequest {
-                token: config.token.clone(),
                 rated,
                 time_limit: chosen_time_limit.clone(),
                 target_user_id: opponent.id.clone(),

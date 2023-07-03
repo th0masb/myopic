@@ -87,7 +87,7 @@ enum CompletionType {
 #[async_trait]
 impl<M: MoveChooser + Send + Sync> StreamHandler<CompletionType> for GameStreamHandler<M> {
     async fn handle(&mut self, line: String) -> Result<LoopAction<CompletionType>> {
-        log::info!("Stream heartbeat");
+        log::debug!("Stream heartbeat");
         if self.cancel.is_cancelled() {
             log::info!("Cancellation detected! Breaking from game stream");
             return Ok(LoopAction::Break(CompletionType::Cancelled));
@@ -105,7 +105,7 @@ impl<M: MoveChooser + Send + Sync> StreamHandler<CompletionType> for GameStreamH
                 Ok(LoopAction::Continue)
             }
         } else {
-            log::info!("Received event: {}", line);
+            log::debug!("Received event: {}", line);
             Ok(match self.game.process_event(line.as_str()).await? {
                 GameExecutionState::Running => LoopAction::Continue,
                 GameExecutionState::Finished => LoopAction::Break(CompletionType::GameFinished),

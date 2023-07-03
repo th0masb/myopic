@@ -2,18 +2,17 @@ use serde_derive::Deserialize;
 
 #[derive(Debug, Clone)]
 pub struct ChallengeRequest {
-    pub token: String,
     pub rated: bool,
     pub time_limit: TimeLimits,
     pub target_user_id: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct UserDetails {
     pub perfs: UserDetailsPerfs,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct UserDetailsPerfs {
     pub blitz: UserDetailsGamePerf,
     pub bullet: UserDetailsGamePerf,
@@ -28,12 +27,12 @@ impl UserDetailsPerfs {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct UserDetailsGamePerf {
     pub rating: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct OnlineBot {
     pub id: String,
     pub perfs: UserDetailsPerfs,

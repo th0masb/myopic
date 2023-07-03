@@ -2119,6 +2119,7 @@ dependencies = [
  "log",
  "myopic-brain",
  "openings",
+ "rand",
  "simple_logger",
  "tokio",
 ]
