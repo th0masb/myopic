@@ -135,14 +135,14 @@ impl<M: MoveChooser> Game<M> {
     }
 
     async fn process_state(&mut self, state: GameState) -> Result<GameExecutionState> {
-        log::info!("Parsing previous game moves: {}", state.moves);
+        log::debug!("Parsing previous game moves: {}", state.moves);
         let (active_side, n_moves) = self.get_game_state(state.moves.as_str())?;
         self.halfmove_count = n_moves as usize;
         match state.status.as_str() {
             STARTED_STATUS | CREATED_STATUS => {
                 let metadata = self.get_latest_metadata()?.clone();
                 if active_side != metadata.lambda_side {
-                    log::info!("It is not our turn, waiting for opponents move");
+                    log::debug!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
                     let (remaining, increment) = match metadata.lambda_side {
