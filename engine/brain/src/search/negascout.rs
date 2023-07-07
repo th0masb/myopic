@@ -21,14 +21,14 @@ pub struct SearchContext {
 }
 
 impl SearchContext {
-    fn next_level(&self, next_alpha: i32, next_beta: i32, mv: &Move) -> SearchContext {
+    fn next_level(&self, next_alpha: i32, next_beta: i32, mv: &Move, r: usize) -> SearchContext {
         let mut next_precursors = self.precursors.clone();
         next_precursors.push(mv.clone());
         SearchContext {
             start_time: self.start_time,
             alpha: next_alpha,
             beta: next_beta,
-            depth_remaining: self.depth_remaining - 1,
+            depth_remaining: self.depth_remaining - cmp::min(r, self.depth_remaining),
             precursors: next_precursors,
         }
     }
@@ -80,15 +80,15 @@ impl<T: SearchTerminator> Scout<'_, T> {
         match self.transpositions.get(hash) {
             None => {}
             Some(TreeNode::Pv { depth, eval, optimal_path, .. }) => {
-                table_move = optimal_path.first();
+                table_move = optimal_path.first().cloned();
                 if (*depth as usize) >= ctx.depth_remaining &&
                     table_move.is_some() &&
-                    can_break_early(root, table_move.unwrap())? {
+                    can_break_early(root, table_move.as_ref().unwrap())? {
                     return Ok(SearchResponse { eval: *eval, path: optimal_path.clone() });
                 }
             }
             Some(TreeNode::Cut { depth, beta, cutoff_move, .. }) => {
-                table_move = Some(cutoff_move);
+                table_move = Some(cutoff_move.clone());
                 if (*depth as usize) >= ctx.depth_remaining &&
                     ctx.beta <= *beta &&
                     can_break_early(root, cutoff_move)? {
@@ -96,7 +96,7 @@ impl<T: SearchTerminator> Scout<'_, T> {
                 }
             }
             Some(TreeNode::All { depth, eval, best_move, .. }) => {
-                table_move = Some(best_move);
+                table_move = Some(best_move.clone());
                 if (*depth as usize) >= ctx.depth_remaining &&
                     *eval <= ctx.alpha &&
                     can_break_early(root, best_move)? {
@@ -105,24 +105,33 @@ impl<T: SearchTerminator> Scout<'_, T> {
             }
         };
 
+        if can_try_mull_move_pruning(root, &ctx) {
+            root.make(Move::Null)?;
+            let null_search = -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &Move::Null, 3))?;
+            root.unmake()?;
+            if null_search.eval > ctx.beta {
+                return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
+            }
+        }
+
         let (start_alpha, mut result, mut best_path) = (ctx.alpha, -eval::INFTY, vec![]);
-        for (i, m) in self.moves.generate(root, &ctx, table_move).enumerate() {
+        for (i, m) in self.moves.generate(root, &ctx, table_move.as_ref()).enumerate() {
             root.make(m.clone())?;
             #[allow(unused_assignments)]
             let mut response = SearchResponse::default();
             if i == 0 {
                 // Perform a full search immediately on the first move which
                 // we expect to be the best
-                response = -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &m))?;
+                response = -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &m, 1))?;
             } else {
                 // Search with null window under the assumption that the
                 // previous moves are better than this
-                response = -self.search(root, ctx.next_level(-ctx.alpha - 1, -ctx.alpha, &m))?;
+                response = -self.search(root, ctx.next_level(-ctx.alpha - 1, -ctx.alpha, &m, 1))?;
                 // If there is some move which can raise alpha
                 if ctx.alpha < response.eval && response.eval < ctx.beta {
                     // Then this was actually a better move and so we must
                     // perform a full search
-                    response = -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &m))?;
+                    response = -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &m, 1))?;
                 }
             }
             root.unmake()?;
@@ -216,9 +225,9 @@ fn is_pseudo_legal(position: &Board, m: &Move) -> bool {
     }
 }
 
-fn can_try_mull_move_pruning(node: &Evaluator) -> bool {
+fn can_try_mull_move_pruning(node: &Evaluator, ctx: &SearchContext) -> bool {
     let position = node.board();
-    !position.in_check() && {
+    ctx.depth_remaining < 5 && ctx.beta < eval::INFTY && !position.in_check() && {
         let active = position.active();
         let pawns = position.locs(&[Piece(position.active(), Class::P)]).size();
         let others = position.locs(&[
