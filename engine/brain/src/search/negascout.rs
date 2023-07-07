@@ -2,13 +2,13 @@ use core::cmp;
 use std::time::Instant;
 
 use myopic_board::anyhow::{anyhow, Result};
-use myopic_board::{Move, TerminalState};
+use myopic_board::{Board, Move, TerminalState};
 
 use crate::search::moves::MoveGenerator;
 use crate::search::terminator::SearchTerminator;
 use crate::search::transpositions::{Transpositions, TreeNode};
 use crate::search::{eval, quiescent};
-use crate::Evaluator;
+use crate::{Class, Corner, Evaluator, Line, Piece};
 
 /// Provides relevant callstack information for the search to
 /// use during the traversal of the tree.
@@ -77,34 +77,30 @@ impl<T: SearchTerminator> Scout<'_, T> {
         }
 
         let (hash, mut table_move) = (root.board().hash(), None);
-        // TODO We need to be careful about collisions, but also can this be the cause of spurious
-        //  repetitions when we are up by a lot of material? This given move may have been the best
-        //  before but now leads to a draw, this should be checked. We need to check the move is
-        //  pseudo legal before early returning it
         match self.transpositions.get(hash) {
             None => {}
             Some(TreeNode::Pv { depth, eval, optimal_path, .. }) => {
-                if (*depth as usize) >= ctx.depth_remaining {
-                    // We already searched this position fully at a sufficient depth
+                table_move = optimal_path.first();
+                if (*depth as usize) >= ctx.depth_remaining &&
+                    table_move.is_some() &&
+                    can_break_early(root, table_move.unwrap())? {
                     return Ok(SearchResponse { eval: *eval, path: optimal_path.clone() });
-                } else {
-                    // The depth wasn't sufficient and so we only have a suggestion
-                    // for the best move
-                    table_move = optimal_path.last()
                 }
             }
             Some(TreeNode::Cut { depth, beta, cutoff_move, .. }) => {
-                if (*depth as usize) >= ctx.depth_remaining && ctx.beta <= *beta {
+                table_move = Some(cutoff_move);
+                if (*depth as usize) >= ctx.depth_remaining &&
+                    ctx.beta <= *beta &&
+                    can_break_early(root, cutoff_move)? {
                     return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
-                } else {
-                    table_move = Some(cutoff_move);
                 }
             }
             Some(TreeNode::All { depth, eval, best_move, .. }) => {
-                if (*depth as usize) >= ctx.depth_remaining && *eval <= ctx.alpha {
+                table_move = Some(best_move);
+                if (*depth as usize) >= ctx.depth_remaining &&
+                    *eval <= ctx.alpha &&
+                    can_break_early(root, best_move)? {
                     return Ok(SearchResponse { eval: *eval, path: vec![] });
-                } else {
-                    table_move = Some(best_move);
                 }
             }
         };
@@ -181,5 +177,40 @@ impl<T: SearchTerminator> Scout<'_, T> {
         }
 
         Ok(SearchResponse { eval: result, path: best_path })
+    }
+}
+
+fn can_break_early(node: &mut Evaluator, m: &Move) -> Result<bool> {
+    return Ok(is_psuedo_legal(node.board(), m) && !causes_termination(node, m)?)
+}
+
+fn causes_termination(node: &mut Evaluator, m: &Move) -> Result<bool> {
+    node.make(m.clone())?;
+    let terminal = node.board().terminal_state().is_some();
+    node.unmake()?;
+    Ok(terminal)
+}
+
+fn is_psuedo_legal(position: &Board, m: &Move) -> bool {
+    match m {
+        Move::Enpassant { capture, .. } => position.enpassant() == Some(*capture),
+        &Move::Castle { corner } => {
+            let Corner(side, flank) = corner;
+            position.remaining_rights()[side].contains(flank) && {
+                let Line(rook_src, _) = Line::rook_castling(corner);
+                let Line(king_src, _) = Line::king_castling(corner);
+                position.locs(&[Piece(side, Class::R)]).contains(rook_src) &&
+                    position.king(side) == king_src
+            }
+        }
+        &Move::Standard { moving, from, dest, capture } => {
+            position.piece(from) == Some(moving) &&
+                position.piece(dest) == capture &&
+                moving.control(from, position.all_pieces()).contains(dest)
+        }
+        &Move::Promotion { from, dest, promoted, capture } => {
+            position.piece(from) == Some(Piece(position.active(), Class::P)) &&
+                position.piece(dest) == capture
+        }
     }
 }
