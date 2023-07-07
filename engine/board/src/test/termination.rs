@@ -130,3 +130,16 @@ fn repetition_9() {
         12. Bd2 Bc5 13. Be3 Bb4 14. Bd2 Bc5 15. Be3 d6",
     )
 }
+
+#[test]
+fn repetition_10() {
+    test_pgn(
+        Some(TerminalState::Draw),
+        "1. Nf3 Nf6 2. d4 g6 3. Bg5 Bg7 4. Nbd2 O-O 5. e4 d5 6. e5 Ne4 7. Nxe4 dxe4 \
+        8. Nd2 Qxd4 9. Bxe7 Re8 10. Bf6 Bxf6 11. exf6 Qxb2 12. Bc4 e3 13. fxe3 Bg4 14. Qxg4 Qxa1+ \
+        15. Qd1 Qxd1+ 16. Kxd1 Rxe3 17. Re1 Rxe1+ 18. Kxe1 Nd7 19. Ne4 Re8 20. Bd3 Nxf6 \
+        21. Kf2 Nxe4+ 22. Bxe4 Rxe4 23. Kf3 Rc4 24. Ke3 Rxc2 25. Kd3 Rxg2 26. Kc4 Rxa2 \
+        27. Kb3 Rxh2 28. Kc4 Kg7 29. Kd5 Kf6 30. Ke4 a5 31. Kd5 a4 32. Kc4 a3 33. Kb3 a2 \
+        34. Ka3 Rc2 35. Kb3 Rh2 36. Ka3 Rc2 37. Kb3 Rh2"
+    )
+}

@@ -7,7 +7,7 @@ use lichess_game::{EmptyCancellationHook, Metadata};
 use myopic_brain::Engine;
 use openings::{DynamoOpeningService, OpeningTable};
 use std::collections::{HashMap, HashSet};
-use std::ops::{Range, RangeInclusive};
+use std::ops::Range;
 use std::time::Duration;
 use simple_logger::SimpleLogger;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -19,18 +19,30 @@ use log::LevelFilter;
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
-const TABLE_SIZE: usize = 1_000_000;
+const TABLE_SIZE: usize = 5_000_000;
 
 #[derive(Parser, Debug)]
 struct Args {
     #[arg(long)]
     auth_token: String,
     #[arg(long)]
+    time_limit: u32,
+    #[arg(long)]
+    time_increment: u32,
+    #[arg(long, default_value_t = 19)]
     start_hour: u32,
-    #[arg(long)]
+    #[arg(long, default_value_t = 6)]
     end_hour: u32,
-    #[arg(long)]
+    #[arg(long, default_value_t = LevelFilter::Info)]
     log_level: LevelFilter,
+    #[arg(long, default_value_t = 3)]
+    max_concurrent_games: usize,
+    #[arg(long, default_value_t = 150)]
+    rating_offset_above: u32,
+    #[arg(long, default_value_t = 200)]
+    rating_offset_below: u32,
+    #[arg(long, default_value_t = 5400)]
+    flush_interval_secs: u64
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -50,14 +62,7 @@ async fn main() {
     let cloned_token = args.auth_token.clone();
     let (tx, rx) = tokio::sync::mpsc::channel::<GameStarted>(32);
     tokio::spawn(async move { run_event_stream(cloned_token, cloned_id, tx).await });
-    search_for_game(
-        &args,
-        bot_id.clone(),
-        RatingRange { offset_below: 200, offset_above: 100 },
-        2,
-        TimeLimits { limit: 120, increment: 1 },
-        rx
-    ).await;
+    search_for_game(&args, bot_id.clone(), rx).await;
 }
 
 #[derive(Debug, Clone, Default)]
@@ -74,15 +79,13 @@ struct RatingRange {
 async fn search_for_game(
     args: &Args,
     bot_id: String,
-    rating_range: RatingRange,
-    max_concurrent_games: usize,
-    time_limit: TimeLimits,
     mut rx: Receiver<GameStarted>,
 ) {
     let client = LichessClient::new(args.auth_token.clone());
-    let mut poll_interval = tokio::time::interval(Duration::from_secs(45));
-    let mut flush_interval = tokio::time::interval(Duration::from_secs(3600));
+    let mut poll_interval = tokio::time::interval(Duration::from_secs(20));
+    let mut flush_interval = tokio::time::interval(Duration::from_secs(args.flush_interval_secs));
     let mut tracker = BotTracker::default();
+    let mut backoff_index = 0u32;
     loop {
         tokio::select! {
             _ = flush_interval.tick() => {
@@ -98,15 +101,27 @@ async fn search_for_game(
                     &mut tracker,
                     bot_id.as_str(),
                     &client,
-                    &rating_range,
-                    time_limit.clone(),
+                    RatingRange {
+                        offset_below: args.rating_offset_below,
+                        offset_above: args.rating_offset_above
+                    },
+                    TimeLimits { limit: args.time_limit, increment: args.time_increment },
                 ).await {
                     log::error!("Error in challenge poll: {}", e);
-                    sleep(Duration::from_secs(120)).await;
+                    backoff_index += 1;
+                    backoff(backoff_index).await;
+                } else {
+                    backoff_index = 0;
                 };
             }
         }
     }
+}
+
+async fn backoff(index: u32) {
+    let base_wait = Duration::from_secs(120);
+    let max_wait = Duration::from_secs(600);
+    sleep(std::cmp::min(max_wait, index * base_wait)).await;
 }
 
 fn get_active_time_range(args: &Args) -> Vec<Range<DateTime<Utc>>> {
@@ -136,7 +151,7 @@ async fn execute_challenge_poll(
     tracker: &mut BotTracker,
     bot_id: &str,
     client: &LichessClient,
-    rating_range: &RatingRange,
+    rating_range: RatingRange,
     time_limit: TimeLimits,
 ) -> Result<()> {
     let now = Utc::now();
@@ -151,7 +166,7 @@ async fn execute_challenge_poll(
             .await
             .map_err(|e| anyhow!("Failed to fetch bot state: {}", e))?;
 
-    if games_in_progress >= 2 {
+    if games_in_progress >= args.max_concurrent_games {
         return Ok(());
     } else if !online_bots.iter().any(|b| b.id.as_str() == bot_id) {
         log::warn!("It does not appear that we are online!");
@@ -161,10 +176,16 @@ async fn execute_challenge_poll(
     let min_rating = rating - rating_range.offset_below;
     let max_rating = rating + rating_range.offset_above;
     let ratings = min_rating..=max_rating;
+    // Only take bots within the acceptable rating range, whose rating is not provisional and who
+    // have not violated tos as these bots will be more likely to accept challenges.
     let candidate_bots: Vec<_> = online_bots.into_iter()
         .filter(|b| !exclusions.contains(&b.id.as_str()))
-        .filter(|b| ratings.contains(&b.perfs.rating_for(time_limit_type)))
+        .filter(|b| !b.tos_violation.unwrap_or(false))
+        .filter(|b| b.perfs.rating_for(time_limit_type).is_some())
+        .filter(|b| ratings.contains(&b.perfs.rating_for(time_limit_type).unwrap().rating))
+        .filter(|b| !b.perfs.rating_for(time_limit_type).unwrap().prov.unwrap_or(false))
         .collect();
+
     log::info!("{} candidate opponents", candidate_bots.len());
     let (tested, untested): (Vec<_>, Vec<_>) =
         candidate_bots.into_iter().partition(|b| tracker.activity.contains_key(&b.id));
@@ -175,7 +196,7 @@ async fn execute_challenge_poll(
 
     let chosen = if !untested.is_empty() {
         untested.iter()
-            .max_by_key(|b| b.perfs.rating_for(time_limit_type))
+            .max_by_key(|b| b.perfs.rating_for(time_limit_type).unwrap().rating)
             .unwrap().clone()
     } else if !active.is_empty() {
         active.choose(&mut thread_rng()).unwrap().clone()
@@ -193,11 +214,15 @@ async fn execute_challenge_poll(
 
     let _ = client.create_challenge(request).await
         .map_err(|e| anyhow!("Failed to create challenge {}", e))
-        .and_then(|status| {
-            if status.is_success() {
-                Ok(())
-            } else {
-                Err(anyhow!("Error status {} for challenge creation", status))
+        .and_then(|(status, message)| {
+            match status.as_u16() {
+                200 => Ok(()),
+                400 => {
+                    log::warn!("Failed to create challenge with 400 response {}", message);
+                    Ok(())
+                }
+                429 => Err(anyhow!("Failed to create challenge with 429!")),
+                _ => Err(anyhow!("Error status {} for challenge creation: {}", status, message)),
             }
         })?;
 
@@ -211,7 +236,10 @@ async fn fetch_bot_state(
     client: &LichessClient
 ) -> Result<BotState> {
     Ok(BotState {
-        rating: client.fetch_rating(bot_id, time_limit_type).await?,
+        rating: client.fetch_rating(bot_id, time_limit_type)
+            .await?
+            .map(|r| r.rating)
+            .unwrap_or(1500),
         online_bots: client.fetch_online_bots().await?,
         games_in_progress: client.get_our_live_games().await?.now_playing.len(),
     })
