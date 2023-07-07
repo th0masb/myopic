@@ -44,7 +44,7 @@ async fn specific_challenge_handler(
             target_user_id: target_id.to_string(),
         };
         for r in repeat(request).take(challenge.repeat) {
-            let status = client.create_challenge(r).await?;
+            let (status, _) = client.create_challenge(r).await?;
             if status.is_success() {
                 log::info!("Successfully created challenge for {}", target_id);
             } else {
@@ -68,7 +68,7 @@ async fn random_challenge_handler(
     let client = LichessClient::new(config.token.clone());
 
     let our_rating =
-        client.fetch_rating(config.our_user_id.as_str(), chosen_time_limit.get_type()).await?;
+        client.fetch_rating(config.our_user_id.as_str(), chosen_time_limit.get_type()).await?.unwrap();
 
     let mut bots = client
         .fetch_online_bots()
@@ -77,26 +77,26 @@ async fn random_challenge_handler(
         .filter(|b| b.id != config.our_user_id)
         .collect_vec();
 
-    bots.sort_by_key(|bot| bot.perfs.rating_for(chosen_time_limit.get_type()));
+    bots.sort_by_key(|bot| bot.perfs.rating_for(chosen_time_limit.get_type()).unwrap().rating);
 
     let lower_count = (challenge_count * 3) / 4;
     let upper_count = challenge_count - lower_count;
 
     let mut opponents = bots
         .iter()
-        .filter(|b| b.perfs.rating_for(chosen_time_limit.get_type()) <= our_rating)
+        .filter(|b| b.perfs.rating_for(chosen_time_limit.get_type()).unwrap().rating <= our_rating.rating)
         .rev()
         .take(lower_count)
         .collect::<Vec<_>>();
 
     opponents.extend(
         bots.iter()
-            .filter(|b| b.perfs.rating_for(chosen_time_limit.get_type()) > our_rating)
+            .filter(|b| b.perfs.rating_for(chosen_time_limit.get_type()).unwrap().rating > our_rating.rating)
             .take(upper_count),
     );
 
     for opponent in opponents {
-        let status = client
+        let (status, _) = client
             .create_challenge(ChallengeRequest {
                 rated,
                 time_limit: chosen_time_limit.clone(),

@@ -130,6 +130,7 @@ struct BestMoveResponse {
 }
 
 impl<T: SearchTerminator> Search<'_, T> {
+    // TODO If any
     pub fn search(&mut self) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
@@ -168,6 +169,8 @@ impl<T: SearchTerminator> Search<'_, T> {
             return Err(anyhow!("Cannot iteratively deepen with depth 0"));
         }
 
+        // TODO If any move in the current position leads to a draw by repetition then disable the
+        //  transposition table early break?
         let SearchResponse { eval, path } = Scout {
             terminator: &self.terminator,
             transpositions: self.transpositions,

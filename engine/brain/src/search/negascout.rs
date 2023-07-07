@@ -77,6 +77,10 @@ impl<T: SearchTerminator> Scout<'_, T> {
         }
 
         let (hash, mut table_move) = (root.board().hash(), None);
+        // TODO We need to be careful about collisions, but also can this be the cause of spurious
+        //  repetitions when we are up by a lot of material? This given move may have been the best
+        //  before but now leads to a draw, this should be checked. We need to check the move is
+        //  pseudo legal before early returning it
         match self.transpositions.get(hash) {
             None => {}
             Some(TreeNode::Pv { depth, eval, optimal_path, .. }) => {
