@@ -44,6 +44,7 @@ pub enum Move {
     Enpassant { side: Side, from: Square, dest: Square, capture: Square },
     Promotion { from: Square, dest: Square, promoted: Piece, capture: Option<Piece> },
     Castle { corner: Corner },
+    Null,
 }
 
 impl Move {
@@ -52,7 +53,7 @@ impl Move {
             Move::Standard { capture, .. } => capture.is_some(),
             Promotion { capture, .. } => capture.is_some(),
             Move::Enpassant { .. } => true,
-            Move::Castle { .. } => false,
+            Move::Castle { .. } | Move::Null => false,
         }
     }
 }
@@ -188,6 +189,7 @@ impl Board {
         king_loc: Square
     ) -> bool {
         match m {
+            Move::Null => false,
             Move::Castle { corner } => {
                 let Line(_, dest) = Line::rook_castling(*corner);
                 Piece(corner.0, Class::R)
@@ -458,7 +460,7 @@ mod fen_test {
 impl Reflectable for Board {
     fn reflect(&self) -> Self {
         let start_hash = Board::default().hash();
-        if self.history.historical_positions().next() == Some(start_hash) {
+        if self.history.historical_positions().next().map(|(_, h)| h) == Some(start_hash) {
             // If we played from the start position we can reflect properly
             let mut reflected = Board::default();
             reflected.active = Side::B;

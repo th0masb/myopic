@@ -72,6 +72,7 @@ fn parse_single_move(start: &mut Board, pgn_move: &str) -> Result<Move> {
     let matching = legal
         .into_iter()
         .filter(|mv| match mv {
+            Move::Null => false,
             &Move::Standard { moving, from, dest, .. } => {
                 move_piece_matches(moving.1) && target == Some(dest) && matches_start(from)
             }

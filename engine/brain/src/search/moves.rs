@@ -60,7 +60,7 @@ impl MaterialAndPositioningHeuristic {
 
     fn get_category(&self, eval: &Evaluator, mv: &Move) -> MoveCategory {
         match mv {
-            Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
+            Null | Enpassant { .. } | Castle { .. } | Promotion { .. } => MoveCategory::Special,
             &Standard { moving: Piece(side, class), from, dest, .. } => {
                 if eval.board().side(side.reflect()).contains(dest) {
                     let exchange_value = eval.see(from, dest);

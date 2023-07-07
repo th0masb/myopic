@@ -55,6 +55,7 @@ impl PieceSquareTablesFacet {
 
     fn make_impl(&mut self, mv: &Move, add: UpdateFn, remove: UpdateFn) {
         match mv {
+            Move::Null => {}
             &Move::Castle { corner: Corner(side, flank) } => {
                 let Line(rook_start, rook_end) = Line::rook_castling(Corner(side, flank));
                 remove(self, Piece(side, Class::R), rook_start);

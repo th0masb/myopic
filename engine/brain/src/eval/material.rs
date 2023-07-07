@@ -82,7 +82,7 @@ impl MaterialFacet {
 
     fn make_impl(&mut self, mv: &Move, add: UpdateFn, remove: UpdateFn) {
         match mv {
-            Move::Castle { .. } => {}
+            Move::Castle { .. } | Move::Null => {}
             Move::Standard { capture, .. } => {
                 if let Some(piece) = capture {
                     remove(self, *piece);

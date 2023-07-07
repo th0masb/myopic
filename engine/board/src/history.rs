@@ -40,8 +40,8 @@ impl History {
         self.inner.iter().map(|(m, _)| m.clone())
     }
 
-    pub fn historical_positions(&self) -> impl Iterator<Item = u64> + '_ {
-        self.inner.iter().map(|(_, d)| d.hash)
+    pub fn historical_positions(&self) -> impl Iterator<Item = (&Move, u64)> + '_ {
+        self.inner.iter().map(|(m, d)| (m, d.hash))
     }
 
     pub fn attempt_pop(&mut self) -> Result<(Move, Discards)> {

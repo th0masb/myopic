@@ -3,17 +3,17 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use itertools::Itertools;
-use MoveFacet::Attacking;
 
+use MoveFacet::Attacking;
+use myopic_core::*;
 use myopic_core::anyhow::{anyhow, Result};
 use myopic_core::Corner;
-use myopic_core::*;
 
-use crate::anyhow::Error;
-use crate::parse::parse_option;
 use crate::{Board, MoveFacet, Moves};
+use crate::anyhow::Error;
 use crate::Move;
 use crate::MoveFacet::Checking;
+use crate::parse::parse_option;
 
 mod misc;
 mod szukstra_tal;
@@ -23,6 +23,7 @@ type MoveSet = BTreeSet<Move>;
 impl Display for Move {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Move::Null => write!(f, "null"),
             Move::Standard { moving, from, dest, capture } => {
                 let formatted_capture = capture.map_or("-".to_string(), |p| p.to_string());
                 write!(f, "s{}{}{}{}", moving, from, dest, formatted_capture)
@@ -147,9 +148,9 @@ mod parsing_formatting_test {
     use myopic_core::{Class, Corner, Flank, Side};
     use Square::*;
 
+    use crate::{Piece, Square};
     use crate::anyhow::Result;
     use crate::Move;
-    use crate::{Piece, Square};
 
     #[test]
     fn standard() -> Result<()> {

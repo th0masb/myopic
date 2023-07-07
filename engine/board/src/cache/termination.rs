@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use myopic_core::*;
 
-use crate::{Board, Moves};
+use crate::{Board, Move, Moves};
 use crate::TerminalState;
 
 const HALF_MOVE_CLOCK_LIMIT: usize = 100;
@@ -48,7 +48,11 @@ impl Board {
     }
 
     fn check_repetitions(&self) -> Option<TerminalState> {
-        let mut position_hashes = self.history.historical_positions().collect_vec();
+        let mut position_hashes = self.history.historical_positions()
+            // Exclude positions where null move was played
+            .filter(|(m, _)| !matches!(m, Move::Null))
+            .map(|(_, h)| h)
+            .collect_vec();
         position_hashes.push(self.hash());
         position_hashes.sort_unstable();
         let (mut last, mut count) = (position_hashes[0], 1usize);
