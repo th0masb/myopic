@@ -104,7 +104,7 @@ fn compute_quiescent_moves(
 
 fn categorise(state: &mut Evaluator, mv: &Move) -> MoveCategory {
     match mv {
-        Enpassant { .. } | Castle { .. } => MoveCategory::Other,
+        Move::Null | Enpassant { .. } | Castle { .. } => MoveCategory::Other,
         Promotion { promoted, capture, .. } => {
             let values = state.piece_values();
             MoveCategory::Promotion {

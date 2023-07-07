@@ -108,6 +108,7 @@ pub fn single_move(start: &Board, uci_move: &str) -> Result<Move> {
         .moves(Moves::All)
         .into_iter()
         .find(|mv| match mv {
+            Move::Null => false,
             &Move::Standard { from, dest, .. } => from == f && dest == d,
             &Move::Enpassant { from, dest, .. } => from == f && dest == d,
             &Move::Castle { corner, .. } => {

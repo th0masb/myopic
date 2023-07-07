@@ -181,7 +181,7 @@ impl<T: SearchTerminator> Scout<'_, T> {
 }
 
 fn can_break_early(node: &mut Evaluator, m: &Move) -> Result<bool> {
-    return Ok(is_psuedo_legal(node.board(), m) && !causes_termination(node, m)?)
+    return Ok(is_pseudo_legal(node.board(), m) && !causes_termination(node, m)?)
 }
 
 fn causes_termination(node: &mut Evaluator, m: &Move) -> Result<bool> {
@@ -191,8 +191,9 @@ fn causes_termination(node: &mut Evaluator, m: &Move) -> Result<bool> {
     Ok(terminal)
 }
 
-fn is_psuedo_legal(position: &Board, m: &Move) -> bool {
+fn is_pseudo_legal(position: &Board, m: &Move) -> bool {
     match m {
+        Move::Null => false,
         Move::Enpassant { capture, .. } => position.enpassant() == Some(*capture),
         &Move::Castle { corner } => {
             let Corner(side, flank) = corner;
@@ -212,5 +213,20 @@ fn is_psuedo_legal(position: &Board, m: &Move) -> bool {
             position.piece(from) == Some(Piece(position.active(), Class::P)) &&
                 position.piece(dest) == capture
         }
+    }
+}
+
+fn can_try_mull_move_pruning(node: &Evaluator) -> bool {
+    let position = node.board();
+    !position.in_check() && {
+        let active = position.active();
+        let pawns = position.locs(&[Piece(position.active(), Class::P)]).size();
+        let others = position.locs(&[
+            Piece(active, Class::N),
+            Piece(active, Class::B),
+            Piece(active, Class::R),
+            Piece(active, Class::Q),
+        ]).size();
+        pawns > 2 && others > 0 || others > 1
     }
 }

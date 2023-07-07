@@ -29,6 +29,9 @@ impl Board {
 
         // Moves specific actions
         match mv {
+            Null => {
+                self.enpassant = None;
+            },
             Standard { moving, from, dest, capture } => {
                 if let Some(p) = capture {
                     self.pieces.unset_piece(p, dest);
@@ -85,6 +88,7 @@ impl Board {
         let (mv, state) = self.history.attempt_pop()?;
 
         match &mv {
+            Null => {}
             &Standard { moving, from, dest, capture } => {
                 self.pieces.unset_piece(moving, dest);
                 self.pieces.set_piece(moving, from);

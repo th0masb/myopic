@@ -7,6 +7,7 @@ use crate::Square::*;
 impl Reflectable for Move {
     fn reflect(&self) -> Self {
         match self {
+            Move::Null => Move::Null,
             &Move::Standard { moving, dest, from, capture } => Move::Standard {
                 moving: moving.reflect(),
                 dest: dest.reflect(),
@@ -31,18 +32,10 @@ impl Reflectable for Move {
 }
 
 impl Move {
-    pub fn moving_side(&self) -> Side {
-        match self {
-            &Move::Standard { moving: Piece(side, _), .. } => side,
-            &Move::Enpassant { side, .. } => side,
-            &Move::Promotion { promoted: Piece(side, _), .. } => side,
-            &Move::Castle { corner: Corner(side, _), .. } => side,
-        }
-    }
-
     /// Convert this move into a human readable uci long format string.
     pub fn uci_format(&self) -> String {
         match self {
+            Move::Null => "null".to_owned(),
             Move::Standard { from, dest, .. } => format!("{}{}", from, dest),
             Move::Enpassant { from, dest, .. } => format!("{}{}", from, dest),
             Move::Castle { corner, .. } => {

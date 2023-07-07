@@ -68,7 +68,7 @@ impl Phase {
     pub fn make(&mut self, mv: &Move) {
         let counter_start = self.phase_counter;
         match mv {
-            Move::Castle { .. } => {}
+            Move::Null | Move::Castle { .. } => {}
             Move::Enpassant { .. } => self.phase_counter += self.phase_values[Class::P],
             Move::Standard { capture, .. } => {
                 if let Some(Piece(_, class)) = capture {
@@ -88,7 +88,7 @@ impl Phase {
     pub fn unmake(&mut self, mv: &Move) {
         let counter_start = self.phase_counter;
         match mv {
-            Move::Castle { .. } => {}
+            Move::Null | Move::Castle { .. } => {}
             Move::Enpassant { .. } => self.phase_counter -= self.phase_values[Class::P],
             Move::Standard { capture, .. } => {
                 if let Some(Piece(_, class)) = capture {
