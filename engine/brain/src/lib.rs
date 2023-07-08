@@ -4,7 +4,7 @@ extern crate lazy_static;
 
 use std::time::{Duration, Instant};
 
-pub use crate::search::{InputTable, Transpositions};
+pub use crate::search::{Transpositions, TranspositionsImpl};
 use anyhow::Result;
 pub use eval::tables::PositionTables;
 pub use eval::Evaluator;
@@ -45,7 +45,7 @@ pub struct ComputeMoveOutput {
 }
 
 pub struct Engine {
-    transpositions: Transpositions,
+    transpositions: TranspositionsImpl,
     lookups: Vec<Box<dyn LookupMoveService>>,
     timing: TimeAllocator,
 }
@@ -53,7 +53,7 @@ pub struct Engine {
 impl Engine {
     pub fn new(table_size: usize, lookups: Vec<Box<dyn LookupMoveService>>) -> Engine {
         Engine {
-            transpositions: Transpositions::new(table_size),
+            transpositions: TranspositionsImpl::new(table_size),
             lookups,
             timing: TimeAllocator::default(),
         }
@@ -69,8 +69,7 @@ impl Engine {
                 crate::search(
                     eval,
                     SearchParameters {
-                        // Reuse the same transposition table across different moves
-                        table: InputTable::Existing(&mut self.transpositions),
+                        table: &mut self.transpositions,
                         terminator: self.timing.allocate(
                             position_count,
                             input.remaining - start.elapsed(),

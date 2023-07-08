@@ -3,8 +3,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
 
-use crate::search::{InputTable, SearchParameters};
-use crate::Evaluator;
+use crate::search::SearchParameters;
+use crate::{Evaluator, TranspositionsImpl};
 
 #[rustfmt::skip]
 /// Run on system76
@@ -77,7 +77,7 @@ fn benchmark() -> Result<(), Box<dyn Error>> {
         }
         best_moves.push(crate::search(position, SearchParameters {
             terminator: depth,
-            table: InputTable::Blank(table_size),
+            table: &mut TranspositionsImpl::new(table_size),
         })?)
     }
     println!("Successfully computed {} moves at depth {} in {}ms", best_moves.len(), depth, start.elapsed().as_millis());

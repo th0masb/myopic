@@ -9,7 +9,7 @@ use terminator::SearchTerminator;
 
 use crate::search::negascout::{Scout, SearchContext, SearchResponse};
 use crate::search::pv::PrincipleVariation;
-pub use crate::search::transpositions::Transpositions;
+pub use crate::search::transpositions::{TranspositionsImpl, Transpositions};
 use crate::{eval, Evaluator};
 
 mod moves;
@@ -24,31 +24,32 @@ const DEPTH_UPPER_BOUND: usize = 20;
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
-pub fn search<T: SearchTerminator>(
+pub fn search<T: SearchTerminator, TT: Transpositions>(
     root: Evaluator,
-    parameters: SearchParameters<T>,
+    parameters: SearchParameters<T, TT>,
 ) -> Result<SearchOutcome> {
-    match parameters.table {
-        InputTable::Blank(size) => Search {
-            root,
-            terminator: parameters.terminator,
-            transpositions: &mut Transpositions::new(size),
-        }
-        .search(),
-        InputTable::Existing(table) => {
-            Search { root, terminator: parameters.terminator, transpositions: table }.search()
-        }
-    }
+    Search { root, terminator: parameters.terminator, transpositions: parameters.table }.search()
+    //match parameters.table {
+    //    InputTable::Blank(size) => Search {
+    //        root,
+    //        terminator: parameters.terminator,
+    //        transpositions: &mut TranspositionsImpl::new(size),
+    //    }
+    //    .search(),
+    //    InputTable::Existing(table) => {
+    //        Search { root, terminator: parameters.terminator, transpositions: table }.search()
+    //    }
+    //}
 }
 
-pub enum InputTable<'a> {
-    Blank(usize),
-    Existing(&'a mut Transpositions),
-}
+//pub enum InputTable<'a, TT: Transpositions> {
+//    Blank(usize),
+//    Existing(&'a mut TT),
+//}
 
-pub struct SearchParameters<'a, T: SearchTerminator> {
+pub struct SearchParameters<'a, T: SearchTerminator, TT: Transpositions> {
     pub terminator: T,
-    pub table: InputTable<'a>,
+    pub table: &'a mut TT,
 }
 
 /// Data class composing information/result about/of a best move search.
@@ -116,10 +117,10 @@ mod searchoutcome_serialize_test {
     }
 }
 
-struct Search<'a, T: SearchTerminator> {
+struct Search<'a, T: SearchTerminator, TT: Transpositions> {
     root: Evaluator,
     terminator: T,
-    transpositions: &'a mut Transpositions,
+    transpositions: &'a mut TT,
 }
 
 struct BestMoveResponse {
@@ -129,7 +130,7 @@ struct BestMoveResponse {
     depth: usize,
 }
 
-impl<T: SearchTerminator> Search<'_, T> {
+impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
     // TODO If any
     pub fn search(&mut self) -> Result<SearchOutcome> {
         let search_start = Instant::now();

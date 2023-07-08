@@ -131,6 +131,27 @@ impl Positions {
         }
     }
 
+    #[cfg(debug_assertions)]
+    pub fn check_consistent(&self) -> Result<()> {
+        for sq in Square::iter() {
+            let pieces_piece = iter(&self.pieces)
+                .find(|(_, _, loc)| sq == *loc)
+                .map(|(s, c, _)| Piece(s, c));
+            let squares_piece = self.squares[sq];
+            if pieces_piece != squares_piece {
+                return Err(anyhow!("Mismatch at {}, pieces: {:?}, squares: {:?}", sq, pieces_piece, squares_piece))
+            }
+            if let Some(Piece(side, _)) = pieces_piece {
+                if !self.sides[side].contains(sq) {
+                    return Err(anyhow!("{} does not contain piece at {}", side, sq))
+                } else if self.sides[side.reflect()].contains(sq) {
+                    return Err(anyhow!("{} contains opponent piece at {}", side.reflect(), sq))
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn side_locations(&self, side: Side) -> BitBoard {
         self.sides[side]
     }

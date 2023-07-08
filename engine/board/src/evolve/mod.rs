@@ -5,6 +5,7 @@ use myopic_core::*;
 
 use crate::Move::*;
 use crate::{Board, Move};
+use crate::anyhow::anyhow;
 
 #[cfg(test)]
 mod test;
@@ -16,6 +17,9 @@ impl Board {
     /// a move which is assumed to be legal. The information required to reverse
     /// this same move is returned and the board is mutated to the next state.
     pub(super) fn make_impl(&mut self, mv: Move) -> Result<()> {
+        #[cfg(debug_assertions)]
+        let fen = self.to_fen();
+
         // Preserve the current state
         self.history.push(
             mv.clone(),
@@ -79,12 +83,20 @@ impl Board {
         // General actions
         self.active = self.active.reflect();
         self.clear_cache();
+
+        #[cfg(debug_assertions)]
+        self.pieces.check_consistent()
+            .map_err(|e| anyhow!("Making {} -> {:?}: {}", fen, mv, e)).unwrap();
+
         Ok(())
     }
 
     /// Public API for devolving a move, the information lost at evolve time is
     /// required as an input here to recover the lost state exactly.
     pub(super) fn unmake_impl(&mut self) -> Result<Move> {
+        #[cfg(debug_assertions)]
+        let fen = self.to_fen();
+
         let (mv, state) = self.history.attempt_pop()?;
 
         match &mv {
@@ -127,6 +139,11 @@ impl Board {
         self.enpassant = state.enpassant;
         self.active = self.active.reflect();
         self.clear_cache();
+
+        #[cfg(debug_assertions)]
+        self.pieces.check_consistent()
+            .map_err(|e| anyhow!("Unmaking {} -> {:?}: {}", fen, mv, e)).unwrap();
+
         Ok(mv)
     }
 

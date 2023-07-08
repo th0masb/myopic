@@ -3,10 +3,9 @@ use std::time::Instant;
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Context, Error, LambdaEvent};
 use simple_logger::SimpleLogger;
-use InputTable::Blank;
 
 use lambda_payloads::benchmark::*;
-use myopic_brain::{InputTable, SearchParameters};
+use myopic_brain::{SearchParameters, TranspositionsImpl};
 
 mod positions;
 
@@ -18,7 +17,7 @@ async fn main() -> Result<(), Error> {
     SimpleLogger::new().with_level(log::LevelFilter::Info).without_timestamps().init()?;
     if let Ok(_) = std::env::var(RUN_LOCALLY_VAR) {
         let output = handler(LambdaEvent::new(
-            BenchStartEvent { positions: 200, depth: 6, table_size: 100_000 },
+            BenchStartEvent { positions: 200, depth: 7, table_size: 100_000 },
             Context::default(),
         ))
         .await?;
@@ -41,7 +40,10 @@ async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Err
         }
         moves.push(myopic_brain::search(
             root,
-            SearchParameters { terminator: e.depth, table: Blank(e.table_size) },
+            SearchParameters {
+                terminator: e.depth,
+                table: &mut TranspositionsImpl::new(e.table_size)
+            },
         )?);
     }
 
