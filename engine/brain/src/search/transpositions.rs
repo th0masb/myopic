@@ -1,27 +1,9 @@
+use myopic_board::Board;
 use crate::Move;
 
-pub struct Transpositions {
-    inner: Vec<Option<TreeNode>>,
-}
-
-impl Transpositions {
-    pub fn new(n_entries: usize) -> Transpositions {
-        Transpositions { inner: vec![None; n_entries] }
-    }
-
-    pub fn get(&self, k: u64) -> Option<&TreeNode> {
-        let index = self.index(k);
-        self.inner[index].as_ref().filter(|&m| m.matches(k))
-    }
-
-    pub fn insert(&mut self, k: u64, v: TreeNode) {
-        let index = self.index(k);
-        self.inner[index] = Some(v);
-    }
-
-    fn index(&self, k: u64) -> usize {
-        (k % self.inner.len() as u64) as usize
-    }
+pub trait Transpositions {
+    fn get(&self, pos: &Board) -> Option<&TreeNode>;
+    fn put(&mut self, pos: &Board, n: TreeNode);
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -29,6 +11,34 @@ pub enum TreeNode {
     Pv { hash: u64, depth: u8, eval: i32, optimal_path: Vec<Move> },
     Cut { hash: u64, depth: u8, beta: i32, cutoff_move: Move },
     All { hash: u64, depth: u8, eval: i32, best_move: Move },
+}
+
+pub struct TranspositionsImpl {
+    inner: Vec<Option<TreeNode>>,
+}
+
+impl Transpositions for TranspositionsImpl {
+    fn get(&self, pos: &Board) -> Option<&TreeNode> {
+        let hash = pos.hash();
+        let index = self.index(hash);
+        self.inner[index].as_ref().filter(|&m| m.matches(hash))
+    }
+
+    fn put(&mut self, pos: &Board, n: TreeNode) {
+        let hash = pos.hash();
+        let index = self.index(hash);
+        self.inner[index] = Some(n);
+    }
+}
+
+impl TranspositionsImpl {
+    pub fn new(n_entries: usize) -> TranspositionsImpl {
+        TranspositionsImpl { inner: vec![None; n_entries] }
+    }
+
+    fn index(&self, k: u64) -> usize {
+        (k % self.inner.len() as u64) as usize
+    }
 }
 
 impl TreeNode {

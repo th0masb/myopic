@@ -47,7 +47,8 @@ impl See<'_> {
         let mut active = first_attacker.0;
         let mut src = self.source.into();
         let mut removed = BitBoard::EMPTY;
-        let (mut attadef, mut xray) = self.pieces_involved();
+        let pieces_involved = self.pieces_involved();
+        let (mut attadef, mut xray) = pieces_involved;
         loop {
             d += 1;
             gain[d] = self.value(attacker) - gain[d - 1];
@@ -65,7 +66,11 @@ impl See<'_> {
             if src.is_empty() {
                 break;
             } else {
-                attacker = board.piece(src.first().unwrap()).unwrap();
+                let attacker_square = src.first().unwrap();
+                match board.piece(attacker_square) {
+                    None => panic!("See error: {} -> {} on {}", self.source, self.target, board.to_fen()),
+                    Some(p) => attacker = p
+                }
             }
         }
         d -= 1;
@@ -162,11 +167,11 @@ fn compute_attack_location_constraints() -> EnumMap<Square, BitBoard> {
 #[cfg(test)]
 mod test {
     use enum_map::enum_map;
-    use myopic_board::{Reflectable, Square};
+    use myopic_board::{Corner, Move, Reflectable, Square};
 
     use super::See;
     use crate::eval::material::PieceValues;
-    use crate::Board;
+    use crate::{Board, Evaluator, Flank, Piece, Side};
     use crate::Class;
 
     fn dummy_values() -> PieceValues {
@@ -259,5 +264,59 @@ mod test {
                 .unwrap(),
             expected: vec![(Square::B5, Square::D7, 0)],
         })
+    }
+
+    #[test]
+    fn see_case_6() {
+        execute_case(TestCase {
+            board: "r1bq1rk1/1pp1npb1/3p2p1/pQBPp1Pp/2P1P2P/2N2P1B/PP6/R3K2R b KQ - 0 14"
+                .parse::<Board>()
+                .unwrap(),
+            expected: vec![(Square::C8, Square::H3, 0)],
+        })
+    }
+
+    #[test]
+    fn see_case_7() {
+        let initial_position = "r1bqk2r/1ppnnpb1/3p2p1/p2Pp1Pp/2P1P2P/2N1BP2/PP6/R2QKBNR w KQkq a6 0 11";
+        let mut evaluator: Evaluator = initial_position.parse::<Board>().unwrap().into();
+        let moves = vec![
+            Move::Standard {
+                moving: Piece(Side::W, Class::B),
+                from: Square::F1,
+                dest: Square::H3,
+                capture: None,
+            },
+            Move::Castle {
+                corner: Corner(Side::B, Flank::K)
+            },
+            Move::Standard {
+                moving: Piece(Side::W, Class::Q),
+                from: Square::D1,
+                dest: Square::B3,
+                capture: None,
+            },
+            Move::Standard {
+                moving: Piece(Side::B, Class::N),
+                from: Square::D7,
+                dest: Square::C5,
+                capture: None,
+            },
+            Move::Standard {
+                moving: Piece(Side::W, Class::Q),
+                from: Square::B3,
+                dest: Square::B5,
+                capture: None,
+            },
+            Move::Null,
+            Move::Standard {
+                moving: Piece(Side::W, Class::B),
+                from: Square::E3,
+                dest: Square::C5,
+                capture: Some(Piece(Side::B, Class::N)),
+            },
+        ];
+        moves.into_iter().for_each(|m| evaluator.make(m).unwrap());
+        assert_eq!(0, evaluator.see(Square::C8, Square::H3));
     }
 }

@@ -6,7 +6,7 @@ use myopic_board::{Board, Move, TerminalState};
 
 use crate::search::moves::MoveGenerator;
 use crate::search::terminator::SearchTerminator;
-use crate::search::transpositions::{Transpositions, TreeNode};
+use crate::search::transpositions::{TranspositionsImpl, Transpositions, TreeNode};
 use crate::search::{eval, quiescent};
 use crate::{Class, Corner, Evaluator, Line, Piece};
 
@@ -50,16 +50,16 @@ impl std::ops::Neg for SearchResponse {
     }
 }
 
-pub struct Scout<'a, T: SearchTerminator> {
+pub struct Scout<'a, T: SearchTerminator, TT: Transpositions> {
     /// The terminator is responsible for deciding when the search is complete
     pub terminator: &'a T,
     /// Transposition table containing previously computed information about nodes in the tree.
-    pub transpositions: &'a mut Transpositions,
+    pub transpositions: &'a mut TT,
     /// Move generator for nodes in the tree
     pub moves: MoveGenerator<'a>,
 }
 
-impl<T: SearchTerminator> Scout<'_, T> {
+impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
     pub fn search(
         &mut self,
         root: &mut Evaluator,
@@ -77,7 +77,7 @@ impl<T: SearchTerminator> Scout<'_, T> {
         }
 
         let (hash, mut table_move) = (root.board().hash(), None);
-        match self.transpositions.get(hash) {
+        match self.transpositions.get(root.board()) {
             None => {}
             Some(TreeNode::Pv { depth, eval, optimal_path, .. }) => {
                 table_move = optimal_path.first().cloned();
@@ -145,8 +145,8 @@ impl<T: SearchTerminator> Scout<'_, T> {
             ctx.alpha = cmp::max(ctx.alpha, result);
             if ctx.alpha >= ctx.beta {
                 // We are a cut node
-                self.transpositions.insert(
-                    hash,
+                self.transpositions.put(
+                    root.board(),
                     TreeNode::Cut {
                         depth: ctx.depth_remaining as u8,
                         beta: ctx.beta,
@@ -162,8 +162,8 @@ impl<T: SearchTerminator> Scout<'_, T> {
         if ctx.alpha == start_alpha {
             // We are an all node
             if let Some(m) = best_path.last() {
-                self.transpositions.insert(
-                    hash,
+                self.transpositions.put(
+                    root.board(),
                     TreeNode::All {
                         depth: ctx.depth_remaining as u8,
                         eval: result,
@@ -174,8 +174,8 @@ impl<T: SearchTerminator> Scout<'_, T> {
             }
         } else {
             // We are a pv node
-            self.transpositions.insert(
-                hash,
+            self.transpositions.put(
+                root.board(),
                 TreeNode::Pv {
                     depth: ctx.depth_remaining as u8,
                     eval: result,

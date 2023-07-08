@@ -1,6 +1,4 @@
-use crate::search::InputTable;
-use crate::{Evaluator, SearchOutcome, SearchParameters};
-use InputTable::Blank;
+use crate::{Evaluator, SearchOutcome, SearchParameters, TranspositionsImpl};
 
 #[test]
 fn early_draw_bug_1() {
@@ -50,7 +48,7 @@ fn early_draw_bug_2() {
 fn search(pgn: &str, depth: usize) -> SearchOutcome {
     let mut board = Evaluator::default();
     board.play_pgn(pgn).expect(format!("Invalid {}", pgn).as_str());
-    crate::search(board, SearchParameters { terminator: depth, table: Blank(10_000) })
+    crate::search(board, SearchParameters { terminator: depth, table: &mut TranspositionsImpl::new(10_000) })
         .map_err(|e| panic!("{}", e))
         .unwrap()
 }
