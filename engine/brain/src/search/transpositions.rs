@@ -1,5 +1,5 @@
-use myopic_board::Board;
 use crate::Move;
+use myopic_board::Board;
 
 pub trait Transpositions {
     fn get(&self, pos: &Board) -> Option<&TreeNode>;
@@ -8,7 +8,7 @@ pub trait Transpositions {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum TreeNode {
-    Pv { hash: u64, depth: u8, eval: i32, optimal_path: Vec<Move> },
+    Pv { hash: u64, depth: u8, eval: i32, best_path: Vec<Move> },
     Cut { hash: u64, depth: u8, beta: i32, cutoff_move: Move },
     All { hash: u64, depth: u8, eval: i32, best_move: Move },
 }
@@ -42,7 +42,7 @@ impl TranspositionsImpl {
 }
 
 impl TreeNode {
-    fn matches(&self, hash: u64) -> bool {
+    pub fn matches(&self, hash: u64) -> bool {
         match self {
             TreeNode::Cut { hash: node_hash, .. } => *node_hash == hash,
             TreeNode::All { hash: node_hash, .. } => *node_hash == hash,
@@ -56,5 +56,13 @@ impl TreeNode {
             &TreeNode::Cut { depth, .. } => depth,
             &TreeNode::All { depth, .. } => depth,
         }) as usize
+    }
+
+    pub fn get_move(&self) -> &Move {
+        match self {
+            TreeNode::Pv { best_path: optimal_path, .. } => optimal_path.first().unwrap(),
+            TreeNode::Cut { cutoff_move, .. } => cutoff_move,
+            TreeNode::All { best_move, .. } => best_move,
+        }
     }
 }

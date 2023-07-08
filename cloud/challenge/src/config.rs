@@ -1,5 +1,5 @@
-use serde_derive::Deserialize;
 use lichess_api::ratings::TimeLimits;
+use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct UserConfig {
@@ -24,4 +24,3 @@ pub struct KnownUserChallenge {
     pub rated: bool,
     pub repeat: usize,
 }
-

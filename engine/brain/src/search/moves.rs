@@ -1,6 +1,6 @@
 use myopic_board::{Board, Move, Move::*, Moves, Reflectable, Square};
 
-use crate::negascout::SearchContext;
+use crate::negascout::Context;
 use crate::search::pv::PrincipleVariation;
 use crate::{BitBoard, Class, Evaluator, Piece, PositionTables};
 
@@ -19,7 +19,7 @@ impl MoveGenerator<'_> {
     pub fn generate(
         &self,
         state: &Evaluator,
-        ctx: &SearchContext,
+        ctx: &Context,
         table: Option<&Move>,
     ) -> impl Iterator<Item = Move> {
         let mut moves = state.board().moves(Moves::All);

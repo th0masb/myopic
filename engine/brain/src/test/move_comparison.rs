@@ -69,7 +69,10 @@ fn search_after_move(pgn: &str, mv: &str, depth: usize) -> SearchOutcome {
     let mut board = Evaluator::default();
     board.play_pgn(pgn).expect(format!("Invalid {}", pgn).as_str());
     board.play_uci(mv).expect(format!("Invalid {} {}", pgn, mv).as_str());
-    crate::search(board, SearchParameters { terminator: depth, table: &mut TranspositionsImpl::new(TABLE_SIZE) })
-        .map_err(|e| panic!("Could not search at {}: {}", pgn, e))
-        .unwrap()
+    crate::search(
+        board,
+        SearchParameters { terminator: depth, table: &mut TranspositionsImpl::new(TABLE_SIZE) },
+    )
+    .map_err(|e| panic!("Could not search at {}: {}", pgn, e))
+    .unwrap()
 }

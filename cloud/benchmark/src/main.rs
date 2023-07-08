@@ -42,7 +42,7 @@ async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Err
             root,
             SearchParameters {
                 terminator: e.depth,
-                table: &mut TranspositionsImpl::new(e.table_size)
+                table: &mut TranspositionsImpl::new(e.table_size),
             },
         )?);
     }

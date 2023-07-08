@@ -7,9 +7,9 @@ use myopic_board::anyhow::{anyhow, Result};
 use myopic_board::Move;
 use terminator::SearchTerminator;
 
-use crate::search::negascout::{Scout, SearchContext, SearchResponse};
+use crate::search::negascout::{Context, Scout, SearchResponse};
 use crate::search::pv::PrincipleVariation;
-pub use crate::search::transpositions::{TranspositionsImpl, Transpositions};
+pub use crate::search::transpositions::{Transpositions, TranspositionsImpl, TreeNode};
 use crate::{eval, Evaluator};
 
 mod moves;
@@ -29,23 +29,7 @@ pub fn search<T: SearchTerminator, TT: Transpositions>(
     parameters: SearchParameters<T, TT>,
 ) -> Result<SearchOutcome> {
     Search { root, terminator: parameters.terminator, transpositions: parameters.table }.search()
-    //match parameters.table {
-    //    InputTable::Blank(size) => Search {
-    //        root,
-    //        terminator: parameters.terminator,
-    //        transpositions: &mut TranspositionsImpl::new(size),
-    //    }
-    //    .search(),
-    //    InputTable::Existing(table) => {
-    //        Search { root, terminator: parameters.terminator, transpositions: table }.search()
-    //    }
-    //}
 }
-
-//pub enum InputTable<'a, TT: Transpositions> {
-//    Blank(usize),
-//    Existing(&'a mut TT),
-//}
 
 pub struct SearchParameters<'a, T: SearchTerminator, TT: Transpositions> {
     pub terminator: T,
@@ -58,7 +42,7 @@ pub struct SearchOutcome {
     pub best_move: Move,
     /// Larger +ve score better for side to move
     pub relative_eval: i32,
-    pub depth: usize,
+    pub depth: u8,
     pub time: Duration,
     pub optimal_path: Vec<Move>,
 }
@@ -127,11 +111,10 @@ struct BestMoveResponse {
     eval: i32,
     best_move: Move,
     path: Vec<Move>,
-    depth: usize,
+    depth: u8,
 }
 
 impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
-    // TODO If any
     pub fn search(&mut self) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
@@ -139,7 +122,7 @@ impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
         let mut best_response = None;
 
         for i in 1..DEPTH_UPPER_BOUND {
-            match self.best_move(i, search_start, &pv) {
+            match self.best_move(i as u8, search_start, &pv) {
                 Err(message) => {
                     break_err = anyhow!("{}", message);
                     break;
@@ -162,7 +145,7 @@ impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
 
     fn best_move(
         &mut self,
-        depth: usize,
+        depth: u8,
         search_start: Instant,
         pv: &PrincipleVariation,
     ) -> Result<BestMoveResponse> {
@@ -179,9 +162,9 @@ impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
         }
         .search(
             &mut self.root,
-            SearchContext {
-                depth_remaining: depth,
-                start_time: search_start,
+            Context {
+                depth,
+                start: search_start,
                 alpha: -eval::INFTY,
                 beta: eval::INFTY,
                 precursors: vec![],

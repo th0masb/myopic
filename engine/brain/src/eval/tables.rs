@@ -141,7 +141,7 @@ impl Default for PositionTables {
                     Class::Q => parse_symmetric(QUEEN).reflect(),
                     Class::K => parse_symmetric(KING).reflect(),
                 },
-            }
+            },
         }
     }
 }
@@ -269,9 +269,9 @@ mod test {
     use myopic_board::Board;
     use myopic_board::Square::*;
 
-    use crate::{Class, Piece, PositionTables, Side};
-    use crate::eval::EvalFacet;
     use crate::eval::tables::PieceSquareTablesFacet;
+    use crate::eval::EvalFacet;
+    use crate::{Class, Piece, PositionTables, Side};
 
     #[test]
     fn zero_eval_for_start() {

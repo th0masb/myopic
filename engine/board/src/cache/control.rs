@@ -32,7 +32,8 @@ impl Board {
             .into_iter()
             .map(|class| Piece(side, class))
             .flat_map(|p| locs(p).into_iter().map(move |sq| control(p, sq)))
-            .collect::<BitBoard>() | Board::pawn_control(side, locs(Piece(side, Class::P)))
+            .collect::<BitBoard>()
+            | Board::pawn_control(side, locs(Piece(side, Class::P)))
     }
 
     fn pawn_control(side: Side, pawns: BitBoard) -> BitBoard {

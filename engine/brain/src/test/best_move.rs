@@ -30,7 +30,10 @@ fn test(setup: Setup, expected_move_pool: Vec<UciMove>, is_won: bool) {
 }
 
 fn test_impl(board: Evaluator, expected_move_pool: Vec<UciMove>, is_won: bool) {
-    match crate::search(board, SearchParameters { terminator: DEPTH, table: &mut TranspositionsImpl::new(TABLE_SIZE) }) {
+    match crate::search(
+        board,
+        SearchParameters { terminator: DEPTH, table: &mut TranspositionsImpl::new(TABLE_SIZE) },
+    ) {
         Err(message) => panic!("{}", message),
         Ok(outcome) => {
             assert!(

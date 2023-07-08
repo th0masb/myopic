@@ -8,13 +8,13 @@ use enumset::EnumSet;
 
 use cache::CalculationCache;
 use history::History;
-use Move::Promotion;
 use myopic_core::anyhow::Result;
 pub use myopic_core::*;
 use parse::patterns;
 pub use parse::uci::UciMove;
 use positions::Positions;
 use rights::Rights;
+use Move::Promotion;
 
 use crate::anyhow::{anyhow, Error};
 use crate::cache::RaySet;
@@ -166,18 +166,22 @@ impl Board {
     fn moves_impl<'a>(
         &'a self,
         all: Vec<Move>,
-        facets: &'a [MoveFacet]
-    ) -> impl Iterator<Item=Move> + 'a {
+        facets: &'a [MoveFacet],
+    ) -> impl Iterator<Item = Move> + 'a {
         let discoveries = self.compute_discoveries();
         let occupied = self.side(Side::W) | self.side(Side::B);
-        let king_loc = self.king(self.active.reflect());
+        let king_loc = self.king(self.active.reflect()).unwrap();
         all.into_iter().filter(move |m| {
-            facets.iter().any(|&f| {
-                match f {
-                    MoveFacet::Attacking => m.is_attack(),
-                    MoveFacet::Promoting => if let Promotion { .. } = m { true } else { false },
-                    MoveFacet::Checking => Board::is_checking(m, &discoveries, occupied, king_loc),
+            facets.iter().any(|&f| match f {
+                MoveFacet::Attacking => m.is_attack(),
+                MoveFacet::Promoting => {
+                    if let Promotion { .. } = m {
+                        true
+                    } else {
+                        false
+                    }
                 }
+                MoveFacet::Checking => Board::is_checking(m, &discoveries, occupied, king_loc),
             })
         })
     }
@@ -186,34 +190,28 @@ impl Board {
         m: &Move,
         discoveries: &RaySet,
         occupied: BitBoard,
-        king_loc: Square
+        king_loc: Square,
     ) -> bool {
         match m {
             Move::Null => false,
             Move::Castle { corner } => {
                 let Line(_, dest) = Line::rook_castling(*corner);
-                Piece(corner.0, Class::R)
-                    .control(dest, occupied)
-                    .contains(king_loc)
-            },
+                Piece(corner.0, Class::R).control(dest, occupied).contains(king_loc)
+            }
             Move::Enpassant { side, from, dest, capture } => {
-                discoveries.constraints[*from].contains(*dest) ||
-                    Piece(*side, Class::P)
+                discoveries.constraints[*from].contains(*dest)
+                    || Piece(*side, Class::P)
                         .control(*dest, occupied - *from - *capture)
                         .contains(king_loc)
-            },
+            }
             Promotion { from, dest, promoted, .. } => {
-                discoveries.constraints[*from].contains(*dest) ||
-                    promoted
-                        .control(*dest, occupied - *from)
-                        .contains(king_loc)
-            },
+                discoveries.constraints[*from].contains(*dest)
+                    || promoted.control(*dest, occupied - *from).contains(king_loc)
+            }
             Move::Standard { moving, from, dest, .. } => {
-                discoveries.constraints[*from].contains(*dest) ||
-                    moving
-                        .control(*dest, occupied - *from)
-                        .contains(king_loc)
-            },
+                discoveries.constraints[*from].contains(*dest)
+                    || moving.control(*dest, occupied - *from).contains(king_loc)
+            }
         }
     }
 
@@ -229,7 +227,7 @@ impl Board {
 
     /// Determines whether the active side is in a state of check.
     pub fn in_check(&self) -> bool {
-        self.passive_control().contains(self.king(self.active))
+        self.passive_control().contains(self.king(self.active).unwrap())
     }
 
     /// Return the locations of all pieces on the given side.
@@ -266,8 +264,8 @@ impl Board {
     }
 
     /// Return the location of the king for the given side.
-    pub fn king(&self, side: Side) -> Square {
-        self.pieces.locs(Piece(side, Class::K)).into_iter().next().unwrap()
+    pub fn king(&self, side: Side) -> Option<Square> {
+        self.pieces.locs(Piece(side, Class::K)).into_iter().next()
     }
 
     /// Return the piece occupying the given location.

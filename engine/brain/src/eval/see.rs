@@ -68,8 +68,13 @@ impl See<'_> {
             } else {
                 let attacker_square = src.first().unwrap();
                 match board.piece(attacker_square) {
-                    None => panic!("See error: {} -> {} on {}", self.source, self.target, board.to_fen()),
-                    Some(p) => attacker = p
+                    None => panic!(
+                        "See error: {} -> {} on {}",
+                        self.source,
+                        self.target,
+                        board.to_fen()
+                    ),
+                    Some(p) => attacker = p,
                 }
             }
         }
@@ -171,8 +176,8 @@ mod test {
 
     use super::See;
     use crate::eval::material::PieceValues;
-    use crate::{Board, Evaluator, Flank, Piece, Side};
     use crate::Class;
+    use crate::{Board, Evaluator, Flank, Piece, Side};
 
     fn dummy_values() -> PieceValues {
         enum_map! {
@@ -278,7 +283,8 @@ mod test {
 
     #[test]
     fn see_case_7() {
-        let initial_position = "r1bqk2r/1ppnnpb1/3p2p1/p2Pp1Pp/2P1P2P/2N1BP2/PP6/R2QKBNR w KQkq a6 0 11";
+        let initial_position =
+            "r1bqk2r/1ppnnpb1/3p2p1/p2Pp1Pp/2P1P2P/2N1BP2/PP6/R2QKBNR w KQkq a6 0 11";
         let mut evaluator: Evaluator = initial_position.parse::<Board>().unwrap().into();
         let moves = vec![
             Move::Standard {
@@ -287,9 +293,7 @@ mod test {
                 dest: Square::H3,
                 capture: None,
             },
-            Move::Castle {
-                corner: Corner(Side::B, Flank::K)
-            },
+            Move::Castle { corner: Corner(Side::B, Flank::K) },
             Move::Standard {
                 moving: Piece(Side::W, Class::Q),
                 from: Square::D1,

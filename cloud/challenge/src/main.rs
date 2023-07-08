@@ -1,13 +1,13 @@
 use crate::config::{ChallengeEvent, KnownUserChallenge, UserConfig};
 use itertools::Itertools;
-use lambda_runtime::{Error, LambdaEvent, service_fn};
+use lambda_runtime::{service_fn, Error, LambdaEvent};
+use lichess_api::ratings::{ChallengeRequest, TimeLimits};
+use lichess_api::LichessClient;
 use rand::prelude::SliceRandom;
 use simple_logger::SimpleLogger;
 use std::iter::repeat;
 use std::time::Duration;
 use tokio::time::sleep;
-use lichess_api::LichessClient;
-use lichess_api::ratings::{ChallengeRequest, TimeLimits};
 
 mod config;
 
@@ -67,8 +67,10 @@ async fn random_challenge_handler(
 
     let client = LichessClient::new(config.token.clone());
 
-    let our_rating =
-        client.fetch_rating(config.our_user_id.as_str(), chosen_time_limit.get_type()).await?.unwrap();
+    let our_rating = client
+        .fetch_rating(config.our_user_id.as_str(), chosen_time_limit.get_type())
+        .await?
+        .unwrap();
 
     let mut bots = client
         .fetch_online_bots()
@@ -84,14 +86,18 @@ async fn random_challenge_handler(
 
     let mut opponents = bots
         .iter()
-        .filter(|b| b.perfs.rating_for(chosen_time_limit.get_type()).unwrap().rating <= our_rating.rating)
+        .filter(|b| {
+            b.perfs.rating_for(chosen_time_limit.get_type()).unwrap().rating <= our_rating.rating
+        })
         .rev()
         .take(lower_count)
         .collect::<Vec<_>>();
 
     opponents.extend(
         bots.iter()
-            .filter(|b| b.perfs.rating_for(chosen_time_limit.get_type()).unwrap().rating > our_rating.rating)
+            .filter(|b| {
+                b.perfs.rating_for(chosen_time_limit.get_type()).unwrap().rating > our_rating.rating
+            })
             .take(upper_count),
     );
 

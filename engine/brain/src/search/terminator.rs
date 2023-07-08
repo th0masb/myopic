@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::search::negascout::SearchContext;
+use crate::search::negascout::Context;
 
 /// Represents some object which can determine whether a search should be
 /// terminated given certain context about the current state. Implementations
@@ -8,23 +8,23 @@ use crate::search::negascout::SearchContext;
 /// usize which represents a maximum search depth and for a pair (Duration, usize)
 /// which combines both checks.
 pub trait SearchTerminator {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool;
+    fn should_terminate(&self, ctx: &Context) -> bool;
 }
 
 impl SearchTerminator for Duration {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        ctx.start_time.elapsed() > *self
+    fn should_terminate(&self, ctx: &Context) -> bool {
+        ctx.start.elapsed() > *self
     }
 }
 
 impl SearchTerminator for usize {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
-        ctx.depth_remaining > *self
+    fn should_terminate(&self, ctx: &Context) -> bool {
+        ctx.depth as usize > *self
     }
 }
 
 impl SearchTerminator for (Duration, usize) {
-    fn should_terminate(&self, ctx: &SearchContext) -> bool {
+    fn should_terminate(&self, ctx: &Context) -> bool {
         self.0.should_terminate(ctx) || self.1.should_terminate(ctx)
     }
 }

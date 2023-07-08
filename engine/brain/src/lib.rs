@@ -4,7 +4,7 @@ extern crate lazy_static;
 
 use std::time::{Duration, Instant};
 
-pub use crate::search::{Transpositions, TranspositionsImpl};
+pub use crate::search::{Transpositions, TranspositionsImpl, TreeNode};
 use anyhow::Result;
 pub use eval::tables::PositionTables;
 pub use eval::Evaluator;

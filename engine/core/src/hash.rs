@@ -1,6 +1,6 @@
-use std::num::Wrapping;
 use itertools::Itertools;
 use lazy_static::lazy_static;
+use std::num::Wrapping;
 
 use crate::pieces::Piece;
 use crate::square::Square;
@@ -22,7 +22,9 @@ fn compute_features() -> [u64; N_FEATURES] {
 }
 
 // https://github.com/official-stockfish/Stockfish/blob/master/src/misc.h#L122
-struct PRNG { s: u64 }
+struct PRNG {
+    s: u64,
+}
 
 impl PRNG {
     fn rand64(&mut self) -> u64 {

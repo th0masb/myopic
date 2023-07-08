@@ -1,12 +1,14 @@
 mod endings;
 pub mod ratings;
 
+use crate::ratings::{
+    ChallengeRequest, OnlineBot, TimeLimitType, UserDetails, UserDetailsGamePerf,
+};
 use anyhow::{anyhow, Error, Result};
 pub use endings::LichessEndgameClient;
 use reqwest::StatusCode;
 use serde_derive::Deserialize;
 use std::collections::HashMap;
-use crate::ratings::{ChallengeRequest, OnlineBot, TimeLimitType, UserDetails, UserDetailsGamePerf};
 
 const GAME_ENDPOINT: &'static str = "https://lichess.org/api/bot/game";
 const CHALLENGE_ENDPOINT: &'static str = "https://lichess.org/api/challenge";
@@ -29,7 +31,8 @@ impl LichessClient {
     }
 
     pub async fn get_our_profile(&self) -> Result<Account> {
-        let response = self.client
+        let response = self
+            .client
             .get(ACCOUNT_ENDPOINT)
             .bearer_auth(self.auth_token.as_str())
             .send()
@@ -107,23 +110,25 @@ impl LichessClient {
             .map(|response| response.status())
     }
 
-    pub async fn create_challenge(&self, request: ChallengeRequest) -> Result<(StatusCode, String)> {
+    pub async fn create_challenge(
+        &self,
+        request: ChallengeRequest,
+    ) -> Result<(StatusCode, String)> {
         let mut params: HashMap<&str, String> = HashMap::new();
         params.insert("rated", request.rated.to_string());
         params.insert("clock.limit", request.time_limit.limit.to_string());
         params.insert("clock.increment", request.time_limit.increment.to_string());
-        let response = self.client
+        let response = self
+            .client
             .post(format!("https://lichess.org/api/challenge/{}", request.target_user_id))
             .bearer_auth(self.auth_token.as_str())
             .form(&params)
             .send()
             .await
-            .map_err(|e| {
-                anyhow!("Error challenging {}: {}", request.target_user_id, e)
-            })?;
+            .map_err(|e| anyhow!("Error challenging {}: {}", request.target_user_id, e))?;
         let status = response.status();
-        let text = response.text()
-            .await.map_err(|e| anyhow!("Could not get response text: {}", e))?;
+        let text =
+            response.text().await.map_err(|e| anyhow!("Could not get response text: {}", e))?;
         Ok((status, text))
     }
 
@@ -144,8 +149,7 @@ impl LichessClient {
     }
 
     pub async fn fetch_online_bots(&self) -> Result<Vec<OnlineBot>> {
-        self
-            .client
+        self.client
             .get(format!("https://lichess.org/api/bot/online"))
             .send()
             .await?
@@ -159,7 +163,8 @@ impl LichessClient {
     }
 
     pub async fn get_our_live_games(&self) -> Result<OngoingGames> {
-        let response = self.client
+        let response = self
+            .client
             .get("https://lichess.org/api/account/playing")
             .bearer_auth(self.auth_token.as_str())
             .send()
@@ -190,7 +195,7 @@ struct Clock {
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct OngoingGames {
     #[serde(rename = "nowPlaying")]
-    pub now_playing: Vec<OngoingGame>
+    pub now_playing: Vec<OngoingGame>,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
