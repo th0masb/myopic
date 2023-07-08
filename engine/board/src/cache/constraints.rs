@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use enum_map::enum_map;
+use std::fmt::Debug;
 
 use myopic_core::*;
 
@@ -37,9 +37,9 @@ impl Board {
     pub fn compute_check_constraints(
         &self,
         passive_control: BitBoard,
-        pinned: &RaySet
+        pinned: &RaySet,
     ) -> MoveConstraints {
-        let active_king_loc = self.king(self.active);
+        let active_king_loc = self.king(self.active).unwrap();
         let attackers = self.compute_king_attackers();
         if attackers.len() == 1 {
             // If one attacker then all pieces can only move to block the attack
@@ -64,7 +64,7 @@ impl Board {
 
     fn compute_king_attackers(&self) -> Vec<(Piece, Square)> {
         let (whites, blacks) = self.sides();
-        let king_loc = self.king(self.active);
+        let king_loc = self.king(self.active).unwrap();
         [Class::P, Class::N, Class::B, Class::R, Class::Q]
             .into_iter()
             .map(|class| Piece(self.active.reflect(), class))

@@ -1,8 +1,8 @@
 use itertools::Itertools;
 use myopic_core::*;
 
-use crate::{Board, Move, Moves};
 use crate::TerminalState;
+use crate::{Board, Move, Moves};
 
 const HALF_MOVE_CLOCK_LIMIT: usize = 100;
 
@@ -24,6 +24,10 @@ impl Board {
     fn compute_terminal_state(&self) -> Option<TerminalState> {
         let active = self.active;
         let active_king = self.king(active);
+        if active_king.is_none() {
+            return Some(TerminalState::Loss)
+        }
+        let active_king = active_king.unwrap();
         let passive_control = self.passive_control();
         let (whites, blacks) = self.sides();
         let king_moves = Piece(active, Class::K).moves(active_king, whites, blacks);
@@ -48,7 +52,9 @@ impl Board {
     }
 
     fn check_repetitions(&self) -> Option<TerminalState> {
-        let mut position_hashes = self.history.historical_positions()
+        let mut position_hashes = self
+            .history
+            .historical_positions()
             // Exclude positions where null move was played
             .filter(|(m, _)| !matches!(m, Move::Null))
             .map(|(_, h)| h)
@@ -76,12 +82,16 @@ impl Board {
 
     // Assumes king is in check and cannot move out of it
     fn checked_termination(&self) -> Option<TerminalState> {
-        if self.moves(Moves::All).len() > 0 { None } else { Some(TerminalState::Loss) }
+        if self.moves(Moves::All).len() > 0 {
+            None
+        } else {
+            Some(TerminalState::Loss)
+        }
     }
 
     // Assumes king cannot move but not in check
     fn unchecked_termination(&self) -> Option<TerminalState> {
-        let king = self.king(self.active);
+        let king = self.king(self.active).unwrap();
         let pin_rays = Piece(Side::W, Class::Q).empty_control(king);
         let (whites, blacks) = self.sides();
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
@@ -93,7 +103,11 @@ impl Board {
                 return None;
             }
         }
-        if self.moves(Moves::All).len() > 0 { None } else { Some(TerminalState::Draw) }
+        if self.moves(Moves::All).len() > 0 {
+            None
+        } else {
+            Some(TerminalState::Draw)
+        }
     }
 }
 

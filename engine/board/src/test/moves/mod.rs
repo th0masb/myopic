@@ -4,16 +4,16 @@ use std::str::FromStr;
 
 use itertools::Itertools;
 
-use MoveFacet::Attacking;
-use myopic_core::*;
 use myopic_core::anyhow::{anyhow, Result};
 use myopic_core::Corner;
+use myopic_core::*;
+use MoveFacet::Attacking;
 
-use crate::{Board, MoveFacet, Moves};
 use crate::anyhow::Error;
+use crate::parse::parse_option;
 use crate::Move;
 use crate::MoveFacet::Checking;
-use crate::parse::parse_option;
+use crate::{Board, MoveFacet, Moves};
 
 mod misc;
 mod szukstra_tal;
@@ -79,7 +79,11 @@ fn slice(s: &str, skip: usize, take: usize) -> String {
 }
 
 #[derive(Debug, Copy, Clone)]
-enum MoveType { All, Attacks, AttacksChecks }
+enum MoveType {
+    All,
+    Attacks,
+    AttacksChecks,
+}
 
 type ExpectedMoves = Vec<(MoveType, MoveSet)>;
 
@@ -124,7 +128,9 @@ fn execute_test_impl(board: Board, moves: ExpectedMoves) {
         let under_test: MoveSet = match computation_type {
             MoveType::All => board.moves(Moves::All).into_iter().collect(),
             MoveType::Attacks => board.moves(Moves::Are(Attacking)).into_iter().collect(),
-            MoveType::AttacksChecks => board.moves(Moves::AreAny(&[Attacking, Checking])).into_iter().collect(),
+            MoveType::AttacksChecks => {
+                board.moves(Moves::AreAny(&[Attacking, Checking])).into_iter().collect()
+            }
         };
         assert_eq!(
             expected_moves.clone(),
@@ -148,9 +154,9 @@ mod parsing_formatting_test {
     use myopic_core::{Class, Corner, Flank, Side};
     use Square::*;
 
-    use crate::{Piece, Square};
     use crate::anyhow::Result;
     use crate::Move;
+    use crate::{Piece, Square};
 
     #[test]
     fn standard() -> Result<()> {

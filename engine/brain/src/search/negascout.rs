@@ -3,32 +3,33 @@ use std::time::Instant;
 
 use myopic_board::anyhow::{anyhow, Result};
 use myopic_board::{Board, Move, TerminalState};
+use TreeNode::{All, Cut, Pv};
 
 use crate::search::moves::MoveGenerator;
 use crate::search::terminator::SearchTerminator;
-use crate::search::transpositions::{TranspositionsImpl, Transpositions, TreeNode};
+use crate::search::transpositions::{Transpositions, TreeNode};
 use crate::search::{eval, quiescent};
-use crate::{Class, Corner, Evaluator, Line, Piece};
+use crate::{BitBoard, Class, Corner, Evaluator, Line, Piece};
 
 /// Provides relevant callstack information for the search to
 /// use during the traversal of the tree.
-pub struct SearchContext {
-    pub start_time: Instant,
+pub struct Context {
+    pub start: Instant,
     pub alpha: i32,
     pub beta: i32,
-    pub depth_remaining: usize,
+    pub depth: u8,
     pub precursors: Vec<Move>,
 }
 
-impl SearchContext {
-    fn next_level(&self, next_alpha: i32, next_beta: i32, mv: &Move, r: usize) -> SearchContext {
+impl Context {
+    fn next_level(&self, next_alpha: i32, next_beta: i32, mv: &Move, r: u8) -> Context {
         let mut next_precursors = self.precursors.clone();
         next_precursors.push(mv.clone());
-        SearchContext {
-            start_time: self.start_time,
+        Context {
+            start: self.start,
             alpha: next_alpha,
             beta: next_beta,
-            depth_remaining: self.depth_remaining - cmp::min(r, self.depth_remaining),
+            depth: self.depth - cmp::min(r, self.depth),
             precursors: next_precursors,
         }
     }
@@ -44,7 +45,6 @@ pub struct SearchResponse {
 
 impl std::ops::Neg for SearchResponse {
     type Output = SearchResponse;
-
     fn neg(self) -> Self::Output {
         SearchResponse { eval: -self.eval, path: self.path }
     }
@@ -60,81 +60,75 @@ pub struct Scout<'a, T: SearchTerminator, TT: Transpositions> {
 }
 
 impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
-    pub fn search(
-        &mut self,
-        root: &mut Evaluator,
-        mut ctx: SearchContext,
-    ) -> Result<SearchResponse> {
+    pub fn search(&mut self, node: &mut Evaluator, mut ctx: Context) -> Result<SearchResponse> {
         if self.terminator.should_terminate(&ctx) {
-            return Err(anyhow!("Terminated at depth {}", ctx.depth_remaining));
-        } else if ctx.depth_remaining == 0 || root.board().terminal_state().is_some() {
-            return match root.board().terminal_state() {
+            return Err(anyhow!("Terminated at depth {}", ctx.depth));
+        } else if ctx.depth == 0 || node.board().terminal_state().is_some() {
+            return match node.board().terminal_state() {
                 Some(TerminalState::Loss) => Ok(eval::LOSS_VALUE),
                 Some(TerminalState::Draw) => Ok(eval::DRAW_VALUE),
-                None => quiescent::search(root, ctx.alpha, ctx.beta),
+                None => quiescent::search(node, ctx.alpha, ctx.beta),
             }
             .map(|eval| SearchResponse { eval, path: vec![] });
         }
 
-        let (hash, mut table_move) = (root.board().hash(), None);
-        match self.transpositions.get(root.board()) {
+        let (hash, mut table_move) = (node.board().hash(), None);
+        match self.transpositions.get(node.board()) {
             None => {}
-            Some(TreeNode::Pv { depth, eval, optimal_path, .. }) => {
+            Some(Pv { depth, eval, best_path: optimal_path, .. }) => {
                 table_move = optimal_path.first().cloned();
-                if (*depth as usize) >= ctx.depth_remaining &&
-                    table_move.is_some() &&
-                    can_break_early(root, table_move.as_ref().unwrap())? {
+                if *depth >= ctx.depth
+                    && table_move.is_some()
+                    && can_break_early(node, table_move.as_ref().unwrap())?
+                {
                     return Ok(SearchResponse { eval: *eval, path: optimal_path.clone() });
                 }
             }
-            Some(TreeNode::Cut { depth, beta, cutoff_move, .. }) => {
+            Some(Cut { depth, beta, cutoff_move, .. }) => {
                 table_move = Some(cutoff_move.clone());
-                if (*depth as usize) >= ctx.depth_remaining &&
-                    ctx.beta <= *beta &&
-                    can_break_early(root, cutoff_move)? {
+                if *depth >= ctx.depth && ctx.beta <= *beta && can_break_early(node, cutoff_move)? {
                     return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
                 }
             }
-            Some(TreeNode::All { depth, eval, best_move, .. }) => {
+            Some(All { depth, eval, best_move, .. }) => {
                 table_move = Some(best_move.clone());
-                if (*depth as usize) >= ctx.depth_remaining &&
-                    *eval <= ctx.alpha &&
-                    can_break_early(root, best_move)? {
+                if *depth >= ctx.depth && *eval <= ctx.alpha && can_break_early(node, best_move)? {
                     return Ok(SearchResponse { eval: *eval, path: vec![] });
                 }
             }
         };
 
-        if can_try_mull_move_pruning(root, &ctx) {
-            root.make(Move::Null)?;
-            let null_search = -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &Move::Null, 3))?;
-            root.unmake()?;
+        if should_try_null_move_pruning(node, &ctx) {
+            node.make(Move::Null)?;
+            let null_search =
+                -self.search(node, ctx.next_level(-ctx.beta, -ctx.alpha, &Move::Null, 3))?;
+            node.unmake()?;
             if null_search.eval > ctx.beta {
                 return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
             }
         }
 
         let (start_alpha, mut result, mut best_path) = (ctx.alpha, -eval::INFTY, vec![]);
-        for (i, m) in self.moves.generate(root, &ctx, table_move.as_ref()).enumerate() {
-            root.make(m.clone())?;
+        for (i, m) in self.moves.generate(node, &ctx, table_move.as_ref()).enumerate() {
+            node.make(m.clone())?;
             #[allow(unused_assignments)]
             let mut response = SearchResponse::default();
             if i == 0 {
                 // Perform a full search immediately on the first move which
                 // we expect to be the best
-                response = -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &m, 1))?;
+                response = -self.search(node, ctx.next_level(-ctx.beta, -ctx.alpha, &m, 1))?;
             } else {
                 // Search with null window under the assumption that the
                 // previous moves are better than this
-                response = -self.search(root, ctx.next_level(-ctx.alpha - 1, -ctx.alpha, &m, 1))?;
+                response = -self.search(node, ctx.next_level(-ctx.alpha - 1, -ctx.alpha, &m, 1))?;
                 // If there is some move which can raise alpha
                 if ctx.alpha < response.eval && response.eval < ctx.beta {
                     // Then this was actually a better move and so we must
                     // perform a full search
-                    response = -self.search(root, ctx.next_level(-ctx.beta, -ctx.alpha, &m, 1))?;
+                    response = -self.search(node, ctx.next_level(-ctx.beta, -ctx.alpha, &m, 1))?;
                 }
             }
-            root.unmake()?;
+            node.unmake()?;
 
             if response.eval > result {
                 result = response.eval;
@@ -144,15 +138,9 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
 
             ctx.alpha = cmp::max(ctx.alpha, result);
             if ctx.alpha >= ctx.beta {
-                // We are a cut node
                 self.transpositions.put(
-                    root.board(),
-                    TreeNode::Cut {
-                        depth: ctx.depth_remaining as u8,
-                        beta: ctx.beta,
-                        cutoff_move: m,
-                        hash,
-                    },
+                    node.board(),
+                    Cut { depth: ctx.depth, beta: ctx.beta, cutoff_move: m, hash },
                 );
                 return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
             }
@@ -160,29 +148,17 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
 
         // Populate the table with the information from this node.
         if ctx.alpha == start_alpha {
-            // We are an all node
-            if let Some(m) = best_path.last() {
+            if let Some(m) = best_path.first() {
                 self.transpositions.put(
-                    root.board(),
-                    TreeNode::All {
-                        depth: ctx.depth_remaining as u8,
-                        eval: result,
-                        best_move: m.clone(),
-                        hash,
-                    },
-                )
+                    node.board(),
+                    All { depth: ctx.depth, eval: result, best_move: m.clone(), hash },
+                );
             }
         } else {
-            // We are a pv node
             self.transpositions.put(
-                root.board(),
-                TreeNode::Pv {
-                    depth: ctx.depth_remaining as u8,
-                    eval: result,
-                    optimal_path: best_path.clone(),
-                    hash,
-                },
-            )
+                node.board(),
+                Pv { depth: ctx.depth, eval: result, best_path: best_path.clone(), hash },
+            );
         }
 
         Ok(SearchResponse { eval: result, path: best_path })
@@ -190,7 +166,7 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
 }
 
 fn can_break_early(node: &mut Evaluator, m: &Move) -> Result<bool> {
-    return Ok(is_pseudo_legal(node.board(), m) && !causes_termination(node, m)?)
+    return Ok(is_pseudo_legal(node.board(), m) && !causes_termination(node, m)?);
 }
 
 fn causes_termination(node: &mut Evaluator, m: &Move) -> Result<bool> {
@@ -209,33 +185,36 @@ fn is_pseudo_legal(position: &Board, m: &Move) -> bool {
             position.remaining_rights()[side].contains(flank) && {
                 let Line(rook_src, _) = Line::rook_castling(corner);
                 let Line(king_src, _) = Line::king_castling(corner);
-                position.locs(&[Piece(side, Class::R)]).contains(rook_src) &&
-                    position.king(side) == king_src
+                position.locs(&[Piece(side, Class::R)]).contains(rook_src)
+                    && position.king(side).unwrap() == king_src
+                    && (BitBoard::cord(king_src, rook_src) & position.all_pieces()).size() == 2
             }
         }
         &Move::Standard { moving, from, dest, capture } => {
-            position.piece(from) == Some(moving) &&
-                position.piece(dest) == capture &&
-                moving.control(from, position.all_pieces()).contains(dest)
+            position.piece(from) == Some(moving)
+                && position.piece(dest) == capture
+                && moving.control(from, position.all_pieces()).contains(dest)
         }
-        &Move::Promotion { from, dest, promoted, capture } => {
-            position.piece(from) == Some(Piece(position.active(), Class::P)) &&
-                position.piece(dest) == capture
+        &Move::Promotion { from, dest, capture, .. } => {
+            position.piece(from) == Some(Piece(position.active(), Class::P))
+                && position.piece(dest) == capture
         }
     }
 }
 
-fn can_try_mull_move_pruning(node: &Evaluator, ctx: &SearchContext) -> bool {
+fn should_try_null_move_pruning(node: &Evaluator, ctx: &Context) -> bool {
     let position = node.board();
-    ctx.depth_remaining < 5 && ctx.beta < eval::INFTY && !position.in_check() && {
+    ctx.depth < 5 && ctx.beta < 1000 && !position.in_check() && {
         let active = position.active();
         let pawns = position.locs(&[Piece(position.active(), Class::P)]).size();
-        let others = position.locs(&[
-            Piece(active, Class::N),
-            Piece(active, Class::B),
-            Piece(active, Class::R),
-            Piece(active, Class::Q),
-        ]).size();
+        let others = position
+            .locs(&[
+                Piece(active, Class::N),
+                Piece(active, Class::B),
+                Piece(active, Class::R),
+                Piece(active, Class::Q),
+            ])
+            .size();
         pawns > 2 && others > 0 || others > 1
     }
 }

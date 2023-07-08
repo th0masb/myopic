@@ -33,7 +33,7 @@ async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveO
     Ok(ChooseMoveOutput {
         best_move: output.best_move.uci_format(),
         search_details: output.search_details.map(|details| SearchDetails {
-            depth_searched: details.depth,
+            depth_searched: details.depth as usize,
             search_duration_millis: details.time.as_millis() as u64,
             eval: details.relative_eval,
         }),

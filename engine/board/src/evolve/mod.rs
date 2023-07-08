@@ -3,9 +3,10 @@ use anyhow::Result;
 use crate::history::Discards;
 use myopic_core::*;
 
+#[cfg(debug_assertions)]
+use crate::anyhow::anyhow;
 use crate::Move::*;
 use crate::{Board, Move};
-use crate::anyhow::anyhow;
 
 #[cfg(test)]
 mod test;
@@ -35,7 +36,7 @@ impl Board {
         match mv {
             Null => {
                 self.enpassant = None;
-            },
+            }
             Standard { moving, from, dest, capture } => {
                 if let Some(p) = capture {
                     self.pieces.unset_piece(p, dest);
@@ -85,8 +86,10 @@ impl Board {
         self.clear_cache();
 
         #[cfg(debug_assertions)]
-        self.pieces.check_consistent()
-            .map_err(|e| anyhow!("Making {} -> {:?}: {}", fen, mv, e)).unwrap();
+        self.pieces
+            .check_consistent()
+            .map_err(|e| anyhow!("Making {} -> {:?}: {}", fen, mv, e))
+            .unwrap();
 
         Ok(())
     }
@@ -141,8 +144,10 @@ impl Board {
         self.clear_cache();
 
         #[cfg(debug_assertions)]
-        self.pieces.check_consistent()
-            .map_err(|e| anyhow!("Unmaking {} -> {:?}: {}", fen, mv, e)).unwrap();
+        self.pieces
+            .check_consistent()
+            .map_err(|e| anyhow!("Unmaking {} -> {:?}: {}", fen, mv, e))
+            .unwrap();
 
         Ok(mv)
     }

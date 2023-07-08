@@ -1,23 +1,23 @@
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
+use chrono::{DateTime, Timelike, Utc};
 use clap::Parser;
+use lichess_api::ratings::{ChallengeRequest, OnlineBot, TimeLimitType, TimeLimits};
 use lichess_api::{LichessClient, LichessEndgameClient};
 use lichess_events::events::{Challenge, GameStart};
 use lichess_events::{EventProcessor, LichessEvent, StreamParams};
 use lichess_game::{EmptyCancellationHook, Metadata};
+use log::LevelFilter;
 use myopic_brain::Engine;
 use openings::{DynamoOpeningService, OpeningTable};
+use rand::prelude::SliceRandom;
+use rand::thread_rng;
+use simple_logger::SimpleLogger;
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::time::Duration;
-use simple_logger::SimpleLogger;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
-use lichess_api::ratings::{ChallengeRequest, OnlineBot, TimeLimits, TimeLimitType};
-use anyhow::{anyhow, Result};
-use chrono::{DateTime, Timelike, Utc};
-use log::LevelFilter;
-use rand::prelude::SliceRandom;
-use rand::thread_rng;
 
 const TABLE_SIZE: usize = 5_000_000;
 
@@ -42,7 +42,7 @@ struct Args {
     #[arg(long, default_value_t = 200)]
     rating_offset_below: u32,
     #[arg(long, default_value_t = 5400)]
-    flush_interval_secs: u64
+    flush_interval_secs: u64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -76,11 +76,7 @@ struct RatingRange {
     offset_above: u32,
 }
 
-async fn search_for_game(
-    args: &Args,
-    bot_id: String,
-    mut rx: Receiver<GameStarted>,
-) {
+async fn search_for_game(args: &Args, bot_id: String, mut rx: Receiver<GameStarted>) {
     let client = LichessClient::new(args.auth_token.clone());
     let mut poll_interval = tokio::time::interval(Duration::from_secs(20));
     let mut flush_interval = tokio::time::interval(Duration::from_secs(args.flush_interval_secs));
@@ -138,12 +134,7 @@ fn get_active_time_range(args: &Args) -> Vec<Range<DateTime<Utc>>> {
 }
 
 fn change_time(date_time: DateTime<Utc>, hour: u32, min: u32, sec: u32) -> DateTime<Utc> {
-    date_time.with_hour(hour)
-        .unwrap()
-        .with_minute(min)
-        .unwrap()
-        .with_second(sec)
-        .unwrap()
+    date_time.with_hour(hour).unwrap().with_minute(min).unwrap().with_second(sec).unwrap()
 }
 
 async fn execute_challenge_poll(
@@ -178,7 +169,8 @@ async fn execute_challenge_poll(
     let ratings = min_rating..=max_rating;
     // Only take bots within the acceptable rating range, whose rating is not provisional and who
     // have not violated tos as these bots will be more likely to accept challenges.
-    let candidate_bots: Vec<_> = online_bots.into_iter()
+    let candidate_bots: Vec<_> = online_bots
+        .into_iter()
         .filter(|b| !exclusions.contains(&b.id.as_str()))
         .filter(|b| !b.tos_violation.unwrap_or(false))
         .filter(|b| b.perfs.rating_for(time_limit_type).is_some())
@@ -195,9 +187,11 @@ async fn execute_challenge_poll(
     log::info!("{} active, {} inactive", active.len(), inactive.len());
 
     let chosen = if !untested.is_empty() {
-        untested.iter()
+        untested
+            .iter()
             .max_by_key(|b| b.perfs.rating_for(time_limit_type).unwrap().rating)
-            .unwrap().clone()
+            .unwrap()
+            .clone()
     } else if !active.is_empty() {
         active.choose(&mut thread_rng()).unwrap().clone()
     } else {
@@ -206,24 +200,20 @@ async fn execute_challenge_poll(
 
     log::info!("Chose opponent: {}", chosen.id.as_str());
 
-    let request = ChallengeRequest {
-        rated: true,
-        time_limit,
-        target_user_id: chosen.id.clone(),
-    };
+    let request = ChallengeRequest { rated: true, time_limit, target_user_id: chosen.id.clone() };
 
-    let _ = client.create_challenge(request).await
+    let _ = client
+        .create_challenge(request)
+        .await
         .map_err(|e| anyhow!("Failed to create challenge {}", e))
-        .and_then(|(status, message)| {
-            match status.as_u16() {
-                200 => Ok(()),
-                400 => {
-                    log::warn!("Failed to create challenge with 400 response {}", message);
-                    Ok(())
-                }
-                429 => Err(anyhow!("Failed to create challenge with 429!")),
-                _ => Err(anyhow!("Error status {} for challenge creation: {}", status, message)),
+        .and_then(|(status, message)| match status.as_u16() {
+            200 => Ok(()),
+            400 => {
+                log::warn!("Failed to create challenge with 400 response {}", message);
+                Ok(())
             }
+            429 => Err(anyhow!("Failed to create challenge with 429!")),
+            _ => Err(anyhow!("Error status {} for challenge creation: {}", status, message)),
         })?;
 
     *tracker.activity.entry(chosen.id).or_insert(0) += 1;
@@ -233,10 +223,11 @@ async fn execute_challenge_poll(
 async fn fetch_bot_state(
     bot_id: &str,
     time_limit_type: TimeLimitType,
-    client: &LichessClient
+    client: &LichessClient,
 ) -> Result<BotState> {
     Ok(BotState {
-        rating: client.fetch_rating(bot_id, time_limit_type)
+        rating: client
+            .fetch_rating(bot_id, time_limit_type)
             .await?
             .map(|r| r.rating)
             .unwrap_or(1500),
@@ -267,8 +258,9 @@ async fn run_event_stream(auth_token: String, bot_id: String, tx: Sender<GameSta
             games_started: Default::default(),
             table_size: TABLE_SIZE,
             tx,
-        }
-    ).await;
+        },
+    )
+    .await;
 }
 
 fn opening_table() -> DynamoOpeningService {
@@ -315,12 +307,13 @@ impl EventProcessor for EventProcessorImpl {
                         self.table_size,
                         vec![Box::new(opening_table()), Box::new(LichessEndgameClient::default())],
                     );
-                    self.tx.send(
-                        GameStarted {
+                    self.tx
+                        .send(GameStarted {
                             id: metadata.game_id.clone(),
                             opponent_id: opponent.id.clone(),
-                        }
-                    ).await.ok();
+                        })
+                        .await
+                        .ok();
                     tokio::spawn(async move {
                         let game_id = metadata.game_id.clone();
                         log::info!("Starting game {}", game_id);

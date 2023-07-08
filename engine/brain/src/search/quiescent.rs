@@ -6,7 +6,7 @@ use MoveFacet::{Attacking, Checking, Promoting};
 use myopic_board::anyhow::Result;
 use myopic_board::{Move, MoveFacet, Moves, TerminalState};
 
-use crate::{Class, eval, Evaluator, Piece};
+use crate::{eval, Class, Evaluator, Piece};
 
 const Q_CHECK_CAP: i32 = -1;
 const DELTA_SKIP_MARGIN: i32 = 200;
@@ -108,22 +108,20 @@ fn categorise(state: &mut Evaluator, mv: &Move) -> MoveCategory {
         Promotion { promoted, capture, .. } => {
             let values = state.piece_values();
             MoveCategory::Promotion {
-                optimistic_delta: values[promoted.1] - values[Class::P] +
-                    capture.map(|p| values[p.1]).unwrap_or(0)
+                optimistic_delta: values[promoted.1] - values[Class::P]
+                    + capture.map(|p| values[p.1]).unwrap_or(0),
             }
         }
-        Standard { from, dest, capture, .. } => {
-            match capture {
-                None => MoveCategory::Other,
-                Some(Piece(_, class)) => {
-                    let see = state.see(*from, *dest);
-                    if see <= 0 {
-                        MoveCategory::BadExchange { see }
-                    } else {
-                        MoveCategory::GoodExchange {
-                            see,
-                            optimistic_delta: state.piece_values()[*class]
-                        }
+        Standard { from, dest, capture, .. } => match capture {
+            None => MoveCategory::Other,
+            Some(Piece(_, class)) => {
+                let see = state.see(*from, *dest);
+                if see <= 0 {
+                    MoveCategory::BadExchange { see }
+                } else {
+                    MoveCategory::GoodExchange {
+                        see,
+                        optimistic_delta: state.piece_values()[*class],
                     }
                 }
             }

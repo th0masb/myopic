@@ -1,15 +1,14 @@
 pub use constraints::MoveConstraints;
 use myopic_core::BitBoard;
 
-use crate::{Move, TerminalState};
 use crate::Board;
+use crate::{Move, TerminalState};
 pub use rays::RaySet;
 
 mod constraints;
 mod control;
 mod rays;
 mod termination;
-
 
 #[derive(Debug, Clone, Default)]
 pub struct CalculationCache {

@@ -1,8 +1,8 @@
 use myopic_core::*;
 
-use crate::{Board, Move};
 use crate::cache::MoveConstraints;
 use crate::Square::*;
+use crate::{Board, Move};
 
 impl Reflectable for Move {
     fn reflect(&self) -> Self {
@@ -63,7 +63,7 @@ impl Board {
     }
 
     fn compute_all_moves_impl(&self) -> Vec<Move> {
-        let king_loc = self.king(self.active);
+        let king_loc = self.king(self.active).unwrap();
         let passive_control = self.passive_control();
         let pins = self.compute_pinned();
         let constraints = if self.in_check() {
@@ -112,7 +112,7 @@ impl Board {
 
     fn enpassant_doesnt_discover_attack(&self, enpassant_source: Square) -> bool {
         let (active, passive) = (self.active, self.active.reflect());
-        let active_king = self.king(active);
+        let active_king = self.king(active).unwrap();
         let third_rank = passive.pawn_third_rank();
         if !third_rank.contains(active_king) {
             return true;
@@ -183,7 +183,7 @@ impl Board {
     }
 
     fn compute_castle_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
-        let king_constraint = constraints.get(self.king(self.active));
+        let king_constraint = constraints.get(self.king(self.active).unwrap());
         let (whites, blacks) = self.sides();
         let p1 = |c: Corner| king_constraint.subsumes(uncontrolled_req(c));
         let p2 = |c: Corner| !(whites | blacks).intersects(unoccupied_req(c));

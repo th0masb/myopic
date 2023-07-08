@@ -43,7 +43,8 @@ impl Board {
         match &cache.discoveries {
             Some(x) => x.clone(),
             None => {
-                let result = self.compute_discoveries_on(Piece(self.active.reflect(), Class::K)).unwrap();
+                let result =
+                    self.compute_discoveries_on(Piece(self.active.reflect(), Class::K)).unwrap();
                 cache.discoveries = Some(result.clone());
                 result
             }
@@ -54,22 +55,21 @@ impl Board {
         let Piece(discovered_side, class) = piece;
         let discoverer_side = discovered_side.reflect();
         let discovered_loc = match class {
-            Class::K => self.king(discovered_side),
-            _ => self.locs(&[piece]).first()
-                .ok_or(anyhow!("{:?} not on the board", piece))?
+            Class::K => self.king(discovered_side).unwrap(),
+            _ => self.locs(&[piece]).first().ok_or(anyhow!("{:?} not on the board", piece))?,
         };
 
         let discoverer_locs = self.side(discoverer_side);
         let discovered_locs = self.side(discovered_side);
 
-        let mut result = RaySet {
-            points: BitBoard::EMPTY,
-            constraints: enum_map! { _ => BitBoard::EMPTY },
-        };
+        let mut result =
+            RaySet { points: BitBoard::EMPTY, constraints: enum_map! { _ => BitBoard::EMPTY } };
         self.compute_xrayers(discoverer_side, discovered_loc)
             .iter()
             .map(|xrayer| (xrayer, BitBoard::cord(discovered_loc, xrayer)))
-            .filter(|&(_, cord)| (cord & discoverer_locs).size() == 2 && (cord & discovered_locs).size() == 1)
+            .filter(|&(_, cord)| {
+                (cord & discoverer_locs).size() == 2 && (cord & discovered_locs).size() == 1
+            })
             .map(|(xrayer, cord)| (((cord & discoverer_locs) - xrayer).first().unwrap(), cord))
             .for_each(|(loc, cord)| {
                 result.points |= loc;
@@ -83,18 +83,15 @@ impl Board {
         let Piece(pinned_side, class) = piece;
         let pinner_side = pinned_side.reflect();
         let pinned_loc = match class {
-            Class::K => self.king(pinned_side),
-            _ => self.locs(&[piece]).first()
-                .ok_or(anyhow!("{:?} not on the board", piece))?
+            Class::K => self.king(pinned_side).unwrap(),
+            _ => self.locs(&[piece]).first().ok_or(anyhow!("{:?} not on the board", piece))?,
         };
 
         let pinner_locs = self.side(pinner_side);
         let pinned_locs = self.side(pinned_side);
 
-        let mut result = RaySet {
-            points: BitBoard::EMPTY,
-            constraints: enum_map! { _ => BitBoard::ALL },
-        };
+        let mut result =
+            RaySet { points: BitBoard::EMPTY, constraints: enum_map! { _ => BitBoard::ALL } };
         self.compute_xrayers(pinner_side, pinned_loc)
             .iter()
             .map(|sq| BitBoard::cord(pinned_loc, sq))
@@ -129,10 +126,7 @@ mod pinned_test {
             expected_pinned.reflect(),
             board.reflect().compute_pinned_on(active_king.reflect()).unwrap()
         );
-        assert_eq!(
-            expected_pinned,
-            board.compute_pinned_on(active_king).unwrap()
-        );
+        assert_eq!(expected_pinned, board.compute_pinned_on(active_king).unwrap());
     }
 
     #[test]
@@ -165,10 +159,7 @@ mod discovery_test {
             expected_discoveries.reflect(),
             board.reflect().compute_discoveries_on(passive_king.reflect()).unwrap()
         );
-        assert_eq!(
-            expected_discoveries,
-            board.compute_discoveries_on(passive_king).unwrap()
-        );
+        assert_eq!(expected_discoveries, board.compute_discoveries_on(passive_king).unwrap());
     }
 
     #[test]
@@ -181,8 +172,8 @@ mod discovery_test {
                     E4 => !(C2 | D3 | E4 | F5 | G6 | H7),
                     H2 => !(H1 | H2 | H3 | H4 | H5 | H6 | H7),
                     _ => BitBoard::EMPTY,
-                }
-            }
+                },
+            },
         );
     }
 }
