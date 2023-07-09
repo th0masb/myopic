@@ -20,7 +20,7 @@ pub struct History {
     /// The stack which tracks the moves and positional
     /// information which gets lost when you make/unmake
     /// moves
-    inner: Vec<(Move, Discards)>,
+    inner: Vec<(Discards, Move)>,
 }
 
 impl History {
@@ -32,19 +32,19 @@ impl History {
         self.prev_position_count + self.inner.len()
     }
 
-    pub fn push(&mut self, mv: Move, discards: Discards) {
-        self.inner.push((mv, discards));
+    pub fn push(&mut self, discards: Discards, m: Move) {
+        self.inner.push((discards, m));
     }
 
     pub fn historical_moves(&self) -> impl Iterator<Item = Move> + '_ {
-        self.inner.iter().map(|(m, _)| m.clone())
+        self.inner.iter().map(|(_, m)| m.clone())
     }
 
-    pub fn historical_positions(&self) -> impl Iterator<Item = (&Move, u64)> + '_ {
-        self.inner.iter().map(|(m, d)| (m, d.hash))
+    pub fn historical_positions(&self) -> impl Iterator<Item = (u64, &Move)> + '_ {
+        self.inner.iter().map(|(d, m)| (d.hash, m))
     }
 
-    pub fn attempt_pop(&mut self) -> Result<(Move, Discards)> {
+    pub fn attempt_pop(&mut self) -> Result<(Discards, Move)> {
         self.inner.pop().ok_or(anyhow!("Empty history, could not pop last move!"))
     }
 }

@@ -458,7 +458,7 @@ mod fen_test {
 impl Reflectable for Board {
     fn reflect(&self) -> Self {
         let start_hash = Board::default().hash();
-        if self.history.historical_positions().next().map(|(_, h)| h) == Some(start_hash) {
+        if self.history.historical_positions().next().map(|(h, _)| h) == Some(start_hash) {
             // If we played from the start position we can reflect properly
             let mut reflected = Board::default();
             reflected.active = Side::B;

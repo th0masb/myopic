@@ -2,7 +2,7 @@ use core::cmp;
 use std::time::Instant;
 
 use myopic_board::anyhow::{anyhow, Result};
-use myopic_board::{Board, Move, TerminalState};
+use myopic_board::{Board, Move, Moves, TerminalState};
 use TreeNode::{All, Cut, Pv};
 
 use crate::search::moves::MoveGenerator;
@@ -19,6 +19,7 @@ pub struct Context {
     pub beta: i32,
     pub depth: u8,
     pub precursors: Vec<Move>,
+    pub early_break_enabled: bool,
 }
 
 impl Context {
@@ -31,6 +32,7 @@ impl Context {
             beta: next_beta,
             depth: self.depth - cmp::min(r, self.depth),
             precursors: next_precursors,
+            early_break_enabled: self.early_break_enabled,
         }
     }
 }
@@ -77,22 +79,31 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
             None => {}
             Some(Pv { depth, eval, best_path: optimal_path, .. }) => {
                 table_move = optimal_path.first().cloned();
-                if *depth >= ctx.depth
+                if ctx.early_break_enabled
+                    && *depth >= ctx.depth
                     && table_move.is_some()
-                    && can_break_early(node, table_move.as_ref().unwrap())?
+                    && is_pseudo_legal(node, table_move.as_ref().unwrap())
                 {
                     return Ok(SearchResponse { eval: *eval, path: optimal_path.clone() });
                 }
             }
             Some(Cut { depth, beta, cutoff_move, .. }) => {
                 table_move = Some(cutoff_move.clone());
-                if *depth >= ctx.depth && ctx.beta <= *beta && can_break_early(node, cutoff_move)? {
+                if ctx.early_break_enabled
+                    && *depth >= ctx.depth
+                    && ctx.beta <= *beta
+                    && is_pseudo_legal(node, cutoff_move)
+                {
                     return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
                 }
             }
             Some(All { depth, eval, best_move, .. }) => {
                 table_move = Some(best_move.clone());
-                if *depth >= ctx.depth && *eval <= ctx.alpha && can_break_early(node, best_move)? {
+                if ctx.early_break_enabled
+                    && *depth >= ctx.depth
+                    && *eval <= ctx.alpha
+                    && is_pseudo_legal(node, best_move)
+                {
                     return Ok(SearchResponse { eval: *eval, path: vec![] });
                 }
             }
@@ -165,18 +176,8 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
     }
 }
 
-fn can_break_early(node: &mut Evaluator, m: &Move) -> Result<bool> {
-    return Ok(is_pseudo_legal(node.board(), m) && !causes_termination(node, m)?);
-}
-
-fn causes_termination(node: &mut Evaluator, m: &Move) -> Result<bool> {
-    node.make(m.clone())?;
-    let terminal = node.board().terminal_state().is_some();
-    node.unmake()?;
-    Ok(terminal)
-}
-
-fn is_pseudo_legal(position: &Board, m: &Move) -> bool {
+fn is_pseudo_legal(node: &Evaluator, m: &Move) -> bool {
+    let position = node.board();
     match m {
         Move::Null => false,
         Move::Enpassant { capture, .. } => position.enpassant() == Some(*capture),

@@ -56,8 +56,8 @@ impl Board {
             .history
             .historical_positions()
             // Exclude positions where null move was played
-            .filter(|(m, _)| !matches!(m, Move::Null))
-            .map(|(_, h)| h)
+            .filter(|(_, m)| !matches!(m, Move::Null))
+            .map(|(h, h_)| h)
             .collect_vec();
         position_hashes.push(self.hash());
         position_hashes.sort_unstable();
