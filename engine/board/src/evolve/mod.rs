@@ -23,13 +23,13 @@ impl Board {
 
         // Preserve the current state
         self.history.push(
-            mv.clone(),
             Discards {
                 rights: self.rights.clone(),
                 enpassant: self.enpassant(),
                 half_move_clock: self.half_move_clock(),
                 hash: self.hash(),
             },
+            mv.clone(),
         );
 
         // Moves specific actions
@@ -100,7 +100,7 @@ impl Board {
         #[cfg(debug_assertions)]
         let fen = self.to_fen();
 
-        let (mv, state) = self.history.attempt_pop()?;
+        let (state, mv) = self.history.attempt_pop()?;
 
         match &mv {
             Null => {}
