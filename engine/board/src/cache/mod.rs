@@ -16,7 +16,6 @@ pub struct CalculationCache {
     pub passive_control: Option<BitBoard>,
     pub pinned: Option<RaySet>,
     pub discoveries: Option<RaySet>,
-    pub moves: Option<Vec<Move>>,
 }
 
 impl Board {
@@ -26,6 +25,5 @@ impl Board {
         cache.passive_control = None;
         cache.pinned = None;
         cache.discoveries = None;
-        cache.moves = None;
     }
 }

@@ -52,18 +52,6 @@ impl Move {
 
 impl Board {
     pub(crate) fn all_moves_impl(&self) -> Vec<Move> {
-        let moves = { self.cache.borrow().moves.clone() };
-        match moves {
-            Some(mvs) => mvs,
-            None => {
-                let result = self.compute_all_moves_impl();
-                self.cache.borrow_mut().moves = Some(result.clone());
-                result
-            }
-        }
-    }
-
-    fn compute_all_moves_impl(&self) -> Vec<Move> {
         let king_loc = self.king(self.active).unwrap();
         let passive_control = self.passive_control();
         let pins = self.compute_pinned();
