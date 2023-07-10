@@ -99,7 +99,13 @@ export const BotConfigValues: BotConfig[] = [
                 name: "Hyperopic-Move"
             },
             lichessBot: {
-                botId: "Hyperopic",
+                botId: "hyperopic",
+                userMatchers: [
+                    {
+                        include: true,
+                        pattern: "^th0masb$"
+                    }
+                ]
             },
             rateLimits: {
                 challengeTable: { name: "HyperopicChallenges" },
