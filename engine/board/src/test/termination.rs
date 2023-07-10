@@ -127,7 +127,7 @@ fn repetition_9() {
         Some(TerminalState::Draw),
         "1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. O-O Nxe4 \
         5. Re1 Nd6 6. Nxe5 Be7 7. Bf1 Nxe5 8. Rxe5 O-O 9. d4 Ne8 10. d5 Bc5 11. Be3 Be7 \
-        12. Bd2 Bc5 13. Be3 Bb4 14. Bd2 Bc5 15. Be3 d6",
+        12. Bd2 Bc5 13. Be3 Bb4 14. Bd2 Bc5 15. Be3",
     )
 }
 

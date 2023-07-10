@@ -36,11 +36,11 @@ impl History {
         self.inner.push((discards, m));
     }
 
-    pub fn historical_moves(&self) -> impl Iterator<Item = Move> + '_ {
+    pub fn historical_moves(&self) -> impl DoubleEndedIterator<Item = Move> + '_ {
         self.inner.iter().map(|(_, m)| m.clone())
     }
 
-    pub fn historical_positions(&self) -> impl Iterator<Item = (u64, &Move)> + '_ {
+    pub fn historical_positions(&self) -> impl DoubleEndedIterator<Item = (u64, &Move)> + '_ {
         self.inner.iter().map(|(d, m)| (d.hash, m))
     }
 

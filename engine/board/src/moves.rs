@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use myopic_core::*;
 
 use crate::cache::MoveConstraints;
@@ -74,40 +75,47 @@ impl Board {
             result.intersect_pins(&pins);
             result
         };
+        let mut result = Vec::with_capacity(40);
         self.compute_pawn_moves(&constraints)
-            .into_iter()
-            .chain(self.compute_nbrqk_moves(&constraints).into_iter())
-            .chain(self.compute_castle_moves(&constraints).into_iter())
-            .collect()
+            .chain(self.compute_nbrqk_moves(&constraints))
+            .chain(self.compute_castle_moves(&constraints))
+            .for_each(|m| result.push(m));
+        result
     }
 
-    fn compute_pawn_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
-        let mut moves: Vec<Move> = Vec::with_capacity(20);
+    fn compute_pawn_moves<'a>(&'a self, constraints: &'a MoveConstraints) -> impl Iterator<Item=Move> +'a {
         let (standard, enpassant, promotion) = self.separate_pawn_locs();
         let (active_pawn, (whites, blacks)) = (Piece(self.active, Class::P), self.sides());
-        let compute_moves = |loc: Square| active_pawn.moves(loc, whites, blacks);
-
-        // Add moves for pawns which can only produce standard moves.
-        for location in standard | enpassant {
-            let targets = compute_moves(location) & constraints.get(location);
-            moves.extend(self.standards(active_pawn, location, targets));
-        }
+        let compute_moves = move |loc: Square| active_pawn.moves(loc, whites, blacks);
         let active = self.active;
-        for from in enpassant {
-            let dest = self.enpassant.unwrap();
-            let capture = dest.next(active.reflect().pawn_dir()).unwrap();
-            if constraints.get(from).contains(capture)
-                && self.enpassant_doesnt_discover_attack(from)
-            {
-                moves.push(Move::Enpassant { side: active, from, dest, capture });
-            }
-        }
-        for location in promotion {
-            let targets = compute_moves(location) & constraints.get(location);
-            moves.extend(self.promotions(self.active, location, targets));
-        }
 
-        moves
+        (standard | enpassant).into_iter().flat_map(move |location| {
+            self.standards(
+                active_pawn,
+                location,
+                compute_moves(location) & constraints.get(location)
+            )
+        }).chain(
+            enpassant.into_iter().filter_map(move |from| {
+                let dest = self.enpassant.unwrap();
+                let capture = dest.next(active.reflect().pawn_dir()).unwrap();
+                if constraints.get(from).contains(capture)
+                    && self.enpassant_doesnt_discover_attack(from)
+                {
+                    Some(Move::Enpassant { side: active, from, dest, capture })
+                } else {
+                    None
+                }
+            })
+        ).chain(
+            promotion.into_iter().flat_map(move |location| {
+                self.promotions(
+                    self.active,
+                    location,
+                    compute_moves(location) & constraints.get(location)
+                )
+            })
+        )
     }
 
     fn enpassant_doesnt_discover_attack(&self, enpassant_source: Square) -> bool {
@@ -144,32 +152,29 @@ impl Board {
         )
     }
 
-    fn compute_nbrqk_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
-        let mut dest: Vec<Move> = Vec::with_capacity(40);
+    fn compute_nbrqk_moves<'a>(&'a self, constraints: &'a MoveConstraints) -> impl Iterator<Item = Move> + 'a {
         let (whites, blacks) = self.sides();
-        let unchecked_moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
+        let unchecked_moves = move |p: Piece, loc: Square| p.moves(loc, whites, blacks);
         // Add standard moves for pieces which aren't pawns
-        for class in &[Class::N, Class::B, Class::R, Class::Q, Class::K] {
-            let piece = Piece(self.active, *class);
-            for location in self.pieces.locs(piece) {
+        [Class::N, Class::B, Class::R, Class::Q, Class::K].into_iter().flat_map(move |class| {
+            let piece = Piece(self.active, class);
+            self.pieces.locs(piece).into_iter().flat_map(move |location| {
                 let moves = unchecked_moves(piece, location) & constraints.get(location);
-                dest.extend(self.standards(piece, location, moves));
-            }
-        }
+                self.standards(piece, location, moves)
+            })
+        })
+    }
+
+    fn standards(&self, moving: Piece, from: Square, dest: BitBoard) -> impl Iterator<Item = Move> + '_ {
         dest
+            .iter()
+            .map(move |dest| Move::Standard { moving, from, dest, capture: self.piece(dest) })
     }
 
-    fn standards(&self, moving: Piece, from: Square, dests: BitBoard) -> Vec<Move> {
-        dests
+    fn promotions(&self, side: Side, from: Square, dest: BitBoard) -> impl Iterator<Item = Move> + '_ {
+        dest
             .iter()
-            .map(|dest| Move::Standard { moving, from, dest, capture: self.piece(dest) })
-            .collect()
-    }
-
-    fn promotions(&self, side: Side, from: Square, dests: BitBoard) -> Vec<Move> {
-        dests
-            .iter()
-            .flat_map(|dest| {
+            .flat_map(move |dest| {
                 [Class::Q, Class::R, Class::B, Class::N].iter().map(move |&promoted| {
                     Move::Promotion {
                         from,
@@ -179,18 +184,17 @@ impl Board {
                     }
                 })
             })
-            .collect()
     }
 
-    fn compute_castle_moves(&self, constraints: &MoveConstraints) -> Vec<Move> {
+    fn compute_castle_moves<'a>(&'a self, constraints: &'a MoveConstraints) -> impl Iterator<Item=Move> +'a {
         let king_constraint = constraints.get(self.king(self.active).unwrap());
         let (whites, blacks) = self.sides();
-        let p1 = |c: Corner| king_constraint.subsumes(uncontrolled_req(c));
-        let p2 = |c: Corner| !(whites | blacks).intersects(unoccupied_req(c));
+        let p1 = move |c: Corner| king_constraint.subsumes(uncontrolled_req(c));
+        let p2 = move |c: Corner| !(whites | blacks).intersects(unoccupied_req(c));
         self.rights
             .corners()
             .filter(|Corner(side, _)| *side == self.active)
-            .filter(|&c| p1(c) && p2(c))
+            .filter(move |&c| p1(c) && p2(c))
             .filter(|&c| {
                 let Line(k_source, _) = Line::king_castling(c);
                 let Line(r_source, _) = Line::rook_castling(c);
@@ -198,7 +202,6 @@ impl Board {
                     && self.piece(r_source).map(|p| p.1 == Class::R).unwrap_or(false)
             })
             .map(|corner| Move::Castle { corner })
-            .collect()
     }
 }
 
@@ -221,7 +224,7 @@ fn unoccupied_req(Corner(side, flank): Corner) -> BitBoard {
 }
 
 fn enpassant_attack_squares(active: Side, enpassant_square: Square) -> BitBoard {
-    ADJACENTS[enpassant_square.file_index() as usize] & active.reflect().pawn_third_rank()
+    ADJACENTS[enpassant_square.file_index()] & active.reflect().pawn_third_rank()
 }
 
 const ADJACENTS: [BitBoard; 8] = [
