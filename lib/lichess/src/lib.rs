@@ -67,22 +67,23 @@ impl LichessClient {
 
     pub async fn post_move(&self, game_id: &str, mv: &str) -> Result<StatusCode> {
         // Add timeout and retry logic
-        self.client
+        let response = self.client
             .post(format!("{}/{}/move/{}", GAME_ENDPOINT, game_id, mv).as_str())
             .bearer_auth(&self.auth_token)
             .send()
             .await
-            .map_err(|error| anyhow!("Error posting move: {}", error))
-            .and_then(|response| {
-                if response.status().is_success() {
-                    Ok(response.status())
-                } else {
-                    Err(anyhow!(
-                        "Lichess api responded with error {} during move post",
-                        response.status()
-                    ))
-                }
-            })
+            .map_err(|error| anyhow!("Error posting move: {}", error))?;
+
+        let status = response.status();
+        if status.is_success() {
+            Ok(status)
+        } else {
+            let body = response
+                .text()
+                .await
+                .map_err(|e| anyhow!("Failed to get error body {}", e))?;
+            Err(anyhow!("Error posting move {} in {}: {} -> {}", mv, game_id, status, body))
+        }
     }
 
     pub async fn post_chatline(
