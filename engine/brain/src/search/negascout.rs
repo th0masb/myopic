@@ -2,7 +2,7 @@ use core::cmp;
 use std::time::Instant;
 
 use myopic_board::anyhow::{anyhow, Result};
-use myopic_board::{Board, Move, Moves, TerminalState};
+use myopic_board::{Move, TerminalState};
 use TreeNode::{All, Cut, Pv};
 
 use crate::search::moves::MoveGenerator;
