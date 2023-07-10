@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use itertools::Itertools;
 use myopic_core::*;
 
@@ -8,9 +9,7 @@ const HALF_MOVE_CLOCK_LIMIT: usize = 100;
 
 impl Board {
     pub(crate) fn terminal_state_impl(&self) -> Option<TerminalState> {
-        let cache = self.cache.borrow();
-        let terminal_status = cache.termination_status;
-        drop(cache);
+        let terminal_status = self.cache.borrow().termination_status;
         match terminal_status {
             Some(x) => x,
             None => {
@@ -52,31 +51,35 @@ impl Board {
     }
 
     fn check_repetitions(&self) -> Option<TerminalState> {
-        let mut position_hashes = self
+        let mut dest: HashMap<u64, usize> = HashMap::new();
+        dest.insert(self.hash(), 1);
+
+        let positions = self
             .history
             .historical_positions()
             // Exclude positions where null move was played
             .filter(|(_, m)| !matches!(m, Move::Null))
-            .map(|(h, h_)| h)
-            .collect_vec();
-        position_hashes.push(self.hash());
-        position_hashes.sort_unstable();
-        let (mut last, mut count) = (position_hashes[0], 1usize);
-        for hash in position_hashes.into_iter().skip(1) {
-            if hash == last {
-                count += 1;
-                if count == 3 {
-                    break;
-                }
-            } else {
-                count = 1;
-                last = hash;
+            // Only care about positions since the last unrepeatable move
+            .rev()
+            .take_while(|(_, m)| Board::is_repeatable(*m))
+            .map(|(h, _)| h);
+
+        for p in positions {
+            if 3 == *dest.entry(p).and_modify(|v| *v += 1).or_insert(1) {
+                return Some(TerminalState::Draw)
             }
         }
-        if count == 3 {
-            Some(TerminalState::Draw)
-        } else {
-            None
+        None
+    }
+
+    fn is_repeatable(m: &Move) -> bool {
+        match m {
+            Move::Null => true,
+            Move::Enpassant { .. } | Move::Promotion { .. } | Move::Castle { .. } => false,
+            Move::Standard {
+                moving: Piece(_, class),
+                capture, ..
+            } => *class != Class::P && capture.is_none()
         }
     }
 
@@ -96,7 +99,7 @@ impl Board {
         let (whites, blacks) = self.sides();
         let moves = |p: Piece, loc: Square| p.moves(loc, whites, blacks);
         // These pieces have no constraints since not in check and not on pin rays
-        for &class in qrbnp() {
+        for class in [Class::Q, Class::R, Class::B, Class::N, Class::P] {
             let piece = Piece(self.active, class);
             let locations = self.locs(&[piece]) - pin_rays;
             if locations.iter().any(|loc| moves(piece, loc).is_populated()) {
@@ -109,8 +112,4 @@ impl Board {
             Some(TerminalState::Draw)
         }
     }
-}
-
-fn qrbnp<'a>() -> &'a [Class] {
-    &[Class::Q, Class::R, Class::B, Class::N, Class::P]
 }
