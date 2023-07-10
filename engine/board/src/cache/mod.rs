@@ -2,7 +2,7 @@ pub use constraints::MoveConstraints;
 use myopic_core::BitBoard;
 
 use crate::Board;
-use crate::{Move, TerminalState};
+use crate::{TerminalState};
 pub use rays::RaySet;
 
 mod constraints;

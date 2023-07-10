@@ -188,7 +188,6 @@ impl From<Board> for Evaluator {
                 break;
             }
         }
-        facets.push(Box::new(PawnStructureFacet::default()));
 
         if board_clone.to_fen().as_str() == crate::START_FEN {
             let mut eval = Evaluator {
@@ -200,6 +199,7 @@ impl From<Board> for Evaluator {
                     Box::new(DevelopmentFacet::default()),
                     Box::new(KnightRimFacet::default()),
                     Box::new(PieceSquareTablesFacet::default()),
+                    Box::new(PawnStructureFacet::default())
                 ],
             };
             moves.into_iter().rev().for_each(|m| eval.make(m).unwrap());
@@ -208,7 +208,10 @@ impl From<Board> for Evaluator {
             Evaluator {
                 material: MaterialFacet::from(&board),
                 phase: Phase::from(&board),
-                facets: vec![Box::new(PieceSquareTablesFacet::from(&board))],
+                facets: vec![
+                    Box::new(PieceSquareTablesFacet::from(&board)),
+                    Box::new(PawnStructureFacet::default())
+                ],
                 board,
             }
         }
