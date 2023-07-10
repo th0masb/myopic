@@ -12,15 +12,3 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: cargo test --release
-  cross_build_event_stream:
-    name: Cross build event-stream application
-    runs-on: ubuntu-20.04
-    env:
-      APP_NAME: "event-stream"
-      TARGETS: "aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu"
-      DOCKERFILE: "tools/event-stream.dockerfile"
-      DRYRUN: "1"
-    steps:
-      - uses: actions/checkout@v2
-      - run: ./tools/setup-cross-deps.sh
-      - run: VERSION="$GITHUB_SHA" ./tools/publish-multi-platform.sh
