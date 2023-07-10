@@ -244,7 +244,7 @@ mod test {
         board.play_pgn(pgn).unwrap();
         let eval = Evaluator::from(board.clone());
         assert_eq!(board, eval.board().clone());
-        assert_eq!(4, eval.facets.len());
+        assert_eq!(5, eval.facets.len());
     }
 
     #[test]
@@ -253,6 +253,6 @@ mod test {
         let board = Board::from_str(fen).unwrap();
         let eval = Evaluator::from(board.clone());
         assert_eq!(board, eval.board().clone());
-        assert_eq!(1, eval.facets.len());
+        assert_eq!(2, eval.facets.len());
     }
 }
