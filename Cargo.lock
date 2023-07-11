@@ -210,7 +210,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "challenge"
 version = "0.0.0"
 dependencies = [
- "itertools",
+ "itertools 0.10.5",
  "lambda_runtime",
  "lichess_api",
  "log",
@@ -242,7 +242,7 @@ dependencies = [
 name = "chessmove-benchmark-lambda"
 version = "0.0.0"
 dependencies = [
- "itertools",
+ "itertools 0.10.5",
  "lambda_payloads",
  "lambda_runtime",
  "log",
@@ -941,6 +941,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyperopic"
+version = "0.1.0"
+dependencies = [
+ "itertools 0.11.0",
+ "lazy_static",
+]
+
+[[package]]
 name = "iana-time-zone"
 version = "0.1.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1035,6 +1043,15 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
 dependencies = [
  "either",
 ]
@@ -1267,7 +1284,7 @@ name = "myopic-board"
 version = "2.2.0"
 dependencies = [
  "enum-map",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "myopic-core",
  "regex",
@@ -1280,7 +1297,7 @@ dependencies = [
  "dotenv",
  "enum-map",
  "enumset",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "myopic-board",
  "regex",
@@ -1296,7 +1313,7 @@ dependencies = [
  "anyhow",
  "enum-map",
  "enumset",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "rand",
  "rand_pcg",
@@ -1354,7 +1371,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "futures",
- "itertools",
+ "itertools 0.10.5",
  "log",
  "myopic-brain",
  "rand",
@@ -1407,7 +1424,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "indicatif",
- "itertools",
+ "itertools 0.10.5",
  "lazy_static",
  "myopic-board",
  "regex",
