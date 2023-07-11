@@ -14,6 +14,17 @@ pub const fn lift(square: Square) -> Board {
     1u64 << (square as u64)
 }
 
+#[macro_export]
+macro_rules! board {
+    ( $( $x:expr ),* ) => {
+        {
+            let mut board = 0u64;
+            $(board |= 1u64 << ($x as u64);)*
+            board
+        }
+    };
+}
+
 pub fn next(square: Square, (dr, df): Dir) -> Option<Square> {
     let next_r = (rank(square) as isize) + dr;
     let next_f = (file(square) as isize) + df;
@@ -28,6 +39,12 @@ pub fn next(square: Square, (dr, df): Dir) -> Option<Square> {
 mod test {
     use crate::constants::square::*;
     use crate::constants::dir::*;
+    use super::lift;
+
+    #[test]
+    fn board_macro_test() {
+        assert_eq!(lift(A1) | lift(A2) | lift(B5), board!(A1, A2, B5));
+    }
 
     #[test]
     fn next() {
