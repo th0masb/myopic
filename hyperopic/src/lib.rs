@@ -8,11 +8,13 @@ pub type Flank = usize;
 pub type Square = usize;
 pub type Rank = usize;
 pub type File = usize;
-pub type BitBoard = u64;
+pub type Board = u64;
 pub type Class = usize;
 pub type Line = (Square, Square);
 pub type Piece = (Side, Class);
 pub type Corner = (Side, Flank);
+pub type SquareMap<T> = [T; 64];
+pub type SideMap<T> = [T; 2];
 
 // (dr, df)
 pub type Dir = (isize, isize);
@@ -60,6 +62,40 @@ pub mod constants {
         pub const SEE: Dir = (-1, -2); pub const SSE: Dir = (-2, -1);
         pub const SSW: Dir = (-2,  1); pub const SWW: Dir = (-2,  1);
         pub const NWW: Dir = ( 1,  2); pub const NNW: Dir = ( 2,  1);
+    }
+
+    pub mod boards {
+        use crate::Board;
+        use crate::constants::square::*;
+        use crate::square::lift;
+
+        pub const RANKS2: [Board; 1] = [
+            lift(A1) | lift(B1) | lift(C1) | lift(D1) | lift(C1) | lift(B1) | lift(A1),
+        ];
+
+        pub const RIM: Board = 72340172838076673 | 9259542123273814144 | 255 | 18374686479671623680;
+
+        pub const RANKS: [Board; 8] = [
+            255, // 1
+            65280,
+            16711680,
+            4278190080,
+            1095216660480,
+            280375465082880,
+            71776119061217280,
+            18374686479671623680, // 8
+        ];
+
+        pub const FILES: [Board; 8] = [
+            72340172838076673, // H
+            144680345676153346,
+            289360691352306692,
+            578721382704613384,
+            1157442765409226768,
+            2314885530818453536,
+            4629771061636907072,
+            9259542123273814144, // A
+        ];
     }
 
     pub mod square {

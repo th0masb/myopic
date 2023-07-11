@@ -1,5 +1,5 @@
 use std::cmp::{max, min};
-use crate::{BitBoard, Dir, File, Rank, Square};
+use crate::{Board, Dir, File, Rank, Square};
 
 
 pub const fn rank(square: Square) -> Rank {
@@ -10,7 +10,7 @@ pub const fn file(square: Square) -> File {
     square % 8
 }
 
-pub const fn lift(square: Square) -> BitBoard {
+pub const fn lift(square: Square) -> Board {
     1u64 << (square as u64)
 }
 
