@@ -3,14 +3,13 @@ use std::str::FromStr;
 
 pub use anyhow;
 pub use enum_map;
-use enum_map::Enum;
+use enum_map::{Enum, EnumMap};
 pub use enumset;
 use enumset::EnumSetType;
 
 pub use bitboard::BitBoard;
 pub use pieces::{Class, Piece};
 pub use reflectable::Reflectable;
-pub use square::Square;
 
 mod bitboard;
 pub mod hash;
@@ -26,15 +25,37 @@ pub enum Side { W, B }
 #[rustfmt::skip]
 pub enum Flank { K, Q }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Enum)]
+#[rustfmt::skip]
+pub enum Square {
+    H1, G1, F1, E1, D1, C1, B1, A1,
+    H2, G2, F2, E2, D2, C2, B2, A2,
+    H3, G3, F3, E3, D3, C3, B3, A3,
+    H4, G4, F4, E4, D4, C4, B4, A4,
+    H5, G5, F5, E5, D5, C5, B5, A5,
+    H6, G6, F6, E6, D6, C6, B6, A6,
+    H7, G7, F7, E7, D7, C7, B7, A7,
+    H8, G8, F8, E8, D8, C8, B8, A8,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Enum)]
+#[rustfmt::skip]
+pub enum File { H, G, F, E, D, C, B, A }
+
+#[derive(Debug, EnumSetType, Hash, PartialOrd, Ord)]
+#[rustfmt::skip]
+pub enum Dir { N, E, S, W, NE, SE, SW, NW, NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW }
+
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Corner(pub Side, pub Flank);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Line(pub Square, pub Square);
 
-#[derive(Debug, EnumSetType, Hash, PartialOrd, Ord)]
-#[rustfmt::skip]
-pub enum Dir { N, E, S, W, NE, SE, SW, NW, NNE, NEE, SEE, SSE, SSW, SWW, NWW, NNW }
+
+type Matrix<E, T> = EnumMap<E, EnumMap<E, T>>;
+
 
 impl Line {
     pub fn king_castling(Corner(side, flank): Corner) -> Line {

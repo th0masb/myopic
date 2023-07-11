@@ -1,10 +1,11 @@
 use std::iter::repeat;
+use enum_map::{enum_map, EnumMap};
 
 use itertools::izip;
 use lazy_static::lazy_static;
 
 use crate::bitboard::BitBoard;
-use crate::square::Square;
+use crate::Square;
 
 use super::{bishop_dirs, compute_bishop_index, compute_control, compute_powerset, BISHOP_MASKS};
 
@@ -20,6 +21,9 @@ lazy_static! {
 }
 
 fn compute_move_database() -> Moves {
+    let xyz: EnumMap<Square, u64> = enum_map! {
+        y => y as u64
+    };
     let mut dest = Vec::with_capacity(64);
     let dirs = bishop_dirs();
     for (sq, bb) in izip!(Square::iter(), BISHOP_MASKS.iter().map(|&m| BitBoard(m))) {
@@ -38,7 +42,7 @@ fn compute_move_database() -> Moves {
 
 #[cfg(test)]
 mod test {
-    use crate::square::Square::*;
+    use crate::Square::*;
 
     use super::{compute_bishop_index, compute_move_database, Moves};
 
