@@ -19,6 +19,13 @@ const ADJACENT_FILES: [BitBoard; 8] = [
     BitBoard::FILES[6],
 ];
 
+const WHITE_HALF: BitBoard = BitBoard(
+    BitBoard::RANKS[0].0 | BitBoard::RANKS[1].0 | BitBoard::RANKS[2].0 | BitBoard::RANKS[3].0
+);
+const BLACK_HALF: BitBoard = BitBoard(
+    BitBoard::RANKS[4].0 | BitBoard::RANKS[5].0 | BitBoard::RANKS[6].0 | BitBoard::RANKS[7].0
+);
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash, Enum)]
 enum Feature {
     Passed,
@@ -27,8 +34,6 @@ enum Feature {
     Backward,
 }
 
-//type FeatureScores = EnumMap<Feature, (i32, i32)>;
-//type FeatureCounts = EnumMap<Feature, fn(BitBoard, BitBoard) -> i32>;
 type Bonus = (i32, i32);
 
 #[derive(Clone, PartialEq)]
@@ -45,7 +50,6 @@ pub struct PawnStructureFacet {
     cache: RefCell<Vec<Option<CachedEval>>>,
 
 }
-
 
 impl Default for PawnStructureFacet {
     fn default() -> Self {
@@ -118,13 +122,19 @@ impl PawnStructureFacet {
             mid += w_count * w_mid - b_count * b_mid;
             end += w_count * w_end - b_count * b_end;
         }
-        // Evaluate the connection rewards
+        // Evaluate the connection rewards, only count connections if we are in the opponents half
         let (con_mid, con_end) = self.connected_passer_bonus;
         for i in 0..7 {
             let this_file = BitBoard::FILES[i];
             let next_file = BitBoard::FILES[i + 1];
-            let w_count = count_connections(this_file & w_passers, next_file & w_passers);
-            let b_count = count_connections(this_file & b_passers, next_file & b_passers);
+            let w_count = count_connections(
+                this_file & w_passers,
+                next_file & w_passers & BLACK_HALF
+            );
+            let b_count = count_connections(
+                this_file & b_passers,
+                next_file & b_passers & WHITE_HALF
+            );
             mid += (w_count - b_count) * con_mid;
             end += (w_count - b_count) * con_end;
         }
