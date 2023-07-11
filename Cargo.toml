@@ -18,6 +18,7 @@ members = [
     "lib/events",
     "lib/lichess",
     "lib/openings",
+    "hyperopic"
 ]
 exclude = [
     "uci-client"
