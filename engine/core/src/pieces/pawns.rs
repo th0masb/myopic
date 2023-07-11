@@ -1,5 +1,5 @@
 use crate::bitboard::BitBoard;
-use crate::square::Square;
+use crate::Square;
 use crate::Side;
 
 pub fn white_control(loc: Square) -> BitBoard {
@@ -181,7 +181,7 @@ const BLACK_CONTROL: [BitBoard; 64] = [
 #[cfg(test)]
 mod black_test {
     use crate::pieces::{Class, Piece};
-    use crate::square::Square::*;
+    use crate::Square::*;
 
     use super::*;
 
@@ -205,7 +205,7 @@ mod black_test {
 #[cfg(test)]
 mod white_test {
     use crate::pieces::{Class, Piece};
-    use crate::square::Square::*;
+    use crate::Square::*;
 
     use super::*;
 
