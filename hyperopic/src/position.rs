@@ -3,7 +3,9 @@ use crate::{Board, class, ClassMap, Corner, CornerMap, file, lift, Piece, PieceM
 use crate::moves::{Move, Moves, Move::*};
 
 use anyhow::{anyhow, Result};
-use crate::constants::{class, corner, side};
+use crate::board::iter;
+use crate::constants::{class, corner, side, piece};
+use crate::constants::boards::FILES;
 use crate::hash::piece;
 
 /// Represents the possible ways a game can be terminated, we only
@@ -23,6 +25,7 @@ pub struct Position {
     pub piece_boards: PieceMap<Board>,
     pub piece_locs: SquareMap<Option<Piece>>,
     pub side_boards: SideMap<Board>,
+    pub king_locs: SideMap<Square>,
     pub castling_rights: CornerMap<bool>,
     pub active: Side,
     pub enpassant: Option<Square>,
@@ -45,44 +48,9 @@ impl Default for Position {
     }
 }
 
-fn rights_removed<'a>(square: Square) -> &'a [Corner] {
-    use crate::constants::{square::*, corner::*};
-    match square {
-        H1 => &[WK],
-        E1 => &[WK, WQ],
-        A1 => &[WQ],
-        H8 => &[BK],
-        E8 => &[BK, BQ],
-        A8 => &[BQ],
-        _ => &[],
-    }
-}
-
-fn king_line(corner: Corner) -> (Square, Square) {
-    use crate::constants::{square, corner};
-    match corner {
-        corner::WK => (square::E1, square::G1),
-        corner::WQ => (square::E1, square::C1),
-        corner::BK => (square::E8, square::G8),
-        corner::BQ => (square::E8, square::C8),
-        _ => panic!()
-    }
-}
-
-fn rook_line(corner: Corner) -> (Square, Square) {
-    use crate::constants::{square, corner};
-    match corner {
-        corner::WK => (square::H1, square::F1),
-        corner::WQ => (square::A1, square::D1),
-        corner::BK => (square::H8, square::F8),
-        corner::BQ => (square::A8, square::D8),
-        _ => panic!()
-    }
-}
-
+// Implementation block for making/unmaking moves
 impl Position {
     pub fn make(&mut self, m: Move) -> Result<()> {
-        use crate::constants::{class, side, piece};
         self.history.push((self.create_discards(), m.clone()));
         self.enpassant.map(|sq| self.key ^= crate::hash::enpassant(sq));
         match m {
@@ -149,33 +117,7 @@ impl Position {
         Ok(())
     }
 
-    fn set_piece(&mut self, piece: Piece, square: Square) {
-        self.key ^= crate::hash::piece(piece, square);
-        let lifted = lift(square);
-        self.piece_boards[piece] |= lifted;
-        self.side_boards[side(piece)] |= lifted;
-        self.piece_locs[square] = Some(piece);
-    }
-
-    fn unset_piece(&mut self, piece: Piece, square: Square) {
-        self.key ^= crate::hash::piece(piece, square);
-        let lifted = !lift(square);
-        self.piece_boards[piece] &= lifted;
-        self.side_boards[side(piece)] &= lifted;
-        self.piece_locs[square] = None;
-    }
-
-    fn remove_rights(&mut self, corners: &[Corner]) {
-        corners.iter().for_each(|&c| {
-            if self.castling_rights[c] {
-                self.castling_rights[c] = false;
-                self.key ^= crate::hash::corner(c);
-            }
-        })
-    }
-
     pub fn unmake(&mut self) -> Result<Move> {
-        use crate::constants::{class, side, piece};
         if self.history.len() == 0 {
             return Err(anyhow!("No moves left to unmake!"));
         }
@@ -220,8 +162,33 @@ impl Position {
         Ok(mv)
     }
 
-    pub fn moves(&self, moves: Moves) -> Vec<Move> {
-        todo!()
+    fn set_piece(&mut self, piece: Piece, square: Square) {
+        self.key ^= crate::hash::piece(piece, square);
+        let lifted = lift(square);
+        let side = side(piece);
+        self.piece_boards[piece] |= lifted;
+        self.side_boards[side] |= lifted;
+        self.piece_locs[square] = Some(piece);
+        if class(piece) == class::K {
+            self.king_locs[side] = square
+        }
+    }
+
+    fn unset_piece(&mut self, piece: Piece, square: Square) {
+        self.key ^= crate::hash::piece(piece, square);
+        let lifted = !lift(square);
+        self.piece_boards[piece] &= lifted;
+        self.side_boards[side(piece)] &= lifted;
+        self.piece_locs[square] = None;
+    }
+
+    fn remove_rights(&mut self, corners: &[Corner]) {
+        corners.iter().for_each(|&c| {
+            if self.castling_rights[c] {
+                self.castling_rights[c] = false;
+                self.key ^= crate::hash::corner(c);
+            }
+        })
     }
 
     pub fn create_discards(&self) -> Discards {
@@ -233,3 +200,72 @@ impl Position {
         }
     }
 }
+
+// Implementation block for misc property generation
+impl Position {
+    pub fn compute_control(&self, side: Side) -> Board {
+        use crate::constants::{piece::*, side::*};
+        use crate::board::control;
+        let invisible_king = self.piece_boards[if side == W { BK } else { WK }];
+        let occupied = (self.side_boards[W] | self.side_boards[B]) & !invisible_king;
+        [class::N, class::B, class::R, class::Q, class::K]
+            .into_iter()
+            .map(|class| side * 6 + class)
+            .flat_map(|p| iter(self.piece_boards[p]).map(move |sq| control(p, sq, occupied)))
+            .fold(0u64, |a, n| a | n)
+            | pawn_control(side, self.piece_boards[if side == W { WP } else { BP }])
+    }
+}
+
+fn pawn_control(side: Side, pawns: Board) -> Board {
+    use crate::constants::boards::FILES;
+    let (not_a_file, not_h_file) = (!FILES[7], !FILES[0]);
+    if side == side::W {
+        ((pawns & not_a_file) << 9) | ((pawns & not_h_file) << 7)
+    } else {
+        ((pawns & not_h_file) >> 9) | ((pawns & not_a_file) >> 7)
+    }
+}
+
+// Implementation block for move generation
+impl Position {
+    pub fn moves(&self, moves: Moves) -> Vec<Move> {
+        todo!()
+    }
+}
+
+fn rights_removed<'a>(square: Square) -> &'a [Corner] {
+    use crate::constants::{square::*, corner::*};
+    match square {
+        H1 => &[WK],
+        E1 => &[WK, WQ],
+        A1 => &[WQ],
+        H8 => &[BK],
+        E8 => &[BK, BQ],
+        A8 => &[BQ],
+        _ => &[],
+    }
+}
+
+fn king_line(corner: Corner) -> (Square, Square) {
+    use crate::constants::{square, corner};
+    match corner {
+        corner::WK => (square::E1, square::G1),
+        corner::WQ => (square::E1, square::C1),
+        corner::BK => (square::E8, square::G8),
+        corner::BQ => (square::E8, square::C8),
+        _ => panic!("{} is not a valid corner", corner)
+    }
+}
+
+fn rook_line(corner: Corner) -> (Square, Square) {
+    use crate::constants::{square, corner};
+    match corner {
+        corner::WK => (square::H1, square::F1),
+        corner::WQ => (square::A1, square::D1),
+        corner::BK => (square::H8, square::F8),
+        corner::BQ => (square::A8, square::D8),
+        _ => panic!("{} is not a valid corner", corner)
+    }
+}
+

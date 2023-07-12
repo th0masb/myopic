@@ -310,6 +310,10 @@ mod test {
             super::control(WB, E3, board!(C5, A7, E4, H6, F2)),
             board!(~E3 => C1, C5, H6, F2)
         );
+        assert_eq!(
+            super::control(BR, D5, board!(D5, D2, D1, E8)),
+            board!(~D5 => D2, A5, H5, D8)
+        )
     }
 
     #[test]
