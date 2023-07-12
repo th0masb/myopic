@@ -17,10 +17,10 @@ pub enum TerminalState {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Discards {
-    castling_rights: CornerMap<bool>,
-    enpassant: Option<Square>,
-    clock: usize,
-    hash: u64,
+    pub castling_rights: CornerMap<bool>,
+    pub enpassant: Option<Square>,
+    pub clock: usize,
+    pub key: u64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -47,11 +47,20 @@ impl Position {
         todo!()
     }
 
-    pub fn unmake(&mut self, m: Move) -> Result<Move> {
+    pub fn unmake(&mut self) -> Result<Move> {
         todo!()
     }
 
     pub fn moves(&self, moves: Moves) -> Vec<Move> {
         todo!()
+    }
+
+    pub fn create_discards(&self) -> Discards {
+        Discards {
+            castling_rights: self.castling_rights.clone(),
+            enpassant: self.enpassant,
+            clock: self.clock,
+            key: self.key,
+        }
     }
 }
