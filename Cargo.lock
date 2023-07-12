@@ -950,9 +950,11 @@ dependencies = [
 name = "hyperopic"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "gcd",
  "itertools 0.11.0",
  "lazy_static",
+ "regex",
 ]
 
 [[package]]

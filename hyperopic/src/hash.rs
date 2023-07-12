@@ -22,7 +22,7 @@ pub fn enpassant(square: Square) -> u64 {
 }
 
 /// Get the hash of the given castling zone
-pub fn zone(corner: Corner) -> u64 {
+pub fn corner(corner: Corner) -> u64 {
     FEATURES.corner[corner]
 }
 

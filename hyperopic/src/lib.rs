@@ -2,6 +2,8 @@ mod board;
 mod hash;
 mod position;
 mod moves;
+mod parse;
+mod format;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8
@@ -51,6 +53,18 @@ macro_rules! board {
         }
     };
 }
+
+#[macro_export]
+macro_rules! square_map {
+    ($( $($x:expr),+ => $y:expr),+) => {
+        {
+            let mut result = [None; 64];
+            $($(result[$x as usize] = Some($y);)+)+
+            result
+        }
+    };
+}
+
 
 pub const fn side(piece: Piece) -> Side {
     piece / 6
@@ -176,13 +190,14 @@ pub mod constants {
 
 #[cfg(test)]
 mod test {
-    use crate::board;
+    use crate::{board, Piece, Square, SquareMap};
     use crate::constants::square::*;
     use crate::constants::dir::*;
+    use crate::constants::piece;
     use super::lift;
 
     #[test]
-    fn board_macro_test() {
+    fn board_macro() {
         assert_eq!(lift(A1) | lift(A2) | lift(B5), board!(A1, A2, B5));
         assert_eq!(lift(A1) | lift(A2) | lift(A3), board!(A1 => A3));
         assert_eq!(board!(C3, C2, C1, A3, B3), board!(C3 => A3, C1));
@@ -193,6 +208,18 @@ mod test {
         assert_eq!(
             board!(C2, C1, A3, B3, E3, D4, C5, B6, G4, H6),
             board!(~C3 => A3, C1; ~F2 => B6, H6),
+        );
+    }
+
+    #[test]
+    fn square_map_macro() {
+        let mut expected: SquareMap<Option<Piece>> = [None; 64];
+        expected[F5] = Some(piece::WB);
+        expected[A8] = Some(piece::WB);
+        expected[D2] = Some(piece::BR);
+        assert_eq!(
+            expected,
+            square_map!(F5, A8 => piece::WB, D2 => piece::BR),
         );
     }
 }
