@@ -4,6 +4,8 @@ mod position;
 mod moves;
 mod parse;
 mod format;
+#[cfg(test)]
+mod test;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8
@@ -121,6 +123,12 @@ pub mod constants {
         pub const R: Class = 3; pub const Q: Class = 4; pub const K: Class = 5;
     }
 
+    pub mod corner {
+        use crate::Corner;
+        pub const WK: Corner = 0; pub const WQ: Corner = 1;
+        pub const BK: Corner = 2; pub const BQ: Corner = 3;
+    }
+
     pub mod piece {
         use crate::Piece;
         use crate::constants::side;
@@ -200,7 +208,7 @@ pub mod constants {
 }
 
 #[cfg(test)]
-mod test {
+mod macro_test {
     use crate::{board, Piece, Square, SquareMap};
     use crate::constants::square::*;
     use crate::constants::dir::*;
