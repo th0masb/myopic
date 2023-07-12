@@ -1,6 +1,9 @@
+use crate::square::{file, rank};
+
 mod square;
-mod bitboard;
+mod board;
 mod hash;
+mod position;
 
 pub type Side = usize;
 pub type Flank = usize;
@@ -37,6 +40,15 @@ macro_rules! board {
     };
 }
 
+pub trait Symmetric {
+    fn reflect(&self) -> Self;
+}
+
+impl Symmetric for Square {
+    fn reflect(&self) -> Self {
+        8 * (7 - rank(*self)) + file(*self)
+    }
+}
 
 #[rustfmt::skip]
 pub mod constants {

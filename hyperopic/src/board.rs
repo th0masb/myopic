@@ -3,7 +3,7 @@ use gcd::Gcd;
 use itertools::{iterate, Itertools};
 use lazy_static::lazy_static;
 use crate::{Board, Dir, Piece, SideMap, Square, SquareMap};
-use crate::bitboard::iterator::BoardIterator;
+use crate::board::iterator::BoardIterator;
 use crate::constants::side;
 use crate::square::{file, lift, next, rank};
 
@@ -104,14 +104,6 @@ fn compute_powerset(squares: &[Square]) -> Vec<Board> {
 pub const fn contains(board: Board, square: Square) -> bool {
     board & lift(square) != 0
 }
-//
-//pub const fn covers(left: Board, right: Board) -> bool {
-//    (left & right) == right
-//}
-//
-//pub const fn intersect(left: Board, right: Board) -> bool {
-//    (left & right) != 0
-//}
 
 pub fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
     dirs.iter()
@@ -164,7 +156,7 @@ mod iterator {
             } else {
                 let lsb = bitscan(self.0);
                 self.0 ^= 1u64 << lsb as u64;
-                Some(lsb.into())
+                Some(lsb)
             }
         }
     }
