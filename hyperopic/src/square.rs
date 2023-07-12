@@ -1,7 +1,6 @@
 use std::cmp::{max, min};
 use crate::{Board, Dir, File, Rank, Square};
 
-
 pub const fn rank(square: Square) -> Rank {
     square / 8
 }
