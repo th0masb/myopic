@@ -16,7 +16,6 @@ pub type Board = u64;
 pub type Class = usize;
 pub type Piece = usize;
 pub type Corner = usize;
-pub type Line = (Square, Square);
 pub type Dir = (isize, isize);
 
 pub type SquareMap<T> = [T; 64];
@@ -104,11 +103,18 @@ pub trait Symmetric {
     fn reflect(&self) -> Self;
 }
 
-impl Symmetric for Square {
-    fn reflect(&self) -> Self {
-        8 * (7 - rank(*self)) + file(*self)
-    }
-}
+//impl Symmetric for Square {
+//    fn reflect(&self) -> Self {
+//        8 * (7 - rank(*self)) + file(*self)
+//    }
+//}
+//
+//impl Symmetric for Side {
+//    fn reflect(&self) -> Self {
+//        use crate::constants::side;
+//        if *self == side::W { side::B } else { side::W }
+//    }
+//}
 
 #[rustfmt::skip]
 pub mod constants {
