@@ -15,7 +15,7 @@ pub enum TerminalState {
     Loss,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Discards {
     castling_rights: CornerMap<bool>,
     enpassant: Option<Square>,
@@ -23,7 +23,7 @@ pub struct Discards {
     hash: u64,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Position {
     pub piece_boards: PieceMap<Board>,
     pub piece_locs: SquareMap<Option<Piece>>,
@@ -33,13 +33,12 @@ pub struct Position {
     pub enpassant: Option<Square>,
     pub clock: usize,
     pub key: u64,
-    pub prior_positions: usize,
     pub history: Vec<Discards>,
 }
 
 impl Default for Position {
     fn default() -> Self {
-        todo!()
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".parse().unwrap()
     }
 }
 
