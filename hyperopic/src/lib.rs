@@ -18,6 +18,26 @@ pub type Dir = (isize, isize);
 pub type SquareMap<T> = [T; 64];
 pub type SideMap<T> = [T; 2];
 
+#[macro_export]
+macro_rules! board {
+    ($( $x:expr ),*) => {
+        {
+            let mut board = 0u64;
+            $(board |= 1u64 << ($x as u64);)*
+            board
+        }
+    };
+    ($( $x:expr => $($y:expr),+ );+) => {
+        {
+            use crate::bitboard::cord;
+            let mut board = 0u64;
+            $($(board |= cord($x as usize, $y as usize);)+)+
+            board
+        }
+    };
+}
+
+
 #[rustfmt::skip]
 pub mod constants {
     pub mod side {
@@ -66,7 +86,6 @@ pub mod constants {
     pub mod boards {
         use crate::{Board, board};
         use crate::constants::square::*;
-        use crate::square::lift;
 
         pub const RANKS: [Board; 8] = [
             board!(A1, B1, C1, D1, E1, F1, G1, H1),

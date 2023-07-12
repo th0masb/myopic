@@ -1,6 +1,6 @@
 use std::array;
 use lazy_static::lazy_static;
-use crate::{Corner, Piece, Side, Square};
+use crate::{Corner, Piece, Side, SideMap, Square, SquareMap};
 
 lazy_static! {
     static ref FEATURES: Features = compute_features();
@@ -37,16 +37,14 @@ fn compute_features() -> Features {
 }
 
 struct Features {
-    side: [u64; 2],
-    enpassant: [u64; 64],
-    corner: [[u64; 2]; 2],
+    side: SideMap<u64>,
+    enpassant: SquareMap<u64>,
+    corner: SideMap<[u64; 2]>,
     piece_squares: [[[u64; 64]; 6]; 2],
 }
 
 // https://github.com/official-stockfish/Stockfish/blob/master/src/misc.h#L122
-struct PRNG {
-    s: u64,
-}
+struct PRNG { s: u64 }
 
 impl PRNG {
     fn rand64(&mut self) -> u64 {
