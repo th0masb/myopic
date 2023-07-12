@@ -70,7 +70,7 @@ fn parse_fen(fen: &str) -> Result<Position> {
     let mut side_boards = [0u64; 2];
     (0..12).for_each(|p| side_boards[side(p)] |= piece_boards[p]);
     let rights_fn = |s: &str| parts[2].contains(s);
-    let castling_rights = [rights_fn("k"), rights_fn("q"), rights_fn("K"), rights_fn("Q")];
+    let castling_rights = [rights_fn("K"), rights_fn("Q"), rights_fn("k"), rights_fn("q")];
     let mut key = if active == side::W { 0u64 } else { hash::black_move() };
     (0..4).filter(|i| castling_rights[*i]).for_each(|r| key ^= hash::corner(r));
     (0..12).for_each(|p| iter(piece_boards[p]).for_each(|s| key ^= hash::piece(p, s)));
