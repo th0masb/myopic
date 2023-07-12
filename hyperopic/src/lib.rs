@@ -65,6 +65,17 @@ macro_rules! square_map {
     };
 }
 
+#[macro_export]
+macro_rules! zobrist_hash {
+    ($( $($x:expr),+ => $y:expr),+) => {
+        {
+            use crate::hash;
+            let mut result = 0u64;
+            $($(result ^= hash::piece($y, $x);)+)+
+            result
+        }
+    };
+}
 
 pub const fn side(piece: Piece) -> Side {
     piece / 6
@@ -121,7 +132,7 @@ pub mod constants {
 
         pub const BP: Piece = 6; pub const BN: Piece = 7;
         pub const BB: Piece = 8; pub const BR: Piece = 9;
-        pub const BQ: Piece = 11; pub const BK: Piece = 12;
+        pub const BQ: Piece = 10; pub const BK: Piece = 11;
     }
 
     pub mod dir {

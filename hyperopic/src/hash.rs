@@ -12,8 +12,8 @@ pub fn piece(piece: Piece, square: Square) -> u64 {
 }
 
 /// Get the hash of the given side to move
-pub fn side(side: Side) -> u64 {
-    FEATURES.side[side]
+pub fn black_move() -> u64 {
+    FEATURES.black_move
 }
 
 /// Get the hash of enpassant on the file of the given square
@@ -29,7 +29,7 @@ pub fn corner(corner: Corner) -> u64 {
 fn compute_features() -> Features {
     let mut prng = PRNG { s: 1070372 };
     Features {
-        side: [0, prng.rand64()],
+        black_move: prng.rand64(),
         enpassant: array::from_fn(|_| prng.rand64()),
         corner: array::from_fn(|_| prng.rand64()),
         piece_squares: array::from_fn(|_| array::from_fn(|_| prng.rand64())),
@@ -37,7 +37,7 @@ fn compute_features() -> Features {
 }
 
 struct Features {
-    side: SideMap<u64>,
+    black_move: u64,
     enpassant: SquareMap<u64>,
     corner: CornerMap<u64>,
     piece_squares: PieceMap<SquareMap<u64>>,
