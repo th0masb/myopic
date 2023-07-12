@@ -1,12 +1,11 @@
 use std::array;
-use std::ops::BitAnd;
+use gcd::Gcd;
 use itertools::{iterate, Itertools};
 use lazy_static::lazy_static;
 use crate::{Board, Dir, Piece, SideMap, Square, SquareMap};
 use crate::bitboard::iterator::BoardIterator;
-use crate::bitboard::magic::BISHOP_MASKS;
 use crate::constants::side;
-use crate::square::{lift, next};
+use crate::square::{file, lift, next, rank};
 
 lazy_static! {
     static ref CONTROL: PieceControl = compute_control();
@@ -102,7 +101,6 @@ fn compute_powerset(squares: &[Square]) -> Vec<Board> {
     }
 }
 
-
 pub const fn contains(board: Board, square: Square) -> bool {
     board & lift(square) != 0
 }
@@ -120,6 +118,13 @@ pub fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
         .flat_map(|&d| iterate(Some(source), move |op| op.and_then(|sq| next(sq, d))).take_while(|op| op.is_some()).skip(1).take(depth))
         .filter_map(|x| x)
         .fold(0u64, |a, n| a | lift(n))
+}
+
+pub fn cord(from: Square, dest: Square) -> Board {
+    let dr = rank(dest) as isize - rank(from) as isize;
+    let df = file(dest) as isize - file(from) as isize;
+    let gcd = (df.abs() as u32).gcd(dr.abs() as u32) as isize;
+    lift(from) | rays(from, &[(dr / gcd, df / gcd)], gcd as usize)
 }
 
 pub fn iter(board: Board) -> impl Iterator<Item=Square> {
