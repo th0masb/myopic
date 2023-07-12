@@ -1,26 +1,26 @@
 use std::array;
+use std::cmp::{max, min};
 use gcd::Gcd;
 use itertools::{iterate, Itertools};
 use lazy_static::lazy_static;
-use crate::{Board, Dir, Piece, SideMap, Square, SquareMap};
+use crate::{Board, class, Dir, file, lift, Piece, rank, side, SideMap, Square, SquareMap};
 use crate::board::iterator::BoardIterator;
 use crate::constants::side;
-use crate::square::{file, lift, next, rank};
 
 lazy_static! {
     static ref CONTROL: PieceControl = compute_control();
 }
 
-pub fn control((side, class): Piece, sq: Square, occupied: Board) -> Board {
+pub fn control(piece: Piece, sq: Square, occupied: Board) -> Board {
     use crate::constants::class;
-    match class {
-        class::P => CONTROL.pawns[side][sq],
+    match class(piece) {
+        class::P => CONTROL.pawns[side(piece)][sq],
         class::N => CONTROL.knights[sq],
         class::B => bishop_control(sq, occupied),
         class::R => rook_control(sq, occupied),
         class::Q => bishop_control(sq, occupied) | rook_control(sq, occupied),
         class::K => CONTROL.king[sq],
-        _ => panic!("{} is not a valid piece class", class),
+        _ => panic!("{} is not a valid piece class", class(piece)),
     }
 }
 
@@ -98,6 +98,16 @@ fn compute_powerset(squares: &[Square]) -> Vec<Board> {
         let (head, rest) = (squares[0], &squares[1..]);
         compute_powerset(rest).into_iter()
             .flat_map(|r| [r, r | lift(head)].into_iter()).collect()
+    }
+}
+
+pub fn next(square: Square, (dr, df): Dir) -> Option<Square> {
+    let next_r = (rank(square) as isize) + dr;
+    let next_f = (file(square) as isize) + df;
+    if 0 <= min(next_f, next_r) && max(next_f, next_r) < 8 {
+        Some(8 * (next_r as usize) + next_f as usize)
+    } else {
+        None
     }
 }
 
@@ -288,14 +298,28 @@ mod magic {
 }
 
 #[cfg(test)]
-mod control_test {
+mod test {
     use crate::constants::piece::*;
     use crate::constants::square::*;
+    use crate::constants::dir::*;
     use crate::board;
 
     #[test]
-    fn test() {
-        super::control(WB, D3, board!(E2, C2, B1, C4, B5, A6, E4, F5));
+    fn control() {
+        assert_eq!(
+            super::control(WB, E3, board!(C5, A7, E4, H6, F2)),
+            board!(~E3 => C1, C5, H6, F2)
+        );
+    }
+
+    #[test]
+    fn next() {
+        assert_eq!(Some(A2), super::next(A1, N));
+        assert_eq!(Some(B5), super::next(D4, NWW));
+        assert_eq!(None, super::next(A8, N));
+        assert_eq!(None, super::next(C2, SSE));
+        assert_eq!(None, super::next(H6, NE));
+        assert_eq!(None, super::next(A7, W));
     }
 }
 

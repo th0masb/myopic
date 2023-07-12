@@ -1,28 +1,29 @@
-use crate::square::{file, rank};
-
-mod square;
 mod board;
 mod hash;
 mod position;
+mod moves;
 
 pub type Side = usize;
-pub type Flank = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8
 pub type Square = usize;
 pub type Rank = usize;
 pub type File = usize;
 pub type Board = u64;
 pub type Class = usize;
+pub type Piece = usize;
+pub type Corner = usize;
 pub type Line = (Square, Square);
-pub type Piece = (Side, Class);
-pub type Corner = (Side, Flank);
 pub type Dir = (isize, isize);
 
 pub type SquareMap<T> = [T; 64];
 pub type SideMap<T> = [T; 2];
+pub type ClassMap<T> = [T; 6];
+pub type PieceMap<T> = [T; 12];
+pub type CornerMap<T> = [T; 4];
 
 #[macro_export]
 macro_rules! board {
+    // Individual squares
     ($( $x:expr ),*) => {
         {
             let mut board = 0u64;
@@ -30,15 +31,47 @@ macro_rules! board {
             board
         }
     };
+    // Cords inclusive of source
     ($( $x:expr => $($y:expr),+ );+) => {
         {
-            use crate::bitboard::cord;
+            use crate::board::cord;
             let mut board = 0u64;
             $($(board |= cord($x as usize, $y as usize);)+)+
             board
         }
     };
+    // Cords exclusive of source
+    ($( ~$x:expr => $($y:expr),+ );+) => {
+        {
+            use crate::board::cord;
+            use crate::lift;
+            let mut board = 0u64;
+            $($(board |= cord($x as usize, $y as usize) & !lift($x);)+)+
+            board
+        }
+    };
 }
+
+pub const fn side(piece: Piece) -> Side {
+    piece / 6
+}
+
+pub const fn class(piece: Piece) -> Class {
+    piece % 6
+}
+
+pub const fn rank(square: Square) -> Rank {
+    square / 8
+}
+
+pub const fn file(square: Square) -> File {
+    square % 8
+}
+
+pub const fn lift(square: Square) -> Board {
+    1u64 << (square as u64)
+}
+
 
 pub trait Symmetric {
     fn reflect(&self) -> Self;
@@ -57,11 +90,6 @@ pub mod constants {
         pub const W: Side = 0; pub const B: Side = 1;
     }
 
-    pub mod flank {
-        use crate::Flank;
-        pub const K: Flank = 0; pub const Q: Flank = 1;
-    }
-
     pub mod class {
         use crate::Class;
         pub const P: Class = 0; pub const N: Class = 1; pub const B: Class = 2;
@@ -73,13 +101,13 @@ pub mod constants {
         use crate::constants::side;
         use crate::constants::class;
 
-        pub const WP: Piece = (side::W, class::P); pub const WN: Piece = (side::W, class::N);
-        pub const WB: Piece = (side::W, class::B); pub const WR: Piece = (side::W, class::R);
-        pub const WQ: Piece = (side::W, class::Q); pub const WK: Piece = (side::W, class::K);
+        pub const WP: Piece = 0; pub const WN: Piece = 1;
+        pub const WB: Piece = 2; pub const WR: Piece = 3;
+        pub const WQ: Piece = 4; pub const WK: Piece = 5;
 
-        pub const BP: Piece = (side::B, class::P); pub const BN: Piece = (side::B, class::N);
-        pub const BB: Piece = (side::B, class::B); pub const BR: Piece = (side::B, class::R);
-        pub const BQ: Piece = (side::B, class::Q); pub const BK: Piece = (side::B, class::K);
+        pub const BP: Piece = 6; pub const BN: Piece = 7;
+        pub const BB: Piece = 8; pub const BR: Piece = 9;
+        pub const BQ: Piece = 11; pub const BK: Piece = 12;
     }
 
     pub mod dir {
@@ -143,5 +171,28 @@ pub mod constants {
         pub const D7: Square = 52; pub const C7: Square = 53; pub const B7: Square = 54; pub const A7: Square = 55;
         pub const H8: Square = 56; pub const G8: Square = 57; pub const F8: Square = 58; pub const E8: Square = 59;
         pub const D8: Square = 60; pub const C8: Square = 61; pub const B8: Square = 62; pub const A8: Square = 63;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::board;
+    use crate::constants::square::*;
+    use crate::constants::dir::*;
+    use super::lift;
+
+    #[test]
+    fn board_macro_test() {
+        assert_eq!(lift(A1) | lift(A2) | lift(B5), board!(A1, A2, B5));
+        assert_eq!(lift(A1) | lift(A2) | lift(A3), board!(A1 => A3));
+        assert_eq!(board!(C3, C2, C1, A3, B3), board!(C3 => A3, C1));
+        assert_eq!(
+            board!(C3, C2, C1, A3, B3, F2, E3, D4, C5, B6, G4, H6),
+            board!(C3 => A3, C1; F2 => B6, H6),
+        );
+        assert_eq!(
+            board!(C2, C1, A3, B3, E3, D4, C5, B6, G4, H6),
+            board!(~C3 => A3, C1; ~F2 => B6, H6),
+        );
     }
 }
