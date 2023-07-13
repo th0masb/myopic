@@ -2,11 +2,15 @@ use crate::constants::side;
 use crate::constants::square::*;
 use crate::position::Position;
 use crate::test::assert_boards_equal;
-use crate::{board, Board, Side};
+use crate::{board, reflect_board, reflect_side, Board, Side, Symmetric};
 
 fn execute_test(fen: &str, side: Side, expected: Board) {
     let position: Position = fen.parse().unwrap();
-    assert_boards_equal(expected, position.compute_control(side))
+    assert_boards_equal(expected, position.compute_control(side));
+    assert_boards_equal(
+        reflect_board(expected),
+        position.reflect().compute_control(reflect_side(side)),
+    );
 }
 
 #[test]

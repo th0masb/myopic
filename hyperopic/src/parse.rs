@@ -147,18 +147,18 @@ mod test_fen {
                 3,
                 [false, false, false, false],
                 square_map!(
-                    A3, B2, C4, E4, F2, G2, H2 => piece::WP,
-                    C3, D4 => piece::WN,
-                    E2 => piece::WB,
-                    D1, F1 => piece::WR,
-                    D2 => piece::WQ,
-                    G1 => piece::WK,
-                    A6, B7, D6, E6, F7, G6, H6 => piece::BP,
-                    E7 => piece::BN,
-                    C8, G7 => piece::BB,
-                    A8, D8 => piece::BR,
-                    C7 => piece::BQ,
-                    G8 => piece::BK
+                    A3, B2, C4, E4, F2, G2, H2 => Some(piece::WP),
+                    C3, D4 => Some(piece::WN),
+                    E2 => Some(piece::WB),
+                    D1, F1 => Some(piece::WR),
+                    D2 => Some(piece::WQ),
+                    G1 => Some(piece::WK),
+                    A6, B7, D6, E6, F7, G6, H6 => Some(piece::BP),
+                    E7 => Some(piece::BN),
+                    C8, G7 => Some(piece::BB),
+                    A8, D8 => Some(piece::BR),
+                    C7 => Some(piece::BQ),
+                    G8 => Some(piece::BK)
                 )
             )
         )

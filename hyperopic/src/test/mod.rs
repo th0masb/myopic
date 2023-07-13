@@ -5,6 +5,7 @@ use std::array;
 
 mod control;
 mod make;
+mod pinned;
 
 pub fn assert_boards_equal(expected: Board, actual: Board) {
     assert_eq!(expected, actual, "expected ^ actual {:#064b}", expected ^ actual)
@@ -59,27 +60,39 @@ impl Symmetric for Position {
 }
 
 mod symmetry_test {
-    use Move::Standard;
+    use crate::constants::piece;
+    use crate::constants::square::*;
     use crate::moves::Move;
     use crate::position::Position;
     use crate::Symmetric;
-    use crate::constants::square::*;
-    use crate::constants::piece;
+    use Move::Standard;
 
     #[test]
     fn position_symmetry_1() {
         assert_eq!(
-            "r2qkb1r/1p1b1pp1/p1nppn2/1B5p/3NPP2/2N4P/PPP3P1/R1BQ1RK1 w kq - 0 1".parse::<Position>().unwrap().reflect(),
-            "r1bq1rk1/ppp3p1/2n4p/3npp2/1b5P/P1NPPN2/1P1B1PP1/R2QKB1R b KQ - 0 1".parse::<Position>().unwrap()
+            "r2qkb1r/1p1b1pp1/p1nppn2/1B5p/3NPP2/2N4P/PPP3P1/R1BQ1RK1 w kq - 0 1"
+                .parse::<Position>()
+                .unwrap()
+                .reflect(),
+            "r1bq1rk1/ppp3p1/2n4p/3npp2/1b5P/P1NPPN2/1P1B1PP1/R2QKB1R b KQ - 0 1"
+                .parse::<Position>()
+                .unwrap()
         );
     }
 
     #[test]
     fn position_symmetry_2() {
-        let mut start = "r2qkb1r/1p1b1pp1/p1nppn2/1B5p/3NPP2/2N4P/PPP3P1/R1BQ1RK1 w kq - 0 1".parse::<Position>().unwrap();
+        let mut start = "r2qkb1r/1p1b1pp1/p1nppn2/1B5p/3NPP2/2N4P/PPP3P1/R1BQ1RK1 w kq - 0 1"
+            .parse::<Position>()
+            .unwrap();
         start.make(Standard { from: G1, dest: H1, moving: piece::WK, capture: None }).unwrap();
-        let mut reflected_start = "r1bq1rk1/ppp3p1/2n4p/3npp2/1b5P/P1NPPN2/1P1B1PP1/R2QKB1R b KQ - 0 1".parse::<Position>().unwrap();
-        reflected_start.make(Standard { from: G8, dest: H8, moving: piece::BK, capture: None }).unwrap();
+        let mut reflected_start =
+            "r1bq1rk1/ppp3p1/2n4p/3npp2/1b5P/P1NPPN2/1P1B1PP1/R2QKB1R b KQ - 0 1"
+                .parse::<Position>()
+                .unwrap();
+        reflected_start
+            .make(Standard { from: G8, dest: H8, moving: piece::BK, capture: None })
+            .unwrap();
         assert_eq!(start.reflect(), reflected_start);
     }
 }
