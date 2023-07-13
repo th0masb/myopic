@@ -1,8 +1,8 @@
-use crate::{board, Board, Side};
-use crate::position::Position;
 use crate::constants::side;
 use crate::constants::square::*;
+use crate::position::Position;
 use crate::test::assert_boards_equal;
+use crate::{board, Board, Side};
 
 fn execute_test(fen: &str, side: Side, expected: Board) {
     let position: Position = fen.parse().unwrap();
@@ -81,7 +81,7 @@ fn control_case_5() {
             ~A7 => B6;
             ~C6 => D8, B8, A7, A5, B4, D4, E5, E7;
             ~F8 => D6, H6
-        )
+        ),
     );
 }
 
@@ -100,17 +100,13 @@ fn control_case_6() {
             ~C6 => D8, B8, A7, A5, B4, D4, E5, E7;
             ~F8 => D6, H6;
             ~C8 => A6, H3
-        )
+        ),
     );
 }
 
 #[test]
 fn control_case_7() {
-    execute_test(
-        "8/8/3p4/p3p2p/8/8/8/8 w - - 4 15",
-        side::B,
-        board!(B4, C5, E5, D4, F4, G4)
-    );
+    execute_test("8/8/3p4/p3p2p/8/8/8/8 w - - 4 15", side::B, board!(B4, C5, E5, D4, F4, G4));
 }
 
 #[test]
@@ -130,6 +126,6 @@ fn control_case_8() {
             ~B4 => A6, A2, C2, D3, D5, C6;
             ~A8 => C8, A7;
             ~A7 => B6
-        )
+        ),
     );
 }

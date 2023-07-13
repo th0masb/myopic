@@ -1,11 +1,13 @@
-use std::array;
-use std::cmp::{max, min};
+use crate::board::iterator::BoardIterator;
+use crate::{
+    lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square,
+    SquareMap,
+};
 use gcd::Gcd;
 use itertools::{iterate, Itertools};
 use lazy_static::lazy_static;
-use crate::{Board, piece_class, Dir, square_file, lift, Piece, piece_side, square_rank, SideMap, Square, SquareMap};
-use crate::board::iterator::BoardIterator;
-
+use std::array;
+use std::cmp::{max, min};
 
 lazy_static! {
     static ref CONTROL: PieceControl = compute_control();
@@ -56,7 +58,13 @@ fn compute_control() -> PieceControl {
             compute_magic_moves(sq, ROOK_MASKS[sq], ROOK_MAGICS[sq], ROOK_SHIFTS[sq], &[N, E, S, W])
         }),
         bishop: array::from_fn(|sq| {
-            compute_magic_moves(sq, BISHOP_MASKS[sq], BISHOP_MAGICS[sq], BISHOP_SHIFTS[sq], &[NE, SE, SW, NW])
+            compute_magic_moves(
+                sq,
+                BISHOP_MASKS[sq],
+                BISHOP_MAGICS[sq],
+                BISHOP_SHIFTS[sq],
+                &[NE, SE, SW, NW],
+            )
         }),
     }
 }
@@ -84,7 +92,7 @@ fn compute_sliding_control(source: Square, occupancy: Board, dirs: &[Dir]) -> Bo
             control |= lift(sq);
             next_sq = next(sq, d);
             if contains(occupancy, sq) {
-                break
+                break;
             }
         }
     }
@@ -96,8 +104,7 @@ fn compute_powerset(squares: &[Square]) -> Vec<Board> {
         vec![0]
     } else {
         let (head, rest) = (squares[0], &squares[1..]);
-        compute_powerset(rest).into_iter()
-            .flat_map(|r| [r, r | lift(head)].into_iter()).collect()
+        compute_powerset(rest).into_iter().flat_map(|r| [r, r | lift(head)].into_iter()).collect()
     }
 }
 
@@ -117,7 +124,12 @@ pub const fn contains(board: Board, square: Square) -> bool {
 
 pub fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
     dirs.iter()
-        .flat_map(|&d| iterate(Some(source), move |op| op.and_then(|sq| next(sq, d))).take_while(|op| op.is_some()).skip(1).take(depth))
+        .flat_map(|&d| {
+            iterate(Some(source), move |op| op.and_then(|sq| next(sq, d)))
+                .take_while(|op| op.is_some())
+                .skip(1)
+                .take(depth)
+        })
         .filter_map(|x| x)
         .fold(0u64, |a, n| a | lift(n))
 }
@@ -129,7 +141,7 @@ pub fn cord(from: Square, dest: Square) -> Board {
     lift(from) | rays(from, &[(dr / gcd, df / gcd)], gcd as usize)
 }
 
-pub fn iter(board: Board) -> impl Iterator<Item=Square> {
+pub fn iter(board: Board) -> impl Iterator<Item = Square> {
     BoardIterator(board)
 }
 
@@ -299,33 +311,33 @@ mod magic {
 
 #[cfg(test)]
 mod test {
+    use crate::board;
+    use crate::constants::dir::*;
     use crate::constants::piece::*;
     use crate::constants::square::*;
-    use crate::constants::dir::*;
-    use crate::board;
     use crate::test::assert_boards_equal;
 
     #[test]
     fn control() {
         assert_boards_equal(
             super::control(WB, E3, board!(C5, A7, E4, H6, F2)),
-            board!(~E3 => C1, C5, H6, F2)
+            board!(~E3 => C1, C5, H6, F2),
         );
         assert_boards_equal(
             super::control(BR, D5, board!(D5, D2, D1, E8)),
-            board!(~D5 => D2, A5, H5, D8)
+            board!(~D5 => D2, A5, H5, D8),
         );
         assert_boards_equal(
             super::control(BB, C8, board!(A7, B4, C6, C8, D1, D2, D5, D6, E1, E8, F8)),
-            board!(~C8 => A6, H3)
+            board!(~C8 => A6, H3),
         );
         assert_boards_equal(
             super::control(BK, E8, board!(A7, B4, C6, C8, D1, D2, D5, D6, E1, E8, F8)),
-            board!(D8, D7, E7, F7, F8)
+            board!(D8, D7, E7, F7, F8),
         );
         assert_boards_equal(
             super::control(BN, C6, board!(A7, B4, C6, C8, D1, D2, D5, D6, E1, E8, F8)),
-            board!(A7, A5, B4, D4, E5, E7, D8, B8)
+            board!(A7, A5, B4, D4, E5, E7, D8, B8),
         );
     }
 
@@ -339,4 +351,3 @@ mod test {
         assert_eq!(None, super::next(A7, W));
     }
 }
-
