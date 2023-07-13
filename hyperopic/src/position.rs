@@ -229,11 +229,31 @@ impl Position {
     }
 }
 
-type Constraints = SquareMap<Board>;
-type ConstrainedPieces = (Board, Constraints);
+pub type Constraints = SquareMap<Board>;
+#[derive(Debug, PartialEq)]
+pub struct ConstrainedPieces(pub Board, pub Constraints);
 
 // Implementation block for misc property generation
 impl Position {
+    pub fn compute_discoveries_on(&self, square: Square) -> Result<ConstrainedPieces> {
+        let piece = self.piece_locs[square].ok_or_else(|| anyhow!("No piece at {}", square))?;
+        let target_side = piece_side(piece);
+        let discoverer_side = reflect_side(target_side);
+        let target_locs = self.side_boards[target_side];
+        let discoverer_locs = self.side_boards[discoverer_side];
+        let (mut all_discoverers, mut constraints) = (0u64, [0u64; 64]);
+        for from in iter(self.compute_xrays(discoverer_side, square)) {
+            let cord = cord(from, square);
+            let discoverers_on_cord = cord & discoverer_locs;
+            if discoverers_on_cord.count_ones() == 2 && (cord & target_locs).count_ones() == 1 {
+                let discoverer = discoverers_on_cord ^ lift(from);
+                all_discoverers |= discoverer;
+                constraints[discoverer.trailing_zeros() as usize] = !cord;
+            }
+        }
+        Ok(ConstrainedPieces(all_discoverers, constraints))
+    }
+
     pub fn compute_pinned_on(&self, square: Square) -> Result<ConstrainedPieces> {
         let piece = self.piece_locs[square].ok_or_else(|| anyhow!("No piece at {}", square))?;
         let pinned_side = piece_side(piece);
@@ -250,7 +270,7 @@ impl Position {
                 constraints[pinned.trailing_zeros() as usize] = cord;
             }
         }
-        Ok((all_pinned, constraints))
+        Ok(ConstrainedPieces(all_pinned, constraints))
     }
 
     fn compute_xrays(&self, side: Side, target: Square) -> Board {
