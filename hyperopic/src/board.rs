@@ -135,19 +135,27 @@ pub const fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
 }
 
 pub fn cord(from: Square, dest: Square) -> Board {
+    use std::array;
     lazy_static! {
-        static ref cache: SquareMatrix<Board> = std::array::from_fn(|from| {
-            std::array::from_fn(|dest| compute_cord(from, dest))
-        });
+        static ref CACHE: SquareMatrix<Board> =
+            array::from_fn(|from| array::from_fn(|dest| compute_cord(from, dest)));
     }
-    cache[from][dest]
+    CACHE[from][dest]
 }
 
 pub const fn compute_cord(from: Square, dest: Square) -> Board {
     let dr = square_rank(dest) as isize - square_rank(from) as isize;
     let df = square_file(dest) as isize - square_file(from) as isize;
-    let gcd = gcd(df.abs() as u32, dr.abs() as u32) as isize;
-    lift(from) | rays(from, &[(dr / gcd, df / gcd)], gcd as usize)
+    if dr == 0 && df == 0 {
+        lift(from)
+    } else if dr == 0 {
+        lift(from) | rays(from, &[(0, df / df.abs())], df.abs() as usize)
+    } else if df == 0 {
+        lift(from) | rays(from, &[(dr / dr.abs(), 0)], dr.abs() as usize)
+    } else {
+        let gcd = gcd(df.abs() as u32, dr.abs() as u32) as isize;
+        lift(from) | rays(from, &[(dr / gcd, df / gcd)], gcd as usize)
+    }
 }
 
 pub const fn gcd(mut a: u32, mut b: u32) -> u32 {
@@ -157,6 +165,23 @@ pub const fn gcd(mut a: u32, mut b: u32) -> u32 {
         a = t
     }
     a
+}
+
+#[cfg(test)]
+mod cord_test {
+    use crate::board;
+    use crate::constants::square::*;
+    #[test]
+    fn test() {
+        assert_eq!(super::cord(A1, A1), board!(A1));
+        assert_eq!(super::cord(A1, A7), board!(A1 => A7));
+        assert_eq!(super::cord(A1, D1), board!(A1 => D1));
+        assert_eq!(super::cord(C3, E7), board!(C3, D5, E7));
+        assert_eq!(super::cord(G4, D4), board!(G4 => D4));
+        assert_eq!(super::cord(D4, G4), board!(G4 => D4));
+        assert_eq!(super::cord(D4, D7), board!(D4 => D7));
+        assert_eq!(super::cord(D7, D4), board!(D4 => D7));
+    }
 }
 
 pub fn iter(board: Board) -> impl Iterator<Item = Square> {

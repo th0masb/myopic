@@ -1,6 +1,6 @@
 use crate::moves::Move;
-use crate::position::Position;
-use crate::{reflect_corner, reflect_piece, reflect_side, reflect_square, Board, Symmetric};
+use crate::position::{ConstrainedPieces, Position};
+use crate::{reflect_corner, reflect_piece, reflect_side, reflect_square, Board, Symmetric, reflect_board};
 use std::array;
 
 mod control;
@@ -56,6 +56,15 @@ impl Symmetric for Position {
         );
         moves.into_iter().for_each(|m| reflected.make(m.reflect()).unwrap());
         reflected
+    }
+}
+
+impl Symmetric for ConstrainedPieces {
+    fn reflect(&self) -> Self {
+        ConstrainedPieces(
+            reflect_board(self.0),
+            array::from_fn(|sq| reflect_board(self.1[reflect_square(sq)]))
+        )
     }
 }
 
