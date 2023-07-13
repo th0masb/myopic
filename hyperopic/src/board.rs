@@ -3,7 +3,6 @@ use crate::{
     lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square,
     SquareMap,
 };
-use gcd::Gcd;
 use itertools::{iterate, Itertools};
 use lazy_static::lazy_static;
 use std::array;
@@ -108,10 +107,10 @@ fn compute_powerset(squares: &[Square]) -> Vec<Board> {
     }
 }
 
-pub fn next(square: Square, (dr, df): Dir) -> Option<Square> {
+pub const fn next(square: Square, (dr, df): Dir) -> Option<Square> {
     let next_r = (square_rank(square) as isize) + dr;
     let next_f = (square_file(square) as isize) + df;
-    if 0 <= min(next_f, next_r) && max(next_f, next_r) < 8 {
+    if 0 <= next_f && 0 <= next_r && next_f < 8 && next_r < 8 {
         Some(8 * (next_r as usize) + next_f as usize)
     } else {
         None
@@ -122,23 +121,41 @@ pub const fn contains(board: Board, square: Square) -> bool {
     board & lift(square) != 0
 }
 
-pub fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
-    dirs.iter()
-        .flat_map(|&d| {
-            iterate(Some(source), move |op| op.and_then(|sq| next(sq, d)))
-                .take_while(|op| op.is_some())
-                .skip(1)
-                .take(depth)
-        })
-        .filter_map(|x| x)
-        .fold(0u64, |a, n| a | lift(n))
+pub const fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
+    let mut result = 0u64;
+    let mut i = 0;
+    while i < dirs.len() {
+        let d = dirs[i];
+        let mut curr_depth = 0;
+        let mut sq = source;
+        while let Some(s) = next(sq, d)  {
+            if curr_depth < depth {
+                result |= lift(s);
+            } else {
+                break
+            }
+            sq = s;
+            curr_depth += 1;
+        }
+        i += 1;
+    }
+    result
 }
 
-pub fn cord(from: Square, dest: Square) -> Board {
+pub const fn cord(from: Square, dest: Square) -> Board {
     let dr = square_rank(dest) as isize - square_rank(from) as isize;
     let df = square_file(dest) as isize - square_file(from) as isize;
-    let gcd = (df.abs() as u32).gcd(dr.abs() as u32) as isize;
+    let gcd = gcd(df.abs() as u32, dr.abs() as u32) as isize;
     lift(from) | rays(from, &[(dr / gcd, df / gcd)], gcd as usize)
+}
+
+pub const fn gcd(mut a: u32, mut b: u32) -> u32 {
+    while b != 0 {
+        let t = b;
+        b = a % b;
+        a = t
+    }
+    a
 }
 
 pub fn iter(board: Board) -> impl Iterator<Item = Square> {
