@@ -1,3 +1,5 @@
+use crate::board::iter;
+
 mod board;
 mod format;
 mod hash;
@@ -29,8 +31,9 @@ macro_rules! board {
     // Individual squares
     ($( $x:expr ),*) => {
         {
+            use crate::lift;
             let mut board = 0u64;
-            $(board |= 1u64 << ($x as u64);)*
+            $(board |= lift($x);)*
             board
         }
     };
@@ -61,18 +64,6 @@ macro_rules! square_map {
         {
             let mut result = [None; 64];
             $($(result[$x as usize] = Some($y);)+)+
-            result
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! zobrist_hash {
-    ($( $($x:expr),+ => $y:expr),+) => {
-        {
-            use crate::hash;
-            let mut result = 0u64;
-            $($(result ^= hash::piece($y, $x);)+)+
             result
         }
     };
@@ -116,6 +107,18 @@ pub const fn reflect_square(square: Square) -> Square {
 
 pub const fn reflect_piece(piece: Piece) -> Piece {
     (piece + 6) % 12
+}
+
+pub fn reflect_board(board: Board) -> Board {
+    iter(board).map(|sq| reflect_square(sq)).fold(0u64, |a, n| a | lift(n))
+}
+
+pub const fn in_board(board: Board, square: Square) -> bool {
+    board & lift(square) != 0
+}
+
+pub const fn is_superset(left: Board, right: Board) -> bool {
+    (left & right) == right
 }
 
 #[rustfmt::skip]
@@ -165,6 +168,7 @@ pub mod constants {
         use crate::constants::square::*;
 
         pub const RIM: Board = board!(A1 => A8, H1; H8 => A8, H1);
+        pub const ENPASSANT_RANKS: Board = board!(A2 => H2; A4 => H4; A5 => H5; A7 => H7);
 
         pub const RANKS: [Board; 8] = [
             board!(A1 => H1),
@@ -214,10 +218,10 @@ pub mod constants {
 #[cfg(test)]
 mod macro_test {
     use super::lift;
-    use crate::constants::dir::*;
+
     use crate::constants::piece;
     use crate::constants::square::*;
-    use crate::{board, Piece, Square, SquareMap};
+    use crate::{board, Piece, SquareMap};
 
     #[test]
     fn board_macro() {

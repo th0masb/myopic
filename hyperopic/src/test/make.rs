@@ -1,6 +1,6 @@
 use crate::constants::{corner, piece, side, square::*};
 use crate::moves::Move;
-use crate::position::{Discards, Position};
+use crate::position::Position;
 
 fn execute_test(from_fen: &str, m: Move, dest_fen: &str) {
     let mut from: Position = from_fen.parse().unwrap();
