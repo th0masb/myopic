@@ -158,7 +158,7 @@ pub mod constants {
         pub const  SW: Dir = (-1,  1); pub const  NW: Dir = ( 1,  1);
         pub const NNE: Dir = ( 2, -1); pub const NEE: Dir = ( 1, -2);
         pub const SEE: Dir = (-1, -2); pub const SSE: Dir = (-2, -1);
-        pub const SSW: Dir = (-2,  1); pub const SWW: Dir = (-2,  1);
+        pub const SSW: Dir = (-2,  1); pub const SWW: Dir = (-1,  2);
         pub const NWW: Dir = ( 1,  2); pub const NNW: Dir = ( 2,  1);
     }
 
