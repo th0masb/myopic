@@ -1,11 +1,9 @@
-
-
 mod board;
+mod format;
 mod hash;
-mod position;
 mod moves;
 mod parse;
-mod format;
+mod position;
 #[cfg(test)]
 mod test;
 
@@ -110,7 +108,11 @@ pub const fn reflect_square(square: Square) -> Square {
 
 pub const fn reflect_side(side: Side) -> Side {
     use constants::side;
-    if side == side::W { side::B } else { side::W }
+    if side == side::W {
+        side::B
+    } else {
+        side::W
+    }
 }
 
 pub const fn reflect_piece(piece: Piece) -> Piece {
@@ -216,11 +218,11 @@ pub mod constants {
 
 #[cfg(test)]
 mod macro_test {
-    use crate::{board, Piece, Square, SquareMap};
-    use crate::constants::square::*;
+    use super::lift;
     use crate::constants::dir::*;
     use crate::constants::piece;
-    use super::lift;
+    use crate::constants::square::*;
+    use crate::{board, Piece, Square, SquareMap};
 
     #[test]
     fn board_macro() {
@@ -243,9 +245,6 @@ mod macro_test {
         expected[F5] = Some(piece::WB);
         expected[A8] = Some(piece::WB);
         expected[D2] = Some(piece::BR);
-        assert_eq!(
-            expected,
-            square_map!(F5, A8 => piece::WB, D2 => piece::BR),
-        );
+        assert_eq!(expected, square_map!(F5, A8 => piece::WB, D2 => piece::BR),);
     }
 }

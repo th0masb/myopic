@@ -1,12 +1,12 @@
+use crate::moves::{Move, Move::*, Moves};
+use crate::{
+    lift, piece_class, piece_side, square_file, square_rank, Board, Corner, CornerMap, Piece,
+    PieceMap, Side, SideMap, Square, SquareMap, Symmetric,
+};
 
-use crate::{Board, piece_class, Corner, CornerMap, square_file, lift, Piece, piece_side, PieceMap, square_rank, Side, SideMap, Square, SquareMap, Symmetric};
-use crate::moves::{Move, Moves, Move::*};
-
-use anyhow::{anyhow, Result};
 use crate::board::iter;
-use crate::constants::{class, side, piece};
-
-
+use crate::constants::{class, piece, side};
+use anyhow::{anyhow, Result};
 
 /// Represents the possible ways a game can be terminated, we only
 /// consider a game to be terminated when a side has no legal moves
@@ -69,12 +69,12 @@ impl Position {
                 self.remove_rights(rights_removed(from));
                 self.remove_rights(rights_removed(dest));
                 let is_pawn = piece_class(moving) == class::P;
-                self.clock = if capture.is_some() || is_pawn { 0 } else { self.clock + 1};
+                self.clock = if capture.is_some() || is_pawn { 0 } else { self.clock + 1 };
                 self.enpassant = if is_pawn {
                     let is_white = piece_side(moving) == side::W;
                     let start_r = if is_white { 1 } else { 6 };
                     let third_r = if is_white { 3 } else { 4 };
-                    let shifter = if is_white { from } else  { dest };
+                    let shifter = if is_white { from } else { dest };
                     if square_rank(from) == start_r && square_rank(dest) == third_r {
                         let next_ep = 8 * (square_rank(shifter) + 1) + square_file(shifter);
                         self.key ^= crate::hash::enpassant(next_ep);
@@ -208,8 +208,8 @@ impl Position {
 // Implementation block for misc property generation
 impl Position {
     pub fn compute_control(&self, side: Side) -> Board {
-        use crate::constants::{piece::*, side::*};
         use crate::board::control;
+        use crate::constants::{piece::*, side::*};
         let invisible_king = self.piece_boards[if side == W { BK } else { WK }];
         let occupied = (self.side_boards[W] | self.side_boards[B]) & !invisible_king;
         [class::N, class::B, class::R, class::Q, class::K]
@@ -239,7 +239,7 @@ impl Position {
 }
 
 fn rights_removed<'a>(square: Square) -> &'a [Corner] {
-    use crate::constants::{square::*, corner::*};
+    use crate::constants::{corner::*, square::*};
     match square {
         H1 => &[WK],
         E1 => &[WK, WQ],
@@ -252,24 +252,23 @@ fn rights_removed<'a>(square: Square) -> &'a [Corner] {
 }
 
 fn king_line(corner: Corner) -> (Square, Square) {
-    use crate::constants::{square, corner};
+    use crate::constants::{corner, square};
     match corner {
         corner::WK => (square::E1, square::G1),
         corner::WQ => (square::E1, square::C1),
         corner::BK => (square::E8, square::G8),
         corner::BQ => (square::E8, square::C8),
-        _ => panic!("{} is not a valid corner", corner)
+        _ => panic!("{} is not a valid corner", corner),
     }
 }
 
 fn rook_line(corner: Corner) -> (Square, Square) {
-    use crate::constants::{square, corner};
+    use crate::constants::{corner, square};
     match corner {
         corner::WK => (square::H1, square::F1),
         corner::WQ => (square::A1, square::D1),
         corner::BK => (square::H8, square::F8),
         corner::BQ => (square::A8, square::D8),
-        _ => panic!("{} is not a valid corner", corner)
+        _ => panic!("{} is not a valid corner", corner),
     }
 }
-
