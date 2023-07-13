@@ -133,7 +133,7 @@ mod test_fen {
     use crate::constants::square::*;
     use crate::constants::*;
     use crate::position::Position;
-    use crate::{board, side, square_map, zobrist_hash};
+    use crate::{board, square_map, zobrist_hash};
 
     #[test]
     fn case_1() {

@@ -102,21 +102,20 @@ pub trait Symmetric {
     fn reflect(&self) -> Self;
 }
 
+pub const fn reflect_side(side: Side) -> Side {
+    (side + 1) % 2
+}
+
+pub const fn reflect_corner(corner: Corner) -> Corner {
+    (corner + 2) % 4
+}
+
 pub const fn reflect_square(square: Square) -> Square {
     8 * (7 - square_rank(square)) + square_file(square)
 }
 
-pub const fn reflect_side(side: Side) -> Side {
-    use constants::side;
-    if side == side::W {
-        side::B
-    } else {
-        side::W
-    }
-}
-
 pub const fn reflect_piece(piece: Piece) -> Piece {
-    6 * reflect_side(piece_side(piece)) + piece_class(piece)
+    (piece + 6) % 12
 }
 
 #[rustfmt::skip]
@@ -140,9 +139,6 @@ pub mod constants {
 
     pub mod piece {
         use crate::Piece;
-        
-        
-
         pub const WP: Piece = 0; pub const WN: Piece = 1;
         pub const WB: Piece = 2; pub const WR: Piece = 3;
         pub const WQ: Piece = 4; pub const WK: Piece = 5;
@@ -154,7 +150,6 @@ pub mod constants {
 
     pub mod dir {
         use crate::Dir;
-
         pub const   N: Dir = ( 1,  0); pub const   E: Dir = ( 0, -1);
         pub const   S: Dir = (-1,  0); pub const   W: Dir = ( 0,  1);
         pub const  NE: Dir = ( 1, -1); pub const  SE: Dir = (-1, -1);
@@ -169,29 +164,29 @@ pub mod constants {
         use crate::{Board, board};
         use crate::constants::square::*;
 
+        pub const RIM: Board = board!(A1 => A8, H1; H8 => A8, H1);
+
         pub const RANKS: [Board; 8] = [
-            board!(A1, B1, C1, D1, E1, F1, G1, H1),
-            board!(A2, B2, C2, D2, E2, F2, G2, H2),
-            board!(A3, B3, C3, D3, E3, F3, G3, H3),
-            board!(A4, B4, C4, D4, E4, F4, G4, H4),
-            board!(A5, B5, C5, D5, E5, F5, G5, H5),
-            board!(A6, B6, C6, D6, E6, F6, G6, H6),
-            board!(A7, B7, C7, D7, E7, F7, G7, H7),
-            board!(A8, B8, C8, D8, E8, F8, G8, H8),
+            board!(A1 => H1),
+            board!(A2 => H2),
+            board!(A3 => H3),
+            board!(A4 => H4),
+            board!(A5 => H5),
+            board!(A6 => H6),
+            board!(A7 => H7),
+            board!(A8 => H8),
         ];
 
         pub const FILES: [Board; 8] = [
-            board!(H1, H2, H3, H4, H5, H6, H7, H8),
-            board!(G1, G2, G3, G4, G5, G6, G7, G8),
-            board!(F1, F2, F3, F4, F5, F6, F7, F8),
-            board!(E1, E2, E3, E4, E5, E6, E7, E8),
-            board!(D1, D2, D3, D4, D5, D6, D7, D8),
-            board!(C1, C2, C3, C4, C5, C6, C7, C8),
-            board!(B1, B2, B3, B4, B5, B6, B7, B8),
-            board!(A1, A2, A3, A4, A5, A6, A7, A8),
+            board!(H1 => H8),
+            board!(G1 => G8),
+            board!(F1 => F8),
+            board!(E1 => E8),
+            board!(F1 => F8),
+            board!(C1 => C8),
+            board!(B1 => B8),
+            board!(A1 => A8),
         ];
-
-        pub const RIM: Board = RANKS[0] | RANKS[7] | FILES[0] | FILES[7];
     }
 
     pub mod square {
