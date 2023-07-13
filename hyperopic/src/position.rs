@@ -1,12 +1,12 @@
-use std::str::FromStr;
-use crate::{Board, piece_class, ClassMap, Corner, CornerMap, square_file, lift, Piece, piece_side, PieceMap, square_rank, Side, SideMap, Square, SquareMap, Symmetric};
+
+use crate::{Board, piece_class, Corner, CornerMap, square_file, lift, Piece, piece_side, PieceMap, square_rank, Side, SideMap, Square, SquareMap, Symmetric};
 use crate::moves::{Move, Moves, Move::*};
 
 use anyhow::{anyhow, Result};
 use crate::board::iter;
-use crate::constants::{class, corner, side, piece};
-use crate::constants::boards::FILES;
-use crate::hash::piece;
+use crate::constants::{class, side, piece};
+
+
 
 /// Represents the possible ways a game can be terminated, we only
 /// consider a game to be terminated when a side has no legal moves
@@ -233,7 +233,7 @@ fn pawn_control(side: Side, pawns: Board) -> Board {
 
 // Implementation block for move generation
 impl Position {
-    pub fn moves(&self, moves: Moves) -> Vec<Move> {
+    pub fn moves(&self, _moves: Moves) -> Vec<Move> {
         todo!()
     }
 }
