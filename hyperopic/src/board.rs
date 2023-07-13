@@ -3,7 +3,7 @@ use std::cmp::{max, min};
 use gcd::Gcd;
 use itertools::{iterate, Itertools};
 use lazy_static::lazy_static;
-use crate::{Board, class, Dir, file, lift, Piece, rank, side, SideMap, Square, SquareMap};
+use crate::{Board, piece_class, Dir, square_file, lift, Piece, piece_side, square_rank, SideMap, Square, SquareMap};
 use crate::board::iterator::BoardIterator;
 use crate::constants::side;
 
@@ -13,14 +13,14 @@ lazy_static! {
 
 pub fn control(piece: Piece, sq: Square, occupied: Board) -> Board {
     use crate::constants::class;
-    match class(piece) {
-        class::P => CONTROL.pawns[side(piece)][sq],
+    match piece_class(piece) {
+        class::P => CONTROL.pawns[piece_side(piece)][sq],
         class::N => CONTROL.knights[sq],
         class::B => bishop_control(sq, occupied),
         class::R => rook_control(sq, occupied),
         class::Q => bishop_control(sq, occupied) | rook_control(sq, occupied),
         class::K => CONTROL.king[sq],
-        _ => panic!("{} is not a valid piece class", class(piece)),
+        _ => panic!("{} is not a valid piece class", piece_class(piece)),
     }
 }
 
@@ -102,8 +102,8 @@ fn compute_powerset(squares: &[Square]) -> Vec<Board> {
 }
 
 pub fn next(square: Square, (dr, df): Dir) -> Option<Square> {
-    let next_r = (rank(square) as isize) + dr;
-    let next_f = (file(square) as isize) + df;
+    let next_r = (square_rank(square) as isize) + dr;
+    let next_f = (square_file(square) as isize) + df;
     if 0 <= min(next_f, next_r) && max(next_f, next_r) < 8 {
         Some(8 * (next_r as usize) + next_f as usize)
     } else {
@@ -123,8 +123,8 @@ pub fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
 }
 
 pub fn cord(from: Square, dest: Square) -> Board {
-    let dr = rank(dest) as isize - rank(from) as isize;
-    let df = file(dest) as isize - file(from) as isize;
+    let dr = square_rank(dest) as isize - square_rank(from) as isize;
+    let df = square_file(dest) as isize - square_file(from) as isize;
     let gcd = (df.abs() as u32).gcd(dr.abs() as u32) as isize;
     lift(from) | rays(from, &[(dr / gcd, df / gcd)], gcd as usize)
 }

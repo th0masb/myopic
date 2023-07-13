@@ -9,6 +9,8 @@ pub enum Move {
     Null,
 }
 
+
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Moves<'a> {
     All,

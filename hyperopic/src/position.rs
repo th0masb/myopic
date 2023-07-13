@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use crate::{Board, class, ClassMap, Corner, CornerMap, file, lift, Piece, PieceMap, rank, Side, side, SideMap, Square, SquareMap, Symmetric};
+use crate::{Board, piece_class, ClassMap, Corner, CornerMap, square_file, lift, Piece, piece_side, PieceMap, square_rank, Side, SideMap, Square, SquareMap, Symmetric};
 use crate::moves::{Move, Moves, Move::*};
 
 use anyhow::{anyhow, Result};
@@ -47,6 +47,14 @@ impl Default for Position {
     }
 }
 
+// Unwind the position to earliest point in history, reflect the board, then play back
+// through the reflected moves
+impl Symmetric for Position {
+    fn reflect(&self) -> Self {
+        todo!()
+    }
+}
+
 // Implementation block for making/unmaking moves
 impl Position {
     pub fn make(&mut self, m: Move) -> Result<()> {
@@ -60,15 +68,15 @@ impl Position {
                 self.set_piece(moving, dest);
                 self.remove_rights(rights_removed(from));
                 self.remove_rights(rights_removed(dest));
-                let is_pawn = class(moving) == class::P;
+                let is_pawn = piece_class(moving) == class::P;
                 self.clock = if capture.is_some() || is_pawn { 0 } else { self.clock + 1};
                 self.enpassant = if is_pawn {
-                    let is_white = side(moving) == side::W;
+                    let is_white = piece_side(moving) == side::W;
                     let start_r = if is_white { 1 } else { 6 };
                     let third_r = if is_white { 3 } else { 4 };
                     let shifter = if is_white { from } else  { dest };
-                    if rank(from) == start_r && rank(dest) == third_r {
-                        let next_ep = 8 * (rank(shifter) + 1) + file(shifter);
+                    if square_rank(from) == start_r && square_rank(dest) == third_r {
+                        let next_ep = 8 * (square_rank(shifter) + 1) + square_file(shifter);
                         self.key ^= crate::hash::enpassant(next_ep);
                         Some(next_ep)
                     } else {
@@ -80,7 +88,7 @@ impl Position {
             }
             Promotion { from, dest, promoted, capture } => {
                 capture.map(|p| self.unset_piece(p, dest));
-                let moved = if side(promoted) == side::W { piece::WP } else { piece::BP };
+                let moved = if piece_side(promoted) == side::W { piece::WP } else { piece::BP };
                 self.remove_rights(rights_removed(dest));
                 self.unset_piece(moved, from);
                 self.set_piece(promoted, dest);
@@ -129,7 +137,7 @@ impl Position {
                 capture.map(|p| self.set_piece(p, dest));
             }
             &Promotion { from, dest, promoted, capture } => {
-                let moved = if side(promoted) == side::W { piece::WP } else { piece::BP };
+                let moved = if piece_side(promoted) == side::W { piece::WP } else { piece::BP };
                 self.unset_piece(promoted, dest);
                 self.set_piece(moved, from);
                 capture.map(|p| self.set_piece(p, dest));
@@ -164,7 +172,7 @@ impl Position {
     fn set_piece(&mut self, piece: Piece, square: Square) {
         self.key ^= crate::hash::piece(piece, square);
         let lifted = lift(square);
-        let side = side(piece);
+        let side = piece_side(piece);
         self.piece_boards[piece] |= lifted;
         self.side_boards[side] |= lifted;
         self.piece_locs[square] = Some(piece);
@@ -174,7 +182,7 @@ impl Position {
         self.key ^= crate::hash::piece(piece, square);
         let lifted = !lift(square);
         self.piece_boards[piece] &= lifted;
-        self.side_boards[side(piece)] &= lifted;
+        self.side_boards[piece_side(piece)] &= lifted;
         self.piece_locs[square] = None;
     }
 

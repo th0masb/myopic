@@ -7,7 +7,7 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use crate::{Board, hash, lift, Piece, PieceMap, side, SquareMap};
+use crate::{Board, hash, lift, Piece, piece_side, PieceMap, SquareMap};
 use crate::board::iter;
 use crate::constants::side;
 use crate::position::Position;
@@ -68,7 +68,7 @@ fn parse_fen(fen: &str) -> Result<Position> {
     let mut piece_locs = [None; 64];
     (0..12).for_each(|p| iter(piece_boards[p]).for_each(|s| piece_locs[s] = Some(p)));
     let mut side_boards = [0u64; 2];
-    (0..12).for_each(|p| side_boards[side(p)] |= piece_boards[p]);
+    (0..12).for_each(|p| side_boards[piece_side(p)] |= piece_boards[p]);
     let rights_fn = |s: &str| parts[2].contains(s);
     let castling_rights = [rights_fn("K"), rights_fn("Q"), rights_fn("k"), rights_fn("q")];
     let mut key = if active == side::W { 0u64 } else { hash::black_move() };

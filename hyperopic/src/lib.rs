@@ -1,3 +1,5 @@
+use crate::constants::side;
+
 mod board;
 mod hash;
 mod position;
@@ -78,19 +80,19 @@ macro_rules! zobrist_hash {
     };
 }
 
-pub const fn side(piece: Piece) -> Side {
+pub const fn piece_side(piece: Piece) -> Side {
     piece / 6
 }
 
-pub const fn class(piece: Piece) -> Class {
+pub const fn piece_class(piece: Piece) -> Class {
     piece % 6
 }
 
-pub const fn rank(square: Square) -> Rank {
+pub const fn square_rank(square: Square) -> Rank {
     square / 8
 }
 
-pub const fn file(square: Square) -> File {
+pub const fn square_file(square: Square) -> File {
     square % 8
 }
 
@@ -98,23 +100,22 @@ pub const fn lift(square: Square) -> Board {
     1u64 << (square as u64)
 }
 
-
 pub trait Symmetric {
     fn reflect(&self) -> Self;
 }
 
-//impl Symmetric for Square {
-//    fn reflect(&self) -> Self {
-//        8 * (7 - rank(*self)) + file(*self)
-//    }
-//}
-//
-//impl Symmetric for Side {
-//    fn reflect(&self) -> Self {
-//        use crate::constants::side;
-//        if *self == side::W { side::B } else { side::W }
-//    }
-//}
+pub const fn reflect_square(square: Square) -> Square {
+    8 * (7 - square_rank(square)) + square_file(square)
+}
+
+pub const fn reflect_side(side: Side) -> Side {
+    use constants::side;
+    if side == side::W { side::B } else { side::W }
+}
+
+pub const fn reflect_piece(piece: Piece) -> Piece {
+    6 * reflect_side(piece_side(piece)) + piece_class(piece)
+}
 
 #[rustfmt::skip]
 pub mod constants {
