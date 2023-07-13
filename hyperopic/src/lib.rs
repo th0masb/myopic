@@ -1,7 +1,6 @@
 use crate::board::iter;
 
 mod board;
-mod format;
 mod hash;
 mod moves;
 mod parse;
@@ -21,6 +20,7 @@ pub type Corner = usize;
 pub type Dir = (isize, isize);
 
 pub type SquareMap<T> = [T; 64];
+pub type SquareMatrix<T> = SquareMap<SquareMap<T>>;
 pub type SideMap<T> = [T; 2];
 pub type ClassMap<T> = [T; 6];
 pub type PieceMap<T> = [T; 12];
@@ -40,19 +40,19 @@ macro_rules! board {
     // Cords inclusive of source
     ($( $x:expr => $($y:expr),+ );+) => {
         {
-            use crate::board::cord;
+            use crate::board::compute_cord;
             let mut board = 0u64;
-            $($(board |= cord($x as usize, $y as usize);)+)+
+            $($(board |= compute_cord($x as usize, $y as usize);)+)+
             board
         }
     };
     // Cords exclusive of source
     ($( ~$x:expr => $($y:expr),+ );+) => {
         {
-            use crate::board::cord;
+            use crate::board::compute_cord;
             use crate::lift;
             let mut board = 0u64;
-            $($(board |= cord($x as usize, $y as usize) & !lift($x);)+)+
+            $($(board |= compute_cord($x as usize, $y as usize) & !lift($x);)+)+
             board
         }
     };
@@ -62,8 +62,9 @@ macro_rules! board {
 macro_rules! square_map {
     ($( $($x:expr),+ => $y:expr),+) => {
         {
-            let mut result = [None; 64];
-            $($(result[$x as usize] = Some($y);)+)+
+            use std::default::Default;
+            let mut result = [Default::default(); 64];
+            $($(result[$x as usize] = $y;)+)+
             result
         }
     };
@@ -75,6 +76,10 @@ pub const fn piece_side(piece: Piece) -> Side {
 
 pub const fn piece_class(piece: Piece) -> Class {
     piece % 6
+}
+
+pub const fn create_piece(side: Side, class: Class) -> Piece {
+    side * 6 + class
 }
 
 pub const fn square_rank(square: Square) -> Rank {
@@ -244,6 +249,6 @@ mod macro_test {
         expected[F5] = Some(piece::WB);
         expected[A8] = Some(piece::WB);
         expected[D2] = Some(piece::BR);
-        assert_eq!(expected, square_map!(F5, A8 => piece::WB, D2 => piece::BR),);
+        assert_eq!(expected, square_map!(F5, A8 => Some(piece::WB), D2 => Some(piece::BR)));
     }
 }

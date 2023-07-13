@@ -1,10 +1,7 @@
 use crate::moves::{Move, Move::*, Moves};
-use crate::{
-    board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap,
-    Side, SideMap, Square, SquareMap,
-};
+use crate::{board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, reflect_side, create_piece};
 
-use crate::board::iter;
+use crate::board::{control, compute_cord, iter, cord};
 use crate::constants::{class, piece, side};
 use anyhow::{anyhow, Result};
 
@@ -52,35 +49,37 @@ impl Position {
         active: Side,
         enpassant: Option<Square>,
         clock: usize,
-        rights: CornerMap<bool>,
-        pieces: SquareMap<Option<Piece>>,
+        castling_rights: CornerMap<bool>,
+        piece_locs: SquareMap<Option<Piece>>,
     ) -> Position {
-        let mut hash = if active == side::W { 0u64 } else { crate::hash::black_move() };
-        enpassant.map(|sq| hash ^= crate::hash::enpassant(sq));
+        let mut key = if active == side::W { 0u64 } else { crate::hash::black_move() };
+        enpassant.map(|sq| key ^= crate::hash::enpassant(sq));
         (0..64).for_each(|sq| {
-            pieces[sq].map(|p| hash ^= crate::hash::piece(p, sq));
+            piece_locs[sq].map(|p| key ^= crate::hash::piece(p, sq));
         });
         (0..4).for_each(|c| {
-            if rights[c] {
-                hash ^= crate::hash::corner(c);
+            if castling_rights[c] {
+                key ^= crate::hash::corner(c);
             }
+        });
+        let piece_boards: PieceMap<_> = std::array::from_fn(|p| {
+            (0..64).filter(|&sq| piece_locs[sq] == Some(p)).fold(0u64, |a, n| a | lift(n))
+        });
+        let side_boards: SideMap<_> = std::array::from_fn(|side| {
+            (0..64)
+                .filter(|&sq| piece_locs[sq].map(|p| piece_side(p)) == Some(side))
+                .fold(0u64, |a, n| a | lift(n))
         });
         Position {
             active,
             enpassant,
             clock,
-            key: hash,
+            key,
             history: vec![],
-            piece_boards: std::array::from_fn(|p| {
-                (0..64).filter(|&sq| pieces[sq] == Some(p)).fold(0u64, |a, n| a | lift(n))
-            }),
-            side_boards: std::array::from_fn(|side| {
-                (0..64)
-                    .filter(|&sq| pieces[sq].map(|p| piece_side(p)) == Some(side))
-                    .fold(0u64, |a, n| a | lift(n))
-            }),
-            piece_locs: pieces,
-            castling_rights: rights,
+            piece_boards,
+            side_boards,
+            piece_locs,
+            castling_rights,
         }
     }
 }
@@ -230,8 +229,38 @@ impl Position {
     }
 }
 
+type Constraints = SquareMap<Board>;
+type ConstrainedPieces = (Board, Constraints);
+
 // Implementation block for misc property generation
 impl Position {
+    pub fn compute_pinned_on(&self, square: Square) -> Result<ConstrainedPieces> {
+        let piece = self.piece_locs[square].ok_or_else(|| anyhow!("No piece at {}", square))?;
+        let pinned_side = piece_side(piece);
+        let pinner_side = reflect_side(pinned_side);
+        let pinned_locs = self.side_boards[pinned_side];
+        let pinner_locs = self.side_boards[pinner_side];
+        let (mut all_pinned, mut constraints) = (0u64, [0u64; 64]);
+        for from in iter(self.compute_xrays(pinner_side, square)) {
+            let cord = cord(from, square);
+            let pinned_on_cord = cord & pinned_locs;
+            if pinned_on_cord.count_ones() == 2 && (cord & pinner_locs).count_ones() == 1 {
+                let pinned = pinned_on_cord ^ lift(square);
+                all_pinned |= pinned;
+                constraints[pinned.trailing_zeros() as usize] = cord;
+            }
+        }
+        Ok((all_pinned, constraints))
+    }
+
+    fn compute_xrays(&self, side: Side, target: Square) -> Board {
+        [class::R, class::B, class::Q]
+            .iter()
+            .map(|&c| create_piece(side, c))
+            .map(|p| self.piece_boards[p] & control(p, target, 0))
+            .fold(0u64, |a, n| a | n)
+    }
+
     pub fn compute_control(&self, side: Side) -> Board {
         use crate::board::control;
         use crate::constants::{piece::*, side::*};

@@ -1,8 +1,5 @@
 use crate::board::iterator::BoardIterator;
-use crate::{
-    lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square,
-    SquareMap,
-};
+use crate::{lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square, SquareMap, SquareMatrix};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::array;
@@ -137,7 +134,16 @@ pub const fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
     result
 }
 
-pub const fn cord(from: Square, dest: Square) -> Board {
+pub fn cord(from: Square, dest: Square) -> Board {
+    lazy_static! {
+        static ref cache: SquareMatrix<Board> = std::array::from_fn(|from| {
+            std::array::from_fn(|dest| compute_cord(from, dest))
+        });
+    }
+    cache[from][dest]
+}
+
+pub const fn compute_cord(from: Square, dest: Square) -> Board {
     let dr = square_rank(dest) as isize - square_rank(from) as isize;
     let df = square_file(dest) as isize - square_file(from) as isize;
     let gcd = gcd(df.abs() as u32, dr.abs() as u32) as isize;
@@ -159,21 +165,7 @@ pub fn iter(board: Board) -> impl Iterator<Item = Square> {
 
 #[rustfmt::skip]
 mod iterator {
-    use crate::{Square, SquareMap};
-
-    const DEBRUIJN64: u64 = 0x03f79d71b4cb0a89u64;
-
-    const BITSCAN: SquareMap<usize> = [
-         0, 47,  1, 56, 48, 27,  2, 60,
-        57, 49, 41, 37, 28, 16,  3, 61,
-        54, 58, 35, 52, 50, 42, 21, 44,
-        38, 32, 29, 23, 17, 11,  4, 62,
-        46, 55, 26, 59, 40, 36, 15, 53,
-        34, 51, 20, 43, 31, 22, 10, 45,
-        25, 39, 14, 33, 19, 30,  9, 24,
-        13, 18,  8, 12,  7,  6,  5, 63,
-    ];
-
+    use crate::Square;
 
     /// The iterator implementation struct produced by a bitboard. It simply
     /// wraps a long value used to track the remaining set bits.
@@ -188,28 +180,22 @@ mod iterator {
             if self.0 == 0 {
                 None
             } else {
-                let lsb = bitscan(self.0);
+                let lsb = self.0.trailing_zeros() as usize;
                 self.0 ^= 1u64 << lsb as u64;
                 Some(lsb)
             }
         }
     }
-
-    fn bitscan(x: u64) -> usize {
-        BITSCAN[(x ^ x - 1).wrapping_mul(DEBRUIJN64).wrapping_shr(58) as usize]
-    }
-
     #[cfg(test)]
-    mod bitscan_test {
-        use super::bitscan;
+    mod test {
+        use super::BoardIterator;
+        use crate::constants::square::*;
 
         #[test]
         fn test() {
-            assert_eq!(0, bitscan(1u64));
-            assert_eq!(1, bitscan(2u64));
-            assert_eq!(1, bitscan(0b10u64));
-            assert_eq!(10, bitscan(0b1001110000000000u64));
-            assert_eq!(21, bitscan(0b1001111011000000000000000000000));
+            assert_eq!(Some(H1), BoardIterator(1u64).next());
+            assert_eq!(Some(G1), BoardIterator(2u64).next());
+            assert_eq!(Some(C3), BoardIterator(0b1001111011000000000000000000000).next());
         }
     }
 }
