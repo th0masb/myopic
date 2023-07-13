@@ -3,10 +3,9 @@ use crate::{
     lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square,
     SquareMap,
 };
-use itertools::{iterate, Itertools};
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::array;
-use std::cmp::{max, min};
 
 lazy_static! {
     static ref CONTROL: PieceControl = compute_control();
@@ -90,7 +89,7 @@ fn compute_sliding_control(source: Square, occupancy: Board, dirs: &[Dir]) -> Bo
         while let Some(sq) = next_sq {
             control |= lift(sq);
             next_sq = next(sq, d);
-            if contains(occupancy, sq) {
+            if crate::in_board(occupancy, sq) {
                 break;
             }
         }
@@ -117,10 +116,6 @@ pub const fn next(square: Square, (dr, df): Dir) -> Option<Square> {
     }
 }
 
-pub const fn contains(board: Board, square: Square) -> bool {
-    board & lift(square) != 0
-}
-
 pub const fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
     let mut result = 0u64;
     let mut i = 0;
@@ -128,11 +123,11 @@ pub const fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
         let d = dirs[i];
         let mut curr_depth = 0;
         let mut sq = source;
-        while let Some(s) = next(sq, d)  {
+        while let Some(s) = next(sq, d) {
             if curr_depth < depth {
                 result |= lift(s);
             } else {
-                break
+                break;
             }
             sq = s;
             curr_depth += 1;

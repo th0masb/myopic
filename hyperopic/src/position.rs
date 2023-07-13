@@ -1,7 +1,7 @@
 use crate::moves::{Move, Move::*, Moves};
 use crate::{
-    lift, piece_class, piece_side, square_file, square_rank, Board, Corner, CornerMap, Piece,
-    PieceMap, Side, SideMap, Square, SquareMap, Symmetric,
+    board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap,
+    Side, SideMap, Square, SquareMap,
 };
 
 use crate::board::iter;
@@ -47,17 +47,48 @@ impl Default for Position {
     }
 }
 
-// Unwind the position to earliest point in history, reflect the board, then play back
-// through the reflected moves
-impl Symmetric for Position {
-    fn reflect(&self) -> Self {
-        todo!()
+impl Position {
+    pub fn new(
+        active: Side,
+        enpassant: Option<Square>,
+        clock: usize,
+        rights: CornerMap<bool>,
+        pieces: SquareMap<Option<Piece>>,
+    ) -> Position {
+        let mut hash = if active == side::W { 0u64 } else { crate::hash::black_move() };
+        enpassant.map(|sq| hash ^= crate::hash::enpassant(sq));
+        (0..64).for_each(|sq| {
+            pieces[sq].map(|p| hash ^= crate::hash::piece(p, sq));
+        });
+        (0..4).for_each(|c| {
+            if rights[c] {
+                hash ^= crate::hash::corner(c);
+            }
+        });
+        Position {
+            active,
+            enpassant,
+            clock,
+            key: hash,
+            history: vec![],
+            piece_boards: std::array::from_fn(|p| {
+                (0..64).filter(|&sq| pieces[sq] == Some(p)).fold(0u64, |a, n| a | lift(n))
+            }),
+            side_boards: std::array::from_fn(|side| {
+                (0..64)
+                    .filter(|&sq| pieces[sq].map(|p| piece_side(p)) == Some(side))
+                    .fold(0u64, |a, n| a | lift(n))
+            }),
+            piece_locs: pieces,
+            castling_rights: rights,
+        }
     }
 }
 
 // Implementation block for making/unmaking moves
 impl Position {
     pub fn make(&mut self, m: Move) -> Result<()> {
+        use crate::constants::boards::ENPASSANT_RANKS;
         self.history.push((self.create_discards(), m.clone()));
         self.enpassant.map(|sq| self.key ^= crate::hash::enpassant(sq));
         match m {
@@ -70,18 +101,12 @@ impl Position {
                 self.remove_rights(rights_removed(dest));
                 let is_pawn = piece_class(moving) == class::P;
                 self.clock = if capture.is_some() || is_pawn { 0 } else { self.clock + 1 };
-                self.enpassant = if is_pawn {
+                self.enpassant = if is_pawn && is_superset(ENPASSANT_RANKS, board!(from, dest)) {
                     let is_white = piece_side(moving) == side::W;
-                    let start_r = if is_white { 1 } else { 6 };
-                    let third_r = if is_white { 3 } else { 4 };
                     let shifter = if is_white { from } else { dest };
-                    if square_rank(from) == start_r && square_rank(dest) == third_r {
-                        let next_ep = 8 * (square_rank(shifter) + 1) + square_file(shifter);
-                        self.key ^= crate::hash::enpassant(next_ep);
-                        Some(next_ep)
-                    } else {
-                        None
-                    }
+                    let next_ep = shifter + 8;
+                    self.key ^= crate::hash::enpassant(next_ep);
+                    Some(next_ep)
                 } else {
                     None
                 }

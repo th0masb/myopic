@@ -133,7 +133,7 @@ mod test_fen {
     use crate::constants::square::*;
     use crate::constants::*;
     use crate::position::Position;
-    use crate::{board, square_map, zobrist_hash};
+    use crate::square_map;
 
     #[test]
     fn case_1() {
@@ -141,8 +141,12 @@ mod test_fen {
             "r1br2k1/1pq1npb1/p2pp1pp/8/2PNP3/P1N5/1P1QBPPP/3R1RK1 w - - 3 19"
                 .parse::<Position>()
                 .unwrap(),
-            Position {
-                piece_locs: square_map!(
+            Position::new(
+                side::W,
+                None,
+                3,
+                [false, false, false, false],
+                square_map!(
                     A3, B2, C4, E4, F2, G2, H2 => piece::WP,
                     C3, D4 => piece::WN,
                     E2 => piece::WB,
@@ -155,45 +159,8 @@ mod test_fen {
                     A8, D8 => piece::BR,
                     C7 => piece::BQ,
                     G8 => piece::BK
-                ),
-                key: zobrist_hash!(
-                    A3, B2, C4, E4, F2, G2, H2 => piece::WP,
-                    C3, D4 => piece::WN,
-                    E2 => piece::WB,
-                    D1, F1 => piece::WR,
-                    D2 => piece::WQ,
-                    G1 => piece::WK,
-                    A6, B7, D6, E6, F7, G6, H6 => piece::BP,
-                    E7 => piece::BN,
-                    C8, G7 => piece::BB,
-                    A8, D8 => piece::BR,
-                    C7 => piece::BQ,
-                    G8 => piece::BK
-                ),
-                piece_boards: [
-                    board!(A3, B2, C4, E4, F2, G2, H2),
-                    board!(C3, D4),
-                    board!(E2),
-                    board!(D1, F1),
-                    board!(D2),
-                    board!(G1),
-                    board!(A6, B7, D6, E6, F7, G6, H6),
-                    board!(E7),
-                    board!(C8, G7),
-                    board!(A8, D8),
-                    board!(C7),
-                    board!(G8),
-                ],
-                side_boards: [
-                    board!(A3, B2, C3, C4, D1, D2, D4, E2, E4, F1, F2, G1, G2, H2),
-                    board!(A6, A8, B7, C7, C8, D6, D8, E6, E7, F7, G6, G7, G8, H6),
-                ],
-                castling_rights: [false, false, false, false],
-                active: side::W,
-                enpassant: None,
-                clock: 3,
-                history: vec![],
-            }
+                )
+            )
         )
     }
 }
