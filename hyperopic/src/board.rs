@@ -303,17 +303,30 @@ mod test {
     use crate::constants::square::*;
     use crate::constants::dir::*;
     use crate::board;
+    use crate::test::assert_boards_equal;
 
     #[test]
     fn control() {
-        assert_eq!(
+        assert_boards_equal(
             super::control(WB, E3, board!(C5, A7, E4, H6, F2)),
             board!(~E3 => C1, C5, H6, F2)
         );
-        assert_eq!(
+        assert_boards_equal(
             super::control(BR, D5, board!(D5, D2, D1, E8)),
             board!(~D5 => D2, A5, H5, D8)
-        )
+        );
+        assert_boards_equal(
+            super::control(BB, C8, board!(A7, B4, C6, C8, D1, D2, D5, D6, E1, E8, F8)),
+            board!(~C8 => A6, H3)
+        );
+        assert_boards_equal(
+            super::control(BK, E8, board!(A7, B4, C6, C8, D1, D2, D5, D6, E1, E8, F8)),
+            board!(D8, D7, E7, F7, F8)
+        );
+        assert_boards_equal(
+            super::control(BN, C6, board!(A7, B4, C6, C8, D1, D2, D5, D6, E1, E8, F8)),
+            board!(A7, A5, B4, D4, E5, E7, D8, B8)
+        );
     }
 
     #[test]

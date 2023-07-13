@@ -75,12 +75,8 @@ fn parse_fen(fen: &str) -> Result<Position> {
     (0..4).filter(|i| castling_rights[*i]).for_each(|r| key ^= hash::corner(r));
     (0..12).for_each(|p| iter(piece_boards[p]).for_each(|s| key ^= hash::piece(p, s)));
     enpassant.map(|sq| key ^= hash::enpassant(sq));
-    let king_locs = [
-        iter(piece_boards[piece::WK]).next().unwrap(),
-        iter(piece_boards[piece::BK]).next().unwrap(),
-    ];
     Ok(Position {
-        active, clock, enpassant, king_locs, piece_boards,
+        active, clock, enpassant, piece_boards,
         piece_locs, side_boards, key, castling_rights, history: vec![]
     })
 }
@@ -159,7 +155,6 @@ mod test_fen {
                     C7 => piece::BQ,
                     G8 => piece::BK
                 ),
-                king_locs: [G1, G8],
                 piece_boards: [
                     board!(A3, B2, C4, E4, F2, G2, H2),
                     board!(C3, D4),

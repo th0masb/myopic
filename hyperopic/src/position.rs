@@ -25,7 +25,6 @@ pub struct Position {
     pub piece_boards: PieceMap<Board>,
     pub piece_locs: SquareMap<Option<Piece>>,
     pub side_boards: SideMap<Board>,
-    pub king_locs: SideMap<Square>,
     pub castling_rights: CornerMap<bool>,
     pub active: Side,
     pub enpassant: Option<Square>,
@@ -169,9 +168,6 @@ impl Position {
         self.piece_boards[piece] |= lifted;
         self.side_boards[side] |= lifted;
         self.piece_locs[square] = Some(piece);
-        if class(piece) == class::K {
-            self.king_locs[side] = square
-        }
     }
 
     fn unset_piece(&mut self, piece: Piece, square: Square) {
