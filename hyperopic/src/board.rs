@@ -5,7 +5,7 @@ use itertools::{iterate, Itertools};
 use lazy_static::lazy_static;
 use crate::{Board, piece_class, Dir, square_file, lift, Piece, piece_side, square_rank, SideMap, Square, SquareMap};
 use crate::board::iterator::BoardIterator;
-use crate::constants::side;
+
 
 lazy_static! {
     static ref CONTROL: PieceControl = compute_control();

@@ -1,4 +1,4 @@
-use crate::constants::side;
+
 
 mod board;
 mod hash;
@@ -138,8 +138,8 @@ pub mod constants {
 
     pub mod piece {
         use crate::Piece;
-        use crate::constants::side;
-        use crate::constants::class;
+        
+        
 
         pub const WP: Piece = 0; pub const WN: Piece = 1;
         pub const WB: Piece = 2; pub const WR: Piece = 3;

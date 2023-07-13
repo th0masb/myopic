@@ -1,6 +1,6 @@
 use std::array;
 use lazy_static::lazy_static;
-use crate::{ClassMap, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap};
+use crate::{Corner, CornerMap, Piece, PieceMap, Square, SquareMap};
 
 lazy_static! {
     static ref FEATURES: Features = compute_features();

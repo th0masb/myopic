@@ -1,5 +1,5 @@
-use std::array;
-use std::cmp::max;
+
+
 use std::str::FromStr;
 
 use anyhow::{Error, Result};
@@ -7,9 +7,9 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use crate::{Board, hash, lift, Piece, piece_side, PieceMap, SquareMap};
+use crate::{Board, hash, lift, Piece, piece_side, PieceMap};
 use crate::board::iter;
-use crate::constants::side;
+
 use crate::position::Position;
 
 impl FromStr for Position {
@@ -59,7 +59,7 @@ lazy_static! {
 }
 
 fn parse_fen(fen: &str) -> Result<Position> {
-    use crate::constants::{side, piece};
+    use crate::constants::{side};
     let parts = SPACE.split(fen).map(|p| p.trim()).collect_vec();
     let active = if parts[1] == "w" { side::W } else { side::B };
     let enpassant = if parts[3] == "-" { None } else { Some(SQUARE_MAP.get(parts[3])) };
@@ -107,11 +107,11 @@ fn parse_fen_rank(rank: &str) -> Vec<Option<Piece>> {
     }).collect()
 }
 
-fn parse_pgn(pgn: &str) -> Result<Position> {
+fn parse_pgn(_pgn: &str) -> Result<Position> {
     todo!()
 }
 
-fn parse_uci(uci: &str) -> Result<Position> {
+fn parse_uci(_uci: &str) -> Result<Position> {
     todo!()
 }
 
