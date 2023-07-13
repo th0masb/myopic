@@ -1,5 +1,5 @@
 use crate::moves::{Move, Move::*, Moves};
-use crate::{board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, reflect_side, create_piece};
+use crate::{board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, reflect_side, create_piece, in_board};
 
 use crate::board::{control, compute_cord, iter, cord};
 use crate::constants::{class, piece, side};
@@ -308,6 +308,48 @@ fn pawn_control(side: Side, pawns: Board) -> Board {
 // Implementation block for move generation
 impl Position {
     pub fn moves(&self, _moves: Moves) -> Vec<Move> {
+        let active = self.active;
+        let passive_control = self.compute_control(reflect_side(active));
+        let active_king = create_piece(active, class::K);
+        let active_king_loc = self.piece_boards[active_king].trailing_zeros() as usize;
+        if active_king_loc == 64 {
+            // King not on the board -> no legal moves
+            return vec![]
+        }
+        let pins = self.compute_pinned_on(active_king_loc).unwrap();
+        let in_check = in_board(passive_control, active_king_loc);
+        // The set of constraints for each piece on the board to avoid illegal moves
+        let constraints = if in_check {
+            let attacker_side = reflect_side(active);
+            let occupied = self.side_boards[side::W] | self.side_boards[side::B];
+            let king_attackers = (0..5)
+                .map(|class| create_piece(attacker_side, class))
+                .map(|p| (p, self.piece_boards[p] & control(p, active_king_loc, 0)))
+                .flat_map(|(p, b)| iter(b).map(move |sq| (p, sq)))
+                .filter(|(p, sq)| in_board(control(*p, *sq, occupied), active_king_loc))
+                .fold(0u64, |a, (_, n)| a | lift(n));
+
+            if king_attackers.count_ones() == 1 {
+                // We can move out of check or block the check, we still need to take pins into account
+                let from = king_attackers.trailing_zeros() as Square;
+                let blocking_squares = cord(from, active_king_loc);
+                let mut result = [blocking_squares; 64];
+                result[active_king_loc] = !passive_control;
+                iter(pins.0).for_each(|sq| result[sq] &= pins.1[sq]);
+                result
+            } else {
+                // Only legal moves are for king to move out of passive control
+                let mut result = [crate::constants::boards::EMPTY; 64];
+                result[active_king_loc] = !passive_control;
+                result
+            }
+        } else {
+            // We only need to care about pins + king not moving into check
+            let mut result = [crate::constants::boards::ALL; 64];
+            result[active_king_loc] = !passive_control;
+            iter(pins.0).for_each(|sq| result[sq] &= pins.1[sq]);
+            result
+        };
         todo!()
     }
 }
