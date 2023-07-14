@@ -1,9 +1,10 @@
 use crate::moves::{Move, Move::*, Moves};
-use crate::{board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, reflect_side, create_piece, in_board};
+use crate::{board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, reflect_side, create_piece, in_board, square_file};
 
-use crate::board::{control, compute_cord, iter, cord};
+use crate::board::{control, compute_cord, iter, cord, board_moves};
 use crate::constants::{class, piece, side};
 use anyhow::{anyhow, Result};
+use crate::constants::boards::{ADJACENT_FILES, RANKS};
 
 /// Represents the possible ways a game can be terminated, we only
 /// consider a game to be terminated when a side has no legal moves
@@ -92,7 +93,7 @@ impl Position {
         self.enpassant.map(|sq| self.key ^= crate::hash::enpassant(sq));
         match m {
             Null => self.enpassant = None,
-            Standard { moving, from, dest, capture } => {
+            Normal { moving, from, dest, capture } => {
                 capture.map(|p| self.unset_piece(p, dest));
                 self.unset_piece(moving, from);
                 self.set_piece(moving, dest);
@@ -110,7 +111,7 @@ impl Position {
                     None
                 }
             }
-            Promotion { from, dest, promoted, capture } => {
+            Promote { from, dest, promoted, capture } => {
                 capture.map(|p| self.unset_piece(p, dest));
                 let moved = if piece_side(promoted) == side::W { piece::WP } else { piece::BP };
                 self.remove_rights(rights_removed(dest));
@@ -155,12 +156,12 @@ impl Position {
         let (state, mv) = self.history.remove(self.history.len() - 1);
         match &mv {
             Null => {}
-            &Standard { moving, from, dest, capture } => {
+            &Normal { moving, from, dest, capture } => {
                 self.unset_piece(moving, dest);
                 self.set_piece(moving, from);
                 capture.map(|p| self.set_piece(p, dest));
             }
-            &Promotion { from, dest, promoted, capture } => {
+            &Promote { from, dest, promoted, capture } => {
                 let moved = if piece_side(promoted) == side::W { piece::WP } else { piece::BP };
                 self.unset_piece(promoted, dest);
                 self.set_piece(moved, from);
@@ -233,7 +234,6 @@ pub type Constraints = SquareMap<Board>;
 #[derive(Debug, PartialEq)]
 pub struct ConstrainedPieces(pub Board, pub Constraints);
 
-// Implementation block for misc property generation
 impl Position {
     pub fn compute_discoveries_on(&self, square: Square) -> Result<ConstrainedPieces> {
         let piece = self.piece_locs[square].ok_or_else(|| anyhow!("No piece at {}", square))?;
@@ -305,7 +305,6 @@ fn pawn_control(side: Side, pawns: Board) -> Board {
     }
 }
 
-// Implementation block for move generation
 impl Position {
     pub fn moves(&self, _moves: Moves) -> Vec<Move> {
         let active = self.active;
@@ -350,7 +349,64 @@ impl Position {
             iter(pins.0).for_each(|sq| result[sq] &= pins.1[sq]);
             result
         };
-        todo!()
+        let mut result = Vec::with_capacity(40);
+        self.compute_pawn_moves(&constraints).for_each(|m| result.push(m));
+        result
+    }
+
+    fn compute_pawn_moves<'a>(&'a self, constraints: &'a Constraints) -> impl Iterator<Item=Move> + 'a {
+        let active = self.active;
+        let moving = create_piece(active, class::P);
+        let pawns = self.piece_boards[create_piece(active, class::P)];
+        let is_white = active == side::W;
+        let last_rank = if is_white { RANKS[6] } else { RANKS[1] };
+        let enpassant_attack = self.enpassant.map_or(0u64, |sq| {
+            let attack_rank = if is_white { RANKS[3] } else { RANKS[4] };
+            attack_rank & ADJACENT_FILES[square_file(sq)]
+        });
+        let standard = pawns & !last_rank;
+        let enpassant = pawns & enpassant_attack;
+        let promotion = pawns & last_rank;
+        let friendly = self.side_boards[active];
+        let enemy = self.side_boards[reflect_side(active)];
+
+        iter(standard).flat_map(move |from| {
+            self.create_normal_moves(
+                moving,
+                from,
+                board_moves(moving, from, friendly, enemy) & constraints[from]
+            )
+        }).chain(
+            iter(promotion).flat_map(move |from| {
+                self.create_promote_moves(
+                    active,
+                    from,
+                    board_moves(moving, from, friendly, enemy) & constraints[from]
+                )
+            })
+        )
+    }
+
+    fn create_normal_moves(
+        &self,
+        moving: Piece,
+        from: Square,
+        dest: Board
+    ) -> impl Iterator<Item=Move> + '_ {
+        iter(dest).map(move |dest| Normal { moving, from, dest, capture: self.piece_locs[dest] })
+    }
+
+    fn create_promote_moves(
+        &self,
+        side: Side,
+        from: Square,
+        dest: Board
+    ) -> impl Iterator<Item=Move> + '_ {
+        iter(dest).flat_map(move |dest| {
+            [class::N, class::B, class::R, class::Q].into_iter().map(move |promoted| {
+                Promote { from, dest, promoted: create_piece(side, promoted), capture: self.piece_locs[dest] }
+            })
+        })
     }
 }
 
