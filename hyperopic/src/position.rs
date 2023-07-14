@@ -1,5 +1,6 @@
+use std::io::Read;
 use crate::moves::{Move, Move::*, Moves};
-use crate::{board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, reflect_side, create_piece, in_board, square_file};
+use crate::{board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, reflect_side, create_piece, in_board, square_file, first_square, square_rank, intersects, union_boards};
 
 use crate::board::{control, compute_cord, iter, cord, board_moves};
 use crate::constants::{class, piece, side};
@@ -130,8 +131,9 @@ impl Position {
                 self.clock = 0;
             }
             Castle { corner } => {
-                let (r_source, r_target) = rook_line(corner);
-                let (k_source, k_target) = king_line(corner);
+                let details = &CASTLING_DETAILS[corner];
+                let (r_source, r_target) = details.rook_line;
+                let (k_source, k_target) = details.king_line;
                 self.remove_rights(rights_removed(k_source));
                 let side = corner / 2;
                 let rook = if side == side::W { piece::WR } else { piece::BR };
@@ -175,8 +177,9 @@ impl Position {
                 self.set_piece(moving, from);
             }
             &Castle { corner } => {
-                let (r_source, r_target) = rook_line(corner);
-                let (k_source, k_target) = king_line(corner);
+                let details = &CASTLING_DETAILS[corner];
+                let (r_source, r_target) = details.rook_line;
+                let (k_source, k_target) = details.king_line;
                 let side = corner / 2;
                 let rook = if side == side::W { piece::WR } else { piece::BR };
                 let king = if side == side::W { piece::WK } else { piece::BK };
@@ -350,8 +353,38 @@ impl Position {
             result
         };
         let mut result = Vec::with_capacity(40);
-        self.compute_pawn_moves(&constraints).for_each(|m| result.push(m));
+        self.compute_pawn_moves(&constraints)
+            .chain(self.compute_nbrqk_moves(&constraints))
+            .chain(self.compute_castle_moves(constraints[active_king_loc]))
+            .for_each(|m| result.push(m));
         result
+    }
+
+    fn compute_nbrqk_moves<'a>(&'a self, constraints: &'a Constraints) -> impl Iterator<Item = Move> + 'a {
+        let friendly = self.side_boards[self.active];
+        let enemy = self.side_boards[reflect_side(self.active)];
+        [class::N, class::B, class::R, class::Q, class::K].into_iter().flat_map(move |class| {
+            let piece = create_piece(self.active, class);
+            iter(self.piece_boards[piece]).flat_map(move |sq| {
+                let moves = board_moves(piece, sq, friendly, enemy) & constraints[sq];
+                self.create_normal_moves(piece, sq, moves)
+            })
+        })
+    }
+
+    fn compute_castle_moves<'a>(&'a self, king_constraint: Board) -> impl Iterator<Item=Move> +'a {
+        self.castling_rights.iter().enumerate()
+            .filter(|(_, &allowed)| allowed)
+            .filter_map(move |(corner, _)| {
+                let details = &CASTLING_DETAILS[corner];
+                if is_superset(king_constraint, details.no_control)
+                    && !intersects(union_boards(&self.side_boards), details.no_piece)
+                {
+                    Some(Castle { corner })
+                } else {
+                    None
+                }
+            })
     }
 
     fn compute_pawn_moves<'a>(&'a self, constraints: &'a Constraints) -> impl Iterator<Item=Move> + 'a {
@@ -384,7 +417,36 @@ impl Position {
                     board_moves(moving, from, friendly, enemy) & constraints[from]
                 )
             })
+        ).chain(
+            iter(enpassant).filter_map(move |from| {
+                let dest = self.enpassant.unwrap();
+                let capture = if is_white { dest - 8 } else { dest + 8 };
+                if in_board(constraints[from], dest) &&
+                    self.enpassant_doesnt_discover_attack(from, capture) {
+                    Some(Enpassant { side: active, from, dest, capture })
+                } else {
+                    None
+                }
+            })
         )
+    }
+
+    fn enpassant_doesnt_discover_attack(&self, from: Square, capture: Square) -> bool {
+        let (active, passive) = (self.active, reflect_side(self.active));
+        let active_king_loc = first_square(self.piece_boards[create_piece(active, class::K)]);
+        let from_rank = RANKS[square_rank(from)];
+        if !in_board(from_rank, active_king_loc) {
+            return true;
+        }
+        let rook = create_piece(passive, class::R);
+        let queen = create_piece(passive, class::Q);
+        let attackers = (self.piece_boards[rook] | self.piece_boards[queen]) & from_rank;
+        let occupied = self.side_boards[side::W] | self.side_boards[side::B];
+        !iter(attackers).any(|sq| {
+            let cord = cord(sq, active_king_loc) & occupied;
+            // Exactly 4 pieces, king, attacker, the two pawns about to vacate the rank
+            cord.count_ones() == 4 && is_superset(cord, board!(from, capture))
+        })
     }
 
     fn create_normal_moves(
@@ -423,24 +485,40 @@ fn rights_removed<'a>(square: Square) -> &'a [Corner] {
     }
 }
 
-fn king_line(corner: Corner) -> (Square, Square) {
-    use crate::constants::{corner, square};
-    match corner {
-        corner::WK => (square::E1, square::G1),
-        corner::WQ => (square::E1, square::C1),
-        corner::BK => (square::E8, square::G8),
-        corner::BQ => (square::E8, square::C8),
-        _ => panic!("{} is not a valid corner", corner),
-    }
-}
+#[rustfmt::skip]
+const CASTLING_DETAILS: CornerMap<CastlingDetails> = {
+    use crate::constants::square::*;
+    [
+        CastlingDetails {
+            king_line: (E1, G1),
+            rook_line: (H1, F1),
+            no_piece: board!(F1 => G1),
+            no_control: board!(E1 => G1)
+        },
+        CastlingDetails {
+            king_line: (E1, C1),
+            rook_line: (A1, D1),
+            no_piece: board!(D1 => B1),
+            no_control: board!(E1 => C1)
+        },
+        CastlingDetails {
+            king_line: (E8, G8),
+            rook_line: (H8, F8),
+            no_piece: board!(F8 => G8),
+            no_control: board!(E8 => G8)
+        },
+        CastlingDetails {
+            king_line: (E8, C8),
+            rook_line: (A8, D8),
+            no_piece: board!(D8 => B8),
+            no_control: board!(E8 => C8)
+        },
+    ]
+};
 
-fn rook_line(corner: Corner) -> (Square, Square) {
-    use crate::constants::{corner, square};
-    match corner {
-        corner::WK => (square::H1, square::F1),
-        corner::WQ => (square::A1, square::D1),
-        corner::BK => (square::H8, square::F8),
-        corner::BQ => (square::A8, square::D8),
-        _ => panic!("{} is not a valid corner", corner),
-    }
+struct CastlingDetails {
+    king_line: (Square, Square),
+    rook_line: (Square, Square),
+    no_piece: Board,
+    no_control: Board,
 }
