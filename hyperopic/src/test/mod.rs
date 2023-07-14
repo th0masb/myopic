@@ -18,7 +18,7 @@ impl Symmetric for Move {
         match self {
             Null => Null,
             Castle { corner } => Castle { corner: reflect_corner(*corner) },
-            Standard { moving, from, dest, capture } => Standard {
+            Normal { moving, from, dest, capture } => Normal {
                 moving: reflect_piece(*moving),
                 from: reflect_square(*from),
                 dest: reflect_square(*dest),
@@ -30,7 +30,7 @@ impl Symmetric for Move {
                 dest: reflect_square(*dest),
                 capture: reflect_square(*capture),
             },
-            Promotion { from, dest, promoted, capture } => Promotion {
+            Promote { from, dest, promoted, capture } => Promote {
                 from: reflect_square(*from),
                 dest: reflect_square(*dest),
                 promoted: reflect_piece(*promoted),
@@ -74,7 +74,7 @@ mod symmetry_test {
     use crate::moves::Move;
     use crate::position::Position;
     use crate::Symmetric;
-    use Move::Standard;
+    use Move::Normal;
 
     #[test]
     fn position_symmetry_1() {
@@ -94,13 +94,13 @@ mod symmetry_test {
         let mut start = "r2qkb1r/1p1b1pp1/p1nppn2/1B5p/3NPP2/2N4P/PPP3P1/R1BQ1RK1 w kq - 0 1"
             .parse::<Position>()
             .unwrap();
-        start.make(Standard { from: G1, dest: H1, moving: piece::WK, capture: None }).unwrap();
+        start.make(Normal { from: G1, dest: H1, moving: piece::WK, capture: None }).unwrap();
         let mut reflected_start =
             "r1bq1rk1/ppp3p1/2n4p/3npp2/1b5P/P1NPPN2/1P1B1PP1/R2QKB1R b KQ - 0 1"
                 .parse::<Position>()
                 .unwrap();
         reflected_start
-            .make(Standard { from: G8, dest: H8, moving: piece::BK, capture: None })
+            .make(Normal { from: G8, dest: H8, moving: piece::BK, capture: None })
             .unwrap();
         assert_eq!(start.reflect(), reflected_start);
     }

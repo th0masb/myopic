@@ -53,7 +53,7 @@ fn black_queenside_castle() {
 fn test_white_rook_taking_black_rook_removing_kingside_rights() {
     execute_test(
         "r3k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K2R w KQkq - 0 1",
-        Move::Standard { moving: piece::WR, from: H1, dest: H8, capture: Some(piece::BR) },
+        Move::Normal { moving: piece::WR, from: H1, dest: H8, capture: Some(piece::BR) },
         "r3k2R/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K3 b Qq - 0 1",
     );
 }
@@ -62,7 +62,7 @@ fn test_white_rook_taking_black_rook_removing_kingside_rights() {
 fn test_black_rook_taking_white_rook_removing_kingside_rights() {
     execute_test(
         "r3k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K2R b KQkq - 0 1",
-        Move::Standard { moving: piece::BR, from: H8, dest: H1, capture: Some(piece::WR) },
+        Move::Normal { moving: piece::BR, from: H8, dest: H1, capture: Some(piece::WR) },
         "r3k3/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K2r w Qq - 0 2",
     );
 }
@@ -71,7 +71,7 @@ fn test_black_rook_taking_white_rook_removing_kingside_rights() {
 fn test_white_rook_taking_black_rook_removing_queenside_rights() {
     execute_test(
         "r3k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K2R w KQkq - 0 1",
-        Move::Standard { moving: piece::WR, from: A1, dest: A8, capture: Some(piece::BR) },
+        Move::Normal { moving: piece::WR, from: A1, dest: A8, capture: Some(piece::BR) },
         "R3k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/4K2R b Kk - 0 1",
     );
 }
@@ -80,7 +80,7 @@ fn test_white_rook_taking_black_rook_removing_queenside_rights() {
 fn test_black_rook_taking_white_rook_removing_queenside_rights() {
     execute_test(
         "r3k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K2R b KQkq - 0 1",
-        Move::Standard { moving: piece::BR, from: A8, dest: A1, capture: Some(piece::WR) },
+        Move::Normal { moving: piece::BR, from: A8, dest: A1, capture: Some(piece::WR) },
         "4k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/r3K2R w Kk - 0 2",
     );
 }
@@ -89,7 +89,7 @@ fn test_black_rook_taking_white_rook_removing_queenside_rights() {
 fn test_white_king_moving_removes_castling_rights() {
     execute_test(
         "r3k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K2R w KQkq - 0 1",
-        Move::Standard { moving: piece::WK, from: E1, dest: E2, capture: None },
+        Move::Normal { moving: piece::WK, from: E1, dest: E2, capture: None },
         "r3k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q1KPP1/R6R b kq - 1 1",
     );
 }
@@ -98,7 +98,7 @@ fn test_white_king_moving_removes_castling_rights() {
 fn test_black_king_moving_removes_castling_rights() {
     execute_test(
         "r3k2r/4pp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K2R b KQkq - 0 1",
-        Move::Standard { moving: piece::BK, from: E8, dest: D7, capture: None },
+        Move::Normal { moving: piece::BK, from: E8, dest: D7, capture: None },
         "r6r/3kpp2/1n1b4/2p5/2B5/1N6/2Q2PP1/R3K2R w KQ - 1 2",
     );
 }
@@ -107,7 +107,7 @@ fn test_black_king_moving_removes_castling_rights() {
 fn test_white_pawn_moves_forward_two() {
     execute_test(
         "r1bqkb1r/pp2pppp/2np1n2/6B1/3NP3/2N5/PPP2PPP/R2QKB1R w KQkq - 12 1",
-        Move::Standard { moving: piece::WP, from: G2, dest: G4, capture: None },
+        Move::Normal { moving: piece::WP, from: G2, dest: G4, capture: None },
         "r1bqkb1r/pp2pppp/2np1n2/6B1/3NP1P1/2N5/PPP2P1P/R2QKB1R b KQkq g3 0 1",
     );
 }
@@ -116,7 +116,7 @@ fn test_white_pawn_moves_forward_two() {
 fn test_black_pawn_moves_forward_two() {
     execute_test(
         "r1bqkb1r/pp2pppp/2np1n2/6B1/3NP1P1/2N5/PPP2P1P/R2QKB1R b KQkq - 12 1",
-        Move::Standard { moving: piece::BP, from: B7, dest: B5, capture: None },
+        Move::Normal { moving: piece::BP, from: B7, dest: B5, capture: None },
         "r1bqkb1r/p3pppp/2np1n2/1p4B1/3NP1P1/2N5/PPP2P1P/R2QKB1R w KQkq b6 0 2",
     );
 }
@@ -125,7 +125,7 @@ fn test_black_pawn_moves_forward_two() {
 fn test_white_pawn_moves_forward_one() {
     execute_test(
         "r1bqkb1r/pp2pppp/2np1n2/6B1/3NP3/2N5/PPP2PPP/R2QKB1R w KQkq - 12 1",
-        Move::Standard { moving: piece::WP, from: G2, dest: G3, capture: None },
+        Move::Normal { moving: piece::WP, from: G2, dest: G3, capture: None },
         "r1bqkb1r/pp2pppp/2np1n2/6B1/3NP3/2N3P1/PPP2P1P/R2QKB1R b KQkq - 0 1",
     );
 }
@@ -134,7 +134,7 @@ fn test_white_pawn_moves_forward_one() {
 fn test_black_pawn_moves_forward_one() {
     execute_test(
         "r1bqkb1r/pp2pppp/2np1n2/6B1/3NP3/2N3P1/PPP2P1P/R2QKB1R b KQkq - 11 1",
-        Move::Standard { moving: piece::BP, from: B7, dest: B6, capture: None },
+        Move::Normal { moving: piece::BP, from: B7, dest: B6, capture: None },
         "r1bqkb1r/p3pppp/1pnp1n2/6B1/3NP3/2N3P1/PPP2P1P/R2QKB1R w KQkq - 0 2",
     );
 }
@@ -161,7 +161,7 @@ fn test_black_enpassant() {
 fn test_white_promotion() {
     execute_test(
         "r1bqkb1r/p5Pp/2np3B/4p3/1n1N3P/P1N3P1/2P2P2/R2QKB1R w KQkq - 11 9",
-        Move::Promotion { from: G7, dest: H8, promoted: piece::WR, capture: Some(piece::BR) },
+        Move::Promote { from: G7, dest: H8, promoted: piece::WR, capture: Some(piece::BR) },
         "r1bqkb1R/p6p/2np3B/4p3/1n1N3P/P1N3P1/2P2P2/R2QKB1R b KQq - 0 9",
     );
 }
@@ -170,7 +170,7 @@ fn test_white_promotion() {
 fn test_black_promotion() {
     execute_test(
         "r1bqkb1R/p6p/2np4/8/1n1N3P/P1N1B1P1/2P1pP2/R1KQ1B1R b q - 1 12",
-        Move::Promotion { from: E2, dest: E1, promoted: piece::BN, capture: None },
+        Move::Promote { from: E2, dest: E1, promoted: piece::BN, capture: None },
         "r1bqkb1R/p6p/2np4/8/1n1N3P/P1N1B1P1/2P2P2/R1KQnB1R w q - 0 13",
     );
 }

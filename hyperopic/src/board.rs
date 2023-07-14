@@ -1,15 +1,36 @@
 use crate::board::iterator::BoardIterator;
-use crate::{lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square, SquareMap, SquareMatrix};
+use crate::{lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square, SquareMap, SquareMatrix, in_board};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::array;
+use crate::constants::{class, side};
+use crate::constants::boards::RANKS;
 
 lazy_static! {
     static ref CONTROL: PieceControl = compute_control();
 }
 
+pub fn board_moves(piece: Piece, sq: Square, friendly: Board, enemy: Board) -> Board {
+    let occupied = friendly | enemy;
+    let control = control(piece, sq, occupied);
+    if piece_class(piece) == class::P {
+        let mut moves = control & enemy;
+        let is_white = piece_side(piece) == side::W;
+        let shift_forward = if is_white { 8isize } else { -8 };
+        let next = sq as isize + shift_forward;
+        if !in_board(occupied, next as usize) {
+            moves |= lift(next as usize);
+            if in_board(RANKS[if is_white { 1 } else { 6 }], sq) {
+                moves |= (lift((next + shift_forward) as usize) & !occupied)
+            }
+        }
+        moves
+    } else {
+        control & !friendly
+    }
+}
+
 pub fn control(piece: Piece, sq: Square, occupied: Board) -> Board {
-    use crate::constants::class;
     match piece_class(piece) {
         class::P => CONTROL.pawns[piece_side(piece)][sq],
         class::N => CONTROL.knights[sq],

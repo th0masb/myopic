@@ -198,6 +198,17 @@ pub mod constants {
             board!(B1 => B8),
             board!(A1 => A8),
         ];
+
+        pub const ADJACENT_FILES: [Board; 8] = [
+            FILES[1],
+            FILES[0] | FILES[2],
+            FILES[1] | FILES[3],
+            FILES[2] | FILES[4],
+            FILES[3] | FILES[5],
+            FILES[4] | FILES[6],
+            FILES[5] | FILES[7],
+            FILES[6]
+        ];
     }
 
     pub mod square {

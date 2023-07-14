@@ -2,9 +2,9 @@ use crate::{Corner, Piece, Side, Square};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Move {
-    Standard { moving: Piece, from: Square, dest: Square, capture: Option<Piece> },
+    Normal { moving: Piece, from: Square, dest: Square, capture: Option<Piece> },
     Enpassant { side: Side, from: Square, dest: Square, capture: Square },
-    Promotion { from: Square, dest: Square, promoted: Piece, capture: Option<Piece> },
+    Promote { from: Square, dest: Square, promoted: Piece, capture: Option<Piece> },
     Castle { corner: Corner },
     Null,
 }
