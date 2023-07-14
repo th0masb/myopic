@@ -1,10 +1,13 @@
 use crate::moves::Move;
 use crate::position::{ConstrainedPieces, Position};
-use crate::{reflect_corner, reflect_piece, reflect_side, reflect_square, Board, Symmetric, reflect_board};
+use crate::{
+    reflect_board, reflect_corner, reflect_piece, reflect_side, reflect_square, Board, Symmetric,
+};
 use std::array;
 
 mod control;
 mod make;
+mod moves;
 mod pinned;
 
 pub fn assert_boards_equal(expected: Board, actual: Board) {
@@ -63,7 +66,7 @@ impl Symmetric for ConstrainedPieces {
     fn reflect(&self) -> Self {
         ConstrainedPieces(
             reflect_board(self.0),
-            array::from_fn(|sq| reflect_board(self.1[reflect_square(sq)]))
+            array::from_fn(|sq| reflect_board(self.1[reflect_square(sq)])),
         )
     }
 }

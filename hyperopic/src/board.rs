@@ -1,9 +1,12 @@
 use crate::board::iterator::BoardIterator;
-use crate::{lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square, SquareMap, SquareMatrix, in_board};
+use crate::constants::boards::RANKS;
+use crate::constants::{class, side};
+use crate::{
+    in_board, lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap,
+    Square, SquareMap, SquareMatrix,
+};
 use lazy_static::lazy_static;
 use std::array;
-use crate::constants::{class, side};
-use crate::constants::boards::RANKS;
 
 lazy_static! {
     static ref CONTROL: PieceControl = compute_control();

@@ -149,7 +149,7 @@ pub const fn first_square(board: Board) -> Square {
 }
 
 pub fn union_boards(boards: &[Board]) -> Board {
-    boards.iter().fold(0u64,  |a, n| a | n)
+    boards.iter().fold(0u64, |a, n| a | n)
 }
 
 #[rustfmt::skip]
@@ -219,7 +219,7 @@ pub mod constants {
             board!(G1 => G8),
             board!(F1 => F8),
             board!(E1 => E8),
-            board!(F1 => F8),
+            board!(D1 => D8),
             board!(C1 => C8),
             board!(B1 => B8),
             board!(A1 => A8),

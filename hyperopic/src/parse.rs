@@ -17,12 +17,12 @@ impl FromStr for Position {
     }
 }
 
-struct StringIndexMap {
+pub struct StringIndexMap {
     content: Vec<String>,
 }
 
 impl StringIndexMap {
-    fn squares() -> StringIndexMap {
+    pub fn squares() -> StringIndexMap {
         StringIndexMap {
             content: (1usize..=8)
                 .into_iter()
@@ -33,7 +33,26 @@ impl StringIndexMap {
         }
     }
 
-    fn fen_pieces() -> StringIndexMap {
+    pub fn sides() -> StringIndexMap {
+        StringIndexMap { content: vec!["w", "b"].into_iter().map(|s| s.to_owned()).collect() }
+    }
+
+    pub fn corners() -> StringIndexMap {
+        StringIndexMap {
+            content: vec!["wk", "wq", "bk", "bq"].into_iter().map(|s| s.to_owned()).collect(),
+        }
+    }
+
+    pub fn pieces() -> StringIndexMap {
+        StringIndexMap {
+            content: vec!["wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk"]
+                .into_iter()
+                .map(|s| s.to_owned())
+                .collect(),
+        }
+    }
+
+    pub fn fen_pieces() -> StringIndexMap {
         StringIndexMap {
             content: vec!["P", "N", "B", "R", "Q", "K", "p", "n", "b", "r", "q", "k"]
                 .into_iter()
@@ -44,8 +63,12 @@ impl StringIndexMap {
 }
 
 impl StringIndexMap {
-    fn get(&self, s: &str) -> usize {
-        self.content.iter().position(|s1| s1.as_str() == s).unwrap()
+    pub fn get_op<S: AsRef<str>>(&self, s: S) -> Option<usize> {
+        self.content.iter().position(|s1| s1.as_str() == s.as_ref())
+    }
+
+    pub fn get<S: AsRef<str>>(&self, s: S) -> usize {
+        self.get_op(s).unwrap()
     }
 }
 
