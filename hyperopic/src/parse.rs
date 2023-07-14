@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use anyhow::{Error, Result};
-use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -63,7 +62,7 @@ lazy_static! {
 
 fn parse_fen(fen: &str) -> Result<Position> {
     use crate::constants::side;
-    let parts = SPACE.split(fen).map(|p| p.trim()).collect_vec();
+    let parts = SPACE.split(fen).map(|p| p.trim()).collect::<Vec<_>>();
     let active = if parts[1] == "w" { side::W } else { side::B };
     let enpassant = if parts[3] == "-" { None } else { Some(SQUARE_MAP.get(parts[3])) };
     let clock = parts[4].parse::<usize>()?;
@@ -96,7 +95,7 @@ fn parse_fen_pieces(fen: &str) -> PieceMap<Board> {
     FEN_RANK
         .find_iter(fen)
         .flat_map(|m| parse_fen_rank(m.as_str()))
-        .collect_vec()
+        .collect::<Vec<_>>()
         .into_iter()
         .rev()
         .enumerate()

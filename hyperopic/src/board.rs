@@ -1,6 +1,5 @@
 use crate::board::iterator::BoardIterator;
 use crate::{lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap, Square, SquareMap, SquareMatrix, in_board};
-use itertools::Itertools;
 use lazy_static::lazy_static;
 use std::array;
 use crate::constants::{class, side};
@@ -21,7 +20,7 @@ pub fn board_moves(piece: Piece, sq: Square, friendly: Board, enemy: Board) -> B
         if !in_board(occupied, next as usize) {
             moves |= lift(next as usize);
             if in_board(RANKS[if is_white { 1 } else { 6 }], sq) {
-                moves |= (lift((next + shift_forward) as usize) & !occupied)
+                moves |= lift((next + shift_forward) as usize) & !occupied
             }
         }
         moves
@@ -93,7 +92,7 @@ fn compute_magic_moves(
     dirs: &[Dir],
 ) -> Vec<Board> {
     let mut result = vec![0u64; 1usize << mask.count_ones()];
-    for variation in compute_powerset(iter(mask).collect_vec().as_slice()) {
+    for variation in compute_powerset(iter(mask).collect::<Vec<_>>().as_slice()) {
         let index = magic::index(variation, magic, shift);
         result[index] = compute_sliding_control(sq, variation, dirs)
     }

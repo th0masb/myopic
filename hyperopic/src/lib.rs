@@ -70,46 +70,56 @@ macro_rules! square_map {
     };
 }
 
-pub const fn piece_side(piece: Piece) -> Side {
-    piece / 6
-}
-
-pub const fn piece_class(piece: Piece) -> Class {
-    piece % 6
-}
-
-pub const fn create_piece(side: Side, class: Class) -> Piece {
-    side * 6 + class
-}
-
-pub const fn square_rank(square: Square) -> Rank {
-    square / 8
-}
-
-pub const fn square_file(square: Square) -> File {
-    square % 8
-}
-
-pub const fn lift(square: Square) -> Board {
-    1u64 << (square as u64)
-}
-
 pub trait Symmetric {
     fn reflect(&self) -> Self;
 }
 
+#[inline(always)]
+pub const fn piece_side(piece: Piece) -> Side {
+    piece / 6
+}
+
+#[inline(always)]
+pub const fn piece_class(piece: Piece) -> Class {
+    piece % 6
+}
+
+#[inline(always)]
+pub const fn create_piece(side: Side, class: Class) -> Piece {
+    side * 6 + class
+}
+
+#[inline(always)]
+pub const fn square_rank(square: Square) -> Rank {
+    square / 8
+}
+
+#[inline(always)]
+pub const fn square_file(square: Square) -> File {
+    square % 8
+}
+
+#[inline(always)]
+pub const fn lift(square: Square) -> Board {
+    1u64 << (square as u64)
+}
+
+#[inline(always)]
 pub const fn reflect_side(side: Side) -> Side {
     (side + 1) % 2
 }
 
+#[inline(always)]
 pub const fn reflect_corner(corner: Corner) -> Corner {
     (corner + 2) % 4
 }
 
+#[inline(always)]
 pub const fn reflect_square(square: Square) -> Square {
     8 * (7 - square_rank(square)) + square_file(square)
 }
 
+#[inline(always)]
 pub const fn reflect_piece(piece: Piece) -> Piece {
     (piece + 6) % 12
 }
@@ -118,12 +128,28 @@ pub fn reflect_board(board: Board) -> Board {
     iter(board).map(|sq| reflect_square(sq)).fold(0u64, |a, n| a | lift(n))
 }
 
+#[inline(always)]
 pub const fn in_board(board: Board, square: Square) -> bool {
     board & lift(square) != 0
 }
 
+#[inline(always)]
 pub const fn is_superset(left: Board, right: Board) -> bool {
     (left & right) == right
+}
+
+#[inline(always)]
+pub const fn intersects(left: Board, right: Board) -> bool {
+    (left & right) != 0
+}
+
+#[inline(always)]
+pub const fn first_square(board: Board) -> Square {
+    board.trailing_zeros() as Square
+}
+
+pub fn union_boards(boards: &[Board]) -> Board {
+    boards.iter().fold(0u64,  |a, n| a | n)
 }
 
 #[rustfmt::skip]
