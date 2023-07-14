@@ -1,14 +1,14 @@
 use crate::position::{ConstrainedPieces, Position};
-use crate::{board, Board, create_piece, reflect_square, Square, square_map, Symmetric};
-use crate::board::iter;
-use crate::constants::{class, square::*};
+use crate::{board, reflect_square, square_map, Square, Symmetric};
+
+use crate::constants::square::*;
 use anyhow::Result;
 
 fn execute_pin_test(
     fen: &str,
     under_test: fn(&Position, Square) -> Result<ConstrainedPieces>,
     square: Square,
-    expected: ConstrainedPieces
+    expected: ConstrainedPieces,
 ) {
     let position = fen.parse::<Position>().unwrap();
     let reflected = position.reflect();
@@ -28,8 +28,8 @@ fn pinned_case_1() {
                 E4 => board!(D4 => G4),
                 C5 => board!(B6 => D4),
                 D5 => board!(D4 => D8)
-            )
-        )
+            ),
+        ),
     );
 }
 
@@ -39,10 +39,7 @@ fn pinned_case_2() {
         "K2Q4/7p/1B4n1/2bq4/2rkp1R1/4p3/5br1/6B1 b KQkq - 5 10",
         Position::compute_pinned_on,
         E3,
-        ConstrainedPieces(
-            board!(F2),
-            square_map!(F2 => board!(E3 => G1))
-        )
+        ConstrainedPieces(board!(F2), square_map!(F2 => board!(E3 => G1))),
     );
 }
 
@@ -54,7 +51,7 @@ fn discovery_1() {
         H7,
         ConstrainedPieces(
             board!(E4, H2),
-            square_map!(E4 => !board!(C2 => H7), H2 => !board!(H1 => H7))
-        )
+            square_map!(E4 => !board!(C2 => H7), H2 => !board!(H1 => H7)),
+        ),
     )
 }

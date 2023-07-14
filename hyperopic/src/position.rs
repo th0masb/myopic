@@ -1,11 +1,15 @@
+use crate::moves::{Move, Move::*, MoveFacet, Moves};
+use crate::{
+    board, create_piece, first_square, in_board, intersects, is_superset, lift, piece_class,
+    piece_side, reflect_piece, reflect_side, square_file, square_rank, union_boards, Board, Corner,
+    CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap,
+};
 use std::io::Read;
-use crate::moves::{Move, Move::*, Moves};
-use crate::{board, is_superset, lift, piece_class, piece_side, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, reflect_side, create_piece, in_board, square_file, first_square, square_rank, intersects, union_boards};
 
-use crate::board::{control, compute_cord, iter, cord, board_moves};
+use crate::board::{board_moves, control, cord, iter};
+use crate::constants::boards::{ADJACENT_FILES, RANKS};
 use crate::constants::{class, piece, side};
 use anyhow::{anyhow, Result};
-use crate::constants::boards::{ADJACENT_FILES, RANKS};
 
 /// Represents the possible ways a game can be terminated, we only
 /// consider a game to be terminated when a side has no legal moves
@@ -235,7 +239,7 @@ impl Position {
 
 pub type Constraints = SquareMap<Board>;
 #[derive(Debug, PartialEq)]
-pub struct ConstrainedPieces(pub Board, pub Constraints);
+pub struct ConstrainedPieces(pub Board, pub SquareMap<Board>);
 
 impl Position {
     pub fn compute_discoveries_on(&self, square: Square) -> Result<ConstrainedPieces> {
@@ -308,25 +312,36 @@ fn pawn_control(side: Side, pawns: Board) -> Board {
     }
 }
 
+fn intersect_into(left: &mut ConstrainedPieces, right: &Constraints) {
+    iter(left.0).for_each(|sq| left.1[sq] &= right[sq]);
+}
+
+fn constraint_union(left: &mut ConstrainedPieces, right: &ConstrainedPieces) {
+    left.0 |= right.0;
+    iter(left.0).for_each(|sq| left.1[sq] |= right.1[sq]);
+}
+
 impl Position {
-    pub fn moves(&self, _moves: Moves) -> Vec<Move> {
+    pub fn moves(&self, moves: Moves) -> Vec<Move> {
         let active = self.active;
         let passive_control = self.compute_control(reflect_side(active));
         let active_king = create_piece(active, class::K);
         let active_king_loc = self.piece_boards[active_king].trailing_zeros() as usize;
         if active_king_loc == 64 {
             // King not on the board -> no legal moves
-            return vec![]
+            return vec![];
         }
         let pins = self.compute_pinned_on(active_king_loc).unwrap();
         let in_check = in_board(passive_control, active_king_loc);
+
         // The set of constraints for each piece on the board to avoid illegal moves
-        let constraints = if in_check {
+        let mut constraints = if in_check {
             let attacker_side = reflect_side(active);
             let occupied = self.side_boards[side::W] | self.side_boards[side::B];
             let king_attackers = (0..5)
                 .map(|class| create_piece(attacker_side, class))
-                .map(|p| (p, self.piece_boards[p] & control(p, active_king_loc, 0)))
+                // Reflect the piece when taking control or won't work for pawns
+                .map(|p| (p, self.piece_boards[p] & control(reflect_piece(p), active_king_loc, 0)))
                 .flat_map(|(p, b)| iter(b).map(move |sq| (p, sq)))
                 .filter(|(p, sq)| in_board(control(*p, *sq, occupied), active_king_loc))
                 .fold(0u64, |a, (_, n)| a | lift(n));
@@ -352,15 +367,47 @@ impl Position {
             iter(pins.0).for_each(|sq| result[sq] &= pins.1[sq]);
             result
         };
+
+        match moves {
+            // No further constraints needed
+            Moves::All => {}
+            // We further constrain the piece moves based on the facets given
+            Moves::AreAny(facets) => {
+                // With facets set we default to no moves, then union moves allowed by each facet
+                let mut updated_constraints = ConstrainedPieces(0, [0u64; 64]);
+                facets.iter().for_each(|&f| {
+                    constraint_union(&mut updated_constraints, &self.compute_facet_constraints(f));
+                });
+                intersect_into(&mut updated_constraints, &constraints);
+                constraints = updated_constraints.1;
+            }
+        }
+        self.compute_moves(&constraints, active_king_loc)
+    }
+
+    fn compute_facet_constraints(&self, facet: MoveFacet) -> ConstrainedPieces {
+        let result = ConstrainedPieces(0, [0u64; 64]);
+        match facet {
+            MoveFacet::Checking => {}
+            MoveFacet::Attacking => {}
+            MoveFacet::Promoting => {}
+        }
+        result
+    }
+
+    fn compute_moves(&self, constraints: &Constraints, active_king: Square) -> Vec<Move> {
         let mut result = Vec::with_capacity(40);
         self.compute_pawn_moves(&constraints)
             .chain(self.compute_nbrqk_moves(&constraints))
-            .chain(self.compute_castle_moves(constraints[active_king_loc]))
+            .chain(self.compute_castle_moves(constraints[active_king]))
             .for_each(|m| result.push(m));
         result
     }
 
-    fn compute_nbrqk_moves<'a>(&'a self, constraints: &'a Constraints) -> impl Iterator<Item = Move> + 'a {
+    fn compute_nbrqk_moves<'a>(
+        &'a self,
+        constraints: &'a Constraints,
+    ) -> impl Iterator<Item = Move> + 'a {
         let friendly = self.side_boards[self.active];
         let enemy = self.side_boards[reflect_side(self.active)];
         [class::N, class::B, class::R, class::Q, class::K].into_iter().flat_map(move |class| {
@@ -372,29 +419,39 @@ impl Position {
         })
     }
 
-    fn compute_castle_moves<'a>(&'a self, king_constraint: Board) -> impl Iterator<Item=Move> +'a {
-        self.castling_rights.iter().enumerate()
-            .filter(|(_, &allowed)| allowed)
-            .filter_map(move |(corner, _)| {
+    fn compute_castle_moves<'a>(
+        &'a self,
+        king_constraint: Board,
+    ) -> impl Iterator<Item = Move> + 'a {
+        self.castling_rights.iter().enumerate().filter(|(_, &allowed)| allowed).filter_map(
+            move |(corner, _)| {
                 let details = &CASTLING_DETAILS[corner];
                 if is_superset(king_constraint, details.no_control)
                     && !intersects(union_boards(&self.side_boards), details.no_piece)
+                    && self.piece_locs[details.king_line.0]
+                        == Some(create_piece(self.active, class::K))
+                    && self.piece_locs[details.rook_line.0]
+                        == Some(create_piece(self.active, class::R))
                 {
                     Some(Castle { corner })
                 } else {
                     None
                 }
-            })
+            },
+        )
     }
 
-    fn compute_pawn_moves<'a>(&'a self, constraints: &'a Constraints) -> impl Iterator<Item=Move> + 'a {
+    fn compute_pawn_moves<'a>(
+        &'a self,
+        constraints: &'a Constraints,
+    ) -> impl Iterator<Item = Move> + 'a {
         let active = self.active;
         let moving = create_piece(active, class::P);
         let pawns = self.piece_boards[create_piece(active, class::P)];
         let is_white = active == side::W;
         let last_rank = if is_white { RANKS[6] } else { RANKS[1] };
         let enpassant_attack = self.enpassant.map_or(0u64, |sq| {
-            let attack_rank = if is_white { RANKS[3] } else { RANKS[4] };
+            let attack_rank = if is_white { RANKS[4] } else { RANKS[3] };
             attack_rank & ADJACENT_FILES[square_file(sq)]
         });
         let standard = pawns & !last_rank;
@@ -403,32 +460,32 @@ impl Position {
         let friendly = self.side_boards[active];
         let enemy = self.side_boards[reflect_side(active)];
 
-        iter(standard).flat_map(move |from| {
-            self.create_normal_moves(
-                moving,
-                from,
-                board_moves(moving, from, friendly, enemy) & constraints[from]
-            )
-        }).chain(
-            iter(promotion).flat_map(move |from| {
+        iter(standard)
+            .flat_map(move |from| {
+                self.create_normal_moves(
+                    moving,
+                    from,
+                    board_moves(moving, from, friendly, enemy) & constraints[from],
+                )
+            })
+            .chain(iter(promotion).flat_map(move |from| {
                 self.create_promote_moves(
                     active,
                     from,
-                    board_moves(moving, from, friendly, enemy) & constraints[from]
+                    board_moves(moving, from, friendly, enemy) & constraints[from],
                 )
-            })
-        ).chain(
-            iter(enpassant).filter_map(move |from| {
+            }))
+            .chain(iter(enpassant).filter_map(move |from| {
                 let dest = self.enpassant.unwrap();
                 let capture = if is_white { dest - 8 } else { dest + 8 };
-                if in_board(constraints[from], dest) &&
-                    self.enpassant_doesnt_discover_attack(from, capture) {
+                if in_board(constraints[from], capture)
+                    && self.enpassant_doesnt_discover_attack(from, capture)
+                {
                     Some(Enpassant { side: active, from, dest, capture })
                 } else {
                     None
                 }
-            })
-        )
+            }))
     }
 
     fn enpassant_doesnt_discover_attack(&self, from: Square, capture: Square) -> bool {
@@ -453,8 +510,8 @@ impl Position {
         &self,
         moving: Piece,
         from: Square,
-        dest: Board
-    ) -> impl Iterator<Item=Move> + '_ {
+        dest: Board,
+    ) -> impl Iterator<Item = Move> + '_ {
         iter(dest).map(move |dest| Normal { moving, from, dest, capture: self.piece_locs[dest] })
     }
 
@@ -462,11 +519,14 @@ impl Position {
         &self,
         side: Side,
         from: Square,
-        dest: Board
-    ) -> impl Iterator<Item=Move> + '_ {
+        dest: Board,
+    ) -> impl Iterator<Item = Move> + '_ {
         iter(dest).flat_map(move |dest| {
-            [class::N, class::B, class::R, class::Q].into_iter().map(move |promoted| {
-                Promote { from, dest, promoted: create_piece(side, promoted), capture: self.piece_locs[dest] }
+            [class::N, class::B, class::R, class::Q].into_iter().map(move |promoted| Promote {
+                from,
+                dest,
+                promoted: create_piece(side, promoted),
+                capture: self.piece_locs[dest],
             })
         })
     }

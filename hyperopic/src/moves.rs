@@ -12,7 +12,6 @@ pub enum Move {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Moves<'a> {
     All,
-    Are(MoveFacet),
     AreAny(&'a [MoveFacet]),
 }
 
