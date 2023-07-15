@@ -262,13 +262,13 @@ impl Position {
         let passive_control = self.compute_control(reflect_side(self.active));
         let friendly = self.side_boards[self.active];
         let enemy = self.side_boards[reflect_side(self.active)];
-        let moves = board_moves(king, king_loc, friendly, enemy);
+        let moves = board_moves(king, king_loc, friendly, enemy) & !passive_control;
         // In most positions the king can moves somewhere and this is cheap to check
         if !is_superset(passive_control, moves) {
             None
         } else if in_board(passive_control, king_loc) {
             // If in check delegate to move gen
-            Some(TerminalState::Loss).filter(|_| self.moves(&Moves::All).len() > 0)
+            Some(TerminalState::Loss).filter(|_| self.moves(&Moves::All).is_empty())
         } else {
             // In most positions where king can't move but not in check there will be a piece
             // definitely not pinned which can move
@@ -283,7 +283,7 @@ impl Position {
                 }
             }
             // Otherwise delegate to move gen to be sure
-            Some(TerminalState::Draw).filter(|_| self.moves(&Moves::All).len() > 0)
+            Some(TerminalState::Draw).filter(|_| self.moves(&Moves::All).is_empty())
         }.or(self.check_clock_limit()).or(self.check_repetitions())
     }
 
