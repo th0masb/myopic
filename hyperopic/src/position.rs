@@ -321,8 +321,20 @@ fn constraint_union(left: &mut ConstrainedPieces, right: &ConstrainedPieces) {
     iter(left.0).for_each(|sq| left.1[sq] |= right.1[sq]);
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+enum CastlingMoveMode {
+    All,
+    None,
+    Checking,
+}
+
 impl Position {
-    pub fn moves(&self, moves: Moves) -> Vec<Move> {
+
+    // TODO We currently miss promotions which cause check if we specify checking facet only,
+    //  we probably need a rethink to handle this although not an issue atm because we never
+    //  specify the checking facet without also the promoting facet. For each move type we need
+    //  to consider the powerset of the set of all facets to handle this properly
+    pub fn moves(&self, moves: &Moves) -> Vec<Move> {
         let active = self.active;
         let passive_control = self.compute_control(reflect_side(active));
         let active_king = create_piece(active, class::K);
@@ -368,40 +380,74 @@ impl Position {
             result
         };
 
+        let mut castle_mode = CastlingMoveMode::All;
         match moves {
             // No further constraints needed
             Moves::All => {}
             // We further constrain the piece moves based on the facets given
             Moves::AreAny(facets) => {
+                castle_mode = CastlingMoveMode::None;
                 // With facets set we default to no moves, then union moves allowed by each facet
-                let mut updated_constraints = ConstrainedPieces(0, [0u64; 64]);
+                let mut facet_constraints = ConstrainedPieces(0, [0u64; 64]);
                 facets.iter().for_each(|&f| {
-                    constraint_union(&mut updated_constraints, &self.compute_facet_constraints(f));
+                    if f == MoveFacet::Checking {
+                        castle_mode = CastlingMoveMode::Checking
+                    }
+                    constraint_union(&mut facet_constraints, &self.compute_facet_constraints(f));
                 });
-                intersect_into(&mut updated_constraints, &constraints);
-                constraints = updated_constraints.1;
+                intersect_into(&mut facet_constraints, &constraints);
+                constraints = facet_constraints.1;
             }
         }
-        self.compute_moves(&constraints, active_king_loc)
-    }
 
-    fn compute_facet_constraints(&self, facet: MoveFacet) -> ConstrainedPieces {
-        let result = ConstrainedPieces(0, [0u64; 64]);
-        match facet {
-            MoveFacet::Checking => {}
-            MoveFacet::Attacking => {}
-            MoveFacet::Promoting => {}
-        }
-        result
-    }
-
-    fn compute_moves(&self, constraints: &Constraints, active_king: Square) -> Vec<Move> {
         let mut result = Vec::with_capacity(40);
         self.compute_pawn_moves(&constraints)
             .chain(self.compute_nbrqk_moves(&constraints))
-            .chain(self.compute_castle_moves(constraints[active_king]))
+            .chain(self.compute_castle_moves(passive_control, castle_mode))
             .for_each(|m| result.push(m));
         result
+    }
+
+    fn compute_facet_constraints(&self, facet: MoveFacet) -> ConstrainedPieces {
+        match facet {
+            MoveFacet::Checking => {
+                let passive_king = create_piece(reflect_side(self.active), class::K);
+                if let Some(passive_king_loc) = iter(self.piece_boards[passive_king]).next() {
+                    // Checks are made up of discoveries, direct attacks or castling (handled separately)
+                    let mut result = self.compute_discoveries_on(passive_king_loc).unwrap();
+                    let occupied = union_boards(&self.side_boards);
+                    (0..5).for_each(|class| {
+                        let piece = create_piece(self.active, class);
+                        // Reflect the piece to handle pawns correctly
+                        let attack_squares = control(reflect_piece(piece), passive_king_loc, occupied);
+                        iter(self.piece_boards[piece]).for_each(|sq| {
+                            result.0 |= lift(sq);
+                            result.1[sq] |= attack_squares;
+                        })
+                    });
+                    result
+                } else {
+                    // No checking moves if the other king isn't on the board
+                    ConstrainedPieces(0, [0; 64])
+                }
+            }
+            MoveFacet::Attacking => {
+                let friendly = self.side_boards[self.active];
+                let enemies = self.side_boards[reflect_side(self.active)];
+                ConstrainedPieces(friendly, [enemies; 64])
+            }
+            MoveFacet::Promoting => {
+                let mut result = ConstrainedPieces(0, [0u64; 64]);
+                let active_pawn = create_piece(self.active, class::P);
+                let promote_rank = if self.active == side::W { RANKS[6] } else { RANKS[1] };
+                let last_rank = if self.active == side::W { RANKS[7] } else { RANKS[0] };
+                iter(self.piece_boards[active_pawn] & promote_rank).for_each(|sq| {
+                    result.0 |= lift(sq);
+                    result.1[sq] = last_rank;
+                });
+                result
+            }
+        }
     }
 
     fn compute_nbrqk_moves<'a>(
@@ -421,24 +467,38 @@ impl Position {
 
     fn compute_castle_moves<'a>(
         &'a self,
-        king_constraint: Board,
+        passive_control: Board,
+        mode: CastlingMoveMode,
     ) -> impl Iterator<Item = Move> + 'a {
-        self.castling_rights.iter().enumerate().filter(|(_, &allowed)| allowed).filter_map(
-            move |(corner, _)| {
+        self.castling_rights
+            .iter()
+            .enumerate()
+            .filter(|(_, &allowed)| allowed)
+            .filter_map(move |(corner, _)| {
                 let details = &CASTLING_DETAILS[corner];
-                if is_superset(king_constraint, details.no_control)
-                    && !intersects(union_boards(&self.side_boards), details.no_piece)
-                    && self.piece_locs[details.king_line.0]
-                        == Some(create_piece(self.active, class::K))
-                    && self.piece_locs[details.rook_line.0]
-                        == Some(create_piece(self.active, class::R))
+                let king = create_piece(self.active, class::K);
+                let rook = create_piece(self.active, class::R);
+                let occupied = union_boards(&self.side_boards);
+                if !intersects(passive_control, details.no_control)
+                    && !intersects(occupied, details.no_piece)
+                    && self.piece_locs[details.king_line.0] == Some(king)
+                    && self.piece_locs[details.rook_line.0] == Some(rook)
+                    && match mode {
+                        CastlingMoveMode::All => true,
+                        CastlingMoveMode::None => false,
+                        CastlingMoveMode::Checking => {
+                            intersects(
+                                control(rook, details.rook_line.1, occupied),
+                                self.piece_boards[reflect_piece(king)]
+                            )
+                        }
+                    }
                 {
                     Some(Castle { corner })
                 } else {
                     None
                 }
-            },
-        )
+            })
     }
 
     fn compute_pawn_moves<'a>(
