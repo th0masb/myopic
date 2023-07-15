@@ -1,9 +1,11 @@
+#[rustfmt::skip]
 mod misc;
+#[rustfmt::skip]
 mod szukstra_tal;
 
 use std::collections::BTreeSet;
 
-use crate::moves::MoveFacet::{Attacking, Checking};
+use crate::moves::MoveFacet::{Attacking, Checking, Promoting};
 use crate::moves::{Move, MoveFacet, Moves};
 use crate::parse::StringIndexMap;
 use crate::position::Position;
@@ -59,25 +61,25 @@ type ExpectedMoves<'a> = Vec<(Moves<'a>, MoveSet)>;
 struct TestCase {
     board: &'static str,
     all: Vec<&'static str>,
+    // TODO replace with checking only
     attacks_checks: Vec<&'static str>,
     attacks: Vec<&'static str>,
+    promotes: Vec<&'static str>,
 }
 
-fn parse_moves(encoded: &Vec<&str>) -> Result<BTreeSet<Move>> {
-    let mut dest = BTreeSet::new();
-    for &s in encoded {
-        dest.insert(Move::from_str(s)?);
-    }
-    Ok(dest)
+fn parse_moves<'a, S: AsRef<str>, I : Iterator<Item=S>>(input: I) -> BTreeSet<Move> {
+    input.map(|s| Move::from_str(s.as_ref()).unwrap()).collect()
 }
 
 fn execute_test(case: TestCase) -> Result<()> {
     let board = case.board.parse::<Position>()?;
 
     let expected = vec![
-        (Moves::All, parse_moves(&case.all)?),
-        (Moves::AreAny(&[Attacking]), parse_moves(&case.attacks)?),
-        (Moves::AreAny(&[Attacking, Checking]), parse_moves(&case.attacks_checks)?),
+        (Moves::All, parse_moves(case.all.iter())),
+        (Moves::AreAny(&[Attacking]), parse_moves(case.attacks.iter())),
+        (Moves::AreAny(&[Promoting]), parse_moves(case.promotes.iter())),
+        (Moves::AreAny(&[Attacking, Promoting]), parse_moves(case.attacks.iter().chain(case.promotes.iter()))),
+        (Moves::AreAny(&[Attacking, Checking, Promoting]), parse_moves(case.attacks_checks.iter().chain(case.promotes.iter()))),
     ];
 
     let ref_board = board.reflect();
