@@ -10,6 +10,7 @@ use crate::board::{board_moves, control, cord, iter};
 use crate::constants::boards::{ADJACENT_FILES, RANKS};
 use crate::constants::{class, piece, side};
 use anyhow::{anyhow, Result};
+use rustc_hash::FxHashMap;
 
 /// Represents the possible ways a game can be terminated, we only
 /// consider a game to be terminated when a side has no legal moves
@@ -23,6 +24,9 @@ pub enum TerminalState {
     Loss,
 }
 
+// TODO Lets attach the passive control board to the position and compute eagerly,
+//  we will need it in every position to determine the terminal state and again in
+//  vast majority of positions to compute legal moves
 #[derive(Debug, Clone, PartialEq)]
 pub struct Position {
     pub piece_boards: PieceMap<Board>,
@@ -96,8 +100,9 @@ impl Position {
         use crate::constants::boards::ENPASSANT_RANKS;
         self.history.push((self.create_discards(), m.clone()));
         self.enpassant.map(|sq| self.key ^= crate::hash::enpassant(sq));
+        self.enpassant = None;
         match m {
-            Null => self.enpassant = None,
+            Null => {},
             Normal { moving, from, dest, capture } => {
                 capture.map(|p| self.unset_piece(p, dest));
                 self.unset_piece(moving, from);
@@ -106,14 +111,12 @@ impl Position {
                 self.remove_rights(rights_removed(dest));
                 let is_pawn = piece_class(moving) == class::P;
                 self.clock = if capture.is_some() || is_pawn { 0 } else { self.clock + 1 };
-                self.enpassant = if is_pawn && is_superset(ENPASSANT_RANKS, board!(from, dest)) {
+                if is_pawn && is_superset(ENPASSANT_RANKS, board!(from, dest)) {
                     let is_white = piece_side(moving) == side::W;
                     let shifter = if is_white { from } else { dest };
                     let next_ep = shifter + 8;
                     self.key ^= crate::hash::enpassant(next_ep);
-                    Some(next_ep)
-                } else {
-                    None
+                    self.enpassant = Some(next_ep)
                 }
             }
             Promote { from, dest, promoted, capture } => {
@@ -122,7 +125,6 @@ impl Position {
                 self.remove_rights(rights_removed(dest));
                 self.unset_piece(moved, from);
                 self.set_piece(promoted, dest);
-                self.enpassant = None;
                 self.clock = 0;
             }
             Enpassant { side, from, dest, capture } => {
@@ -131,7 +133,6 @@ impl Position {
                 self.unset_piece(taken, capture);
                 self.unset_piece(moving, from);
                 self.set_piece(moving, dest);
-                self.enpassant = None;
                 self.clock = 0;
             }
             Castle { corner } => {
@@ -146,7 +147,6 @@ impl Position {
                 self.unset_piece(king, k_source);
                 self.set_piece(rook, r_target);
                 self.set_piece(king, k_target);
-                self.enpassant = None;
                 self.clock += 1;
             }
         };
@@ -241,7 +241,74 @@ pub type Constraints = SquareMap<Board>;
 #[derive(Debug, PartialEq)]
 pub struct ConstrainedPieces(pub Board, pub SquareMap<Board>);
 
+fn is_repeatable_move(m: &Move) -> bool {
+    match m {
+        Null => true,
+        Enpassant { .. } | Promote { .. } | Castle { .. } => false,
+        Normal { moving, capture, .. } => {
+            piece_class(*moving) != class::P && capture.is_none()
+        }
+    }
+}
+
 impl Position {
+    pub fn compute_terminal_state(&self) -> Option<TerminalState> {
+        let king = create_piece(self.active, class::K);
+        let king_loc = self.piece_boards[king].trailing_zeros() as usize;
+        if king_loc == 64 {
+            // Treat king not on the board as a loss
+            return Some(TerminalState::Loss)
+        }
+        let passive_control = self.compute_control(reflect_side(self.active));
+        let friendly = self.side_boards[self.active];
+        let enemy = self.side_boards[reflect_side(self.active)];
+        let moves = board_moves(king, king_loc, friendly, enemy);
+        // In most positions the king can moves somewhere and this is cheap to check
+        if !is_superset(passive_control, moves) {
+            None
+        } else if in_board(passive_control, king_loc) {
+            // If in check delegate to move gen
+            Some(TerminalState::Loss).filter(|_| self.moves(&Moves::All).len() > 0)
+        } else {
+            // In most positions where king can't move but not in check there will be a piece
+            // definitely not pinned which can move
+            let queen = create_piece(self.active, class::Q);
+            // Anything on this board cannot be pinned to the king
+            let not_pinned = !control(queen, king_loc, 0);
+            for class in [class::Q, class::R, class::B, class::N, class::P] {
+                let piece = create_piece(self.active, class);
+                let locs = self.piece_boards[piece] & not_pinned;
+                if iter(locs).any(|loc| board_moves(piece, loc, friendly, enemy) != 0) {
+                    return None
+                }
+            }
+            // Otherwise delegate to move gen to be sure
+            Some(TerminalState::Draw).filter(|_| self.moves(&Moves::All).len() > 0)
+        }.or(self.check_clock_limit()).or(self.check_repetitions())
+    }
+
+    fn check_repetitions(&self) -> Option<TerminalState> {
+        let mut key_counts: FxHashMap<u64, usize> = FxHashMap::default();
+        key_counts.insert(self.key, 1);
+
+        let positions = self.history.iter()
+            .filter(|(_, m)| m != &Null)
+            .rev()
+            .take_while(|(_, m)| is_repeatable_move(m))
+            .map(|(discards, _)| discards.key);
+
+        for p in positions {
+            if 3 == *key_counts.entry(p).and_modify(|v| *v += 1).or_insert(1) {
+                return Some(TerminalState::Draw)
+            }
+        }
+        None
+    }
+
+    fn check_clock_limit(&self) -> Option<TerminalState> {
+        Some(TerminalState::Draw).filter(|_| self.clock >= 100)
+    }
+
     pub fn compute_discoveries_on(&self, square: Square) -> Result<ConstrainedPieces> {
         let piece = self.piece_locs[square].ok_or_else(|| anyhow!("No piece at {}", square))?;
         let target_side = piece_side(piece);
@@ -329,7 +396,6 @@ enum CastlingMoveMode {
 }
 
 impl Position {
-
     // TODO We currently miss promotions which cause check if we specify checking facet only,
     //  we probably need a rethink to handle this although not an issue atm because we never
     //  specify the checking facet without also the promoting facet. For each move type we need
