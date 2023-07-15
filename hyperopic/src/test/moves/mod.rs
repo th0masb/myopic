@@ -4,7 +4,7 @@ mod szukstra_tal;
 use std::collections::BTreeSet;
 
 use crate::moves::MoveFacet::{Attacking, Checking};
-use crate::moves::{Move, Moves};
+use crate::moves::{Move, MoveFacet, Moves};
 use crate::parse::StringIndexMap;
 use crate::position::Position;
 use crate::Symmetric;
@@ -53,21 +53,14 @@ fn slice(s: &str, skip: usize, take: usize) -> String {
     s.chars().skip(skip).take(take).collect::<String>()
 }
 
-#[derive(Debug, Copy, Clone)]
-enum MoveType {
-    All,
-    Attacks,
-    AttacksChecks,
-}
-
-type ExpectedMoves = Vec<(MoveType, MoveSet)>;
+type ExpectedMoves<'a> = Vec<(Moves<'a>, MoveSet)>;
 
 #[derive(Debug, Clone)]
 struct TestCase {
     board: &'static str,
-    expected_all: Vec<&'static str>,
-    expected_attacks_checks: Vec<&'static str>,
-    expected_attacks: Vec<&'static str>,
+    all: Vec<&'static str>,
+    attacks_checks: Vec<&'static str>,
+    attacks: Vec<&'static str>,
 }
 
 fn parse_moves(encoded: &Vec<&str>) -> Result<BTreeSet<Move>> {
@@ -82,15 +75,15 @@ fn execute_test(case: TestCase) -> Result<()> {
     let board = case.board.parse::<Position>()?;
 
     let expected = vec![
-        (MoveType::All, parse_moves(&case.expected_all)?),
-        //(MoveType::Attacks, parse_moves(&case.expected_attacks)?),
-        //(MoveType::AttacksChecks, parse_moves(&case.expected_attacks_checks)?),
+        (Moves::All, parse_moves(&case.all)?),
+        (Moves::AreAny(&[Attacking]), parse_moves(&case.attacks)?),
+        (Moves::AreAny(&[Attacking, Checking]), parse_moves(&case.attacks_checks)?),
     ];
 
     let ref_board = board.reflect();
     let ref_moves = expected
         .iter()
-        .map(|(t, mvs)| (*t, mvs.into_iter().map(|m| m.reflect()).collect::<BTreeSet<_>>()))
+        .map(|(t, mvs)| (t.clone(), mvs.into_iter().map(|m| m.reflect()).collect::<BTreeSet<_>>()))
         .collect::<Vec<_>>();
 
     execute_test_impl(board, expected);
@@ -98,15 +91,9 @@ fn execute_test(case: TestCase) -> Result<()> {
     Ok(())
 }
 
-fn execute_test_impl(board: Position, moves: ExpectedMoves) {
+fn execute_test_impl(board: Position, moves: ExpectedMoves<'_>) {
     for (computation_type, expected_moves) in moves.into_iter() {
-        let under_test: MoveSet = match computation_type {
-            MoveType::All => board.moves(Moves::All).into_iter().collect(),
-            MoveType::Attacks => board.moves(Moves::AreAny(&[Attacking])).into_iter().collect(),
-            MoveType::AttacksChecks => {
-                board.moves(Moves::AreAny(&[Attacking, Checking])).into_iter().collect()
-            }
-        };
+        let under_test: MoveSet = board.moves(&computation_type).into_iter().collect();
         assert_eq!(
             expected_moves.clone(),
             under_test.clone(),

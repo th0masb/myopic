@@ -5,7 +5,7 @@ fn black_move_eight() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2pp1np1/4p3/2PPP3/1QN1BP2/PP2N1PP/R3KB1R b KQ - 3 10",
         #[rustfmt::skip]
-        expected_all: vec![
+        all: vec![
             "sbpa7a6-", "sbpa7a5-",
             "sbpb7b6-", "sbpb7b5-",
             "sbnb8a6-", "sbnb8d7-",
@@ -22,12 +22,12 @@ fn black_move_eight() -> Result<()> {
             "sbph7h6-", "sbph7h5-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
+        attacks: vec![
             "sbpe5d4wp",
             "sbnf6e4wp",
         ],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
+        attacks_checks: vec![
             "sbpe5d4wp",
             "sbnf6e4wp",
         ],
@@ -39,7 +39,7 @@ fn white_move_nine() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2pp1np1/8/2PpP3/1QN1BP2/PP2N1PP/R3KB1R w KQ - 0 2",
         #[rustfmt::skip]
-        expected_all: vec![
+        all: vec![
             "cwq",
             "swra1b1-", "swra1c1-", "swra1c1-", "swra1d1-",
             "swpa2a3-", "swpa2a4-",
@@ -56,13 +56,13 @@ fn white_move_nine() -> Result<()> {
             "swph2h3-", "swph2h4-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
+        attacks: vec![
             "swqb3b7bp",
             "swbe3d4bp",
             "swne2d4bp",
         ],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
+        attacks_checks: vec![
             "swqb3b7bp",
             "swbe3d4bp",
             "swne2d4bp",
@@ -75,7 +75,7 @@ fn black_move_nine() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2pp1np1/8/2PNP3/1QN1BP2/PP4PP/R3KB1R b KQ - 0 2",
         #[rustfmt::skip]
-        expected_all: vec![
+        all: vec![
             "sbpa7a6-", "sbpa7a5-",
             "sbpb7b6-", "sbpb7b5-",
             "sbnb8a6-", "sbnb8d7-",
@@ -91,11 +91,11 @@ fn black_move_nine() -> Result<()> {
             "sbph7h6-", "sbph7h5-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
+        attacks: vec![
             "sbnf6e4wp"
         ],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
+        attacks_checks: vec![
             "sbnf6e4wp"
         ],
     })
@@ -106,7 +106,7 @@ fn white_move_ten() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2p2np1/3p4/2PNP3/1QN1BP2/PP4PP/R3KB1R w KQ - 0 3",
         #[rustfmt::skip]
-        expected_all: vec![
+        all: vec![
             "cwq",
             "swra1b1-", "swra1c1-", "swra1c1-", "swra1d1-",
             "swpa2a3-", "swpa2a4-",
@@ -124,7 +124,7 @@ fn white_move_ten() -> Result<()> {
             "swph2h3-", "swph2h4-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
+        attacks: vec![
             "swqb3b7bp",
             "swnc3d5bp",
             "swpc4d5bp",
@@ -132,7 +132,7 @@ fn white_move_ten() -> Result<()> {
             "swpe4d5bp",
         ],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
+        attacks_checks: vec![
             "swqb3b7bp",
             "swnc3d5bp",
             "swpc4d5bp",
@@ -147,7 +147,7 @@ fn black_move_ten() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/2p2np1/3P4/3NP3/1QN1BP2/PP4PP/R3KB1R b KQ - 0 3",
         #[rustfmt::skip]
-        expected_all: vec![
+        all: vec![
             "sbpa7a6-", "sbpa7a5-",
             "sbpb7b6-", "sbpb7b5-",
             "sbnb8a6-", "sbnb8d7-",
@@ -162,14 +162,14 @@ fn black_move_ten() -> Result<()> {
             "sbph7h6-", "sbph7h5-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
+        attacks: vec![
             "sbpc6d5wp",
             "sbqd8d5wp",
             "sbnf6d5wp",
             "sbnf6e4wp",
         ],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
+        attacks_checks: vec![
             "sbpc6d5wp",
             "sbqd8d5wp",
             "sbnf6d5wp",
@@ -183,7 +183,7 @@ fn white_move_eleven() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/5np1/3p4/3NP3/1QN1BP2/PP4PP/R3KB1R w KQ - 0 4",
         #[rustfmt::skip]
-        expected_all: vec![
+        all: vec![
             "cwq",
             "swra1b1-", "swra1c1-", "swra1c1-", "swra1d1-",
             "swpa2a3-", "swpa2a4-",
@@ -200,14 +200,14 @@ fn white_move_eleven() -> Result<()> {
             "swph2h3-", "swph2h4-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
+        attacks: vec![
             "swqb3b7bp",
             "swqb3d5bp",
             "swnc3d5bp",
             "swpe4d5bp",
         ],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
+        attacks_checks: vec![
             "swqb3b7bp",
             "swqb3d5bp",
             "swnc3d5bp",
@@ -221,7 +221,7 @@ fn black_move_eleven() -> Result<()> {
     execute_test(TestCase {
         board: "rnbq1rk1/pp3pbp/5np1/3P4/3N4/1QN1BP2/PP4PP/R3KB1R b KQ - 0 4",
         #[rustfmt::skip]
-        expected_all: vec![
+        all: vec![
             "sbpa7a6-", "sbpa7a5-",
             "sbpb7b6-", "sbpb7b5-",
             "sbnb8a6-", "sbnb8d7-", "sbnb8c6-",
@@ -235,12 +235,12 @@ fn black_move_eleven() -> Result<()> {
             "sbph7h6-", "sbph7h5-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
+        attacks: vec![
             "sbqd8d5wp",
             "sbnf6d5wp",
         ],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
+        attacks_checks: vec![
             "sbqd8d5wp",
             "sbnf6d5wp",
         ],
@@ -252,7 +252,7 @@ fn white_move_twelve() -> Result<()> {
     execute_test(TestCase {
         board: "r1bq1rk1/pp3pbp/2n2np1/3P4/3N4/1QN1BP2/PP4PP/R3KB1R w KQ - 1 5",
         #[rustfmt::skip]
-        expected_all: vec![
+        all: vec![
             "cwq",
             "swra1b1-", "swra1c1-", "swra1c1-", "swra1d1-",
             "swpa2a3-", "swpa2a4-",
@@ -269,13 +269,13 @@ fn white_move_twelve() -> Result<()> {
             "swph2h3-", "swph2h4-",
         ],
         #[rustfmt::skip]
-        expected_attacks: vec![
+        attacks: vec![
             "swqb3b7bp",
             "swnd4c6bn",
             "swpd5c6bn",
         ],
         #[rustfmt::skip]
-        expected_attacks_checks: vec![
+        attacks_checks: vec![
             "swqb3b7bp",
             "swnd4c6bn",
             "swpd5c6bn",
