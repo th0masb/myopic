@@ -71,12 +71,6 @@ impl StringIndexMap {
                 .collect(),
         }
     }
-
-    pub fn pgn_pieces() -> StringIndexMap {
-        StringIndexMap {
-            content: vec!["", "N", "B", "R", "Q", "K"].into_iter().map(|s| s.to_owned()).collect(),
-        }
-    }
 }
 
 impl StringIndexMap {
@@ -211,6 +205,10 @@ fn parse_class(piece: Option<char>) -> Class {
 fn parse_fen(fen: &str) -> Result<Position> {
     use crate::constants::side;
     let parts = SPACE.split(fen).map(|p| p.trim()).collect::<Vec<_>>();
+    // TODO Would be better to do a regex match
+    if parts.len() != 6 {
+        return Err(anyhow!("Cannot parse {} as fen", fen))
+    }
     let active = if parts[1] == "w" { side::W } else { side::B };
     let enpassant = if parts[3] == "-" { None } else { Some(SQUARE_MAP.get(parts[3])) };
     let clock = parts[4].parse::<usize>()?;
@@ -308,6 +306,73 @@ mod test_fen {
                     G8 => Some(piece::BK)
                 )
             )
+        )
+    }
+}
+
+#[cfg(test)]
+mod test_pgn_game {
+    use crate::Board;
+
+    use super::*;
+
+    fn assert_positions_equal(mut a: Position, b: Position) {
+        a.history = b.history.clone();
+        assert_eq!(a, b);
+    }
+
+    fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
+        assert_positions_equal(
+            expected_finish.parse().unwrap(),
+            pgn.parse().unwrap(),
+        )
+    }
+
+    #[test]
+    fn case_zero() {
+        execute_success_test(
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            ""
+        )
+    }
+
+    #[test]
+    fn case_one() {
+        execute_success_test(
+            "8/1P4pk/P1N2pp1/8/P3q2P/6P1/5PK1/8 w - - 6 56",
+            "1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. e3 Bf5 5. Nc3 e6 6. Nh4 Bg6
+             7. Nxg6 hxg6 8. g3 Nbd7 9. Bg2 dxc4 10. Qe2 Nb6 11. O-O Bb4
+             12. Bd2 O-O 13. Ne4 Qe7 14. Bxb4 Qxb4 15. Nc5 Rab8 16. Rfc1
+            Rfd8 17. Qc2 Nfd7 18. Ne4 e5 19. a3 Qe7 20. Re1 Nf6 21. Ng5
+            exd4 22. exd4 Qd6 23. Nf3 Re8 24. Re5 Nfd7 25. Ra5 a6 26. Rd1
+            Rbd8 27. Bf1 Re7 28. Rg5 Qf6 29. Kg2 Rde8 30. h4 Qe6 31. a4
+            Qe4 32. Qc1 f6 33. Ra5 Qe6 34. Qc2 Qe4 35. Qc1 Kh8 36. Re1 Qg4
+            37. Rxe7 Rxe7 38. Bxc4 Nxc4 39. Qxc4 Qe4 40. Qb3 c5 41. dxc5
+            Qc6 42. Qc3 Re2 43. b4 Ne5 44. b5 Qe4 45. c6 Nd3 46. Qxd3 Qxd3
+            47. cxb7 Re8 48. bxa6 Qb3 49. Rc5 Kh7 50. Rc8 Rg8 51. Nd4 Qb6
+            52. Rxg8 Kxg8 53. Kg1 Kh7 54. Nc6 Qb1+ 55. Kg2 Qe4+ 1/2-1/2",
+        )
+    }
+
+    #[test]
+    fn case_two() {
+        execute_success_test(
+            "5rk1/pp2p3/3p2pb/2pP4/2q5/3b1B1P/PPn2Q2/R1NK2R1 w - - 0 28",
+            "
+            [Event \"F/S Return Match\"]
+            [Site \"Belgrade, Serbia JUG\"]
+            [Date \"1992.11.04\"]
+            [Round \"29\"]
+            [White \"Fischer, Robert J.\"]
+            [Black \"Spassky, Boris V.\"]
+            [Result \"1/2-1/2\"]
+
+            1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.f3 O-O 6.Be3 Nbd7 7.Qd2
+            c5 8.d5 Ne5 9.h3 Nh5 10.Bf2 f5 11.exf5 Rxf5 12.g4 Rxf3 13.gxh5
+            Qf8 14.Ne4 Bh6 15.Qc2 Qf4 16.Ne2 Rxf2 17.Nxf2 Nf3+ 18.Kd1 Qh4
+            19.Nd3 Bf5 20.Nec1 Nd2 21.hxg6 hxg6 22.Bg2 Nxc4 23.Qf2 Ne3+
+            24.Ke2 Qc4 25.Bf3 Rf8 26.Rg1 Nc2 27.Kd1 Bxd3 0-1
+            ",
         )
     }
 }
