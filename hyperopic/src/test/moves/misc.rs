@@ -388,3 +388,18 @@ fn case_22() -> Result<()> {
         promotes: vec![]
     })
 }
+
+#[test]
+fn case_23() -> Result<()> {
+    execute_test(TestCase {
+        board: "3k4/8/8/8/8/8/P7/R3K3 w Q - 4 7",
+        all: vec![
+            "cwq",
+            "swra1b1-", "swra1c1-", "swra1d1-", "swpa2a3-", "swpa2a4-",
+            "swke1f1-", "swke1f2-", "swke1e2-", "swke1d2-", "swke1d1-",
+        ],
+        attacks: vec![],
+        attacks_checks: vec!["cwq", "swra1d1-"],
+        promotes: vec![]
+    })
+}
