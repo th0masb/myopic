@@ -14,6 +14,8 @@ mod see;
 mod test;
 mod timing;
 mod search;
+mod eval;
+mod tables;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8
@@ -84,6 +86,11 @@ pub trait Symmetric {
 #[inline(always)]
 pub const fn side_parity(side: Side) -> i32 {
     2i32 * side as i32 - 1i32
+}
+
+#[inline(always)]
+pub const fn corner_side(corner: Corner) -> Side {
+    corner / 2
 }
 
 #[inline(always)]
