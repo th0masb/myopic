@@ -102,7 +102,7 @@ impl Position {
         self.enpassant.map(|sq| self.key ^= crate::hash::enpassant(sq));
         self.enpassant = None;
         match m {
-            Null => {},
+            Null => {}
             Normal { moving, from, dest, capture } => {
                 capture.map(|p| self.unset_piece(p, dest));
                 self.unset_piece(moving, from);
@@ -245,9 +245,7 @@ fn is_repeatable_move(m: &Move) -> bool {
     match m {
         Null => true,
         Enpassant { .. } | Promote { .. } | Castle { .. } => false,
-        Normal { moving, capture, .. } => {
-            piece_class(*moving) != class::P && capture.is_none()
-        }
+        Normal { moving, capture, .. } => piece_class(*moving) != class::P && capture.is_none(),
     }
 }
 
@@ -257,7 +255,7 @@ impl Position {
         let king_loc = self.piece_boards[king].trailing_zeros() as usize;
         if king_loc == 64 {
             // Treat king not on the board as a loss
-            return Some(TerminalState::Loss)
+            return Some(TerminalState::Loss);
         }
         let passive_control = self.compute_control(reflect_side(self.active));
         let friendly = self.side_boards[self.active];
@@ -279,19 +277,23 @@ impl Position {
                 let piece = create_piece(self.active, class);
                 let locs = self.piece_boards[piece] & not_pinned;
                 if iter(locs).any(|loc| board_moves(piece, loc, friendly, enemy) != 0) {
-                    return None
+                    return None;
                 }
             }
             // Otherwise delegate to move gen to be sure
             Some(TerminalState::Draw).filter(|_| self.moves(&Moves::All).is_empty())
-        }.or(self.check_clock_limit()).or(self.check_repetitions())
+        }
+        .or(self.check_clock_limit())
+        .or(self.check_repetitions())
     }
 
     fn check_repetitions(&self) -> Option<TerminalState> {
         let mut key_counts: FxHashMap<u64, usize> = FxHashMap::default();
         key_counts.insert(self.key, 1);
 
-        let positions = self.history.iter()
+        let positions = self
+            .history
+            .iter()
             .filter(|(_, m)| m != &Null)
             .rev()
             .take_while(|(_, m)| is_repeatable_move(m))
@@ -299,7 +301,7 @@ impl Position {
 
         for p in positions {
             if 3 == *key_counts.entry(p).and_modify(|v| *v += 1).or_insert(1) {
-                return Some(TerminalState::Draw)
+                return Some(TerminalState::Draw);
             }
         }
         None
@@ -485,7 +487,8 @@ impl Position {
                     (0..5).for_each(|class| {
                         let piece = create_piece(self.active, class);
                         // Reflect the piece to handle pawns correctly
-                        let attack_squares = control(reflect_piece(piece), passive_king_loc, occupied);
+                        let attack_squares =
+                            control(reflect_piece(piece), passive_king_loc, occupied);
                         iter(self.piece_boards[piece]).for_each(|sq| {
                             result.0 |= lift(sq);
                             result.1[sq] |= attack_squares;
@@ -536,11 +539,8 @@ impl Position {
         passive_control: Board,
         mode: CastlingMoveMode,
     ) -> impl Iterator<Item = Move> + 'a {
-        self.castling_rights
-            .iter()
-            .enumerate()
-            .filter(|(_, &allowed)| allowed)
-            .filter_map(move |(corner, _)| {
+        self.castling_rights.iter().enumerate().filter(|(_, &allowed)| allowed).filter_map(
+            move |(corner, _)| {
                 let details = &CASTLING_DETAILS[corner];
                 let king = create_piece(self.active, class::K);
                 let rook = create_piece(self.active, class::R);
@@ -552,19 +552,18 @@ impl Position {
                     && match mode {
                         CastlingMoveMode::All => true,
                         CastlingMoveMode::None => false,
-                        CastlingMoveMode::Checking => {
-                            intersects(
-                                control(rook, details.rook_line.1, occupied),
-                                self.piece_boards[reflect_piece(king)]
-                            )
-                        }
+                        CastlingMoveMode::Checking => intersects(
+                            control(rook, details.rook_line.1, occupied),
+                            self.piece_boards[reflect_piece(king)],
+                        ),
                     }
                 {
                     Some(Castle { corner })
                 } else {
                     None
                 }
-            })
+            },
+        )
     }
 
     fn compute_pawn_moves<'a>(

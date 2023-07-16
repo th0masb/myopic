@@ -1,15 +1,17 @@
 use crate::board::iter;
 
 mod board;
+mod format;
 mod hash;
+mod material;
 mod moves;
+mod node;
 mod parse;
+mod phase;
 mod position;
+mod see;
 #[cfg(test)]
 mod test;
-mod node;
-mod phase;
-mod material;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8
