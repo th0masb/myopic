@@ -1,13 +1,16 @@
-use crate::search::pv::PrincipleVariation;
-use crate::{Board, Class, create_piece, in_board, Piece, piece_class, piece_side, reflect_side, side_parity, Square, union_boards};
 use crate::board::{control, iter};
 use crate::constants::class;
+use crate::moves::Move::{Castle, Enpassant, Normal, Null, Promote};
 use crate::moves::{Move, Moves};
-use crate::moves::Move::{Null, Castle, Enpassant, Normal, Promote};
 use crate::node::SearchNode;
 use crate::position::Position;
 use crate::search::negascout::Context;
+use crate::search::pv::PrincipleVariation;
 use crate::tables::PositionTables;
+use crate::{
+    create_piece, in_board, piece_class, piece_side, reflect_side, side_parity, union_boards,
+    Board, Class, Piece, Square,
+};
 
 pub struct MoveGenerator<'a> {
     pv: &'a PrincipleVariation,
@@ -118,12 +121,11 @@ fn get_lower_value_pieces<'a>(class: Class) -> &'a [Class] {
         class::R => &[class::P, class::N, class::B],
         class::Q => &[class::P, class::N, class::B, class::R],
         class::K => &[class::P, class::N, class::B, class::R, class::Q],
-        _ => panic!("{} not a valid piece class", class)
+        _ => panic!("{} not a valid piece class", class),
     }
 }
 
 fn compute_control(board: &Position, piece: Piece) -> Board {
     let occupied = union_boards(&board.side_boards);
-    iter(board.piece_boards[piece])
-        .fold(0u64, |a, n| a | control(piece, n, occupied))
+    iter(board.piece_boards[piece]).fold(0u64, |a, n| a | control(piece, n, occupied))
 }

@@ -1,6 +1,7 @@
 use crate::board::iter;
 
 mod board;
+mod eval;
 mod format;
 mod hash;
 mod material;
@@ -9,13 +10,12 @@ mod node;
 mod parse;
 mod phase;
 mod position;
+mod search;
 mod see;
+mod tables;
 #[cfg(test)]
 mod test;
 mod timing;
-mod search;
-mod eval;
-mod tables;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8
