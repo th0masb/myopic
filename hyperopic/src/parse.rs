@@ -74,7 +74,7 @@ impl StringIndexMap {
 
     pub fn uci_pieces() -> StringIndexMap {
         StringIndexMap {
-            content: vec!["P", "N", "B", "R", "Q", "K"].into_iter().map(|s| s.to_owned()).collect(),
+            content: vec!["p", "n", "b", "r", "q", "k"].into_iter().map(|s| s.to_owned()).collect(),
         }
     }
 }
