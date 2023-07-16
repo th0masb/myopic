@@ -12,6 +12,8 @@ mod position;
 mod see;
 #[cfg(test)]
 mod test;
+mod timing;
+mod search;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8
