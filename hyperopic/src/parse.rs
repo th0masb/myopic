@@ -8,10 +8,7 @@ use Move::{Enpassant, Normal, Null, Promote};
 use crate::board::iter;
 use crate::constants::class;
 use crate::moves::{Move, Moves};
-use crate::{
-    hash, lift, piece_class, piece_side, square_file, square_rank, Board, Class, Piece, PieceMap,
-    Square,
-};
+use crate::{lift, piece_class, square_file, square_rank, Board, Class, Piece, PieceMap, Square};
 
 use crate::position::Position;
 
@@ -231,25 +228,9 @@ fn parse_fen(fen: &str) -> Result<Position> {
     let piece_boards = parse_fen_pieces(parts[0]);
     let mut piece_locs = [None; 64];
     (0..12).for_each(|p| iter(piece_boards[p]).for_each(|s| piece_locs[s] = Some(p)));
-    let mut side_boards = [0u64; 2];
-    (0..12).for_each(|p| side_boards[piece_side(p)] |= piece_boards[p]);
     let rights_fn = |s: &str| parts[2].contains(s);
     let castling_rights = [rights_fn("K"), rights_fn("Q"), rights_fn("k"), rights_fn("q")];
-    let mut key = if active == side::W { 0u64 } else { hash::black_move() };
-    (0..4).filter(|i| castling_rights[*i]).for_each(|r| key ^= hash::corner(r));
-    (0..12).for_each(|p| iter(piece_boards[p]).for_each(|s| key ^= hash::piece(p, s)));
-    enpassant.map(|sq| key ^= hash::enpassant(sq));
-    Ok(Position {
-        active,
-        clock,
-        enpassant,
-        piece_boards,
-        piece_locs,
-        side_boards,
-        key,
-        castling_rights,
-        history: vec![],
-    })
+    Ok(Position::new(active, enpassant, clock, castling_rights, piece_locs))
 }
 
 fn parse_fen_pieces(fen: &str) -> PieceMap<Board> {

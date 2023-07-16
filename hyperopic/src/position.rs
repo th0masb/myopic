@@ -38,6 +38,7 @@ pub struct Position {
     pub clock: usize,
     pub key: u64,
     pub history: Vec<(Discards, Move)>,
+    pub passive_control: Board,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -46,6 +47,7 @@ pub struct Discards {
     pub enpassant: Option<Square>,
     pub clock: usize,
     pub key: u64,
+    pub passive_control: u64,
 }
 
 impl Default for Position {
@@ -80,7 +82,7 @@ impl Position {
                 .filter(|&sq| piece_locs[sq].map(|p| piece_side(p)) == Some(side))
                 .fold(0u64, |a, n| a | lift(n))
         });
-        Position {
+        let mut result = Position {
             active,
             enpassant,
             clock,
@@ -90,7 +92,10 @@ impl Position {
             side_boards,
             piece_locs,
             castling_rights,
-        }
+            passive_control: 0,
+        };
+        result.passive_control = result.compute_control(reflect_side(active));
+        result
     }
 }
 
@@ -151,7 +156,8 @@ impl Position {
             }
         };
         self.key ^= crate::hash::black_move();
-        self.active = if self.active == side::W { side::B } else { side::W };
+        self.passive_control = self.compute_control(self.active);
+        self.active = reflect_side(self.active);
         Ok(())
     }
 
@@ -198,6 +204,7 @@ impl Position {
         self.enpassant = state.enpassant;
         self.key = state.key;
         self.active = if self.active == side::W { side::B } else { side::W };
+        self.passive_control = state.passive_control;
         Ok(mv)
     }
 
@@ -233,6 +240,7 @@ impl Position {
             enpassant: self.enpassant,
             clock: self.clock,
             key: self.key,
+            passive_control: self.passive_control,
         }
     }
 }
@@ -251,7 +259,7 @@ fn is_repeatable_move(m: &Move) -> bool {
 
 impl Position {
     pub fn in_check(&self) -> bool {
-        todo!()
+        intersects(self.passive_control, self.piece_boards[create_piece(self.active, class::K)])
     }
 
     pub fn friendly_enemy_boards(&self) -> (Board, Board) {
@@ -265,7 +273,7 @@ impl Position {
             // Treat king not on the board as a loss
             return Some(TerminalState::Loss);
         }
-        let passive_control = self.compute_control(reflect_side(self.active));
+        let passive_control = self.passive_control;
         let friendly = self.side_boards[self.active];
         let enemy = self.side_boards[reflect_side(self.active)];
         let moves = board_moves(king, king_loc, friendly, enemy) & !passive_control;
@@ -412,7 +420,7 @@ impl Position {
     //  to consider the powerset of the set of all facets to handle this properly
     pub fn moves(&self, moves: &Moves) -> Vec<Move> {
         let active = self.active;
-        let passive_control = self.compute_control(reflect_side(active));
+        let passive_control = self.passive_control;
         let active_king = create_piece(active, class::K);
         let active_king_loc = self.piece_boards[active_king].trailing_zeros() as usize;
         if active_king_loc == 64 {
