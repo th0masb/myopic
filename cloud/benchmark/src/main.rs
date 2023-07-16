@@ -3,9 +3,9 @@ use std::time::Instant;
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Context, Error, LambdaEvent};
 use simple_logger::SimpleLogger;
+use hyperopic::search::{SearchParameters, TranspositionsImpl};
 
 use lambda_payloads::benchmark::*;
-use myopic_brain::{SearchParameters, TranspositionsImpl};
 
 mod positions;
 
@@ -15,7 +15,8 @@ const RUN_LOCALLY_VAR: &str = "RUN_LOCALLY";
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     SimpleLogger::new().with_level(log::LevelFilter::Info).without_timestamps().init()?;
-    if let Ok(_) = std::env::var(RUN_LOCALLY_VAR) {
+    //if let Ok(_) = std::env::var(RUN_LOCALLY_VAR) {
+    if true {
         let output = handler(LambdaEvent::new(
             BenchStartEvent { positions: 200, depth: 7, table_size: 100_000 },
             Context::default(),
@@ -30,16 +31,16 @@ async fn main() -> Result<(), Error> {
 
 async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Error> {
     let e = &event.payload;
-    let roots = positions::get(e.positions)?;
-    let n = roots.len();
+    let positions = positions::get(e.positions);
+    let n = positions.len();
     let start = Instant::now();
     let mut moves = vec![];
-    for (i, root) in roots.into_iter().enumerate() {
+    for (i, position) in positions.into_iter().enumerate() {
         if i % LOG_GAP == 0 {
             log::info!("[Position {}, Elapsed {}ms]", i, start.elapsed().as_millis());
         }
-        moves.push(myopic_brain::search(
-            root,
+        moves.push(hyperopic::search::search(
+            position.into(),
             SearchParameters {
                 terminator: e.depth,
                 table: &mut TranspositionsImpl::new(e.table_size),

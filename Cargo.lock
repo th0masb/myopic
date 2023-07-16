@@ -242,11 +242,11 @@ dependencies = [
 name = "chessmove-benchmark-lambda"
 version = "0.0.0"
 dependencies = [
+ "hyperopic",
  "itertools",
  "lambda_payloads",
  "lambda_runtime",
  "log",
- "myopic-brain",
  "serde",
  "serde_json",
  "simple_logger",
@@ -449,7 +449,7 @@ name = "debug"
 version = "0.1.0"
 dependencies = [
  "clap 4.3.8",
- "myopic-brain",
+ "hyperopic",
  "serde",
  "serde_json",
 ]
