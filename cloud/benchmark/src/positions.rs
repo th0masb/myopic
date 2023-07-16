@@ -1,11 +1,7 @@
-use myopic_brain::{anyhow, Evaluator};
+use hyperopic::position::Position;
 
-pub fn get(n: usize) -> anyhow::Result<Vec<Evaluator>> {
-    let mut roots = vec![];
-    for &fen in POSITIONS.iter().take(n) {
-        roots.push(fen.parse::<Evaluator>()?);
-    }
-    Ok(roots)
+pub fn get(n: usize) -> Vec<Position> {
+    POSITIONS.iter().take(n).map(|&s| s.parse().unwrap()).collect()
 }
 
 pub static POSITIONS: [&'static str; 500] = [

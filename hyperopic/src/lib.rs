@@ -5,12 +5,12 @@ mod eval;
 mod format;
 mod hash;
 mod material;
-mod moves;
-mod node;
+pub mod moves;
+pub mod node;
 mod parse;
 mod phase;
-mod position;
-mod search;
+pub mod position;
+pub mod search;
 mod see;
 mod tables;
 #[cfg(test)]
