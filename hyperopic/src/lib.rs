@@ -7,6 +7,9 @@ mod parse;
 mod position;
 #[cfg(test)]
 mod test;
+mod node;
+mod phase;
+mod material;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8
@@ -72,6 +75,11 @@ macro_rules! square_map {
 
 pub trait Symmetric {
     fn reflect(&self) -> Self;
+}
+
+#[inline(always)]
+pub const fn side_parity(side: Side) -> i32 {
+    2i32 * side as i32 - 1i32
 }
 
 #[inline(always)]
