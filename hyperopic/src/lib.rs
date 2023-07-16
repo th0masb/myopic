@@ -85,7 +85,7 @@ pub trait Symmetric {
 
 #[inline(always)]
 pub const fn side_parity(side: Side) -> i32 {
-    2i32 * side as i32 - 1i32
+    if side == constants::side::W { 1 } else { -1 }
 }
 
 #[inline(always)]
