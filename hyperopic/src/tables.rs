@@ -1,9 +1,12 @@
-use crate::{Class, ClassMap, Corner, corner_side, create_piece, Piece, piece_class, piece_side, reflect_piece, reflect_square, Side, SideMap, Square, square_file, square_rank, SquareMap, Symmetric};
 use crate::constants::class;
-use crate::hash::corner;
+use crate::{
+    corner_side, create_piece, piece_class, piece_side, reflect_piece, reflect_square, square_file,
+    square_rank, ClassMap, Piece, SideMap, Square, SquareMap, Symmetric,
+};
+
 use crate::moves::Move;
 use crate::node::{EvalFacet, Evaluation};
-use crate::position::{CASTLING_DETAILS, Position};
+use crate::position::{Position, CASTLING_DETAILS};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct PieceSquareTablesFacet {
@@ -125,27 +128,26 @@ impl PositionTables {
 
 impl Default for PositionTables {
     fn default() -> Self {
-        todo!()
-        //PositionTables {
-        //    tables: enum_map! {
-        //        Side::W => enum_map! {
-        //            Class::P => parse_full(PAWN),
-        //            Class::N => parse_symmetric(KNIGHT),
-        //            Class::B => parse_symmetric(BISHOP),
-        //            Class::R => parse_symmetric(ROOK),
-        //            Class::Q => parse_symmetric(QUEEN),
-        //            Class::K => parse_symmetric(KING),
-        //        },
-        //        Side::B => enum_map! {
-        //            Class::P => parse_full(PAWN).reflect(),
-        //            Class::N => parse_symmetric(KNIGHT).reflect(),
-        //            Class::B => parse_symmetric(BISHOP).reflect(),
-        //            Class::R => parse_symmetric(ROOK).reflect(),
-        //            Class::Q => parse_symmetric(QUEEN).reflect(),
-        //            Class::K => parse_symmetric(KING).reflect(),
-        //        },
-        //    },
-        //}
+        PositionTables {
+            tables: [
+                [
+                    parse_full(PAWN),
+                    parse_symmetric(KNIGHT),
+                    parse_symmetric(BISHOP),
+                    parse_symmetric(ROOK),
+                    parse_symmetric(QUEEN),
+                    parse_symmetric(KING),
+                ],
+                [
+                    parse_full(PAWN).reflect(),
+                    parse_symmetric(KNIGHT).reflect(),
+                    parse_symmetric(BISHOP).reflect(),
+                    parse_symmetric(ROOK).reflect(),
+                    parse_symmetric(QUEEN).reflect(),
+                    parse_symmetric(KING).reflect(),
+                ],
+            ],
+        }
     }
 }
 
@@ -154,12 +156,10 @@ struct SquareTable(SquareMap<(i32, i32)>);
 
 impl Symmetric for SquareTable {
     fn reflect(&self) -> Self {
-        SquareTable(
-            std::array::from_fn(|sq| {
-                let (mid, end) = self.0[reflect_square(sq)];
-                (-mid, -end)
-            })
-        )
+        SquareTable(std::array::from_fn(|sq| {
+            let (mid, end) = self.0[reflect_square(sq)];
+            (-mid, -end)
+        }))
     }
 }
 
@@ -167,21 +167,15 @@ type SymmetricTable = [(i32, i32); 32];
 type CompleteTable = [(i32, i32); 64];
 
 fn parse_symmetric(raw: SymmetricTable) -> SquareTable {
-    SquareTable(
-        std::array::from_fn(|sq| {
-            let (rank, file) = (square_rank(sq), square_file(sq));
-            let column = if file < 4 { file } else { 7 - file };
-            raw[4 * rank + column]
-        })
-    )
+    SquareTable(std::array::from_fn(|sq| {
+        let (rank, file) = (square_rank(sq), square_file(sq));
+        let column = if file < 4 { file } else { 7 - file };
+        raw[4 * rank + column]
+    }))
 }
 
 fn parse_full(raw: CompleteTable) -> SquareTable {
-    SquareTable(
-        std::array::from_fn(|sq| {
-            raw[8 * square_rank(sq) + square_file(sq)]
-        })
-    )
+    SquareTable(std::array::from_fn(|sq| raw[8 * square_rank(sq) + square_file(sq)]))
 }
 
 /// Tables lifted from stockfish here: https://github.com/official-stockfish/Stockfish/blob/master/src/psqt.cpp
@@ -272,16 +266,18 @@ const PAWN: CompleteTable = [
 
 #[cfg(test)]
 mod test {
-    use myopic_board::Board;
-    use myopic_board::Square::*;
+    use crate::constants::square::*;
 
-    use crate::eval::tables::PieceSquareTablesFacet;
-    use crate::eval::EvalFacet;
-    use crate::{Class, Piece, PositionTables, Side};
+    use crate::constants::{class, side};
+    use crate::create_piece;
+
+    use crate::node::EvalFacet;
+    use crate::position::Position;
+    use crate::tables::{PieceSquareTablesFacet, PositionTables};
 
     #[test]
     fn zero_eval_for_start() {
-        let pst = PieceSquareTablesFacet::from(&Board::default());
+        let pst = PieceSquareTablesFacet::from(&Position::default());
         assert_eq!(0, pst.mid_eval);
         assert_eq!(0, pst.end_eval);
     }
@@ -289,19 +285,19 @@ mod test {
     #[test]
     fn test_midgame() {
         let tables = PositionTables::default();
-        assert_eq!(-7, tables.midgame(Piece(Side::W, Class::P), C6));
-        assert_eq!(7, tables.midgame(Piece(Side::B, Class::P), C3));
-        assert_eq!(69, tables.midgame(Piece(Side::W, Class::K), D5));
-        assert_eq!(-69, tables.midgame(Piece(Side::B, Class::K), D4));
+        assert_eq!(-7, tables.midgame(create_piece(side::W, class::P), C6));
+        assert_eq!(7, tables.midgame(create_piece(side::B, class::P), C3));
+        assert_eq!(69, tables.midgame(create_piece(side::W, class::K), D5));
+        assert_eq!(-69, tables.midgame(create_piece(side::B, class::K), D4));
     }
 
     #[test]
     fn test_endgame() {
         let tables = PositionTables::default();
-        assert_eq!(21, tables.endgame(Piece(Side::W, Class::P), C6));
-        assert_eq!(-21, tables.endgame(Piece(Side::B, Class::P), C3));
-        assert_eq!(194, tables.endgame(Piece(Side::W, Class::K), D5));
-        assert_eq!(-194, tables.endgame(Piece(Side::B, Class::K), D4));
+        assert_eq!(21, tables.endgame(create_piece(side::W, class::P), C6));
+        assert_eq!(-21, tables.endgame(create_piece(side::B, class::P), C3));
+        assert_eq!(194, tables.endgame(create_piece(side::W, class::K), D5));
+        assert_eq!(-194, tables.endgame(create_piece(side::B, class::K), D4));
     }
 
     #[test]
@@ -315,9 +311,9 @@ mod test {
         42. g7 Ree8 43. fxe8=Q Rxe8 44. Rh8 Re1+ 45. Ka2 Rg1 46. g8=Q Rxg8 47. Rxg8 Kf4 \
         48. Kb3 Kf5 49. Rg5+ Ke6 50. Rxh5 Kd7";
 
-        let mut board = Board::default();
-        let moves = board.play_pgn(pgn).unwrap();
-        let mut board = Board::default();
+        let final_position: Position = pgn.parse().unwrap();
+        let moves: Vec<_> = final_position.history.iter().map(|(_, m)| m.clone()).collect();
+        let mut board = Position::default();
         let mut pst = PieceSquareTablesFacet::default();
         for m in moves {
             pst.make(&m, &board);

@@ -4,12 +4,12 @@ use MoveFacet::{Attacking, Checking, Promoting};
 use anyhow::Result;
 use Move::Null;
 
-use crate::{Class, Piece, node, piece_class};
 use crate::constants::class;
-use crate::moves::{Move, MoveFacet, Moves};
 use crate::moves::Move::{Castle, Enpassant, Normal, Promote};
+use crate::moves::{Move, MoveFacet, Moves};
 use crate::node::SearchNode;
 use crate::position::TerminalState;
+use crate::{node, piece_class};
 
 const Q_CHECK_CAP: i32 = -1;
 const DELTA_SKIP_MARGIN: i32 = 200;

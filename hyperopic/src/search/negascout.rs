@@ -1,19 +1,19 @@
+use anyhow::{anyhow, Result};
 use core::cmp;
 use std::time::Instant;
-use anyhow::{anyhow, Result};
 
 use TreeNode::{All, Cut, Pv};
 
-use crate::search::moves::MoveGenerator;
-use crate::search::terminator::SearchTerminator;
-use crate::search::transpositions::{Transpositions, TreeNode};
-use crate::{Class, Corner, create_piece, in_board, node, Piece, union_boards};
 use crate::board::board_moves;
 use crate::constants::class;
 use crate::moves::Move;
 use crate::node::SearchNode;
-use crate::position::{CASTLING_DETAILS, TerminalState};
+use crate::position::{TerminalState, CASTLING_DETAILS};
+use crate::search::moves::MoveGenerator;
 use crate::search::quiescent;
+use crate::search::terminator::SearchTerminator;
+use crate::search::transpositions::{Transpositions, TreeNode};
+use crate::{create_piece, in_board, node};
 
 /// Provides relevant callstack information for the search to
 /// use during the traversal of the tree.
@@ -192,8 +192,8 @@ fn is_pseudo_legal(node: &SearchNode, m: &Move) -> bool {
                 let details = &CASTLING_DETAILS[corner];
                 let rook = create_piece(position.active, class::R);
                 let king = create_piece(position.active, class::K);
-                position.piece_locs[details.rook_line.0] == Some(rook) &&
-                    position.piece_locs[details.king_line.0] == Some(king)
+                position.piece_locs[details.rook_line.0] == Some(rook)
+                    && position.piece_locs[details.king_line.0] == Some(king)
             }
         }
         &Move::Normal { moving, from, dest, capture } => {

@@ -4,9 +4,9 @@ use crate::position::{Position, TerminalState};
 use crate::material::{MaterialFacet, PieceValues};
 use crate::moves::Move;
 use crate::phase::Phase;
+use crate::tables::PieceSquareTablesFacet;
 use crate::{see, Square};
 use anyhow::Result;
-use crate::tables::PieceSquareTablesFacet;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;

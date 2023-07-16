@@ -6,13 +6,13 @@ use serde::Serializer;
 use anyhow::{anyhow, Result};
 use terminator::SearchTerminator;
 
-use crate::search::negascout::{Context, Scout, SearchResponse};
-use crate::search::pv::PrincipleVariation;
-pub use crate::search::transpositions::{Transpositions, TranspositionsImpl, TreeNode};
 use crate::moves::{Move, Moves};
 use crate::node;
 use crate::node::SearchNode;
 use crate::position::{Position, TerminalState};
+use crate::search::negascout::{Context, Scout, SearchResponse};
+use crate::search::pv::PrincipleVariation;
+pub use crate::search::transpositions::{Transpositions, TranspositionsImpl, TreeNode};
 
 mod moves;
 pub mod negascout;
@@ -73,10 +73,8 @@ mod searchoutcome_serialize_test {
 
     use serde_json;
 
-    use myopic_board::{Corner, Move, Piece, Square};
-
-    use crate::{Class, create_piece, Flank, Side};
     use crate::constants::{class, corner, side, square};
+    use crate::create_piece;
     use crate::moves::Move;
 
     use super::SearchOutcome;
@@ -176,7 +174,7 @@ impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
                 precursors: vec![],
                 // If there is potential for the position to be drawn based on the move we choose
                 // then disable early breaking using the transposition table
-                early_break_enabled: !risks_draw
+                early_break_enabled: !risks_draw,
             },
         )?;
 
@@ -202,9 +200,8 @@ fn contains_draw(node: &mut Position, depth: usize) -> Result<bool> {
                     let recursive = contains_draw(node, depth - 1)?;
                     node.unmake()?;
                     if recursive {
-                        return Ok(true)
+                        return Ok(true);
                     }
-
                 }
                 false
             }
@@ -214,7 +211,7 @@ fn contains_draw(node: &mut Position, depth: usize) -> Result<bool> {
 
 #[cfg(test)]
 mod test_contains_draw {
-    use myopic_board::Board;
+    use crate::position::Position;
 
     #[test]
     fn has_draw_0() {
@@ -225,8 +222,7 @@ mod test_contains_draw {
         29. Kh3 Qb6 30. Rxe5 Rxe5 31. Qxe5 Qc6 32. Qc3 Qb5 33. Be3 Nf6 34. Qc7 Rf8 35. Bd4 h6 \
         36. Bxf6 gxf6 37. Qc3 Kg7 38. Qd4 Rb8 39. Bd3 Qxb2 40. Qg4+ Kh7 41. Qxa4 Rg8 42. g3 Rg5 \
         43. Qd7 Kg7 44. Bc4 Rh5+ 45. Kg4 Rg5+ 46. Kh3 Rh5+ 47. Kg4";
-        let mut board = Board::default();
-        board.play_pgn(pgn).unwrap();
+        let mut board: Position = pgn.parse().unwrap();
         assert_eq!(false, super::contains_draw(&mut board, 0).unwrap());
         assert_eq!(false, super::contains_draw(&mut board, 1).unwrap());
         assert_eq!(true, super::contains_draw(&mut board, 2).unwrap());
@@ -242,8 +238,7 @@ mod test_contains_draw {
         34. Kg3 g5 35. Kg2 Rb8 36. Kf2 Kg7 37. Kf3 Rxb1 38. Nxb1 Qxb1 39. Ke3 Kg6 40. Rc4 f6 \
         41. Rc8 Qe1+ 42. Kd3 Qd1+ 43. Ke3 Qe1+ 44. Kd3 Qf1+ 45. Kd2 Qf4+ 46. Ke1 Qxa4 47. Rg8+ Kh5 \
         48. Rc8 Qf4 49. c4 a4";
-        let mut board = Board::default();
-        board.play_pgn(pgn).unwrap();
+        let mut board: Position = pgn.parse().unwrap();
         assert_eq!(false, super::contains_draw(&mut board, 0).unwrap());
         assert_eq!(false, super::contains_draw(&mut board, 1).unwrap());
         assert_eq!(false, super::contains_draw(&mut board, 2).unwrap());

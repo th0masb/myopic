@@ -74,15 +74,25 @@ impl StringIndexMap {
                 .collect(),
         }
     }
+
+    pub fn uci_pieces() -> StringIndexMap {
+        StringIndexMap {
+            content: vec!["P", "N", "B", "R", "Q", "K"].into_iter().map(|s| s.to_owned()).collect(),
+        }
+    }
 }
 
 impl StringIndexMap {
-    pub fn get_op<S: AsRef<str>>(&self, s: S) -> Option<usize> {
+    pub fn index_op<S: AsRef<str>>(&self, s: S) -> Option<usize> {
         self.content.iter().position(|s1| s1.as_str() == s.as_ref())
     }
 
-    pub fn get<S: AsRef<str>>(&self, s: S) -> usize {
-        self.get_op(s).unwrap()
+    pub fn index<S: AsRef<str>>(&self, s: S) -> usize {
+        self.index_op(s).unwrap()
+    }
+
+    pub fn format(&self, index: usize) -> &str {
+        self.content[index].as_str()
     }
 }
 
@@ -137,7 +147,7 @@ fn parse_pgn_move(position: &Position, input: &str) -> Result<Move> {
     }
 
     let target =
-        SQUARE.find_iter(input).map(|m| SQUARE_MAP.get(m.as_str())).last().map(|mv| mv.clone());
+        SQUARE.find_iter(input).map(|m| SQUARE_MAP.index(m.as_str())).last().map(|mv| mv.clone());
 
     let (move_piece_class, promote_piece_class) = parse_pgn_classes(input);
     let move_piece_matches = |p: Class| move_piece_class == p;
@@ -216,7 +226,7 @@ fn parse_fen(fen: &str) -> Result<Position> {
         return Err(anyhow!("Cannot parse {} as fen", fen));
     }
     let active = if parts[1] == "w" { side::W } else { side::B };
-    let enpassant = if parts[3] == "-" { None } else { Some(SQUARE_MAP.get(parts[3])) };
+    let enpassant = if parts[3] == "-" { None } else { Some(SQUARE_MAP.index(parts[3])) };
     let clock = parts[4].parse::<usize>()?;
     let piece_boards = parse_fen_pieces(parts[0]);
     let mut piece_locs = [None; 64];
@@ -265,7 +275,7 @@ fn parse_fen_rank(rank: &str) -> Vec<Option<Piece>> {
             if c.is_numeric() {
                 vec![None; c.to_string().parse::<usize>().unwrap()]
             } else {
-                vec![Some(FEN_PIECES_MAP.get(c.to_string().as_str()))]
+                vec![Some(FEN_PIECES_MAP.index(c.to_string().as_str()))]
             }
         })
         .collect()
