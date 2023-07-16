@@ -1,5 +1,4 @@
 use crate::position::{Position, TerminalState};
-use crate::Symmetric;
 
 fn execute_test(expected: Option<TerminalState>, input: &str) {
     let board = input.parse::<Position>().unwrap();
@@ -9,10 +8,7 @@ fn execute_test(expected: Option<TerminalState>, input: &str) {
 
 #[test]
 fn checkmate() {
-    execute_test(
-        Some(TerminalState::Loss),
-        "5R1k/pp2R2p/8/1b2r3/3p3q/8/PPB3P1/6K1 b - - 0 36"
-    );
+    execute_test(Some(TerminalState::Loss), "5R1k/pp2R2p/8/1b2r3/3p3q/8/PPB3P1/6K1 b - - 0 36");
 }
 
 #[test]

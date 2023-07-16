@@ -6,9 +6,12 @@ use regex::Regex;
 use Move::{Enpassant, Normal, Null, Promote};
 
 use crate::board::iter;
-use crate::{hash, lift, piece_side, Board, Piece, PieceMap, Square, Class, square_file, square_rank, piece_class};
 use crate::constants::class;
 use crate::moves::{Move, Moves};
+use crate::{
+    hash, lift, piece_class, piece_side, square_file, square_rank, Board, Class, Piece, PieceMap,
+    Square,
+};
 
 use crate::position::Position;
 
@@ -120,20 +123,21 @@ fn parse_pgn_move(position: &Position, input: &str) -> Result<Move> {
     let moves = position.moves(&Moves::All);
 
     if PGN_CASTLE.is_match(input) {
-        return moves.iter().find(|&m| {
-            if let Move::Castle { corner } = m {
-                *corner % 2 == if input == "O-O" { 0 } else { 1 }
-            } else {
-                false
-            }
-        }).cloned().ok_or(anyhow!("{} not legal", input))
+        return moves
+            .iter()
+            .find(|&m| {
+                if let Move::Castle { corner } = m {
+                    *corner % 2 == if input == "O-O" { 0 } else { 1 }
+                } else {
+                    false
+                }
+            })
+            .cloned()
+            .ok_or(anyhow!("{} not legal", input));
     }
 
-    let target = SQUARE
-        .find_iter(input)
-        .map(|m| SQUARE_MAP.get(m.as_str()))
-        .last()
-        .map(|mv| mv.clone());
+    let target =
+        SQUARE.find_iter(input).map(|m| SQUARE_MAP.get(m.as_str())).last().map(|mv| mv.clone());
 
     let (move_piece_class, promote_piece_class) = parse_pgn_classes(input);
     let move_piece_matches = |p: Class| move_piece_class == p;
@@ -144,31 +148,33 @@ fn parse_pgn_move(position: &Position, input: &str) -> Result<Move> {
     let rank = parse_extra_rank_file(&RANK, input);
     let matches_start = |sq: Square| matches_square(file, rank, sq);
 
-    moves.into_iter().filter(|m| {
-        match m {
+    moves
+        .into_iter()
+        .filter(|m| match m {
             Null | Move::Castle { .. } => false,
             Enpassant { from, .. } => {
                 move_matches_pawn && target == position.enpassant && matches_start(*from)
-            },
+            }
             Normal { moving, from, dest, .. } => {
                 move_piece_matches(piece_class(*moving))
-                    && target == Some(*dest) && matches_start(*from)
-            },
+                    && target == Some(*dest)
+                    && matches_start(*from)
+            }
             Promote { from, dest, promoted, .. } => {
-                move_matches_pawn &&
-                    target == Some(*dest) &&
-                    matches_start(*from) &&
-                    promote_piece_matches(piece_class(*promoted))
-            },
-        }
-    }).next().ok_or(anyhow!("No move matching {}", input))
+                move_matches_pawn
+                    && target == Some(*dest)
+                    && matches_start(*from)
+                    && promote_piece_matches(piece_class(*promoted))
+            }
+        })
+        .next()
+        .ok_or(anyhow!("No move matching {}", input))
 }
 
 fn matches_square(file: Option<char>, rank: Option<char>, square: Square) -> bool {
     let sq_file = FILE_CHARS[square_file(square)];
     let sq_rank = RANK_CHARS[square_rank(square)];
-    file.map(|f| f == sq_file).unwrap_or(true) &&
-        rank.map(|r| r == sq_rank).unwrap_or(true)
+    file.map(|f| f == sq_file).unwrap_or(true) && rank.map(|r| r == sq_rank).unwrap_or(true)
 }
 
 fn parse_extra_rank_file(re: &Regex, input: &str) -> Option<char> {
@@ -207,7 +213,7 @@ fn parse_fen(fen: &str) -> Result<Position> {
     let parts = SPACE.split(fen).map(|p| p.trim()).collect::<Vec<_>>();
     // TODO Would be better to do a regex match
     if parts.len() != 6 {
-        return Err(anyhow!("Cannot parse {} as fen", fen))
+        return Err(anyhow!("Cannot parse {} as fen", fen));
     }
     let active = if parts[1] == "w" { side::W } else { side::B };
     let enpassant = if parts[3] == "-" { None } else { Some(SQUARE_MAP.get(parts[3])) };
@@ -312,7 +318,6 @@ mod test_fen {
 
 #[cfg(test)]
 mod test_pgn_game {
-    use crate::Board;
 
     use super::*;
 
@@ -322,18 +327,12 @@ mod test_pgn_game {
     }
 
     fn execute_success_test(expected_finish: &'static str, pgn: &'static str) {
-        assert_positions_equal(
-            expected_finish.parse().unwrap(),
-            pgn.parse().unwrap(),
-        )
+        assert_positions_equal(expected_finish.parse().unwrap(), pgn.parse().unwrap())
     }
 
     #[test]
     fn case_zero() {
-        execute_success_test(
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-            ""
-        )
+        execute_success_test("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "")
     }
 
     #[test]
@@ -379,7 +378,7 @@ mod test_pgn_game {
 
 #[cfg(test)]
 mod test_single_move {
-    use crate::Board;
+
     use std::str::FromStr;
 
     use super::*;
@@ -502,7 +501,7 @@ mod test_single_move {
             "rnbq1rk1/p4pPp/2pbp3/8/3P4/8/Pp2BPPP/R1BQK1NR w KQ - 0 12",
             "gxf8=Q+",
         )
-            .unwrap()
+        .unwrap()
     }
 
     #[test]
@@ -512,6 +511,6 @@ mod test_single_move {
             "rnbq1Qk1/p4p1p/2pbp3/8/3P4/8/Pp2BPPP/R1BQK1NR b KQ - 0 12",
             "Qxf8",
         )
-            .unwrap()
+        .unwrap()
     }
 }

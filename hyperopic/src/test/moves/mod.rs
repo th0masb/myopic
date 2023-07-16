@@ -6,7 +6,7 @@ mod szukstra_tal;
 use std::collections::BTreeSet;
 
 use crate::moves::MoveFacet::{Attacking, Checking, Promoting};
-use crate::moves::{Move, MoveFacet, Moves};
+use crate::moves::{Move, Moves};
 use crate::parse::StringIndexMap;
 use crate::position::Position;
 use crate::Symmetric;
@@ -67,7 +67,7 @@ struct TestCase {
     promotes: Vec<&'static str>,
 }
 
-fn parse_moves<'a, S: AsRef<str>, I : Iterator<Item=S>>(input: I) -> BTreeSet<Move> {
+fn parse_moves<'a, S: AsRef<str>, I: Iterator<Item = S>>(input: I) -> BTreeSet<Move> {
     input.map(|s| Move::from_str(s.as_ref()).unwrap()).collect()
 }
 
@@ -78,8 +78,14 @@ fn execute_test(case: TestCase) -> Result<()> {
         (Moves::All, parse_moves(case.all.iter())),
         (Moves::AreAny(&[Attacking]), parse_moves(case.attacks.iter())),
         (Moves::AreAny(&[Promoting]), parse_moves(case.promotes.iter())),
-        (Moves::AreAny(&[Attacking, Promoting]), parse_moves(case.attacks.iter().chain(case.promotes.iter()))),
-        (Moves::AreAny(&[Attacking, Checking, Promoting]), parse_moves(case.attacks_checks.iter().chain(case.promotes.iter()))),
+        (
+            Moves::AreAny(&[Attacking, Promoting]),
+            parse_moves(case.attacks.iter().chain(case.promotes.iter())),
+        ),
+        (
+            Moves::AreAny(&[Attacking, Checking, Promoting]),
+            parse_moves(case.attacks_checks.iter().chain(case.promotes.iter())),
+        ),
     ];
 
     let ref_board = board.reflect();

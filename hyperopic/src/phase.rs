@@ -1,8 +1,8 @@
-use crate::{Class, ClassMap, Piece, piece_class, Square};
 use crate::constants::class;
 use crate::moves::Move;
 use crate::node::Evaluation;
 use crate::position::Position;
+use crate::{piece_class, ClassMap};
 
 const MAX_PHASE: i32 = 256;
 
@@ -16,7 +16,7 @@ pub struct Phase {
 
 impl Default for Phase {
     fn default() -> Self {
-        let phase_values = [0i32, 1i32, 1i32, 2i32,6i32, 0i32 ];
+        let phase_values = [0i32, 1i32, 1i32, 2i32, 6i32, 0i32];
         Phase {
             phase_counter: 0,
             phase: 0,

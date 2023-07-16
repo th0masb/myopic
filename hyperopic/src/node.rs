@@ -1,13 +1,11 @@
-use std::str::FromStr;
-
-use crate::position::{Position, TerminalState};
 use crate::constants::side;
+use crate::position::{Position, TerminalState};
 
-use anyhow::Result;
 use crate::material::{MaterialFacet, PieceValues};
 use crate::moves::Move;
 use crate::phase::Phase;
-use crate::Square;
+use crate::{see, Square};
+use anyhow::Result;
 
 //mod antipattern;
 //mod castling;
@@ -135,8 +133,7 @@ impl TreeNode {
     /// exchange, negative mean a bad one. If the pieces are on the same side the
     /// result is undefined.
     pub fn see(&self, source: Square, target: Square) -> i32 {
-        todo!()
-        //see::exchange_value(&self.board, source, target, self.piece_values())
+        see::exchange_value(&self.board, source, target, self.piece_values())
     }
 
     // TODO For now we just use midgame values, should take into account phase

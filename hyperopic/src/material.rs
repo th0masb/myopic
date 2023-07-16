@@ -1,6 +1,6 @@
-use crate::{Class, ClassMap, create_piece, Piece, piece_class, piece_side, side_parity, Square};
 use crate::constants::class;
-use crate::hash::piece;
+use crate::{create_piece, piece_class, piece_side, side_parity, ClassMap, Piece};
+
 use crate::moves::Move;
 use crate::node::{EvalFacet, Evaluation};
 use crate::position::Position;
