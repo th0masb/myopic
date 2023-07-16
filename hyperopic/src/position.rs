@@ -250,6 +250,14 @@ fn is_repeatable_move(m: &Move) -> bool {
 }
 
 impl Position {
+    pub fn in_check(&self) -> bool {
+        todo!()
+    }
+
+    pub fn friendly_enemy_boards(&self) -> (Board, Board) {
+        (self.side_boards[self.active], self.side_boards[reflect_side(self.active)])
+    }
+
     pub fn compute_terminal_state(&self) -> Option<TerminalState> {
         let king = create_piece(self.active, class::K);
         let king_loc = self.piece_boards[king].trailing_zeros() as usize;
@@ -671,7 +679,7 @@ fn rights_removed<'a>(square: Square) -> &'a [Corner] {
 }
 
 #[rustfmt::skip]
-const CASTLING_DETAILS: CornerMap<CastlingDetails> = {
+pub const CASTLING_DETAILS: CornerMap<CastlingDetails> = {
     use crate::constants::square::*;
     [
         CastlingDetails {
@@ -701,9 +709,9 @@ const CASTLING_DETAILS: CornerMap<CastlingDetails> = {
     ]
 };
 
-struct CastlingDetails {
-    king_line: (Square, Square),
-    rook_line: (Square, Square),
-    no_piece: Board,
-    no_control: Board,
+pub struct CastlingDetails {
+    pub king_line: (Square, Square),
+    pub rook_line: (Square, Square),
+    pub no_piece: Board,
+    pub no_control: Board,
 }

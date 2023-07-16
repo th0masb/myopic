@@ -7,15 +7,6 @@ use crate::phase::Phase;
 use crate::{see, Square};
 use anyhow::Result;
 
-//mod antipattern;
-//mod castling;
-//mod development;
-//pub mod material;
-//mod phase;
-//mod see;
-//pub mod tables;
-//mod pawns;
-
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
 
@@ -58,14 +49,14 @@ pub trait EvalFacet {
 /// Wrapper around a chess board which adds position evaluation capabilities.
 /// The evaluation function is decomposed into orthogonal "facets". The minimal
 /// evaluator looks only at material.
-pub struct TreeNode {
+pub struct SearchNode {
     board: Position,
     phase: Phase,
     material: MaterialFacet,
     facets: Vec<Box<dyn EvalFacet>>,
 }
 
-impl TreeNode {
+impl SearchNode {
     /// Get an immutable reference to the underlying board
     pub fn board(&self) -> &Position {
         &self.board
@@ -146,7 +137,7 @@ impl TreeNode {
     }
 }
 
-impl From<Position> for TreeNode {
+impl From<Position> for SearchNode {
     fn from(board: Position) -> Self {
         let mut board_clone = board.clone();
         let mut moves = vec![];
@@ -159,7 +150,7 @@ impl From<Position> for TreeNode {
         }
 
         if board_clone == Position::default() {
-            let mut eval = TreeNode {
+            let mut eval = SearchNode {
                 board: Position::default(),
                 phase: Default::default(),
                 material: Default::default(),
@@ -174,7 +165,7 @@ impl From<Position> for TreeNode {
             moves.into_iter().rev().for_each(|m| eval.make(m).unwrap());
             eval
         } else {
-            TreeNode {
+            SearchNode {
                 material: MaterialFacet::from(&board),
                 phase: Phase::from(&board),
                 facets: vec![
