@@ -6,6 +6,7 @@ use crate::moves::Move;
 use crate::phase::Phase;
 use crate::{see, Square};
 use anyhow::Result;
+use crate::tables::PieceSquareTablesFacet;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -155,10 +156,10 @@ impl From<Position> for SearchNode {
                 phase: Default::default(),
                 material: Default::default(),
                 facets: vec![
+                    Box::new(PieceSquareTablesFacet::default()),
                     //Box::new(CastlingFacet::default()),
                     //Box::new(DevelopmentFacet::default()),
                     //Box::new(KnightRimFacet::default()),
-                    //Box::new(PieceSquareTablesFacet::default()),
                     //Box::new(PawnStructureFacet::default())
                 ],
             };
@@ -169,7 +170,7 @@ impl From<Position> for SearchNode {
                 material: MaterialFacet::from(&board),
                 phase: Phase::from(&board),
                 facets: vec![
-                    //Box::new(PieceSquareTablesFacet::from(&board)),
+                    Box::new(PieceSquareTablesFacet::from(&board)),
                     //Box::new(PawnStructureFacet::default())
                 ],
                 board,

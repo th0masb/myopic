@@ -1,5 +1,5 @@
 use crate::search::pv::PrincipleVariation;
-use crate::{Board, Class, create_piece, in_board, Piece, piece_class, piece_side, reflect_side, Square, union_boards};
+use crate::{Board, Class, create_piece, in_board, Piece, piece_class, piece_side, reflect_side, side_parity, Square, union_boards};
 use crate::board::{control, iter};
 use crate::constants::class;
 use crate::moves::{Move, Moves};
@@ -7,6 +7,7 @@ use crate::moves::Move::{Null, Castle, Enpassant, Normal, Promote};
 use crate::node::SearchNode;
 use crate::position::Position;
 use crate::search::negascout::Context;
+use crate::tables::PositionTables;
 
 pub struct MoveGenerator<'a> {
     pv: &'a PrincipleVariation,
@@ -49,7 +50,7 @@ fn reposition_last(dest: &mut Vec<Move>, new_first: &Move) {
 /// also orders within those subcategories.
 #[derive(Default)]
 struct MaterialAndPositioningHeuristic {
-    //tables: PositionTables,
+    tables: PositionTables,
 }
 
 impl MaterialAndPositioningHeuristic {
@@ -74,14 +75,14 @@ impl MaterialAndPositioningHeuristic {
                         MoveCategory::BadExchange(exchange_value)
                     }
                 } else {
-                    todo!()
-                    //get_lower_value_delta(eval, create_piece(side, class), dest)
-                    //    .map(|n| MoveCategory::BadExchange(n))
-                    //    .unwrap_or_else(|| {
-                    //        let from_value = self.tables.midgame(moving, from);
-                    //        let dest_value = self.tables.midgame(moving, dest);
-                    //        MoveCategory::Positional(side.parity() * (dest_value - from_value))
-                    //    })
+                    get_lower_value_delta(eval, moving, dest)
+                        .map(|n| MoveCategory::BadExchange(n))
+                        .unwrap_or_else(|| {
+                            let side = piece_side(moving);
+                            let from_value = self.tables.midgame(moving, from);
+                            let dest_value = self.tables.midgame(moving, dest);
+                            MoveCategory::Positional(side_parity(side) * (dest_value - from_value))
+                        })
                 }
             }
         }
