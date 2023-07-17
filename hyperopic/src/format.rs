@@ -1,8 +1,8 @@
 use crate::constants::{piece_class, side};
 use crate::moves::Move;
 use crate::parse::StringIndexMap;
-use crate::position::{CASTLING_DETAILS, Position};
-use crate::{Corner, Piece};
+use crate::position::{Position, CASTLING_DETAILS};
+
 use lazy_static::lazy_static;
 use std::fmt::{Display, Formatter};
 

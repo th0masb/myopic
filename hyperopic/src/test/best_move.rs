@@ -1,7 +1,7 @@
+use crate::node;
 use crate::node::SearchNode;
 use crate::position::Position;
 use crate::search::{SearchParameters, TranspositionsImpl};
-use crate::{eval, node, Symmetric};
 
 const DEPTH: usize = 4;
 const TABLE_SIZE: usize = 10_000;

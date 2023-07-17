@@ -7,9 +7,9 @@ use Move::Null;
 use crate::constants::{class, piece_class};
 use crate::moves::Move::{Castle, Enpassant, Normal, Promote};
 use crate::moves::{Move, MoveFacet, Moves};
+use crate::node;
 use crate::node::SearchNode;
 use crate::position::TerminalState;
-use crate::node;
 
 const Q_CHECK_CAP: i32 = -1;
 const DELTA_SKIP_MARGIN: i32 = 200;

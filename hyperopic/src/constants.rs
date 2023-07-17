@@ -1,4 +1,4 @@
-use crate::{Board, Class, constants, Corner, File, Piece, Rank, Side, Square};
+use crate::{Board, Class, Corner, File, Piece, Rank, Side, Square};
 
 pub mod side {
     use crate::Side;

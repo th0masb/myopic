@@ -262,19 +262,11 @@ fn parse_fen_rank(rank: &str) -> Vec<Option<Piece>> {
         .collect()
 }
 
-fn parse_pgn(_pgn: &str) -> Result<Position> {
-    todo!()
-}
-
-fn parse_uci(_uci: &str) -> Result<Position> {
-    todo!()
-}
-
 #[cfg(test)]
 mod test_fen {
+    use crate::constants::side;
     use crate::constants::square::*;
     use crate::constants::*;
-    use crate::constants::side;
     use crate::position::Position;
     use crate::square_map;
 

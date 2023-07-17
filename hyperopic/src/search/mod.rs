@@ -14,11 +14,11 @@ use crate::search::negascout::{Context, Scout, SearchResponse};
 use crate::search::pv::PrincipleVariation;
 pub use crate::search::transpositions::{Transpositions, TranspositionsImpl, TreeNode};
 
+pub mod end;
 mod moves;
 pub mod negascout;
 mod pv;
 pub mod quiescent;
-pub mod end;
 mod transpositions;
 
 const DEPTH_UPPER_BOUND: usize = 20;
@@ -73,8 +73,8 @@ mod searchoutcome_serialize_test {
 
     use serde_json;
 
-    use crate::constants::{class, corner, side, square};
     use crate::constants::create_piece;
+    use crate::constants::{class, corner, side, square};
     use crate::moves::Move;
 
     use super::SearchOutcome;
@@ -159,24 +159,21 @@ impl<E: SearchEnd, T: Transpositions> Search<'_, E, T> {
 
         // TODO If any move in the current position leads to a draw by repetition then disable the
         //  transposition table early break?
-        let SearchResponse { eval, path } = Scout {
-            end: &self.end,
-            transpositions: self.transpositions,
-            moves: pv.into(),
-        }
-        .search(
-            &mut self.node,
-            Context {
-                depth,
-                start: search_start,
-                alpha: -node::INFTY,
-                beta: node::INFTY,
-                precursors: vec![],
-                // If there is potential for the position to be drawn based on the move we choose
-                // then disable early breaking using the transposition table
-                early_break_enabled: !risks_draw,
-            },
-        )?;
+        let SearchResponse { eval, path } =
+            Scout { end: &self.end, transpositions: self.transpositions, moves: pv.into() }
+                .search(
+                    &mut self.node,
+                    Context {
+                        depth,
+                        start: search_start,
+                        alpha: -node::INFTY,
+                        beta: node::INFTY,
+                        precursors: vec![],
+                        // If there is potential for the position to be drawn based on the move we choose
+                        // then disable early breaking using the transposition table
+                        early_break_enabled: !risks_draw,
+                    },
+                )?;
 
         // If the path returned is empty then there must be no legal moves in this position
         if path.is_empty() {

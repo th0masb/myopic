@@ -2,13 +2,12 @@ use lazy_static::lazy_static;
 use std::{array, cmp};
 
 use crate::board::{control, iter, union_boards};
+use crate::constants::{
+    class, create_piece, in_board, intersects, lift, piece_class, piece_side, reflect_side, side,
+};
 use crate::material::PieceValues;
 use crate::position::Position;
-use crate::{
-    Board, Class, Piece,
-    Side, Square, SquareMap,
-};
-use crate::constants::{class, create_piece, in_board, intersects, lift, piece_class, piece_side, reflect_side, side};
+use crate::{Board, Class, Piece, Side, Square, SquareMap};
 
 pub fn exchange_value(
     board: &Position,

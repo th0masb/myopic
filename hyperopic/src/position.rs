@@ -1,16 +1,21 @@
-use std::cmp::{max, min};
 use crate::moves::{Move, Move::*, MoveFacet, Moves};
-use crate::{board, Board, Corner, CornerMap, hash, Piece, PieceMap, Side, SideMap, Square, SquareMap};
+use crate::{
+    board, hash, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap,
+};
+use std::cmp::{max, min};
 use std::io::Read;
 
 use crate::board::{board_moves, control, cord, iter, union_boards};
 use crate::constants::boards::{ADJACENT_FILES, RANKS};
-use anyhow::{anyhow, Result};
-use rustc_hash::FxHashMap;
-use crate::constants::{class, corner, create_piece, first_square, in_board, intersects, is_superset, lift, piece, piece_class, piece_side, reflect_piece, reflect_side, side, square_file, square_rank};
 use crate::constants::piece::*;
 use crate::constants::side::*;
 use crate::constants::square::*;
+use crate::constants::{
+    class, corner, create_piece, first_square, in_board, intersects, is_superset, lift, piece,
+    piece_class, piece_side, reflect_piece, reflect_side, side, square_file, square_rank,
+};
+use anyhow::{anyhow, Result};
+use rustc_hash::FxHashMap;
 
 /// Represents the possible ways a game can be terminated, we only
 /// consider a game to be terminated when a side has no legal moves
@@ -56,7 +61,7 @@ impl Default for Position {
 #[cfg(debug_assertions)]
 pub fn check_consistent(position: &Position) -> Result<()> {
     if position.key != position.compute_key() {
-        return Err(anyhow!("Keys do not match!"))
+        return Err(anyhow!("Keys do not match!"));
     }
     for sq in 0..64 {
         let pieces_piece = (0..12).find(|p| in_board(position.piece_boards[*p], sq));
@@ -116,7 +121,7 @@ impl Position {
         let mut key = if self.active == side::W { 0u64 } else { hash::black_move() };
         self.enpassant.map(|sq| key ^= hash::enpassant(sq));
         (0..64).for_each(|sq| self.piece_locs[sq].iter().for_each(|&p| key ^= hash::piece(p, sq)));
-        (0..4).filter(|c| self.castling_rights[*c]).for_each(|c|key ^= hash::corner(c));
+        (0..4).filter(|c| self.castling_rights[*c]).for_each(|c| key ^= hash::corner(c));
         key
     }
 }
@@ -410,7 +415,7 @@ impl Position {
 
     pub fn compute_control(&self, side: Side) -> Board {
         use crate::board::control;
-        use crate::constants::{};
+
         let invisible_king = self.piece_boards[if side == W { BK } else { WK }];
         let occupied = (self.side_boards[W] | self.side_boards[B]) & !invisible_king;
         [class::N, class::B, class::R, class::Q, class::K]

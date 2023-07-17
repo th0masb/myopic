@@ -1,6 +1,6 @@
-use std::fmt::Debug;
 use crate::node::EvalFacet;
 use crate::position::Position;
+use std::fmt::Debug;
 
 pub fn test_facet_evolution<F>(pgn: &str, expected_states: Vec<F>)
 where
