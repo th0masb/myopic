@@ -1,9 +1,6 @@
+use std::cmp::{max, min};
 use crate::moves::{Move, Move::*, MoveFacet, Moves};
-use crate::{
-    board, create_piece, first_square, in_board, intersects, is_superset, lift, piece_class,
-    piece_side, reflect_piece, reflect_side, square_file, square_rank, union_boards, Board, Corner,
-    CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap,
-};
+use crate::{board, create_piece, first_square, in_board, intersects, is_superset, lift, piece_class, piece_side, reflect_piece, reflect_side, square_file, square_rank, union_boards, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, hash};
 use std::io::Read;
 
 use crate::board::{board_moves, control, cord, iter};
@@ -56,6 +53,34 @@ impl Default for Position {
     }
 }
 
+#[cfg(debug_assertions)]
+pub fn check_consistent(position: &Position) -> Result<()> {
+    if position.key != position.compute_key() {
+        return Err(anyhow!("Keys do not match!"))
+    }
+    for sq in 0..64 {
+        let pieces_piece = (0..12).find(|p| in_board(position.piece_boards[*p], sq));
+        let squares_piece = position.piece_locs[sq];
+        if pieces_piece != squares_piece {
+            return Err(anyhow!(
+                "Mismatch at {}, pieces: {:?}, squares: {:?}",
+                sq,
+                pieces_piece,
+                squares_piece
+            ));
+        }
+        if let Some(piece) = pieces_piece {
+            let side = piece_side(piece);
+            if !in_board(position.side_boards[side], sq) {
+                return Err(anyhow!("{} does not contain piece at {}", side, sq));
+            } else if in_board(position.side_boards[reflect_side(side)], sq) {
+                return Err(anyhow!("{} contains opponent piece at {}", reflect_side(side), sq));
+            }
+        }
+    }
+    Ok(())
+}
+
 impl Position {
     pub fn new(
         active: Side,
@@ -64,47 +89,45 @@ impl Position {
         castling_rights: CornerMap<bool>,
         piece_locs: SquareMap<Option<Piece>>,
     ) -> Position {
-        let mut key = if active == side::W { 0u64 } else { crate::hash::black_move() };
-        enpassant.map(|sq| key ^= crate::hash::enpassant(sq));
-        (0..64).for_each(|sq| {
-            piece_locs[sq].map(|p| key ^= crate::hash::piece(p, sq));
-        });
-        (0..4).for_each(|c| {
-            if castling_rights[c] {
-                key ^= crate::hash::corner(c);
-            }
-        });
-        let piece_boards: PieceMap<_> = std::array::from_fn(|p| {
-            (0..64).filter(|&sq| piece_locs[sq] == Some(p)).fold(0u64, |a, n| a | lift(n))
-        });
-        let side_boards: SideMap<_> = std::array::from_fn(|side| {
-            (0..64)
-                .filter(|&sq| piece_locs[sq].map(|p| piece_side(p)) == Some(side))
-                .fold(0u64, |a, n| a | lift(n))
-        });
         let mut result = Position {
             active,
             enpassant,
             clock,
-            key,
-            history: vec![],
-            piece_boards,
-            side_boards,
             piece_locs,
             castling_rights,
+            key: 0,
+            history: vec![],
             passive_control: 0,
+            piece_boards: std::array::from_fn(|p| {
+                (0..64).filter(|&sq| piece_locs[sq] == Some(p)).fold(0u64, |a, n| a | lift(n))
+            }),
+            side_boards: std::array::from_fn(|side| {
+                (0..64)
+                    .filter(|&sq| piece_locs[sq].map(|p| piece_side(p)) == Some(side))
+                    .fold(0u64, |a, n| a | lift(n))
+            }),
         };
         result.passive_control = result.compute_control(reflect_side(active));
+        result.key = result.compute_key();
         result
+    }
+
+    fn compute_key(&self) -> u64 {
+        let mut key = if self.active == side::W { 0u64 } else { hash::black_move() };
+        self.enpassant.map(|sq| key ^= hash::enpassant(sq));
+        (0..64).for_each(|sq| self.piece_locs[sq].iter().for_each(|&p| key ^= hash::piece(p, sq)));
+        (0..4).filter(|c| self.castling_rights[*c]).for_each(|c|key ^= hash::corner(c));
+        key
     }
 }
 
 // Implementation block for making/unmaking moves
 impl Position {
     pub fn make(&mut self, m: Move) -> Result<()> {
-        use crate::constants::boards::ENPASSANT_RANKS;
+        #[cfg(debug_assertions)]
+        let start_fen = self.to_string();
         self.history.push((self.create_discards(), m.clone()));
-        self.enpassant.map(|sq| self.key ^= crate::hash::enpassant(sq));
+        self.enpassant.map(|sq| self.key ^= hash::enpassant(sq));
         self.enpassant = None;
         match m {
             Null => {}
@@ -116,11 +139,9 @@ impl Position {
                 self.remove_rights(rights_removed(dest));
                 let is_pawn = piece_class(moving) == class::P;
                 self.clock = if capture.is_some() || is_pawn { 0 } else { self.clock + 1 };
-                if is_pawn && is_superset(ENPASSANT_RANKS, board!(from, dest)) {
-                    let is_white = piece_side(moving) == side::W;
-                    let shifter = if is_white { from } else { dest };
-                    let next_ep = shifter + 8;
-                    self.key ^= crate::hash::enpassant(next_ep);
+                if is_pawn && max(from, dest) - min(from, dest) == 16 {
+                    let next_ep = min(from, dest) + 8;
+                    self.key ^= hash::enpassant(next_ep);
                     self.enpassant = Some(next_ep)
                 }
             }
@@ -155,9 +176,15 @@ impl Position {
                 self.clock += 1;
             }
         };
-        self.key ^= crate::hash::black_move();
+        self.key ^= hash::black_move();
         self.passive_control = self.compute_control(self.active);
         self.active = reflect_side(self.active);
+
+        #[cfg(debug_assertions)]
+        check_consistent(&self)
+            .map_err(|e| anyhow!("{} -> {} makes inconsistency error: {}", start_fen, m, e))
+            .unwrap();
+
         Ok(())
     }
 
@@ -165,8 +192,10 @@ impl Position {
         if self.history.len() == 0 {
             return Err(anyhow!("No moves left to unmake!"));
         }
-        let (state, mv) = self.history.remove(self.history.len() - 1);
-        match &mv {
+        #[cfg(debug_assertions)]
+        let start_fen = self.to_string();
+        let (state, m) = self.history.remove(self.history.len() - 1);
+        match &m {
             Null => {}
             &Normal { moving, from, dest, capture } => {
                 self.unset_piece(moving, dest);
@@ -205,11 +234,17 @@ impl Position {
         self.key = state.key;
         self.active = if self.active == side::W { side::B } else { side::W };
         self.passive_control = state.passive_control;
-        Ok(mv)
+
+        #[cfg(debug_assertions)]
+        check_consistent(&self)
+            .map_err(|e| anyhow!("{} <- {} makes inconsistency error: {}", start_fen, m, e))
+            .unwrap();
+
+        Ok(m)
     }
 
     fn set_piece(&mut self, piece: Piece, square: Square) {
-        self.key ^= crate::hash::piece(piece, square);
+        self.key ^= hash::piece(piece, square);
         let lifted = lift(square);
         let side = piece_side(piece);
         self.piece_boards[piece] |= lifted;
@@ -218,7 +253,7 @@ impl Position {
     }
 
     fn unset_piece(&mut self, piece: Piece, square: Square) {
-        self.key ^= crate::hash::piece(piece, square);
+        self.key ^= hash::piece(piece, square);
         let lifted = !lift(square);
         self.piece_boards[piece] &= lifted;
         self.side_boards[piece_side(piece)] &= lifted;
@@ -229,7 +264,7 @@ impl Position {
         corners.iter().for_each(|&c| {
             if self.castling_rights[c] {
                 self.castling_rights[c] = false;
-                self.key ^= crate::hash::corner(c);
+                self.key ^= hash::corner(c);
             }
         })
     }

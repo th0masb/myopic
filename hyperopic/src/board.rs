@@ -109,7 +109,7 @@ fn compute_sliding_control(source: Square, occupancy: Board, dirs: &[Dir]) -> Bo
         while let Some(sq) = next_sq {
             control |= lift(sq);
             next_sq = next(sq, d);
-            if crate::in_board(occupancy, sq) {
+            if in_board(occupancy, sq) {
                 break;
             }
         }
@@ -384,6 +384,10 @@ mod test {
         assert_boards_equal(
             super::control(BN, C6, board!(A7, B4, C6, C8, D1, D2, D5, D6, E1, E8, F8)),
             board!(A7, A5, B4, D4, E5, E7, D8, B8),
+        );
+        assert_boards_equal(
+            super::control(BP, F4, board!(G4, G3, E5)),
+            board!(G3, E3),
         );
     }
 

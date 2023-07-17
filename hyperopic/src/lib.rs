@@ -85,7 +85,11 @@ pub trait Symmetric {
 
 #[inline(always)]
 pub const fn side_parity(side: Side) -> i32 {
-    if side == constants::side::W { 1 } else { -1 }
+    if side == constants::side::W {
+        1
+    } else {
+        -1
+    }
 }
 
 #[inline(always)]
@@ -220,7 +224,6 @@ pub mod constants {
         pub const EMPTY: Board = 0u64;
         pub const ALL: Board = !0u64;
         pub const RIM: Board = board!(A1 => A8, H1; H8 => A8, H1);
-        pub const ENPASSANT_RANKS: Board = board!(A2 => H2; A4 => H4; A5 => H5; A7 => H7);
 
         pub const RANKS: [Board; 8] = [
             board!(A1 => H1),
