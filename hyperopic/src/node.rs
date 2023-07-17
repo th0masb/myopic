@@ -1,7 +1,7 @@
 use crate::constants::side;
 use crate::position::{Position, TerminalState};
 
-use crate::eval::{CastlingFacet, PawnStructureFacet};
+use crate::eval::{CastlingFacet, DevelopmentFacet, PawnStructureFacet};
 use crate::material::{MaterialFacet, PieceValues};
 use crate::moves::Move;
 use crate::phase::Phase;
@@ -153,7 +153,7 @@ impl From<Position> for SearchNode {
                 facets: vec![
                     Box::new(PieceSquareTablesFacet::default()),
                     Box::new(CastlingFacet::default()),
-                    //Box::new(DevelopmentFacet::default()),
+                    Box::new(DevelopmentFacet::default()),
                     //Box::new(KnightRimFacet::default()),
                     Box::new(PawnStructureFacet::default()),
                 ],
