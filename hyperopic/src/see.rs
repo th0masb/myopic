@@ -1,14 +1,14 @@
 use lazy_static::lazy_static;
 use std::{array, cmp};
 
-use crate::board::{control, iter};
-use crate::constants::{class, side};
+use crate::board::{control, iter, union_boards};
 use crate::material::PieceValues;
 use crate::position::Position;
 use crate::{
-    create_piece, in_board, intersects, lift, piece_class, piece_side, reflect_side, union_boards,
-    Board, Class, Piece, Side, Square, SquareMap,
+    Board, Class, Piece,
+    Side, Square, SquareMap,
 };
+use crate::constants::{class, create_piece, in_board, intersects, lift, piece_class, piece_side, reflect_side, side};
 
 pub fn exchange_value(
     board: &Position,
@@ -162,10 +162,10 @@ fn compute_attack_location_constraints() -> SquareMap<Board> {
 #[cfg(test)]
 mod test {
     use super::See;
-    use crate::{create_piece, reflect_square, Square, Symmetric};
+    use crate::{Square, Symmetric};
 
     use crate::constants::square::*;
-    use crate::constants::{class, corner, side};
+    use crate::constants::{class, corner, create_piece, reflect_square, side};
     use crate::material::PieceValues;
     use crate::moves::Move;
     use crate::node::SearchNode;

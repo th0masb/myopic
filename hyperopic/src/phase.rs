@@ -1,8 +1,8 @@
-use crate::constants::class;
+use crate::constants::{class, piece_class};
 use crate::moves::Move;
 use crate::node::Evaluation;
 use crate::position::Position;
-use crate::{piece_class, ClassMap};
+use crate::ClassMap;
 
 const MAX_PHASE: i32 = 256;
 

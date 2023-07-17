@@ -1,6 +1,6 @@
-use crate::{corner_side, CornerMap, SideMap};
+use crate::{CornerMap, SideMap};
 use crate::{Corner, Side};
-use crate::constants::side;
+use crate::constants::{corner_side, side};
 use crate::moves::Move;
 use crate::node::{EvalFacet, Evaluation};
 use crate::position::Position;

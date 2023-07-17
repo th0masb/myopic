@@ -1,13 +1,16 @@
 use std::cmp::{max, min};
 use crate::moves::{Move, Move::*, MoveFacet, Moves};
-use crate::{board, create_piece, first_square, in_board, intersects, is_superset, lift, piece_class, piece_side, reflect_piece, reflect_side, square_file, square_rank, union_boards, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap, hash};
+use crate::{board, Board, Corner, CornerMap, hash, Piece, PieceMap, Side, SideMap, Square, SquareMap};
 use std::io::Read;
 
-use crate::board::{board_moves, control, cord, iter};
+use crate::board::{board_moves, control, cord, iter, union_boards};
 use crate::constants::boards::{ADJACENT_FILES, RANKS};
-use crate::constants::{class, piece, side};
 use anyhow::{anyhow, Result};
 use rustc_hash::FxHashMap;
+use crate::constants::{class, corner, create_piece, first_square, in_board, intersects, is_superset, lift, piece, piece_class, piece_side, reflect_piece, reflect_side, side, square_file, square_rank};
+use crate::constants::piece::*;
+use crate::constants::side::*;
+use crate::constants::square::*;
 
 /// Represents the possible ways a game can be terminated, we only
 /// consider a game to be terminated when a side has no legal moves
@@ -200,14 +203,14 @@ impl Position {
                 capture.map(|p| self.set_piece(p, dest));
             }
             &Promote { from, dest, promoted, capture } => {
-                let moved = if piece_side(promoted) == side::W { piece::WP } else { piece::BP };
+                let moved = if piece_side(promoted) == W { WP } else { BP };
                 self.unset_piece(promoted, dest);
                 self.set_piece(moved, from);
                 capture.map(|p| self.set_piece(p, dest));
             }
             &Enpassant { side, from, dest, capture } => {
-                let moving = if side == side::W { piece::WP } else { piece::BP };
-                let taken = if side == side::W { piece::BP } else { piece::WP };
+                let moving = if side == W { WP } else { BP };
+                let taken = if side == W { BP } else { WP };
                 self.unset_piece(moving, dest);
                 self.set_piece(taken, capture);
                 self.set_piece(moving, from);
@@ -217,8 +220,8 @@ impl Position {
                 let (r_source, r_target) = details.rook_line;
                 let (k_source, k_target) = details.king_line;
                 let side = corner / 2;
-                let rook = if side == side::W { piece::WR } else { piece::BR };
-                let king = if side == side::W { piece::WK } else { piece::BK };
+                let rook = if side == W { WR } else { BR };
+                let king = if side == W { WK } else { BK };
                 self.set_piece(rook, r_source);
                 self.set_piece(king, k_source);
                 self.unset_piece(rook, r_target);
@@ -229,7 +232,7 @@ impl Position {
         self.clock = state.clock;
         self.enpassant = state.enpassant;
         self.key = state.key;
-        self.active = if self.active == side::W { side::B } else { side::W };
+        self.active = if self.active == W { B } else { W };
         self.passive_control = state.passive_control;
 
         #[cfg(debug_assertions)]
@@ -407,7 +410,7 @@ impl Position {
 
     pub fn compute_control(&self, side: Side) -> Board {
         use crate::board::control;
-        use crate::constants::{piece::*, side::*};
+        use crate::constants::{};
         let invisible_king = self.piece_boards[if side == W { BK } else { WK }];
         let occupied = (self.side_boards[W] | self.side_boards[B]) & !invisible_king;
         [class::N, class::B, class::R, class::Q, class::K]
@@ -671,7 +674,7 @@ impl Position {
         let rook = create_piece(passive, class::R);
         let queen = create_piece(passive, class::Q);
         let attackers = (self.piece_boards[rook] | self.piece_boards[queen]) & from_rank;
-        let occupied = self.side_boards[side::W] | self.side_boards[side::B];
+        let occupied = self.side_boards[W] | self.side_boards[B];
         !iter(attackers).any(|sq| {
             let cord = cord(sq, active_king_loc) & occupied;
             // Exactly 4 pieces, king, attacker, the two pawns about to vacate the rank
@@ -706,14 +709,13 @@ impl Position {
 }
 
 fn rights_removed<'a>(square: Square) -> &'a [Corner] {
-    use crate::constants::{corner::*, square::*};
     match square {
-        H1 => &[WK],
-        E1 => &[WK, WQ],
-        A1 => &[WQ],
-        H8 => &[BK],
-        E8 => &[BK, BQ],
-        A8 => &[BQ],
+        H1 => &[corner::WK],
+        E1 => &[corner::WK, corner::WQ],
+        A1 => &[corner::WQ],
+        H8 => &[corner::BK],
+        E8 => &[corner::BK, corner::BQ],
+        A8 => &[corner::BQ],
         _ => &[],
     }
 }

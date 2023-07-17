@@ -1,12 +1,12 @@
-use crate::constants::class;
+use crate::constants::{class, corner_side, create_piece, piece_class, piece_side, reflect_piece, reflect_square, square_file, square_rank};
 use crate::{
-    corner_side, create_piece, piece_class, piece_side, reflect_piece, reflect_square, square_file,
-    square_rank, ClassMap, Piece, SideMap, Square, SquareMap, Symmetric,
+    ClassMap, Piece,
+    SideMap, Square, SquareMap, Symmetric,
 };
 
 use crate::moves::Move;
 use crate::node::{EvalFacet, Evaluation};
-use crate::position::{Position, CASTLING_DETAILS};
+use crate::position::{CASTLING_DETAILS, Position};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct PieceSquareTablesFacet {
@@ -269,7 +269,7 @@ mod test {
     use crate::constants::square::*;
 
     use crate::constants::{class, side};
-    use crate::create_piece;
+    use crate::constants::create_piece;
 
     use crate::node::EvalFacet;
     use crate::position::Position;

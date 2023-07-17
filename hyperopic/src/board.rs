@@ -1,12 +1,9 @@
 use crate::board::iterator::BoardIterator;
 use crate::constants::boards::RANKS;
-use crate::constants::{class, side};
-use crate::{
-    in_board, lift, piece_class, piece_side, square_file, square_rank, Board, Dir, Piece, SideMap,
-    Square, SquareMap, SquareMatrix,
-};
+use crate::{Board, constants, Dir, Piece, SideMap, Square, SquareMap, SquareMatrix};
 use lazy_static::lazy_static;
 use std::array;
+use crate::constants::{class, in_board, lift, piece_class, piece_side, side, square_file, square_rank};
 
 lazy_static! {
     static ref CONTROL: PieceControl = compute_control();
@@ -400,4 +397,12 @@ mod test {
         assert_eq!(None, super::next(H6, NE));
         assert_eq!(None, super::next(A7, W));
     }
+}
+
+pub fn reflect_board(board: Board) -> Board {
+    iter(board).map(|sq| constants::reflect_square(sq)).fold(0u64, |a, n| a | constants::lift(n))
+}
+
+pub fn union_boards(boards: &[Board]) -> Board {
+    boards.iter().fold(0u64, |a, n| a | n)
 }
