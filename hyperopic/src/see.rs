@@ -5,7 +5,7 @@ use crate::board::{control, iter, union_boards};
 use crate::constants::{
     class, create_piece, in_board, intersects, lift, piece_class, piece_side, reflect_side, side,
 };
-use crate::material::PieceValues;
+use crate::eval::material::PieceValues;
 use crate::position::Position;
 use crate::{Board, Class, Piece, Side, Square, SquareMap};
 
@@ -165,7 +165,7 @@ mod test {
 
     use crate::constants::square::*;
     use crate::constants::{class, corner, create_piece, reflect_square, side};
-    use crate::material::PieceValues;
+    use crate::eval::material::PieceValues;
     use crate::moves::Move;
     use crate::node::SearchNode;
     use crate::position::Position;

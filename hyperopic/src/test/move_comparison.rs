@@ -76,4 +76,3 @@ fn search_after_move(pgn: &str, mv: &str, depth: usize) -> SearchOutcome {
     .map_err(|e| panic!("Could not search at {}: {}", pgn, e))
     .unwrap()
 }
-

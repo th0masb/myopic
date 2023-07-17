@@ -1,11 +1,12 @@
 use crate::constants::side;
 use crate::position::{Position, TerminalState};
 
-use crate::eval::{CastlingFacet, DevelopmentFacet, PawnStructureFacet};
-use crate::material::{MaterialFacet, PieceValues};
+use crate::eval::material::{MaterialFacet, PieceValues};
+use crate::eval::{
+    CastlingFacet, DevelopmentFacet, KnightRimFacet, PawnStructureFacet, PieceSquareTablesFacet,
+};
 use crate::moves::Move;
 use crate::phase::Phase;
-use crate::tables::PieceSquareTablesFacet;
 use crate::{see, Square};
 use anyhow::Result;
 
@@ -154,7 +155,7 @@ impl From<Position> for SearchNode {
                     Box::new(PieceSquareTablesFacet::default()),
                     Box::new(CastlingFacet::default()),
                     Box::new(DevelopmentFacet::default()),
-                    //Box::new(KnightRimFacet::default()),
+                    Box::new(KnightRimFacet::default()),
                     Box::new(PawnStructureFacet::default()),
                 ],
             };

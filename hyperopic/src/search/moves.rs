@@ -2,13 +2,13 @@ use crate::board::{control, iter, union_boards};
 use crate::constants::{
     class, create_piece, in_board, piece_class, piece_side, reflect_side, side_parity,
 };
+use crate::eval::tables::PositionTables;
 use crate::moves::Move::{Castle, Enpassant, Normal, Null, Promote};
 use crate::moves::{Move, Moves};
 use crate::node::SearchNode;
 use crate::position::Position;
 use crate::search::negascout::Context;
 use crate::search::pv::PrincipleVariation;
-use crate::tables::PositionTables;
 use crate::{Board, Class, Piece, Square};
 
 pub struct MoveGenerator<'a> {

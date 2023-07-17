@@ -1,14 +1,14 @@
 use std::cmp::min;
 
-use lazy_static::lazy_static;
-use rustc_hash::FxHashSet;
-use crate::{SideMap, square_map};
-use crate::{Side, SquareMap};
-use crate::constants::square::*;
 use crate::constants::side;
+use crate::constants::square::*;
 use crate::moves::Move;
 use crate::node::{EvalFacet, Evaluation};
 use crate::position::Position;
+use crate::{square_map, SideMap};
+use crate::{Side, SquareMap};
+use lazy_static::lazy_static;
+use rustc_hash::FxHashSet;
 
 type DevPiece = usize;
 type DevPieceMap<T> = [T; 6];
@@ -70,22 +70,24 @@ impl Default for DevelopmentFacet {
 impl DevelopmentFacet {
     fn matching_piece(&self, move_count: usize) -> Option<(Side, DevPiece)> {
         if !self.dev_indices.contains(&move_count) {
-            return None
+            return None;
         }
         self.pieces_moved
             .iter()
             .enumerate()
             .flat_map(|(side, ds)| {
-                ds.iter().enumerate().filter(|(_, &mv)| mv == Some(move_count)).map(move |(d, _)| (side, d))
+                ds.iter()
+                    .enumerate()
+                    .filter(|(_, &mv)| mv == Some(move_count))
+                    .map(move |(d, _)| (side, d))
             })
             .next()
     }
 
     fn penalty(&self, side: Side) -> i32 {
-        let undeveloped_count = self.pieces_moved[side]
-            .iter()
-            .filter(|&moved_index| moved_index.is_none())
-            .count() as f64;
+        let undeveloped_count =
+            self.pieces_moved[side].iter().filter(|&moved_index| moved_index.is_none()).count()
+                as f64;
 
         let move_index_mult = (self.move_index as f64 / self.move_index_divisor as f64).exp2();
         min(
