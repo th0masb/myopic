@@ -21,9 +21,6 @@ pub enum TerminalState {
     Loss,
 }
 
-// TODO Lets attach the passive control board to the position and compute eagerly,
-//  we will need it in every position to determine the terminal state and again in
-//  vast majority of positions to compute legal moves
 #[derive(Debug, Clone, PartialEq)]
 pub struct Position {
     pub piece_boards: PieceMap<Board>,

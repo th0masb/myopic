@@ -11,7 +11,7 @@ use crate::node::SearchNode;
 use crate::position::{TerminalState, CASTLING_DETAILS};
 use crate::search::moves::MoveGenerator;
 use crate::search::quiescent;
-use crate::search::terminator::SearchTerminator;
+use crate::search::end::SearchEnd;
 use crate::search::transpositions::{Transpositions, TreeNode};
 use crate::{create_piece, in_board, node};
 
@@ -56,21 +56,18 @@ impl std::ops::Neg for SearchResponse {
     }
 }
 
-pub struct Scout<'a, T: SearchTerminator, TT: Transpositions> {
-    /// The terminator is responsible for deciding when the search is complete
-    pub terminator: &'a T,
-    /// Transposition table containing previously computed information about nodes in the tree.
-    pub transpositions: &'a mut TT,
-    /// Move generator for nodes in the tree
+pub struct Scout<'a, E: SearchEnd, T: Transpositions> {
+    pub end: &'a E,
+    pub transpositions: &'a mut T,
     pub moves: MoveGenerator<'a>,
 }
 
-impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
+impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
     pub fn search(&mut self, node: &mut SearchNode, mut ctx: Context) -> Result<SearchResponse> {
-        if self.terminator.should_terminate(&ctx) {
+        if self.end.should_end(&ctx) {
             return Err(anyhow!("Terminated at depth {}", ctx.depth));
         }
-        let terminal_state = node.board().compute_terminal_state();
+        let terminal_state = node.position().compute_terminal_state();
         if ctx.depth == 0 || terminal_state.is_some() {
             return match terminal_state {
                 Some(TerminalState::Loss) => Ok(node::LOSS_VALUE),
@@ -80,8 +77,8 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
             .map(|eval| SearchResponse { eval, path: vec![] });
         }
 
-        let (hash, mut table_move) = (node.board().key, None);
-        match self.transpositions.get(node.board()) {
+        let (hash, mut table_move) = (node.position().key, None);
+        match self.transpositions.get(node.position()) {
             None => {}
             Some(Pv { depth, eval, best_path: optimal_path, .. }) => {
                 table_move = optimal_path.first().cloned();
@@ -156,7 +153,7 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
             ctx.alpha = cmp::max(ctx.alpha, result);
             if ctx.alpha >= ctx.beta {
                 self.transpositions.put(
-                    node.board(),
+                    node.position(),
                     Cut { depth: ctx.depth, beta: ctx.beta, cutoff_move: m, hash },
                 );
                 return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
@@ -167,13 +164,13 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
         if ctx.alpha == start_alpha {
             if let Some(m) = best_path.first() {
                 self.transpositions.put(
-                    node.board(),
+                    node.position(),
                     All { depth: ctx.depth, eval: result, best_move: m.clone(), hash },
                 );
             }
         } else {
             self.transpositions.put(
-                node.board(),
+                node.position(),
                 Pv { depth: ctx.depth, eval: result, best_path: best_path.clone(), hash },
             );
         }
@@ -183,7 +180,7 @@ impl<T: SearchTerminator, TT: Transpositions> Scout<'_, T, TT> {
 }
 
 fn is_pseudo_legal(node: &SearchNode, m: &Move) -> bool {
-    let position = node.board();
+    let position = node.position();
     match m {
         Move::Null => false,
         Move::Enpassant { capture, .. } => position.enpassant == Some(*capture),
@@ -210,7 +207,7 @@ fn is_pseudo_legal(node: &SearchNode, m: &Move) -> bool {
 }
 
 fn should_try_null_move_pruning(node: &SearchNode, ctx: &Context) -> bool {
-    let position = node.board();
+    let position = node.position();
     ctx.depth < 5 && ctx.beta < 1000 && !position.in_check() && {
         let active = position.active;
         let pawns = position.piece_boards[create_piece(active, class::P)];

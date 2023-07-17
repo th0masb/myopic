@@ -30,7 +30,7 @@ impl MoveGenerator<'_> {
         ctx: &Context,
         table: Option<&Move>,
     ) -> impl Iterator<Item = Move> {
-        let mut moves = state.board().moves(&Moves::All);
+        let mut moves = state.position().moves(&Moves::All);
         moves.sort_by_cached_key(|m| self.estimator.estimate(state, m));
         table.map(|t| reposition_last(&mut moves, t));
         if let Some(pv) = self.pv.get_next_move(ctx.precursors.as_slice()) {
@@ -109,7 +109,7 @@ fn get_lower_value_delta(eval: &SearchNode, piece: Piece, dst: Square) -> Option
     get_lower_value_pieces(p_class)
         .into_iter()
         .map(|&class| create_piece(reflect_side(piece_side(piece)), class))
-        .filter(|p| in_board(compute_control(eval.board(), *p), dst))
+        .filter(|p| in_board(compute_control(eval.position(), *p), dst))
         .map(|p| piece_values[piece_class(p)] - moving_value)
         .min()
 }

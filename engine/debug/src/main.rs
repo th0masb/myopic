@@ -102,7 +102,7 @@ fn run_search(mut state: SearchNode, depth: usize, table_size: usize) {
         let outcome = hyperopic::search::search(
             state,
             SearchParameters {
-                terminator: depth,
+                end: depth,
                 table: &mut TranspositionsImpl::new(table_size),
             },
         );

@@ -4,7 +4,7 @@ use serde::ser::SerializeStruct;
 use serde::Serializer;
 
 use anyhow::{anyhow, Result};
-use terminator::SearchTerminator;
+use end::SearchEnd;
 
 use crate::moves::{Move, Moves};
 use crate::node;
@@ -18,7 +18,7 @@ mod moves;
 pub mod negascout;
 mod pv;
 pub mod quiescent;
-pub mod terminator;
+pub mod end;
 mod transpositions;
 
 const DEPTH_UPPER_BOUND: usize = 20;
@@ -26,16 +26,16 @@ const DEPTH_UPPER_BOUND: usize = 20;
 /// API function for executing search on the calling thread, we pass a root
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
-pub fn search<T: SearchTerminator, TT: Transpositions>(
-    root: SearchNode,
-    parameters: SearchParameters<T, TT>,
+pub fn search<E: SearchEnd, T: Transpositions>(
+    node: SearchNode,
+    parameters: SearchParameters<E, T>,
 ) -> Result<SearchOutcome> {
-    Search { root, terminator: parameters.terminator, transpositions: parameters.table }.search()
+    Search { node, end: parameters.end, transpositions: parameters.table }.search()
 }
 
-pub struct SearchParameters<'a, T: SearchTerminator, TT: Transpositions> {
-    pub terminator: T,
-    pub table: &'a mut TT,
+pub struct SearchParameters<'a, E: SearchEnd, T: Transpositions> {
+    pub end: E,
+    pub table: &'a mut T,
 }
 
 /// Data class composing information/result about/of a best move search.
@@ -103,10 +103,10 @@ mod searchoutcome_serialize_test {
     }
 }
 
-struct Search<'a, T: SearchTerminator, TT: Transpositions> {
-    root: SearchNode,
-    terminator: T,
-    transpositions: &'a mut TT,
+struct Search<'a, E: SearchEnd, T: Transpositions> {
+    node: SearchNode,
+    end: E,
+    transpositions: &'a mut T,
 }
 
 struct BestMoveResponse {
@@ -116,13 +116,13 @@ struct BestMoveResponse {
     depth: u8,
 }
 
-impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
+impl<E: SearchEnd, T: Transpositions> Search<'_, E, T> {
     pub fn search(&mut self) -> Result<SearchOutcome> {
         let search_start = Instant::now();
         let mut break_err = anyhow!("Terminated before search began");
         let mut pv = PrincipleVariation::default();
         let mut best_response = None;
-        let risks_draw = contains_draw(&mut self.root.board().clone(), 2)?;
+        let risks_draw = contains_draw(&mut self.node.position().clone(), 2)?;
 
         for i in 1..DEPTH_UPPER_BOUND {
             match self.best_move(i as u8, search_start, &pv, risks_draw) {
@@ -160,12 +160,12 @@ impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
         // TODO If any move in the current position leads to a draw by repetition then disable the
         //  transposition table early break?
         let SearchResponse { eval, path } = Scout {
-            terminator: &self.terminator,
+            end: &self.end,
             transpositions: self.transpositions,
             moves: pv.into(),
         }
         .search(
-            &mut self.root,
+            &mut self.node,
             Context {
                 depth,
                 start: search_start,
@@ -180,25 +180,25 @@ impl<T: SearchTerminator, TT: Transpositions> Search<'_, T, TT> {
 
         // If the path returned is empty then there must be no legal moves in this position
         if path.is_empty() {
-            Err(anyhow!("No moves for position {} at depth {}", self.root.board(), depth))
+            Err(anyhow!("No moves for position {} at depth {}", self.node.position(), depth))
         } else {
             Ok(BestMoveResponse { best_move: path.get(0).unwrap().clone(), eval, path, depth })
         }
     }
 }
 
-fn contains_draw(node: &mut Position, depth: usize) -> Result<bool> {
-    Ok(match node.compute_terminal_state() {
+fn contains_draw(position: &mut Position, depth: usize) -> Result<bool> {
+    Ok(match position.compute_terminal_state() {
         Some(TerminalState::Draw) => true,
         Some(TerminalState::Loss) => false,
         None => {
             if depth == 0 {
                 false
             } else {
-                for m in node.moves(&Moves::All) {
-                    node.make(m)?;
-                    let recursive = contains_draw(node, depth - 1)?;
-                    node.unmake()?;
+                for m in position.moves(&Moves::All) {
+                    position.make(m)?;
+                    let recursive = contains_draw(position, depth - 1)?;
+                    position.unmake()?;
                     if recursive {
                         return Ok(true);
                     }
