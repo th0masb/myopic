@@ -84,7 +84,7 @@ fn to_fen_board(board: &Position) -> String {
     let mut dest = String::new();
     let mut empty_count = 0;
     for i in 0..64 {
-        match board.piece_locs[(63 - i)] {
+        match board.piece_locs[63 - i] {
             None => {
                 empty_count += 1;
             }

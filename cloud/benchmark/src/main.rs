@@ -15,8 +15,7 @@ const RUN_LOCALLY_VAR: &str = "RUN_LOCALLY";
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     SimpleLogger::new().with_level(log::LevelFilter::Info).without_timestamps().init()?;
-    //if let Ok(_) = std::env::var(RUN_LOCALLY_VAR) {
-    if true {
+    if let Ok(_) = std::env::var(RUN_LOCALLY_VAR) {
         let output = handler(LambdaEvent::new(
             BenchStartEvent { positions: 200, depth: 7, table_size: 100_000 },
             Context::default(),
@@ -42,7 +41,7 @@ async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Err
         moves.push(hyperopic::search::search(
             position.into(),
             SearchParameters {
-                terminator: e.depth,
+                end: e.depth,
                 table: &mut TranspositionsImpl::new(e.table_size),
             },
         )?);

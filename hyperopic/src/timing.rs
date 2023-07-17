@@ -26,6 +26,7 @@ impl Default for TimeAllocator {
 }
 
 impl TimeAllocator {
+    // TODO Pass in position so we can reduce time thinking if there is a clear capture for example
     pub fn allocate(
         &self,
         half_moves_played: usize,

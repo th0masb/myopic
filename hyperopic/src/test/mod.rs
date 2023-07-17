@@ -12,6 +12,7 @@ mod move_comparison;
 mod moves;
 mod pinned;
 mod termination;
+pub(crate) mod facets;
 
 pub fn assert_boards_equal(expected: Board, actual: Board) {
     assert_eq!(expected, actual, "expected ^ actual {:#064b}", expected ^ actual)

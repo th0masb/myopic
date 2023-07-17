@@ -17,21 +17,24 @@ const DELTA_SKIP_MAX_PHASE: f32 = 0.9;
 const SHALLOW_MOVE_FACETS: [MoveFacet; 3] = [Attacking, Checking, Promoting];
 const DEEP_MOVE_FACETS: [MoveFacet; 2] = [Attacking, Promoting];
 
-pub fn full_search(root: &mut SearchNode) -> Result<i32> {
-    search(root, -node::INFTY, node::INFTY)
+pub fn full_search(node: &mut SearchNode) -> Result<i32> {
+    search(node, -node::INFTY, node::INFTY)
 }
 
-pub fn search(root: &mut SearchNode, alpha: i32, beta: i32) -> Result<i32> {
-    search_impl(root, alpha, beta, -1)
+pub fn search(node: &mut SearchNode, alpha: i32, beta: i32) -> Result<i32> {
+    search_impl(node, alpha, beta, -1)
 }
 
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
-fn search_impl(root: &mut SearchNode, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
-    match root.board().compute_terminal_state() {
-        Some(TerminalState::Loss) => return Ok(node::LOSS_VALUE),
-        Some(TerminalState::Draw) => return Ok(node::DRAW_VALUE),
-        _ => {}
+fn search_impl(node: &mut SearchNode, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
+    // We know the start node not terminal otherwise wouldn't have entered the quiescent search
+    if depth != -1 {
+        match node.position().compute_terminal_state() {
+            Some(TerminalState::Loss) => return Ok(node::LOSS_VALUE),
+            Some(TerminalState::Draw) => return Ok(node::DRAW_VALUE),
+            _ => {}
+        }
     }
     // If we aren't in check then we can use the static eval as the initial
     // result under the sound assumption that there exists a move
@@ -39,8 +42,8 @@ fn search_impl(root: &mut SearchNode, mut alpha: i32, beta: i32, depth: i32) -> 
     // which will improve our score. We cannot make this assumption if we
     // are in check because we will consider all the moves and so we
     // assume lost until proven otherwise.
-    let in_check = root.board().in_check();
-    let mut result = if in_check { -node::INFTY } else { root.relative_eval() };
+    let in_check = node.position().in_check();
+    let mut result = if in_check { -node::INFTY } else { node.relative_eval() };
 
     // Break immediately if the stand pat is greater than beta.
     if result >= beta {
@@ -50,9 +53,9 @@ fn search_impl(root: &mut SearchNode, mut alpha: i32, beta: i32, depth: i32) -> 
         alpha = result;
     }
 
-    let phase = root.phase_progression();
+    let phase = node.phase_progression();
 
-    for (category, m) in compute_quiescent_moves(root, in_check, depth) {
+    for (category, m) in compute_quiescent_moves(node, in_check, depth) {
         match category {
             MoveCategory::Other | MoveCategory::Promotion { .. } => {}
             MoveCategory::BadExchange { .. } => {
@@ -70,9 +73,9 @@ fn search_impl(root: &mut SearchNode, mut alpha: i32, beta: i32, depth: i32) -> 
                 }
             }
         };
-        root.make(m)?;
-        let next_result = -search_impl(root, -beta, -alpha, depth - 1)?;
-        root.unmake()?;
+        node.make(m)?;
+        let next_result = -search_impl(node, -beta, -alpha, depth - 1)?;
+        node.unmake()?;
         result = cmp::max(result, next_result);
         alpha = cmp::max(alpha, result);
         if alpha > beta {
@@ -83,7 +86,7 @@ fn search_impl(root: &mut SearchNode, mut alpha: i32, beta: i32, depth: i32) -> 
 }
 
 fn compute_quiescent_moves(
-    state: &mut SearchNode,
+    node: &mut SearchNode,
     in_check: bool,
     depth: i32,
 ) -> Vec<(MoveCategory, Move)> {
@@ -94,11 +97,11 @@ fn compute_quiescent_moves(
     } else {
         &Moves::AreAny(&SHALLOW_MOVE_FACETS)
     };
-    let mut moves: Vec<_> = state
-        .board()
+    let mut moves: Vec<_> = node
+        .position()
         .moves(moves_selector)
         .into_iter()
-        .map(|mv| (categorise(state, &mv), mv))
+        .map(|mv| (categorise(node, &mv), mv))
         .collect();
 
     moves.sort_unstable_by_key(|(category, _)| -category.score());

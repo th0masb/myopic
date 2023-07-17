@@ -7,6 +7,7 @@ use crate::phase::Phase;
 use crate::tables::PieceSquareTablesFacet;
 use crate::{see, Square};
 use anyhow::Result;
+use crate::eval::CastlingFacet;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -51,16 +52,16 @@ pub trait EvalFacet {
 /// The evaluation function is decomposed into orthogonal "facets". The minimal
 /// evaluator looks only at material.
 pub struct SearchNode {
-    board: Position,
+    position: Position,
     phase: Phase,
     material: MaterialFacet,
     facets: Vec<Box<dyn EvalFacet>>,
 }
 
 impl SearchNode {
-    /// Get an immutable reference to the underlying board
-    pub fn board(&self) -> &Position {
-        &self.board
+    /// Get an immutable reference to the underlying position
+    pub fn position(&self) -> &Position {
+        &self.position
     }
 
     /// Add another evaluation facet to this instance
@@ -68,21 +69,19 @@ impl SearchNode {
         self.facets.push(facet);
     }
 
-    /// Make the given move on the underlying board and update all the internal
-    /// facets
+    /// Make the given move on the underlying board and update all the internal facets
     pub fn make(&mut self, action: Move) -> Result<()> {
-        self.material.make(&action, &self.board);
+        self.material.make(&action, &self.position);
         self.phase.make(&action);
         for cmp in self.facets.iter_mut() {
-            cmp.make(&action, &self.board);
+            cmp.make(&action, &self.position);
         }
-        self.board.make(action)
+        self.position.make(action)
     }
 
-    /// Unmake the given move on the underlying board and update all the internal
-    /// facets
+    /// Unmake the given move on the underlying board and update all the internal facets
     pub fn unmake(&mut self) -> Result<Move> {
-        let action = self.board.unmake()?;
+        let action = self.position.unmake()?;
         self.material.unmake(&action);
         self.phase.unmake(&action);
         for cmp in self.facets.iter_mut() {
@@ -101,16 +100,16 @@ impl SearchNode {
     /// it must return the LOSS_VALUE or DRAW_VALUE depending on the type of
     /// termination.
     pub fn relative_eval(&self) -> i32 {
-        match self.board.compute_terminal_state() {
+        match self.position.compute_terminal_state() {
             Some(TerminalState::Draw) => DRAW_VALUE,
             Some(TerminalState::Loss) => LOSS_VALUE,
             None => {
-                let parity = if self.board.active == side::W { 1 } else { -1 };
-                let material = self.phase.unwrap(self.material.static_eval(&self.board));
+                let parity = if self.position.active == side::W { 1 } else { -1 };
+                let material = self.phase.unwrap(self.material.static_eval(&self.position));
                 let facets = self
                     .facets
                     .iter()
-                    .map(|facet| self.phase.unwrap(facet.static_eval(&self.board)))
+                    .map(|facet| self.phase.unwrap(facet.static_eval(&self.position)))
                     .sum::<i32>();
                 parity * (material + facets)
             }
@@ -125,7 +124,7 @@ impl SearchNode {
     /// exchange, negative mean a bad one. If the pieces are on the same side the
     /// result is undefined.
     pub fn see(&self, source: Square, target: Square) -> i32 {
-        see::exchange_value(&self.board, source, target, self.piece_values())
+        see::exchange_value(&self.position, source, target, self.piece_values())
     }
 
     // TODO For now we just use midgame values, should take into account phase
@@ -142,22 +141,18 @@ impl From<Position> for SearchNode {
     fn from(board: Position) -> Self {
         let mut board_clone = board.clone();
         let mut moves = vec![];
-        loop {
-            if let Ok(m) = board_clone.unmake() {
-                moves.push(m)
-            } else {
-                break;
-            }
+        while let Ok(m) = board_clone.unmake() {
+            moves.push(m)
         }
 
         if board_clone == Position::default() {
             let mut eval = SearchNode {
-                board: Position::default(),
+                position: Position::default(),
                 phase: Default::default(),
                 material: Default::default(),
                 facets: vec![
                     Box::new(PieceSquareTablesFacet::default()),
-                    //Box::new(CastlingFacet::default()),
+                    Box::new(CastlingFacet::default()),
                     //Box::new(DevelopmentFacet::default()),
                     //Box::new(KnightRimFacet::default()),
                     //Box::new(PawnStructureFacet::default())
@@ -173,7 +168,7 @@ impl From<Position> for SearchNode {
                     Box::new(PieceSquareTablesFacet::from(&board)),
                     //Box::new(PawnStructureFacet::default())
                 ],
-                board,
+                position: board,
             }
         }
     }

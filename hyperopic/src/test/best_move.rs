@@ -32,7 +32,7 @@ fn test(position: &str, expected_move_pool: Vec<&str>, is_won: bool) {
 
 fn test_impl(board: SearchNode, expected_move_pool: Vec<&str>, is_won: bool) {
     let mut table = TranspositionsImpl::new(TABLE_SIZE);
-    let params = SearchParameters { terminator: DEPTH, table: &mut table };
+    let params = SearchParameters { end: DEPTH, table: &mut table };
     match crate::search::search(board, params) {
         Err(message) => panic!("{}", message),
         Ok(outcome) => {
