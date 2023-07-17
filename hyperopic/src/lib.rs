@@ -1,5 +1,3 @@
-use crate::board::iter;
-
 mod board;
 mod eval;
 mod format;

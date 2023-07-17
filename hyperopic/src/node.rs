@@ -1,13 +1,13 @@
 use crate::constants::side;
 use crate::position::{Position, TerminalState};
 
+use crate::eval::{CastlingFacet, PawnStructureFacet};
 use crate::material::{MaterialFacet, PieceValues};
 use crate::moves::Move;
 use crate::phase::Phase;
 use crate::tables::PieceSquareTablesFacet;
 use crate::{see, Square};
 use anyhow::Result;
-use crate::eval::CastlingFacet;
 
 /// The evaluation upper/lower bound definition
 pub const INFTY: i32 = 500_000i32;
@@ -155,7 +155,7 @@ impl From<Position> for SearchNode {
                     Box::new(CastlingFacet::default()),
                     //Box::new(DevelopmentFacet::default()),
                     //Box::new(KnightRimFacet::default()),
-                    //Box::new(PawnStructureFacet::default())
+                    Box::new(PawnStructureFacet::default()),
                 ],
             };
             moves.into_iter().rev().for_each(|m| eval.make(m).unwrap());
@@ -166,7 +166,7 @@ impl From<Position> for SearchNode {
                 phase: Phase::from(&board),
                 facets: vec![
                     Box::new(PieceSquareTablesFacet::from(&board)),
-                    //Box::new(PawnStructureFacet::default())
+                    Box::new(PawnStructureFacet::default()),
                 ],
                 position: board,
             }

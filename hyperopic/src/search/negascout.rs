@@ -7,13 +7,13 @@ use TreeNode::{All, Cut, Pv};
 use crate::board::board_moves;
 use crate::constants::{class, create_piece, in_board};
 use crate::moves::Move;
+use crate::node;
 use crate::node::SearchNode;
-use crate::position::{CASTLING_DETAILS, TerminalState};
+use crate::position::{TerminalState, CASTLING_DETAILS};
+use crate::search::end::SearchEnd;
 use crate::search::moves::MoveGenerator;
 use crate::search::quiescent;
-use crate::search::end::SearchEnd;
 use crate::search::transpositions::{Transpositions, TreeNode};
-use crate::node;
 
 /// Provides relevant callstack information for the search to
 /// use during the traversal of the tree.

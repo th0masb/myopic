@@ -1,12 +1,12 @@
-use crate::constants::{class, corner_side, create_piece, piece_class, piece_side, reflect_piece, reflect_square, square_file, square_rank};
-use crate::{
-    ClassMap, Piece,
-    SideMap, Square, SquareMap, Symmetric,
+use crate::constants::{
+    class, corner_side, create_piece, piece_class, piece_side, reflect_piece, reflect_square,
+    square_file, square_rank,
 };
+use crate::{ClassMap, Piece, SideMap, Square, SquareMap, Symmetric};
 
 use crate::moves::Move;
 use crate::node::{EvalFacet, Evaluation};
-use crate::position::{CASTLING_DETAILS, Position};
+use crate::position::{Position, CASTLING_DETAILS};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct PieceSquareTablesFacet {
@@ -268,8 +268,8 @@ const PAWN: CompleteTable = [
 mod test {
     use crate::constants::square::*;
 
-    use crate::constants::{class, side};
     use crate::constants::create_piece;
+    use crate::constants::{class, side};
 
     use crate::node::EvalFacet;
     use crate::position::Position;

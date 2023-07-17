@@ -1,20 +1,18 @@
-use crate::moves::Move;
-use crate::position::{ConstrainedPieces, Position};
-use crate::{
-    Board, Symmetric,
-};
-use std::array;
 use crate::board::reflect_board;
 use crate::constants::{reflect_corner, reflect_piece, reflect_side, reflect_square};
+use crate::moves::Move;
+use crate::position::{ConstrainedPieces, Position};
+use crate::{Board, Symmetric};
+use std::array;
 
 mod best_move;
 mod control;
+pub(crate) mod facets;
 mod make;
 mod move_comparison;
 mod moves;
 mod pinned;
 mod termination;
-pub(crate) mod facets;
 
 pub fn assert_boards_equal(expected: Board, actual: Board) {
     assert_eq!(expected, actual, "expected ^ actual {:#064b}", expected ^ actual)
@@ -23,7 +21,7 @@ pub fn assert_boards_equal(expected: Board, actual: Board) {
 impl Symmetric for Move {
     fn reflect(&self) -> Self {
         use crate::moves::Move::*;
-        use crate::{};
+
         match self {
             Null => Null,
             Castle { corner } => Castle { corner: reflect_corner(*corner) },

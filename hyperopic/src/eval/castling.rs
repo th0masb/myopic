@@ -1,9 +1,9 @@
-use crate::{CornerMap, SideMap};
-use crate::{Corner, Side};
 use crate::constants::{corner_side, side};
 use crate::moves::Move;
 use crate::node::{EvalFacet, Evaluation};
 use crate::position::Position;
+use crate::Side;
+use crate::SideMap;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct CastlingFacet {
@@ -32,8 +32,8 @@ impl EvalFacet for CastlingFacet {
         let rights = board.castling_rights;
 
         Evaluation::Single(
-            self.penalty(side::B, rights[2] as usize + rights[3] as usize) -
-                self.penalty(side::W, rights[0] as usize + rights[1] as usize),
+            self.penalty(side::B, rights[2] as usize + rights[3] as usize)
+                - self.penalty(side::W, rights[0] as usize + rights[1] as usize),
         )
     }
 
@@ -55,14 +55,10 @@ mod test {
     use crate::constants::side;
     use crate::eval::castling::CastlingFacet;
     use crate::test::facets::test_facet_evolution;
-    use crate::Side;
 
     #[test]
     fn evaluation_not_castled() {
-        let under_test = CastlingFacet {
-            penalty: 100,
-            castling_status: [false, false],
-        };
+        let under_test = CastlingFacet { penalty: 100, castling_status: [false, false] };
 
         assert_eq!(200, under_test.penalty(side::W, 0));
         assert_eq!(200, under_test.penalty(side::B, 0));
@@ -92,13 +88,13 @@ mod test {
                 [true, true],
                 [true, true],
             ]
-                .into_iter()
-                .map(|status| {
-                    let mut facet = CastlingFacet::default();
-                    facet.castling_status = status;
-                    facet
-                })
-                .collect(),
+            .into_iter()
+            .map(|status| {
+                let mut facet = CastlingFacet::default();
+                facet.castling_status = status;
+                facet
+            })
+            .collect(),
         )
     }
 
@@ -118,13 +114,13 @@ mod test {
                 [true, true],
                 [true, true],
             ]
-                .into_iter()
-                .map(|status| {
-                    let mut facet = CastlingFacet::default();
-                    facet.castling_status = status;
-                    facet
-                })
-                .collect(),
+            .into_iter()
+            .map(|status| {
+                let mut facet = CastlingFacet::default();
+                facet.castling_status = status;
+                facet
+            })
+            .collect(),
         )
     }
 }

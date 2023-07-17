@@ -1,9 +1,9 @@
-use crate::constants::{reflect_side, side};
+use crate::board::reflect_board;
 use crate::constants::square::*;
+use crate::constants::{reflect_side, side};
 use crate::position::Position;
 use crate::test::assert_boards_equal;
 use crate::{board, Board, Side, Symmetric};
-use crate::board::reflect_board;
 
 fn execute_test(fen: &str, side: Side, expected: Board) {
     let position: Position = fen.parse().unwrap();
