@@ -1,4 +1,5 @@
-use crate::constants::{corner, piece, side, square::*};
+use crate::constants::{corner, piece, side};
+use crate::constants::square::*;
 use crate::moves::Move;
 use crate::position::Position;
 

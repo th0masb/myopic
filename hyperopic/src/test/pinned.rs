@@ -1,8 +1,9 @@
 use crate::position::{ConstrainedPieces, Position};
-use crate::{board, reflect_square, square_map, Square, Symmetric};
+use crate::{board, Square, square_map, Symmetric};
 
 use crate::constants::square::*;
 use anyhow::Result;
+use crate::constants::reflect_square;
 
 fn execute_pin_test(
     fen: &str,

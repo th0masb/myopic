@@ -1,5 +1,5 @@
-use crate::constants::class;
-use crate::{create_piece, piece_class, piece_side, side_parity, ClassMap, Piece};
+use crate::constants::{class, create_piece, piece_class, piece_side, side_parity};
+use crate::{ClassMap, Piece};
 
 use crate::moves::Move;
 use crate::node::{EvalFacet, Evaluation};

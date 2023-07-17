@@ -6,9 +6,9 @@ use regex::Regex;
 use Move::{Enpassant, Normal, Null, Promote};
 
 use crate::board::iter;
-use crate::constants::class;
+use crate::constants::{class, lift, piece_class, square_file, square_rank};
 use crate::moves::{Move, Moves};
-use crate::{lift, piece_class, square_file, square_rank, Board, Class, Piece, PieceMap, Square};
+use crate::{Board, Class, Piece, PieceMap, Square};
 
 use crate::position::Position;
 
@@ -274,6 +274,7 @@ fn parse_uci(_uci: &str) -> Result<Position> {
 mod test_fen {
     use crate::constants::square::*;
     use crate::constants::*;
+    use crate::constants::side;
     use crate::position::Position;
     use crate::square_map;
 

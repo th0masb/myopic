@@ -126,7 +126,7 @@ mod parsing_formatting_test {
     use crate::constants::square::*;
     use crate::constants::{class, corner, side};
 
-    use crate::create_piece;
+    use crate::constants::create_piece;
     use crate::moves::Move;
 
     #[test]

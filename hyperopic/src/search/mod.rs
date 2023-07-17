@@ -74,7 +74,7 @@ mod searchoutcome_serialize_test {
     use serde_json;
 
     use crate::constants::{class, corner, side, square};
-    use crate::create_piece;
+    use crate::constants::create_piece;
     use crate::moves::Move;
 
     use super::SearchOutcome;

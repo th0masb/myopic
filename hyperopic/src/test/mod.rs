@@ -1,9 +1,11 @@
 use crate::moves::Move;
 use crate::position::{ConstrainedPieces, Position};
 use crate::{
-    reflect_board, reflect_corner, reflect_piece, reflect_side, reflect_square, Board, Symmetric,
+    Board, Symmetric,
 };
 use std::array;
+use crate::board::reflect_board;
+use crate::constants::{reflect_corner, reflect_piece, reflect_side, reflect_square};
 
 mod best_move;
 mod control;
@@ -21,7 +23,7 @@ pub fn assert_boards_equal(expected: Board, actual: Board) {
 impl Symmetric for Move {
     fn reflect(&self) -> Self {
         use crate::moves::Move::*;
-        use crate::{reflect_corner, reflect_piece, reflect_side, reflect_square};
+        use crate::{};
         match self {
             Null => Null,
             Castle { corner } => Castle { corner: reflect_corner(*corner) },
