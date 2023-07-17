@@ -158,98 +158,85 @@ fn find_passed_pawns(whites: Board, blacks: Board) -> (Board, Board) {
     (passed_w, passed_b)
 }
 
-//#[cfg(test)]
-//mod test_passed {
-//    use std::ops::Not;
-//    use crate::Reflectable;
-//    use super::*;
-//    use crate::constants::square::*;
-//
-//    #[test]
-//    fn eval_1() {
-//        test_eval(
-//            (160, 200),
-//            B7,
-//            BitBoard::EMPTY
-//        )
-//    }
-//
-//    #[test]
-//    fn eval_2() {
-//        test_eval(
-//            (2 * 160 + 70, 2 * 200 + 120),
-//            B7 | C7,
-//            BitBoard::EMPTY
-//        )
-//    }
-//
-//    #[test]
-//    fn eval_3() {
-//        test_eval(
-//            (2 * 160 + 70 - 40, 2 * 200 + 120 - 60),
-//            B7 | C7 | F4,
-//            F5 | G4
-//        )
-//    }
-//
-//    fn test_eval(expected: Bonus, whites: BitBoard, blacks: BitBoard) {
-//        let f = PawnStructureFacet::default();
-//        let (mid, end) = expected;
-//        assert_eq!(expected, f.evaluate_passed_pawns(whites, blacks));
-//        assert_eq!((-mid, -end), f.evaluate_passed_pawns(blacks.reflect(), whites.reflect()));
-//    }
-//
-//    #[test]
-//    fn count_connections_1() {
-//        assert_eq!(2, count_connections(C2 | C5, B4 | B5 | B7))
-//    }
-//
-//    #[test]
-//    fn find_passers_1() {
-//        test_find_passers(
-//            A4 | E3 | E5 | G4,
-//            B3 | B6 | D3 | D4 | E6 | F7,
-//            BitBoard::EMPTY,
-//            B3 | D3,
-//        )
-//    }
-//
-//    #[test]
-//    fn find_passers_2() {
-//        test_find_passers(
-//            C4 | C5 | C6,
-//            B5 | D5,
-//            C5 | C6,
-//            BitBoard::EMPTY,
-//        )
-//    }
-//
-//    fn test_find_passers(
-//        whites: BitBoard,
-//        blacks: BitBoard,
-//        expected_white_passers: BitBoard,
-//        expected_black_passers: BitBoard,
-//    ) {
-//        test_find_passers_impl(whites, blacks, expected_white_passers, expected_black_passers);
-//        test_find_passers_impl(
-//            blacks.reflect(),
-//            whites.reflect(),
-//            expected_black_passers.reflect(),
-//            expected_white_passers.reflect(),
-//        )
-//    }
-//
-//    fn test_find_passers_impl(
-//        whites: BitBoard,
-//        blacks: BitBoard,
-//        expected_white_passers: BitBoard,
-//        expected_black_passers: BitBoard,
-//    ) {
-//        let (actual_w, actual_b) = find_passed_pawns(whites, blacks);
-//        assert_eq!(expected_white_passers, actual_w);
-//        assert_eq!(expected_black_passers, actual_b);
-//    }
-//}
+#[cfg(test)]
+mod test_passed {
+
+    use super::*;
+    use crate::board;
+    use crate::board::reflect_board;
+    use crate::constants::square::*;
+
+    #[test]
+    fn eval_1() {
+        test_eval((160, 200), board!(B7), EMPTY)
+    }
+
+    #[test]
+    fn eval_2() {
+        test_eval((2 * 160 + 70, 2 * 200 + 120), board!(B7, C7), EMPTY)
+    }
+
+    #[test]
+    fn eval_3() {
+        test_eval((2 * 160 + 70 - 40, 2 * 200 + 120 - 60), board!(B7, C7, F4), board!(F5, G4))
+    }
+
+    fn test_eval(expected: Bonus, whites: Board, blacks: Board) {
+        let f = PawnStructureFacet::default();
+        let (mid, end) = expected;
+        assert_eq!(expected, f.evaluate_passed_pawns(whites, blacks));
+        assert_eq!(
+            (-mid, -end),
+            f.evaluate_passed_pawns(reflect_board(blacks), reflect_board(whites))
+        );
+    }
+
+    #[test]
+    fn count_connections_1() {
+        assert_eq!(2, count_connections(board!(C2, C5), board!(B4, B5, B7)))
+    }
+
+    #[test]
+    fn find_passers_1() {
+        test_find_passers(
+            board!(A4, E3, E5, G4),
+            board!(B3, B6, D3, D4, E6, F7),
+            EMPTY,
+            board!(B3, D3),
+        )
+    }
+
+    #[test]
+    fn find_passers_2() {
+        test_find_passers(board!(C4, C5, C6), board!(B5, D5), board!(C5, C6), EMPTY)
+    }
+
+    fn test_find_passers(
+        whites: Board,
+        blacks: Board,
+        expected_white_passers: Board,
+        expected_black_passers: Board,
+    ) {
+        test_find_passers_impl(whites, blacks, expected_white_passers, expected_black_passers);
+        test_find_passers_impl(
+            reflect_board(blacks),
+            reflect_board(whites),
+            reflect_board(expected_black_passers),
+            reflect_board(expected_white_passers),
+        )
+    }
+
+    fn test_find_passers_impl(
+        whites: Board,
+        blacks: Board,
+        expected_white_passers: Board,
+        expected_black_passers: Board,
+    ) {
+        let (actual_w, actual_b) = find_passed_pawns(whites, blacks);
+        assert_eq!(expected_white_passers, actual_w);
+        assert_eq!(expected_black_passers, actual_b);
+    }
+}
 
 //fn count_passed_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
 //    let mut count = 0i32;

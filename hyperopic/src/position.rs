@@ -124,7 +124,6 @@ impl Position {
         (0..4).filter(|c| self.castling_rights[*c]).for_each(|c| key ^= hash::corner(c));
         key
     }
-
 }
 
 // Implementation block for making/unmaking moves

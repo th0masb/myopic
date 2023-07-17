@@ -10,7 +10,7 @@ use crate::constants::{class, lift, piece_class, square_file, square_rank};
 use crate::moves::{Move, Moves};
 use crate::{Board, Class, Piece, PieceMap, Square};
 
-use crate::position::{CASTLING_DETAILS, Position};
+use crate::position::{Position, CASTLING_DETAILS};
 
 impl FromStr for Position {
     type Err = Error;
@@ -28,7 +28,7 @@ impl Position {
     pub fn play(&mut self, moves: &str) -> Result<Vec<Move>> {
         let pgn_count = PGN_MOVE.find_iter(moves).count();
         let uci_count = UCI_MOVE.find_iter(moves).count();
-        let move_pat: &Regex = if pgn_count >= uci_count { &PGN_MOVE } else { &UCI_MOVE };
+        let move_pat: &Regex = if pgn_count > uci_count { &PGN_MOVE } else { &UCI_MOVE };
         let parse_move = if pgn_count > uci_count { parse_pgn_move } else { parse_uci_move };
 
         let mut result = vec![];
@@ -553,16 +553,12 @@ mod test_single_pgn_move {
 
 #[cfg(test)]
 mod test_single_uci_move {
-    use crate::Board;
+
     use std::str::FromStr;
 
     use super::*;
 
-    fn execute_success_test(
-        expected: &'static str,
-        start_fen: &'static str,
-        uci: &'static str,
-    ) {
+    fn execute_success_test(expected: &'static str, start_fen: &'static str, uci: &'static str) {
         let mut board = start_fen.parse::<Position>().unwrap();
         let parsed_expected = Move::from_str(expected).unwrap();
         let uci_parse = parse_uci_move(&mut board, uci).unwrap();
@@ -606,7 +602,7 @@ mod test_single_uci_move {
     }
 
     #[test]
-    fn case_five()  {
+    fn case_five() {
         execute_success_test(
             "sbra8e8-",
             "r5r1/ppqkb1pp/2p1pn2/3p2B1/3P4/2NB1Q1P/PPP2PP1/4RRK1 b - - 8 14",

@@ -1,8 +1,15 @@
+use crate::moves::Move;
+use crate::node::SearchNode;
+use crate::position::Position;
+use crate::search::{SearchOutcome, SearchParameters, TranspositionsImpl};
+use crate::timing::TimeAllocator;
+use anyhow::Result;
+use std::time::{Duration, Instant};
+
 mod board;
 mod eval;
 mod format;
 mod hash;
-mod material;
 pub mod moves;
 pub mod node;
 mod parse;
@@ -10,7 +17,6 @@ mod phase;
 pub mod position;
 pub mod search;
 mod see;
-mod tables;
 #[cfg(test)]
 mod test;
 mod timing;
@@ -81,6 +87,74 @@ macro_rules! square_map {
 
 pub trait Symmetric {
     fn reflect(&self) -> Self;
+}
+
+pub trait LookupMoveService: Send + Sync {
+    fn lookup(&mut self, position: Position) -> Result<Option<Move>>;
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ComputeMoveInput {
+    pub position: Position,
+    pub remaining: Duration,
+    pub increment: Duration,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct ComputeMoveOutput {
+    pub best_move: Move,
+    pub search_details: Option<SearchOutcome>,
+}
+
+pub struct Engine {
+    transpositions: TranspositionsImpl,
+    lookups: Vec<Box<dyn LookupMoveService>>,
+    timing: TimeAllocator,
+}
+
+impl Engine {
+    pub fn new(table_size: usize, lookups: Vec<Box<dyn LookupMoveService>>) -> Engine {
+        Engine {
+            transpositions: TranspositionsImpl::new(table_size),
+            lookups,
+            timing: TimeAllocator::default(),
+        }
+    }
+
+    pub fn compute_move(&mut self, input: ComputeMoveInput) -> Result<ComputeMoveOutput> {
+        let start = Instant::now();
+        let node: SearchNode = input.position.into();
+        match self.perform_lookups(node.position().clone()) {
+            Some(mv) => Ok(ComputeMoveOutput { best_move: mv, search_details: None }),
+            None => {
+                let position_count = node.position().history.len();
+                search::search(
+                    node,
+                    SearchParameters {
+                        table: &mut self.transpositions,
+                        end: self.timing.allocate(
+                            position_count,
+                            input.remaining - start.elapsed(),
+                            input.increment,
+                        ),
+                    },
+                )
+                .map(|outcome| ComputeMoveOutput {
+                    best_move: outcome.best_move.clone(),
+                    search_details: Some(outcome),
+                })
+            }
+        }
+    }
+
+    fn perform_lookups(&mut self, position: Position) -> Option<Move> {
+        for service in self.lookups.iter_mut() {
+            if let Ok(Some(m)) = service.lookup(position.clone()) {
+                return Some(m);
+            }
+        }
+        None
+    }
 }
 
 #[cfg(test)]

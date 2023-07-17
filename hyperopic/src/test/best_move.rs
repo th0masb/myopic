@@ -1,3 +1,4 @@
+use crate::moves::Move;
 use crate::node;
 use crate::node::SearchNode;
 use crate::position::Position;
@@ -8,7 +9,12 @@ const TABLE_SIZE: usize = 10_000;
 
 fn test(position: &str, expected_move_pool: Vec<&str>, is_won: bool) {
     let position: Position = position.parse().unwrap();
-    test_impl(position.into(), expected_move_pool, is_won);
+    let parsed_moves: Vec<_> = expected_move_pool
+        .into_iter()
+        .map(|s| position.clone().play(s).unwrap().first().unwrap().clone())
+        .collect();
+
+    test_impl(position.into(), parsed_moves, is_won);
     //let ref_board = position.reflect();
     //let ref_move_pool = expected_move_pool.reflect();
     //test_impl(ref_board, ref_move_pool, is_won);
@@ -30,15 +36,14 @@ fn test(position: &str, expected_move_pool: Vec<&str>, is_won: bool) {
     //}
 }
 
-fn test_impl(board: SearchNode, expected_move_pool: Vec<&str>, is_won: bool) {
+fn test_impl(board: SearchNode, expected_move_pool: Vec<Move>, is_won: bool) {
     let mut table = TranspositionsImpl::new(TABLE_SIZE);
     let params = SearchParameters { end: DEPTH, table: &mut table };
     match crate::search::search(board, params) {
         Err(message) => panic!("{}", message),
         Ok(outcome) => {
-            let formatted_move = outcome.best_move.to_string();
             assert!(
-                expected_move_pool.contains(&formatted_move.as_str()),
+                expected_move_pool.contains(&outcome.best_move),
                 "{}",
                 serde_json::to_string(&outcome).unwrap()
             );

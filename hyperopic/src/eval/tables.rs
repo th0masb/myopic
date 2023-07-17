@@ -271,9 +271,9 @@ mod test {
     use crate::constants::create_piece;
     use crate::constants::{class, side};
 
+    use super::{PieceSquareTablesFacet, PositionTables};
     use crate::node::EvalFacet;
     use crate::position::Position;
-    use crate::tables::{PieceSquareTablesFacet, PositionTables};
 
     #[test]
     fn zero_eval_for_start() {
