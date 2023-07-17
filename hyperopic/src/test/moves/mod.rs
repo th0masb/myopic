@@ -114,9 +114,9 @@ fn execute_test_impl(board: Position, moves: ExpectedMoves<'_>) {
 
 fn format_difference(expected: MoveSet, actual: MoveSet) -> String {
     let left_sub_right: Vec<_> =
-        expected.clone().difference(&actual).map(|m| format!("{:?}", m)).collect();
+        expected.clone().difference(&actual).map(|m| format!("{}", m)).collect();
     let right_sub_left: Vec<_> =
-        actual.clone().difference(&expected).map(|m| format!("{:?}", m)).collect();
+        actual.clone().difference(&expected).map(|m| format!("{}", m)).collect();
     format!("E - A: {:?}, A - E: {:?}", left_sub_right, right_sub_left)
 }
 

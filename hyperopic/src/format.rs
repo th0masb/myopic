@@ -1,10 +1,10 @@
+use crate::constants::side;
 use crate::moves::Move;
 use crate::parse::StringIndexMap;
-use crate::{Corner, Piece, piece_class};
 use crate::position::{Position, CASTLING_DETAILS};
+use crate::{piece_class, Corner, Piece};
 use lazy_static::lazy_static;
 use std::fmt::{Display, Formatter};
-use crate::constants::side;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub enum FenPart {
@@ -22,7 +22,7 @@ const ALL_PARTS: [FenPart; 6] = [
     FenPart::CastlingRights,
     FenPart::Enpassant,
     FenPart::HalfMoveCount,
-    FenPart::MoveCount
+    FenPart::MoveCount,
 ];
 
 impl Display for Position {
@@ -60,7 +60,7 @@ impl Display for Move {
     }
 }
 
-pub fn to_fen_impl<I: Iterator<Item=FenPart>>(board: &Position, parts: I) -> String {
+pub fn to_fen_impl<I: Iterator<Item = FenPart>>(board: &Position, parts: I) -> String {
     let mut dest = String::new();
     for cmp in parts {
         let encoded_cmp = match cmp {
@@ -113,10 +113,8 @@ fn to_fen_side(board: &Position) -> String {
 }
 
 fn to_fen_castling_rights(board: &Position) -> String {
-    let rights = (0..4)
-        .filter(|c| board.castling_rights[*c])
-        .map(|c| CORNERS[c])
-        .collect::<String>();
+    let rights =
+        (0..4).filter(|c| board.castling_rights[*c]).map(|c| CORNERS[c]).collect::<String>();
     if rights.is_empty() {
         format!("-")
     } else {
@@ -143,10 +141,10 @@ const PIECES: [&'static str; 12] = ["P", "N", "B", "R", "Q", "K", "p", "n", "b",
 
 #[cfg(test)]
 mod test {
-    use std::iter::once;
+    use super::to_fen_impl;
     use crate::format::FenPart;
     use crate::position::Position;
-    use super::to_fen_impl;
+    use std::iter::once;
 
     const START_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -160,10 +158,7 @@ mod test {
 
     #[test]
     fn start_position_active() {
-        assert_eq!(
-            "w",
-            to_fen_impl(&START_FEN.parse::<Position>().unwrap(), once(FenPart::Active))
-        )
+        assert_eq!("w", to_fen_impl(&START_FEN.parse::<Position>().unwrap(), once(FenPart::Active)))
     }
 
     #[test]

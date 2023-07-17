@@ -5,13 +5,13 @@ use crate::{
 };
 use std::array;
 
+mod best_move;
 mod control;
 mod make;
+mod move_comparison;
 mod moves;
 mod pinned;
 mod termination;
-mod best_move;
-mod move_comparison;
 
 pub fn assert_boards_equal(expected: Board, actual: Board) {
     assert_eq!(expected, actual, "expected ^ actual {:#064b}", expected ^ actual)
