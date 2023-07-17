@@ -3,14 +3,14 @@ use std::str::FromStr;
 use anyhow::{anyhow, Error, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
-use Move::{Enpassant, Normal, Null, Promote};
+use Move::{Castle, Enpassant, Normal, Null, Promote};
 
 use crate::board::iter;
 use crate::constants::{class, lift, piece_class, square_file, square_rank};
 use crate::moves::{Move, Moves};
 use crate::{Board, Class, Piece, PieceMap, Square};
 
-use crate::position::Position;
+use crate::position::{CASTLING_DETAILS, Position};
 
 impl FromStr for Position {
     type Err = Error;
@@ -18,12 +18,26 @@ impl FromStr for Position {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         parse_fen(s).or_else(|_| {
             let mut position = Position::default();
-            for m in PGN_MOVE.find_iter(s) {
-                let m = parse_pgn_move(&position, m.as_str())?;
-                position.make(m)?
-            }
+            position.play(s)?;
             Ok(position)
         })
+    }
+}
+
+impl Position {
+    pub fn play(&mut self, moves: &str) -> Result<Vec<Move>> {
+        let pgn_count = PGN_MOVE.find_iter(moves).count();
+        let uci_count = UCI_MOVE.find_iter(moves).count();
+        let move_pat: &Regex = if pgn_count >= uci_count { &PGN_MOVE } else { &UCI_MOVE };
+        let parse_move = if pgn_count > uci_count { parse_pgn_move } else { parse_uci_move };
+
+        let mut result = vec![];
+        for m in move_pat.find_iter(moves) {
+            let m = parse_move(&self, m.as_str())?;
+            result.push(m.clone());
+            self.make(m)?
+        }
+        Ok(result)
     }
 }
 
@@ -124,16 +138,54 @@ lazy_static! {
         PGN_NORMAL_MOVE.as_str(),
         PGN_CASTLE.as_str()
     ).as_str().parse().unwrap();
+
+    static ref UCI_MOVE: Regex = r"(([a-h][1-8]){2}[nbrq]?)".parse().unwrap();
 }
 
-fn parse_pgn_move(position: &Position, input: &str) -> Result<Move> {
+pub fn parse_uci_move(position: &Position, input: &str) -> Result<Move> {
+    let (f, d, promoting) = extract_uci_component(input)?;
+    position
+        .moves(&Moves::All)
+        .into_iter()
+        .find(|m| match m {
+            Null => false,
+            &Normal { from, dest, .. } => from == f && dest == d,
+            &Enpassant { from, dest, .. } => from == f && dest == d,
+            &Castle { corner, .. } => CASTLING_DETAILS[corner].king_line == (f, d),
+            &Promote { from, dest, promoted, .. } => {
+                from == f
+                    && dest == d
+                    && promoting.map(|c| class_char(piece_class(promoted)) == c).unwrap_or(false)
+            }
+        })
+        .ok_or(anyhow!("No moves matching {}", input))
+}
+
+fn class_char(piece: Class) -> char {
+    match piece {
+        class::Q => 'q',
+        class::R => 'r',
+        class::B => 'b',
+        class::N => 'n',
+        _ => 'x',
+    }
+}
+
+fn extract_uci_component(m: &str) -> Result<(Square, Square, Option<char>)> {
+    let squares: Vec<_> = SQUARE.find_iter(m).map(|m| m.as_str()).collect();
+    let from = SQUARE_MAP.index(squares[0]);
+    let dest = SQUARE_MAP.index(squares[1]);
+    Ok((from, dest, m.chars().skip(4).next()))
+}
+
+pub fn parse_pgn_move(position: &Position, input: &str) -> Result<Move> {
     let moves = position.moves(&Moves::All);
 
     if PGN_CASTLE.is_match(input) {
         return moves
             .iter()
             .find(|&m| {
-                if let Move::Castle { corner } = m {
+                if let Castle { corner } = m {
                     *corner % 2 == if input == "O-O" { 0 } else { 1 }
                 } else {
                     false
@@ -158,7 +210,7 @@ fn parse_pgn_move(position: &Position, input: &str) -> Result<Move> {
     moves
         .into_iter()
         .filter(|m| match m {
-            Null | Move::Castle { .. } => false,
+            Null | Castle { .. } => false,
             Enpassant { from, .. } => {
                 move_matches_pawn && target == position.enpassant && matches_start(*from)
             }
@@ -361,7 +413,7 @@ mod test_pgn_game {
 }
 
 #[cfg(test)]
-mod test_single_move {
+mod test_single_pgn_move {
 
     use std::str::FromStr;
 
@@ -496,5 +548,123 @@ mod test_single_move {
             "Qxf8",
         )
         .unwrap()
+    }
+}
+
+#[cfg(test)]
+mod test_single_uci_move {
+    use crate::Board;
+    use std::str::FromStr;
+
+    use super::*;
+
+    fn execute_success_test(
+        expected: &'static str,
+        start_fen: &'static str,
+        uci: &'static str,
+    ) {
+        let mut board = start_fen.parse::<Position>().unwrap();
+        let parsed_expected = Move::from_str(expected).unwrap();
+        let uci_parse = parse_uci_move(&mut board, uci).unwrap();
+        assert_eq!(parsed_expected, uci_parse);
+    }
+
+    #[test]
+    fn case_one() {
+        execute_success_test(
+            "sbbg4f3wn",
+            "rn1qkbnr/pp2pppp/2p5/3p4/4P1b1/2N2N1P/PPPP1PP1/R1BQKB1R b KQkq - 0 4",
+            "g4f3",
+        )
+    }
+
+    #[test]
+    fn case_two() {
+        execute_success_test(
+            "ewe5f6f5",
+            "r2qkbnr/pp1np1pp/2p5/3pPp2/8/2N2Q1P/PPPP1PP1/R1B1KB1R w KQkq f6 0 7",
+            "e5f6",
+        )
+    }
+
+    #[test]
+    fn case_three() {
+        execute_success_test(
+            "pf7g8wnbn",
+            "r2q1bnr/pp1nkPpp/2p1p3/3p4/8/2N2Q1P/PPPP1PP1/R1B1KB1R w KQ - 1 9",
+            "f7g8n",
+        )
+    }
+
+    #[test]
+    fn case_four() {
+        execute_success_test(
+            "pf7g8wqbn",
+            "r2q1bnr/pp1nkPpp/2p1p3/3p4/8/2N2Q1P/PPPP1PP1/R1B1KB1R w KQ - 1 9",
+            "f7g8q",
+        )
+    }
+
+    #[test]
+    fn case_five()  {
+        execute_success_test(
+            "sbra8e8-",
+            "r5r1/ppqkb1pp/2p1pn2/3p2B1/3P4/2NB1Q1P/PPP2PP1/4RRK1 b - - 8 14",
+            "a8e8",
+        )
+    }
+
+    #[test]
+    fn case_six() {
+        execute_success_test(
+            "swre1e2-",
+            "4rr2/ppqkb1p1/2p1p2p/3p4/3Pn2B/2NBRQ1P/PPP2PP1/4R1K1 w - - 2 18",
+            "e1e2",
+        )
+    }
+
+    #[test]
+    fn case_seven() {
+        execute_success_test(
+            "sbrf3f6wb",
+            "5r2/ppqkb1p1/2p1pB1p/3p4/3Pn2P/2NBRr2/PPP1RPP1/6K1 b - - 0 20",
+            "f3f6",
+        )
+    }
+
+    #[test]
+    fn case_eight() {
+        execute_success_test(
+            "sbne4f2wp",
+            "5r2/ppqkb1p1/2p1pr1p/3p4/3Pn2P/2NBR3/PPP1RPP1/7K b - - 1 21",
+            "e4f2",
+        )
+    }
+
+    #[test]
+    fn case_nine() {
+        execute_success_test(
+            "sbrf8f1wb",
+            "5r2/ppqkb1p1/2p1p2p/3p4/P2P3P/2N1R3/1PP3P1/5B1K b - - 0 24",
+            "f8f1",
+        )
+    }
+
+    #[test]
+    fn case_ten() {
+        execute_success_test(
+            "cwk",
+            "r3k2r/pp1q1ppp/n1p2n2/4p3/3pP2P/3P1QP1/PPPN1PB1/R3K2R w KQkq - 1 13",
+            "e1g1",
+        )
+    }
+
+    #[test]
+    fn case_eleven() {
+        execute_success_test(
+            "cbq",
+            "r3k2r/pp1q1ppp/n1p2n2/4p3/3pP2P/3P1QP1/PPPN1PB1/R4RK1 b kq - 2 13",
+            "e8c8",
+        )
     }
 }
