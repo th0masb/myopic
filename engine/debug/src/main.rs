@@ -1,9 +1,9 @@
 use clap::{Parser, Subcommand};
-use std::str::FromStr;
 use hyperopic::moves::Moves;
 use hyperopic::node::SearchNode;
 use hyperopic::position::Position;
-use hyperopic::search::{SearchParameters, Transpositions, TranspositionsImpl, TreeNode};
+use hyperopic::search::{SearchParameters, Transpositions, TreeNode};
+use itertools::Itertools;
 
 #[derive(Parser)]
 struct Cli {
@@ -52,47 +52,48 @@ fn main() {
     }
 }
 
-//struct DebugTranspositions {
-//    store: Vec<Option<(String, TreeNode)>>,
-//}
-//
-//impl DebugTranspositions {
-//    pub fn new(size: usize) -> DebugTranspositions {
-//        DebugTranspositions { store: vec![None; size] }
-//    }
-//}
-//
-//const FEN_PARTS: [FenPart; 4] =
-//    [FenPart::Board, FenPart::Active, FenPart::CastlingRights, FenPart::Enpassant];
-//
-//impl Transpositions for DebugTranspositions {
-//    fn get(&self, pos: &Position) -> Option<&TreeNode> {
-//        let hash = pos.key;
-//        let index = (hash % self.store.len() as u64) as usize;
-//        if let Some((existing, n)) = self.store[index].as_ref() {
-//            if n.matches(hash) {
-//                let new_pos = pos.to_fen_parts(&FEN_PARTS);
-//                if existing.as_str() != new_pos.as_str() {
-//                    panic!("Collision: {} <-> {}", existing, new_pos)
-//                }
-//                Some(n)
-//            } else {
-//                None
-//            }
-//        } else {
-//            None
-//        }
-//    }
-//
-//    fn put(&mut self, pos: &Position, n: TreeNode) {
-//        let hash = pos.key;
-//        let index = (hash % self.store.len() as u64) as usize;
-//        if !pos.moves(&Moves::All).contains(&n.get_move()) {
-//            panic!("Bad node {} <-> {:?}", pos.to_fen(), n)
-//        }
-//        self.store[index] = Some((pos.to_fen_parts(&FEN_PARTS), n))
-//    }
-//}
+struct DebugTranspositions {
+    store: Vec<Option<(String, TreeNode)>>,
+}
+
+impl DebugTranspositions {
+    pub fn new(size: usize) -> DebugTranspositions {
+        DebugTranspositions { store: vec![None; size] }
+    }
+}
+
+impl Transpositions for DebugTranspositions {
+    fn get(&self, pos: &Position) -> Option<&TreeNode> {
+        let hash = pos.key;
+        let index = (hash % self.store.len() as u64) as usize;
+        if let Some((existing, n)) = self.store[index].as_ref() {
+            if n.matches(hash) {
+                let new_pos = to_table_id(&pos);
+                if existing.as_str() != new_pos.as_str() {
+                    panic!("Collision: {} <-> {}", existing, new_pos)
+                }
+                Some(n)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    fn put(&mut self, pos: &Position, n: TreeNode) {
+        let hash = pos.key;
+        let index = (hash % self.store.len() as u64) as usize;
+        if !pos.moves(&Moves::All).contains(&n.get_move()) {
+            panic!("Bad node {} <-> {:?}", pos.to_string(), n)
+        }
+        self.store[index] = Some((to_table_id(&pos), n))
+    }
+}
+
+fn to_table_id(pos: &Position) -> String {
+    pos.to_string().split_whitespace().take(4).join(" ")
+}
 
 fn run_search(mut state: SearchNode, depth: usize, table_size: usize) {
     if depth == 0 {
@@ -101,10 +102,7 @@ fn run_search(mut state: SearchNode, depth: usize, table_size: usize) {
     } else {
         let outcome = hyperopic::search::search(
             state,
-            SearchParameters {
-                end: depth,
-                table: &mut TranspositionsImpl::new(table_size),
-            },
+            SearchParameters { end: depth, table: &mut DebugTranspositions::new(table_size) },
         );
         println!("{}", serde_json::to_string_pretty(&outcome.unwrap()).unwrap());
     }

@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use chrono::{DateTime, Timelike, Utc};
 use clap::Parser;
+use hyperopic::Engine;
 use lichess_api::ratings::{ChallengeRequest, OnlineBot, TimeLimitType, TimeLimits};
 use lichess_api::{LichessClient, LichessEndgameClient};
 use lichess_events::events::{Challenge, GameStart};
@@ -17,7 +18,6 @@ use std::ops::Range;
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
-use hyperopic::Engine;
 
 const TABLE_SIZE: usize = 5_000_000;
 
@@ -202,7 +202,8 @@ async fn execute_challenge_poll(
 
     log::info!("Chose opponent: {}", chosen.id.as_str());
 
-    let request = ChallengeRequest { rated: args.rated, time_limit, target_user_id: chosen.id.clone() };
+    let request =
+        ChallengeRequest { rated: args.rated, time_limit, target_user_id: chosen.id.clone() };
 
     let _ = client
         .create_challenge(request)

@@ -7,9 +7,9 @@ use reqwest::StatusCode;
 use tokio_util::sync::CancellationToken;
 
 use anyhow::{anyhow, Result};
+use hyperopic::constants::side;
 use hyperopic::position::Position;
 use hyperopic::Side;
-use hyperopic::constants::side;
 
 use crate::compute::MoveChooser;
 use crate::events::{Clock, GameEvent, GameFull, GameState};
@@ -107,7 +107,7 @@ impl<M: MoveChooser> Game<M> {
                         Ok(GameExecutionState::Running)
                     }
                 }
-            },
+            }
         }
     }
 
@@ -139,7 +139,7 @@ impl<M: MoveChooser> Game<M> {
     async fn process_state(&mut self, state: GameState) -> Result<GameExecutionState> {
         if !self.states_processed.insert(state.moves.clone()) {
             log::warn!("{}: Duplicate game state {}", self.lichess.game_id, state.moves.as_str());
-            return Ok(GameExecutionState::Running)
+            return Ok(GameExecutionState::Running);
         }
         log::debug!("Parsing previous game moves: {}", state.moves);
         let position = state.moves.parse::<Position>()?;

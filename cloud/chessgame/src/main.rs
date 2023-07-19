@@ -9,10 +9,12 @@ use rusoto_core::Region;
 use rusoto_lambda::{InvocationRequest, InvokeAsyncRequest, Lambda, LambdaClient};
 use simple_logger::SimpleLogger;
 
+use anyhow::{anyhow, Result};
+use hyperopic::moves::Move;
+use hyperopic::position::Position;
 use lambda_payloads::chessgame::*;
 use lambda_payloads::chessmove::{ChooseMoveEvent, ChooseMoveEventClock, ChooseMoveOutput};
 use lichess_game::{CancellationHook, MoveChooser};
-use myopic_brain::anyhow::{anyhow, Result};
 
 const CANCEL_PERIOD_SECS: u64 = 60;
 
@@ -106,7 +108,7 @@ impl MoveChooser for MoveLambdaClient {
         moves_played: &str,
         remaining: Duration,
         increment: Duration,
-    ) -> Result<String> {
+    ) -> Result<Move> {
         let timer = Instant::now();
         let request = ChooseMoveEvent {
             moves_played: moves_played.to_owned(),
@@ -136,7 +138,12 @@ impl MoveChooser for MoveLambdaClient {
                 let decoded = String::from_utf8(raw_bytes.to_vec())?;
                 log::info!("Response payload: {}", decoded);
                 let response = serde_json::from_str::<ChooseMoveOutput>(decoded.as_str())?;
-                Ok(response.best_move)
+                let mut position = moves_played.parse::<Position>()?;
+                position
+                    .play(&response.best_move)?
+                    .first()
+                    .cloned()
+                    .ok_or(anyhow!("Could not parse {}", response.best_move))
             }
         }
     }
