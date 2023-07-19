@@ -873,6 +873,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dotenv",
+ "itertools 0.11.0",
  "lazy_static",
  "regex",
  "rustc-hash",

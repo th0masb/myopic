@@ -21,18 +21,13 @@ fn knight_avoid_rim_black() {
 }
 
 #[test]
-fn development_preferred_white() {
+fn development_preferred_0() {
     assert_move_better("1. d4 f5 2. Nc3 Nf6 3. Bg5 d5 4. Bxf6 exf6 5. e3 Be6", "f1d3", "c3b5", 3)
 }
 
 #[test]
-fn development_preferred_black() {
-    assert_move_better(
-        "1. d4 f5 2. Nc3 Nf6 3. Bg5 d5 4. Bxf6 exf6 5. e3 Be6 6. Bd3",
-        "f8d6",
-        "c7c6",
-        3,
-    )
+fn development_preferred_1() {
+    assert_move_better("1. e4 e5", "g1f3", "d1e2", 3)
 }
 
 #[test]
