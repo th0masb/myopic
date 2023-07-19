@@ -3,7 +3,6 @@ use crate::{
     board, hash, Board, Corner, CornerMap, Piece, PieceMap, Side, SideMap, Square, SquareMap,
 };
 use std::cmp::{max, min};
-use std::io::Read;
 
 use crate::board::{board_moves, control, cord, iter, union_boards};
 use crate::constants::boards::{ADJACENT_FILES, RANKS};
@@ -11,7 +10,7 @@ use crate::constants::piece::*;
 use crate::constants::side::*;
 use crate::constants::square::*;
 use crate::constants::{
-    class, corner, create_piece, first_square, in_board, intersects, is_superset, lift, piece,
+    class, corner, create_piece, first_square, in_board, intersects, is_superset, lift,
     piece_class, piece_side, reflect_piece, reflect_side, side, square_file, square_rank,
 };
 use anyhow::{anyhow, Result};
@@ -118,7 +117,7 @@ impl Position {
     }
 
     fn compute_key(&self) -> u64 {
-        let mut key = if self.active == side::W { 0u64 } else { hash::black_move() };
+        let mut key = if self.active == W { 0u64 } else { hash::black_move() };
         self.enpassant.map(|sq| key ^= hash::enpassant(sq));
         (0..64).for_each(|sq| self.piece_locs[sq].iter().for_each(|&p| key ^= hash::piece(p, sq)));
         (0..4).filter(|c| self.castling_rights[*c]).for_each(|c| key ^= hash::corner(c));
@@ -152,15 +151,15 @@ impl Position {
             }
             Promote { from, dest, promoted, capture } => {
                 capture.map(|p| self.unset_piece(p, dest));
-                let moved = if piece_side(promoted) == side::W { piece::WP } else { piece::BP };
+                let moved = create_piece(piece_side(promoted), class::P);
                 self.remove_rights(rights_removed(dest));
                 self.unset_piece(moved, from);
                 self.set_piece(promoted, dest);
                 self.clock = 0;
             }
             Enpassant { side, from, dest, capture } => {
-                let moving = if side == side::W { piece::WP } else { piece::BP };
-                let taken = if side == side::W { piece::BP } else { piece::WP };
+                let moving = create_piece(side, class::P);
+                let taken = reflect_piece(moving);
                 self.unset_piece(taken, capture);
                 self.unset_piece(moving, from);
                 self.set_piece(moving, dest);
@@ -172,8 +171,8 @@ impl Position {
                 let (k_source, k_target) = details.king_line;
                 self.remove_rights(rights_removed(k_source));
                 let side = corner / 2;
-                let rook = if side == side::W { piece::WR } else { piece::BR };
-                let king = if side == side::W { piece::WK } else { piece::BK };
+                let rook = create_piece(side, class::R);
+                let king = create_piece(side, class::K);
                 self.unset_piece(rook, r_source);
                 self.unset_piece(king, k_source);
                 self.set_piece(rook, r_target);
@@ -208,14 +207,14 @@ impl Position {
                 capture.map(|p| self.set_piece(p, dest));
             }
             &Promote { from, dest, promoted, capture } => {
-                let moved = if piece_side(promoted) == W { WP } else { BP };
+                let moved = create_piece(piece_side(promoted), class::P);
                 self.unset_piece(promoted, dest);
                 self.set_piece(moved, from);
                 capture.map(|p| self.set_piece(p, dest));
             }
             &Enpassant { side, from, dest, capture } => {
-                let moving = if side == W { WP } else { BP };
-                let taken = if side == W { BP } else { WP };
+                let moving = create_piece(side, class::P);
+                let taken = reflect_piece(moving);
                 self.unset_piece(moving, dest);
                 self.set_piece(taken, capture);
                 self.set_piece(moving, from);
@@ -225,8 +224,8 @@ impl Position {
                 let (r_source, r_target) = details.rook_line;
                 let (k_source, k_target) = details.king_line;
                 let side = corner / 2;
-                let rook = if side == W { WR } else { BR };
-                let king = if side == W { WK } else { BK };
+                let rook = create_piece(side, class::R);
+                let king = create_piece(side, class::K);
                 self.set_piece(rook, r_source);
                 self.set_piece(king, k_source);
                 self.unset_piece(rook, r_target);
@@ -414,8 +413,6 @@ impl Position {
     }
 
     pub fn compute_control(&self, side: Side) -> Board {
-        use crate::board::control;
-
         let invisible_king = self.piece_boards[if side == W { BK } else { WK }];
         let occupied = (self.side_boards[W] | self.side_boards[B]) & !invisible_king;
         [class::N, class::B, class::R, class::Q, class::K]
@@ -430,7 +427,7 @@ impl Position {
 fn pawn_control(side: Side, pawns: Board) -> Board {
     use crate::constants::boards::FILES;
     let (not_a_file, not_h_file) = (!FILES[7], !FILES[0]);
-    if side == side::W {
+    if side == W {
         ((pawns & not_a_file) << 9) | ((pawns & not_h_file) << 7)
     } else {
         ((pawns & not_h_file) >> 9) | ((pawns & not_a_file) >> 7)

@@ -5,6 +5,7 @@ use crate::search::{SearchOutcome, SearchParameters, TranspositionsImpl};
 use crate::timing::TimeAllocator;
 use anyhow::Result;
 use std::time::{Duration, Instant};
+pub use board::union_boards;
 
 mod board;
 mod eval;
@@ -21,7 +22,7 @@ mod see;
 mod test;
 mod timing;
 #[rustfmt::skip]
-mod constants;
+pub mod constants;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8

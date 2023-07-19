@@ -1,8 +1,8 @@
-use crate::board::reflect_board;
+use crate::board::iter;
 use crate::constants::{reflect_corner, reflect_piece, reflect_side, reflect_square};
 use crate::moves::Move;
 use crate::position::{ConstrainedPieces, Position};
-use crate::{Board, Symmetric};
+use crate::{Board, constants, Symmetric};
 use std::array;
 
 mod best_move;
@@ -16,6 +16,10 @@ mod termination;
 
 pub fn assert_boards_equal(expected: Board, actual: Board) {
     assert_eq!(expected, actual, "expected ^ actual {:#064b}", expected ^ actual)
+}
+
+pub fn reflect_board(board: Board) -> Board {
+    iter(board).map(|sq| reflect_square(sq)).fold(0u64, |a, n| a | constants::lift(n))
 }
 
 impl Symmetric for Move {

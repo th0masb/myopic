@@ -20,8 +20,8 @@ impl Default for MaterialFacet {
         MaterialFacet {
             mid_eval: 0,
             end_eval: 0,
-            mid_values: [150, 782, 830, 1289, 2529, 100_000],
-            end_values: [230, 865, 918, 1378, 2687, 100_000],
+            mid_values: [230, 782, 830, 1289, 2529, 100_000],
+            end_values: [300, 865, 918, 1378, 2687, 100_000],
         }
     }
 }
