@@ -167,7 +167,7 @@ impl From<Position> for SearchNode {
                 phase: Phase::from(&board),
                 facets: vec![
                     Box::new(PieceSquareTablesFacet::from(&board)),
-                    Box::new(PawnStructureFacet::default()),
+                    //Box::new(PawnStructureFacet::default()),
                 ],
                 position: board,
             }

@@ -1,12 +1,15 @@
 use std::cmp::max;
+use std::collections::HashSet;
 use std::time::Duration;
 
 use lichess_api::LichessChatRoom;
 use reqwest::StatusCode;
 use tokio_util::sync::CancellationToken;
 
-use myopic_brain::anyhow::{anyhow, Result};
-use myopic_brain::{Board, Side};
+use anyhow::{anyhow, Result};
+use hyperopic::position::Position;
+use hyperopic::Side;
+use hyperopic::constants::side;
 
 use crate::compute::MoveChooser;
 use crate::events::{Clock, GameEvent, GameFull, GameState};
@@ -38,8 +41,9 @@ pub struct Game<M: MoveChooser> {
     inferred_metadata: Option<InferredGameMetadata>,
     lichess: LichessService,
     moves: M,
-    halfmove_count: usize,
+    position_count: usize,
     cancel_token: CancellationToken,
+    states_processed: HashSet<String>,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -56,15 +60,16 @@ impl<M: MoveChooser> From<GameConfig<M>> for Game<M> {
             moves: conf.moves,
             bot_id: conf.bot_id,
             inferred_metadata: None,
-            halfmove_count: 0,
+            position_count: 0,
             cancel_token: conf.cancel_token,
+            states_processed: HashSet::default(),
         }
     }
 }
 
 impl<M: MoveChooser> Game<M> {
     pub fn halfmove_count(&self) -> usize {
-        self.halfmove_count
+        self.position_count
     }
 
     pub async fn abort(&self) -> Result<StatusCode> {
@@ -93,11 +98,14 @@ impl<M: MoveChooser> Game<M> {
                 log::warn!("Error parsing event {}", error);
                 Err(anyhow!("{}", error))
             }
-            Ok(event) => match event {
-                GameEvent::GameFull { content } => self.process_game(content).await,
-                GameEvent::State { content } => self.process_state(content).await,
-                GameEvent::ChatLine { .. } | GameEvent::OpponentGone { .. } => {
-                    Ok(GameExecutionState::Running)
+            Ok(event) => {
+                log::debug!("{}: {}", self.lichess.game_id, event_json);
+                match event {
+                    GameEvent::GameFull { content } => self.process_game(content).await,
+                    GameEvent::State { content } => self.process_state(content).await,
+                    GameEvent::ChatLine { .. } | GameEvent::OpponentGone { .. } => {
+                        Ok(GameExecutionState::Running)
+                    }
                 }
             },
         }
@@ -112,10 +120,10 @@ impl<M: MoveChooser> Game<M> {
             clock: game.clock,
             lambda_side: if self.bot_id == game.white.id {
                 log::info!("Detected lambda is playing as white");
-                Side::W
+                side::W
             } else if self.bot_id == game.black.id {
                 log::info!("Detected lambda is playing as black");
-                Side::B
+                side::B
             } else {
                 return Err(anyhow!(
                     "Name not matched, us: {} w: {} b: {}",
@@ -128,26 +136,27 @@ impl<M: MoveChooser> Game<M> {
         self.process_state(game.state).await
     }
 
-    fn get_game_state(&self, moves: &str) -> Result<(Side, u32)> {
-        let mut state = Board::default();
-        state.play_uci(moves)?;
-        Ok((state.active(), state.position_count() as u32))
-    }
-
     async fn process_state(&mut self, state: GameState) -> Result<GameExecutionState> {
+        if !self.states_processed.insert(state.moves.clone()) {
+            log::warn!("{}: Duplicate game state {}", self.lichess.game_id, state.moves.as_str());
+            return Ok(GameExecutionState::Running)
+        }
         log::debug!("Parsing previous game moves: {}", state.moves);
-        let (active_side, n_moves) = self.get_game_state(state.moves.as_str())?;
-        self.halfmove_count = n_moves as usize;
+        let position = state.moves.parse::<Position>()?;
+        let active = position.active;
+        let position_count = position.history.len();
+        self.position_count = position_count;
         match state.status.as_str() {
             STARTED_STATUS | CREATED_STATUS => {
                 let metadata = self.get_latest_metadata()?.clone();
-                if active_side != metadata.lambda_side {
+                if active != metadata.lambda_side {
                     log::debug!("It is not our turn, waiting for opponents move");
                     Ok(GameExecutionState::Running)
                 } else {
-                    let (remaining, increment) = match metadata.lambda_side {
-                        Side::W => (state.wtime, state.winc),
-                        Side::B => (state.btime, state.binc),
+                    let (remaining, increment) = if metadata.lambda_side == side::W {
+                        (state.wtime, state.winc)
+                    } else {
+                        (state.btime, state.binc)
                     };
                     tokio::select! {
                         _ = self.cancel_token.cancelled() => {
@@ -159,10 +168,10 @@ impl<M: MoveChooser> Game<M> {
                             Duration::from_millis(max(MIN_COMPUTE_TIME_MS, remaining - MOVE_LATENCY_MS)),
                             Duration::from_millis(increment)
                         ) => {
-                            self.lichess.client.post_move(
-                                self.lichess.game_id.as_str(),
-                                computed_move_result?.as_str()
-                            ).await?;
+                            let m = computed_move_result?;
+                            let game_id = self.lichess.game_id.as_str();
+                            log::info!("{}: Posting {}", game_id, m);
+                            self.lichess.client.post_move(game_id, m.to_string().as_str()).await?;
                             Ok(GameExecutionState::Running)
                         }
                     }

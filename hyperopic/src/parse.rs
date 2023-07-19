@@ -25,7 +25,8 @@ impl FromStr for Position {
 }
 
 impl Position {
-    pub fn play(&mut self, moves: &str) -> Result<Vec<Move>> {
+    pub fn play<S: AsRef<str>>(&mut self, moves: S) -> Result<Vec<Move>> {
+        let moves = moves.as_ref();
         let pgn_count = PGN_MOVE.find_iter(moves).count();
         let uci_count = UCI_MOVE.find_iter(moves).count();
         let move_pat: &Regex = if pgn_count > uci_count { &PGN_MOVE } else { &UCI_MOVE };
@@ -58,16 +59,19 @@ impl StringIndexMap {
         }
     }
 
+    #[cfg(test)]
     pub fn sides() -> StringIndexMap {
         StringIndexMap { content: vec!["w", "b"].into_iter().map(|s| s.to_owned()).collect() }
     }
 
+    #[cfg(test)]
     pub fn corners() -> StringIndexMap {
         StringIndexMap {
             content: vec!["wk", "wq", "bk", "bq"].into_iter().map(|s| s.to_owned()).collect(),
         }
     }
 
+    #[cfg(test)]
     pub fn pieces() -> StringIndexMap {
         StringIndexMap {
             content: vec!["wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk"]
@@ -99,13 +103,15 @@ impl StringIndexMap {
     }
 
     pub fn index<S: AsRef<str>>(&self, s: S) -> usize {
-        self.index_op(s).unwrap()
+        let input = s.as_ref().to_string();
+        self.index_op(s).expect(input.as_str())
     }
 
     pub fn format(&self, index: usize) -> &str {
         self.content[index].as_str()
     }
 }
+//"r3k2r/pp1q1ppp/n1p2n2/4p3/3pP2P/3P1QP1/PPPN1PB1/R4RK1 b kq - 2 13",
 
 lazy_static! {
     // Index maps
@@ -115,6 +121,13 @@ lazy_static! {
     // Patterns
     static ref SPACE: Regex = r"(\s+)".parse().unwrap();
     static ref FEN_RANK: Regex = r"([pnbrqkPNBRQK1-8]{1,8})".parse().unwrap();
+
+    static ref FEN: Regex = format!(
+        r"{}(/{}){{7}}\s+(w|b)\s+(-|[kqKQ]{{1,4}})\s+(-|{})\s+\d+\s+\d+",
+        FEN_RANK.as_str(),
+        FEN_RANK.as_str(),
+        SQUARE.as_str(),
+    ).as_str().parse().unwrap();
 
     static ref FILE: Regex = r"([a-h])".parse().unwrap();
     static ref RANK: Regex = r"([1-8])".parse().unwrap();
@@ -269,11 +282,11 @@ fn parse_class(piece: Option<char>) -> Class {
 
 fn parse_fen(fen: &str) -> Result<Position> {
     use crate::constants::side;
-    let parts = SPACE.split(fen).map(|p| p.trim()).collect::<Vec<_>>();
-    // TODO Would be better to do a regex match
-    if parts.len() != 6 {
-        return Err(anyhow!("Cannot parse {} as fen", fen));
+    let fen = fen.trim();
+    if !FEN.is_match(fen) {
+        return Err(anyhow!("Cannot parse {} as a fen", fen))
     }
+    let parts = SPACE.split(fen).map(|p| p.trim()).collect::<Vec<_>>();
     let active = if parts[1] == "w" { side::W } else { side::B };
     let enpassant = if parts[3] == "-" { None } else { Some(SQUARE_MAP.index(parts[3])) };
     let clock = parts[4].parse::<usize>()?;
@@ -350,6 +363,17 @@ mod test_fen {
             )
         )
     }
+}
+
+#[cfg(test)]
+mod parse_test {
+    use crate::position::Position;
+
+    #[test]
+    fn x() {
+        "e2e4 c7c5 g1f3 b8c6 d2d4 c5d4".parse::<Position>().unwrap();
+    }
+
 }
 
 #[cfg(test)]

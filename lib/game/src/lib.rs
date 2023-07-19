@@ -57,7 +57,7 @@ where
 
     game.post_introduction().await;
 
-    log::info!("Initializing game loop");
+    log::info!("{}: Initializing game loop", metadata.game_id);
     let mut handler = GameStreamHandler {
         game,
         start: Instant::now(),
@@ -66,8 +66,8 @@ where
     };
     let game_stream = open_game_stream(&metadata.game_id, &metadata.auth_token).await?;
     match response_stream::handle(game_stream, &mut handler).await? {
-        None => Err(anyhow!("Game stream ended unexpectedly!")),
-        Some(CompletionType::GameFinished) => Ok(format!("Game {} completed", metadata.game_id)),
+        None => Err(anyhow!("{}: Game stream ended unexpectedly!", metadata.game_id)),
+        Some(CompletionType::GameFinished) => Ok(format!("{}: Game completed", metadata.game_id)),
         Some(CompletionType::Cancelled) => on_cancellation.run().await,
     }
 }

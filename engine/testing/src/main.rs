@@ -8,7 +8,6 @@ use lichess_events::events::{Challenge, GameStart};
 use lichess_events::{EventProcessor, LichessEvent, StreamParams};
 use lichess_game::{EmptyCancellationHook, Metadata};
 use log::LevelFilter;
-use myopic_brain::Engine;
 use openings::{DynamoOpeningService, OpeningTable};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -18,6 +17,7 @@ use std::ops::Range;
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
+use hyperopic::Engine;
 
 const TABLE_SIZE: usize = 5_000_000;
 
@@ -29,6 +29,8 @@ struct Args {
     time_limit: u32,
     #[arg(long)]
     time_increment: u32,
+    #[arg(long)]
+    rated: bool,
     #[arg(long, default_value_t = 19)]
     start_hour: u32,
     #[arg(long, default_value_t = 6)]
@@ -200,7 +202,7 @@ async fn execute_challenge_poll(
 
     log::info!("Chose opponent: {}", chosen.id.as_str());
 
-    let request = ChallengeRequest { rated: true, time_limit, target_user_id: chosen.id.clone() };
+    let request = ChallengeRequest { rated: args.rated, time_limit, target_user_id: chosen.id.clone() };
 
     let _ = client
         .create_challenge(request)

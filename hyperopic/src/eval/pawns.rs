@@ -163,8 +163,8 @@ mod test_passed {
 
     use super::*;
     use crate::board;
-    use crate::board::reflect_board;
     use crate::constants::square::*;
+    use crate::test::reflect_board;
 
     #[test]
     fn eval_1() {

@@ -1,7 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use myopic_brain::{Board, ComputeMoveInput, Engine};
 use std::time::Duration;
+use hyperopic::{ComputeMoveInput, Engine};
+use hyperopic::moves::Move;
 
 #[async_trait]
 pub trait MoveChooser {
@@ -10,7 +11,7 @@ pub trait MoveChooser {
         moves_played: &str,
         remaining: Duration,
         increment: Duration,
-    ) -> Result<String>;
+    ) -> Result<Move>;
 }
 
 #[async_trait]
@@ -20,9 +21,8 @@ impl MoveChooser for Engine {
         moves_played: &str,
         remaining: Duration,
         increment: Duration,
-    ) -> Result<String> {
-        let mut position = Board::default();
-        position.play_uci(moves_played)?;
+    ) -> Result<Move> {
+        let position = moves_played.parse()?;
         tokio::task::block_in_place(|| {
             self.compute_move(ComputeMoveInput { position, remaining, increment })
         })
@@ -34,7 +34,7 @@ impl MoveChooser for Engine {
                     log::info!("Computed: {}", formatted);
                 }
             };
-            output.best_move.uci_format()
+            output.best_move
         })
     }
 }

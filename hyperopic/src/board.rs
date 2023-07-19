@@ -3,7 +3,7 @@ use crate::constants::boards::RANKS;
 use crate::constants::{
     class, in_board, lift, piece_class, piece_side, side, square_file, square_rank,
 };
-use crate::{constants, Board, Dir, Piece, SideMap, Square, SquareMap, SquareMatrix};
+use crate::{Board, Dir, Piece, SideMap, Square, SquareMap, SquareMatrix};
 use lazy_static::lazy_static;
 use std::array;
 
@@ -157,7 +157,6 @@ pub const fn rays(source: Square, dirs: &[Dir], depth: usize) -> Board {
 }
 
 pub fn cord(from: Square, dest: Square) -> Board {
-    use std::array;
     lazy_static! {
         static ref CACHE: SquareMatrix<Board> =
             array::from_fn(|from| array::from_fn(|dest| compute_cord(from, dest)));
@@ -396,10 +395,6 @@ mod test {
         assert_eq!(None, super::next(H6, NE));
         assert_eq!(None, super::next(A7, W));
     }
-}
-
-pub fn reflect_board(board: Board) -> Board {
-    iter(board).map(|sq| constants::reflect_square(sq)).fold(0u64, |a, n| a | constants::lift(n))
 }
 
 pub fn union_boards(boards: &[Board]) -> Board {

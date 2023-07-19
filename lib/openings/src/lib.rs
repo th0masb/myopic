@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
-use itertools::Itertools;
+use itertools::{Itertools};
 use log::info;
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use serde_derive::{Deserialize, Serialize};
-
-use myopic_brain::{Board, LookupMoveService};
-use myopic_brain::{FenPart, Move};
+use hyperopic::LookupMoveService;
+use hyperopic::moves::Move;
+use hyperopic::position::Position;
 
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 pub struct OpeningTable {
@@ -38,21 +38,18 @@ impl TryFrom<OpeningTable> for DynamoOpeningService {
 }
 
 impl LookupMoveService for DynamoOpeningService {
-    fn lookup(&mut self, position: Board) -> Result<Option<Move>> {
+    fn lookup(&mut self, position: Position) -> Result<Option<Move>> {
         futures::executor::block_on(async {
-            let pos_count = position.position_count();
+            let pos_count = position.history.len();
             if pos_count > self.params.max_depth as usize {
                 info!("No lookup as {} > {}", pos_count, self.params.max_depth);
                 Ok(None)
             } else {
-                let fen = position.to_fen_parts(&[
-                    FenPart::Board,
-                    FenPart::Active,
-                    FenPart::CastlingRights,
-                ]);
-                info!("Querying table {} for position {}", self.params.name, fen);
+                // The table index comprises, the pieces, active square, castling rights
+                let index = position.to_string().split_whitespace().take(3).join(" ");
+                info!("Querying table {} for position {}", self.params.name, index);
                 self.client
-                    .get_item(self.create_request(fen))
+                    .get_item(self.create_request(index))
                     .await
                     .map_err(|err| anyhow!("{}", err))
                     .and_then(|response| match response.item {
@@ -60,13 +57,14 @@ impl LookupMoveService for DynamoOpeningService {
                             info!("No match found!");
                             Ok(None)
                         }
-                        Some(attributes) => self
-                            .try_extract_move(attributes)
-                            .and_then(|mv| position.parse_uci(mv.as_str()))
-                            .map(|mv| {
-                                info!("Found opening move {}", mv.uci_format());
-                                Some(mv)
-                            }),
+                        Some(attributes) => {
+                            let response = self.try_extract_move(attributes)?;
+                            let parsed = position.clone().play(&response)?;
+                            let m = parsed.first().cloned()
+                                .ok_or(anyhow!("{} not parsed on {}", response, position))?;
+                            info!("Found opening move {}", m);
+                            Ok(Some(m))
+                        }
                     })
             }
         })

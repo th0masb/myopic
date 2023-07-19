@@ -3,11 +3,13 @@ use std::time::{Duration, Instant};
 use reqwest::blocking::{Client, Response};
 use serde_derive::Deserialize;
 
-use myopic_brain::anyhow::{anyhow, Result};
-use myopic_brain::{Board, LookupMoveService, Move};
+use anyhow::{anyhow, Result};
+use hyperopic::{LookupMoveService, union_boards};
+use hyperopic::moves::Move;
+use hyperopic::position::Position;
 
 const TIMEOUT_MS: u64 = 1000;
-const MAX_PIECE_COUNT: usize = 7;
+const MAX_PIECE_COUNT: u32 = 7;
 const TABLE_ENDPOINT: &'static str = "http://tablebase.lichess.ovh/standard";
 
 #[derive(Default)]
@@ -16,9 +18,9 @@ pub struct LichessEndgameClient {
 }
 
 impl LookupMoveService for LichessEndgameClient {
-    fn lookup(&mut self, position: Board) -> Result<Option<Move>> {
-        let query = position.to_fen().replace(" ", "_");
-        let piece_count = position.all_pieces().size();
+    fn lookup(&mut self, position: Position) -> Result<Option<Move>> {
+        let query = position.to_string().replace(" ", "_");
+        let piece_count = union_boards(&position.side_boards).count_ones();
         if piece_count > MAX_PIECE_COUNT {
             log::info!("Too many pieces to use endgame tables for {}", query);
             Ok(None)
@@ -28,7 +30,11 @@ impl LookupMoveService for LichessEndgameClient {
             let query_duration = start.elapsed();
             log::info!("Endgame table query took {}ms", query_duration.as_millis());
             let raw_move = self.process_response(response_result?)?;
-            position.parse_uci(raw_move.as_str()).map(|mv| Some(mv))
+            position.clone().play(&raw_move)?
+                .first()
+                .cloned()
+                .ok_or(anyhow!("{} not parsed correctly on {}", raw_move, position))
+                .map(|m| Some(m))
         }
     }
 }
