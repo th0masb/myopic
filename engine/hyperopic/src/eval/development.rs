@@ -124,284 +124,65 @@ impl EvalFacet for DevelopmentFacet {
     }
 }
 
-//#[cfg(test)]
-//mod test {
-//    use enum_map::enum_map;
-//
-//    use crate::eval::development::DevelopmentFacet;
-//    use crate::eval::{EvalFacet, Evaluation};
-//    use crate::test::facets::test_facet_evolution;
-//    use crate::Board;
-//    use crate::Side;
-//
-//    use super::DevelopmentPiece;
-//
-//    #[test]
-//    fn penalty_test() {
-//        let under_test = DevelopmentFacet {
-//            move_index: 10,
-//            undeveloped_cost: 3,
-//            move_index_divisor: 2,
-//            max_penalty: 10000,
-//            pieces_moved: enum_map! {
-//                Side::W => enum_map! {
-//                    DevelopmentPiece::EPawn => Some(0),
-//                    DevelopmentPiece::GKnight => Some(2),
-//                    DevelopmentPiece::FBishop => Some(4),
-//                    _ => None
-//                },
-//                Side::B => enum_map! {
-//                    DevelopmentPiece::EPawn => Some(1),
-//                    DevelopmentPiece::BKnight => Some(3),
-//                    _ => None
-//                },
-//            },
-//        };
-//
-//        assert_eq!(3 * 3 * 32, under_test.penalty(Side::W));
-//        assert_eq!(4 * 3 * 32, under_test.penalty(Side::B));
-//        assert_eq!(Evaluation::Single(1 * 3 * 32), under_test.static_eval(&Board::default()));
-//    }
-//
-//    #[test]
-//    fn evolution() {
-//        test_facet_evolution(
-//            "1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. Bxc6 bxc6 5. d4 exd4 6. Nxd4 Bc5 7. Be3 Bb7 8. Nc3 d6",
-//            vec![
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        _ => None
-//                    },
-//                    Side::B => Default::default(),
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        DevelopmentPiece::DPawn => Some(8),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        DevelopmentPiece::DPawn => Some(8),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        DevelopmentPiece::DPawn => Some(8),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        DevelopmentPiece::DPawn => Some(8),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        DevelopmentPiece::FBishop => Some(11),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        DevelopmentPiece::DPawn => Some(8),
-//                        DevelopmentPiece::CBishop => Some(12),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        DevelopmentPiece::FBishop => Some(11),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        DevelopmentPiece::DPawn => Some(8),
-//                        DevelopmentPiece::CBishop => Some(12),
-//                        _ => None
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        DevelopmentPiece::FBishop => Some(11),
-//                        DevelopmentPiece::CBishop => Some(13),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        DevelopmentPiece::DPawn => Some(8),
-//                        DevelopmentPiece::CBishop => Some(12),
-//                        DevelopmentPiece::BKnight => Some(14),
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        DevelopmentPiece::FBishop => Some(11),
-//                        DevelopmentPiece::CBishop => Some(13),
-//                        _ => None
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(0),
-//                        DevelopmentPiece::GKnight => Some(2),
-//                        DevelopmentPiece::FBishop => Some(4),
-//                        DevelopmentPiece::DPawn => Some(8),
-//                        DevelopmentPiece::CBishop => Some(12),
-//                        DevelopmentPiece::BKnight => Some(14),
-//                    },
-//                    Side::B => enum_map! {
-//                        DevelopmentPiece::EPawn => Some(1),
-//                        DevelopmentPiece::BKnight => Some(3),
-//                        DevelopmentPiece::GKnight => Some(5),
-//                        DevelopmentPiece::FBishop => Some(11),
-//                        DevelopmentPiece::CBishop => Some(13),
-//                        DevelopmentPiece::DPawn => Some(15),
-//                    },
-//                },
-//            ].into_iter().enumerate().map(|(i, pieces)| {
-//                let mut facet = DevelopmentFacet::default();
-//                facet.move_index = i + 1;
-//                facet.pieces_moved = pieces;
-//                facet
-//            }).collect(),
-//        )
-//    }
-//}
-//
+#[cfg(test)]
+mod test {
+    use rustc_hash::FxHashSet;
+
+    use crate::constants::side;
+    use crate::eval::development::DevelopmentFacet;
+    use crate::node::{EvalFacet, Evaluation};
+    use crate::position::Position;
+    use crate::test::facets::test_facet_evolution;
+    use crate::Board;
+    use crate::Side;
+
+    #[test]
+    fn penalty_test() {
+        let under_test = DevelopmentFacet {
+            move_index: 10,
+            undeveloped_cost: 3,
+            move_index_divisor: 2,
+            max_penalty: 10000,
+            dev_indices: [0, 2, 4, 1, 3].into_iter().collect::<FxHashSet<_>>(),
+            pieces_moved: [
+                [Some(0), None, None, Some(2), None, Some(4)],
+                [Some(1), None, Some(3), None, None, None],
+            ],
+        };
+
+        assert_eq!(3 * 3 * 32, under_test.penalty(side::W));
+        assert_eq!(4 * 3 * 32, under_test.penalty(side::B));
+        assert_eq!(Evaluation::Single(1 * 3 * 32), under_test.static_eval(&Position::default()));
+    }
+
+    #[test]
+    fn evolution() {
+        test_facet_evolution(
+            "1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. Bxc6 bxc6 5. d4 exd4 6. Nxd4 Bc5 7. Be3 Bb7 8. Nc3 d6",
+            vec![
+                [[Some(0), None, None, None, None, None], [None; 6]],
+                [[Some(0), None, None, None, None, None], [Some(1), None, None, None, None, None]],
+                [[Some(0), None, None, Some(2), None, None], [Some(1), None, None, None, None, None]],
+                [[Some(0), None, None, Some(2), None, None], [Some(1), None, Some(3), None, None, None]],
+                [[Some(0), None, None, Some(2), None, Some(4)], [Some(1), None, Some(3), None, None, None]],
+                [[Some(0), None, None, Some(2), None, Some(4)], [Some(1), None, Some(3), Some(5), None, None]],
+                [[Some(0), None, None, Some(2), None, Some(4)], [Some(1), None, Some(3), Some(5), None, None]],
+                [[Some(0), None, None, Some(2), None, Some(4)], [Some(1), None, Some(3), Some(5), None, None]],
+                [[Some(0), Some(8), None, Some(2), None, Some(4)], [Some(1), None, Some(3), Some(5), None, None]],
+                [[Some(0), Some(8), None, Some(2), None, Some(4)], [Some(1), None, Some(3), Some(5), None, None]],
+                [[Some(0), Some(8), None, Some(2), None, Some(4)], [Some(1), None, Some(3), Some(5), None, None]],
+                [[Some(0), Some(8), None, Some(2), None, Some(4)], [Some(1), None, Some(3), Some(5), None, Some(11)]],
+                [[Some(0), Some(8), None, Some(2), Some(12), Some(4)], [Some(1), None, Some(3), Some(5), None, Some(11)]],
+                [[Some(0), Some(8), None, Some(2), Some(12), Some(4)], [Some(1), None, Some(3), Some(5), Some(13), Some(11)]],
+                [[Some(0), Some(8), Some(14), Some(2), Some(12), Some(4)], [Some(1), None, Some(3), Some(5), Some(13), Some(11)]],
+                [[Some(0), Some(8), Some(14), Some(2), Some(12), Some(4)], [Some(1), Some(15), Some(3), Some(5), Some(13), Some(11)]],
+            ].into_iter().enumerate().map(|(i, pieces)| {
+                let mut facet = DevelopmentFacet::default();
+                facet.move_index = i + 1;
+                facet.pieces_moved = pieces.clone();
+                facet.dev_indices = pieces.iter().flat_map(|a| a.iter()).filter_map(|i| *i).collect();
+                facet
+            }).collect(),
+        )
+    }
+}

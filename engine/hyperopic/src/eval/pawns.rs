@@ -38,9 +38,9 @@ impl Default for PawnStructureFacet {
     fn default() -> Self {
         PawnStructureFacet {
             cache: RefCell::new(vec![None; 10000]),
-            doubled_pawn_penalty: (-35, -65),
-            isolated_pawn_penalty: (-20, -5),
-            connected_passer_bonus: (70, 120),
+            doubled_pawn_penalty: (-15, -25),
+            isolated_pawn_penalty: (-10, -5),
+            connected_passer_bonus: (60, 110),
             passer_rank_bonuses: [
                 // Starting rank
                 (0, 0),
@@ -187,7 +187,8 @@ mod test_passed {
     }
 
     fn test_eval(expected: Score, whites: Board, blacks: Board) {
-        let f = PawnStructureFacet::default();
+        let mut f = PawnStructureFacet::default();
+        f.connected_passer_bonus = (70, 120);
         let (mid, end) = expected;
         assert_eq!(expected, f.evaluate_passed_pawns(whites, blacks));
         assert_eq!(

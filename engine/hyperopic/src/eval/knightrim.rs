@@ -83,113 +83,50 @@ impl EvalFacet for KnightRimFacet {
     }
 }
 
-//#[cfg(test)]
-//mod test {
-//    use super::Knight;
-//    use crate::eval::knightrim::{FirstMoveStore, KnightRimFacet};
-//    use crate::eval::{EvalFacet, Evaluation};
-//    use crate::test::facets::test_facet_evolution;
-//    use crate::{Side, Square};
-//    use enum_map::enum_map;
-//    use myopic_board::Board;
-//
-//    #[test]
-//    fn evaluation() {
-//        let facet = KnightRimFacet {
-//            penalty: 75,
-//            move_index: 9,
-//            first_move: enum_map! {
-//                Side::W => enum_map! {
-//                    Knight::B => Some((3, Square::C3)),
-//                    Knight::G => Some((3, Square::H3)),
-//                },
-//                Side::B => enum_map! {
-//                    Knight::B => Some((3, Square::C6)),
-//                    Knight::G => None,
-//                },
-//            },
-//        };
-//
-//        assert_eq!(Evaluation::Single(-75), facet.static_eval(&Board::default()));
-//    }
-//
-//    #[test]
-//    fn evolution() {
-//        test_facet_evolution(
-//            "1. e4 Nc6 2. d4 d5 3. Nf3 Nh6 4. Na3 f6",
-//            vec![
-//                FirstMoveStore::default(),
-//                enum_map! {
-//                    Side::W => Default::default(),
-//                    Side::B => enum_map! {
-//                        Knight::G => None,
-//                        Knight::B => Some((1, Square::C6))
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => Default::default(),
-//                    Side::B => enum_map! {
-//                        Knight::G => None,
-//                        Knight::B => Some((1, Square::C6))
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => Default::default(),
-//                    Side::B => enum_map! {
-//                        Knight::G => None,
-//                        Knight::B => Some((1, Square::C6))
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        Knight::G => Some((4, Square::F3)),
-//                        Knight::B => None
-//                    },
-//                    Side::B => enum_map! {
-//                        Knight::G => None,
-//                        Knight::B => Some((1, Square::C6))
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        Knight::G => Some((4, Square::F3)),
-//                        Knight::B => None
-//                    },
-//                    Side::B => enum_map! {
-//                        Knight::G => Some((5, Square::H6)),
-//                        Knight::B => Some((1, Square::C6))
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        Knight::G => Some((4, Square::F3)),
-//                        Knight::B => Some((6, Square::A3))
-//                    },
-//                    Side::B => enum_map! {
-//                        Knight::G => Some((5, Square::H6)),
-//                        Knight::B => Some((1, Square::C6))
-//                    },
-//                },
-//                enum_map! {
-//                    Side::W => enum_map! {
-//                        Knight::G => Some((4, Square::F3)),
-//                        Knight::B => Some((6, Square::A3))
-//                    },
-//                    Side::B => enum_map! {
-//                        Knight::G => Some((5, Square::H6)),
-//                        Knight::B => Some((1, Square::C6))
-//                    },
-//                },
-//            ]
-//            .into_iter()
-//            .enumerate()
-//            .map(|(i, first_move)| {
-//                let mut facet = KnightRimFacet::default();
-//                facet.first_move = first_move;
-//                facet.move_index = i + 1;
-//                facet
-//            })
-//            .collect(),
-//        )
-//    }
-//}
+#[cfg(test)]
+mod test {
+    use super::Knight;
+    use crate::constants::square::*;
+    use crate::eval::knightrim::{FirstMoveStore, KnightRimFacet};
+    use crate::node::{EvalFacet, Evaluation};
+    use crate::position::Position;
+    use crate::test::facets::test_facet_evolution;
+    use crate::Side;
+
+    #[test]
+    fn evaluation() {
+        let facet = KnightRimFacet {
+            penalty: 75,
+            move_index: 9,
+            first_move: [[Some((3, C3)), Some((3, H3))], [Some((3, C6)), None]],
+        };
+
+        assert_eq!(Evaluation::Single(-75), facet.static_eval(&Position::default()));
+    }
+
+    #[test]
+    fn evolution() {
+        test_facet_evolution(
+            "1. e4 Nc6 2. d4 d5 3. Nf3 Nh6 4. Na3 f6",
+            vec![
+                [[None; 2], [None; 2]],
+                [[None; 2], [Some((1, C6)), None]],
+                [[None; 2], [Some((1, C6)), None]],
+                [[None; 2], [Some((1, C6)), None]],
+                [[None, Some((4, F3))], [Some((1, C6)), None]],
+                [[None, Some((4, F3))], [Some((1, C6)), Some((5, H6))]],
+                [[Some((6, A3)), Some((4, F3))], [Some((1, C6)), Some((5, H6))]],
+                [[Some((6, A3)), Some((4, F3))], [Some((1, C6)), Some((5, H6))]],
+            ]
+            .into_iter()
+            .enumerate()
+            .map(|(i, first_move)| {
+                let mut facet = KnightRimFacet::default();
+                facet.first_move = first_move;
+                facet.move_index = i + 1;
+                facet
+            })
+            .collect(),
+        )
+    }
+}
