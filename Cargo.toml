@@ -1,8 +1,6 @@
 [workspace]
 members = [
-    "engine/board",
-    "engine/brain",
-    "engine/core",
+    "engine/hyperopic",
     "engine/debug",
     "engine/testing",
     "cloud/event-stream",
@@ -18,10 +16,6 @@ members = [
     "lib/events",
     "lib/lichess",
     "lib/openings",
-    "hyperopic"
-]
-exclude = [
-    "uci-client"
 ]
 
 [profile.release]

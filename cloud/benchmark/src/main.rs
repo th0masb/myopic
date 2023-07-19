@@ -1,9 +1,9 @@
 use std::time::Instant;
 
+use hyperopic::search::{SearchParameters, TranspositionsImpl};
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Context, Error, LambdaEvent};
 use simple_logger::SimpleLogger;
-use hyperopic::search::{SearchParameters, TranspositionsImpl};
 
 use lambda_payloads::benchmark::*;
 
@@ -40,10 +40,7 @@ async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Err
         }
         moves.push(hyperopic::search::search(
             position.into(),
-            SearchParameters {
-                end: e.depth,
-                table: &mut TranspositionsImpl::new(e.table_size),
-            },
+            SearchParameters { end: e.depth, table: &mut TranspositionsImpl::new(e.table_size) },
         )?);
     }
 

@@ -1,2 +1,0 @@
-mod mateinthree;
-mod middlegame;

@@ -7,7 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hyperopic = { path = "../../hyperopic" }
+hyperopic = { path = "../../engine/hyperopic" }
 lambda_payloads = { path = "../payloads" }
 simple_logger = "4.1.0"
 log = "0.4.17"

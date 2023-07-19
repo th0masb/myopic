@@ -1,8 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use std::time::Duration;
-use hyperopic::{ComputeMoveInput, Engine};
 use hyperopic::moves::Move;
+use hyperopic::{ComputeMoveInput, Engine};
+use std::time::Duration;
 
 #[async_trait]
 pub trait MoveChooser {

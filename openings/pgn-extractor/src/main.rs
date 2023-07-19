@@ -4,7 +4,9 @@ mod game_stream;
 
 use errors::Errors;
 use game_stream::GameStream;
-use myopic_board::{FenPart, Move};
+use hyperopic::moves::Move;
+use hyperopic::position::Position;
+use itertools::Itertools;
 use std::{collections::HashMap, error::Error, fs, fs::File, path::PathBuf};
 use structopt::StructOpt;
 
@@ -29,34 +31,14 @@ struct Opt {
     #[structopt(short = "o", long = "offset", default_value = "0")]
     #[serde(rename = "offset")]
     search_offset: usize,
-    /// FEN components to include and their ordering
-    #[structopt(long = "format", default_value = "bac")]
-    #[serde(rename = "format")]
-    fen_format: String,
     /// Only the positions will be output.
     #[structopt(long = "positions-only")]
     #[serde(rename = "positions-only")]
     positions_only: bool,
 }
 
-fn parse_fen_components(input: &str) -> Vec<FenPart> {
-    input
-        .chars()
-        .flat_map(|c| match c {
-            'b' => vec![FenPart::Board],
-            'a' => vec![FenPart::Active],
-            'c' => vec![FenPart::CastlingRights],
-            'e' => vec![FenPart::Enpassant],
-            'h' => vec![FenPart::HalfMoveCount],
-            'm' => vec![FenPart::MoveCount],
-            _ => vec![],
-        })
-        .collect()
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
     let opt: Opt = Opt::from_args();
-    let fen_components = parse_fen_components(opt.fen_format.as_str());
 
     eprintln!("{}", chrono::Utc::now());
     eprintln!();
@@ -93,12 +75,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Err(_) => {
                     errors.add_read_error(file_name.clone(), i);
                 }
-                Ok(game) => match parse_entries(
-                    &fen_components,
-                    opt.search_offset,
-                    opt.search_depth,
-                    game.as_str(),
-                ) {
+                Ok(game) => match parse_entries(opt.search_offset, opt.search_depth, game.as_str())
+                {
                     Err(_) => {
                         errors.add_parse_error(file_name.clone(), i);
                     }
@@ -147,15 +125,15 @@ fn path_to_string(path: &PathBuf) -> String {
 }
 
 fn parse_entries(
-    format: &Vec<FenPart>,
     offset: usize,
     depth: usize,
     game: &str,
 ) -> Result<Vec<CollectionEntry>, anyhow::Error> {
-    let mut board = myopic_board::start();
-    let moves: Vec<Move> = board.play_pgn(game)?.into_iter().take(offset + depth).collect();
+    let position = game.parse::<Position>()?;
+    let moves: Vec<_> =
+        position.history.iter().map(|(_, m)| m.clone()).take(offset + depth).collect();
 
-    let (mut board, mut entries) = (myopic_board::start(), vec![]);
+    let (mut board, mut entries) = (Position::default(), vec![]);
     for (i, mv) in moves.into_iter().enumerate() {
         if i >= offset {
             match mv {
@@ -163,8 +141,8 @@ fn parse_entries(
                 Move::Enpassant { .. } => {}
                 _ => {
                     entries.push(CollectionEntry {
-                        position: board.to_fen_parts(format.as_slice()),
-                        mv: mv.uci_format(),
+                        position: board.to_string().split_whitespace().take(3).join(" "),
+                        mv: mv.to_string(),
                     });
                 }
             }

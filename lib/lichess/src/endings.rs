@@ -4,9 +4,9 @@ use reqwest::blocking::{Client, Response};
 use serde_derive::Deserialize;
 
 use anyhow::{anyhow, Result};
-use hyperopic::{LookupMoveService, union_boards};
 use hyperopic::moves::Move;
 use hyperopic::position::Position;
+use hyperopic::{union_boards, LookupMoveService};
 
 const TIMEOUT_MS: u64 = 1000;
 const MAX_PIECE_COUNT: u32 = 7;
@@ -30,7 +30,9 @@ impl LookupMoveService for LichessEndgameClient {
             let query_duration = start.elapsed();
             log::info!("Endgame table query took {}ms", query_duration.as_millis());
             let raw_move = self.process_response(response_result?)?;
-            position.clone().play(&raw_move)?
+            position
+                .clone()
+                .play(&raw_move)?
                 .first()
                 .cloned()
                 .ok_or(anyhow!("{} not parsed correctly on {}", raw_move, position))

@@ -4,10 +4,11 @@ use lambda_runtime::{service_fn, Error, LambdaEvent};
 use log;
 use simple_logger::SimpleLogger;
 
+use anyhow::anyhow;
+use hyperopic::position::Position;
+use hyperopic::{ComputeMoveInput, Engine, LookupMoveService};
 use lambda_payloads::chessmove::*;
 use lichess_api::LichessEndgameClient;
-use myopic_brain::anyhow::anyhow;
-use myopic_brain::{Board, ComputeMoveInput, Engine, LookupMoveService};
 use openings::{DynamoOpeningService, OpeningTable};
 
 const TABLE_SIZE: usize = 10000;
@@ -22,8 +23,7 @@ async fn main() -> Result<(), Error> {
 
 async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveOutput, Error> {
     let choose_move = &event.payload;
-    let mut position = Board::default();
-    position.play_uci(choose_move.moves_played.as_str())?;
+    let position = choose_move.moves_played.parse::<Position>()?;
     let mut engine = Engine::new(TABLE_SIZE, load_lookup_services(&choose_move.features));
     let output = engine.compute_move(ComputeMoveInput {
         position,
@@ -31,7 +31,7 @@ async fn move_handler(event: LambdaEvent<ChooseMoveEvent>) -> Result<ChooseMoveO
         increment: Duration::from_millis(choose_move.clock_millis.increment),
     })?;
     Ok(ChooseMoveOutput {
-        best_move: output.best_move.uci_format(),
+        best_move: output.best_move.to_string(),
         search_details: output.search_details.map(|details| SearchDetails {
             depth_searched: details.depth as usize,
             search_duration_millis: details.time.as_millis() as u64,

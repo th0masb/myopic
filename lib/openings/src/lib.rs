@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use anyhow::{anyhow, Error, Result};
-use itertools::{Itertools};
+use hyperopic::moves::Move;
+use hyperopic::position::Position;
+use hyperopic::LookupMoveService;
+use itertools::Itertools;
 use log::info;
 use rusoto_core::Region;
 use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, GetItemInput};
 use serde_derive::{Deserialize, Serialize};
-use hyperopic::LookupMoveService;
-use hyperopic::moves::Move;
-use hyperopic::position::Position;
 
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 pub struct OpeningTable {
@@ -60,8 +60,11 @@ impl LookupMoveService for DynamoOpeningService {
                         Some(attributes) => {
                             let response = self.try_extract_move(attributes)?;
                             let parsed = position.clone().play(&response)?;
-                            let m = parsed.first().cloned()
-                                .ok_or(anyhow!("{} not parsed on {}", response, position))?;
+                            let m = parsed.first().cloned().ok_or(anyhow!(
+                                "{} not parsed on {}",
+                                response,
+                                position
+                            ))?;
                             info!("Found opening move {}", m);
                             Ok(Some(m))
                         }
