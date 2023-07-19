@@ -1,10 +1,9 @@
 use std::cell::RefCell;
 
+use itertools::Itertools;
 use std::hash::Hasher;
 
 use rustc_hash::FxHasher;
-
-use Feature::{Backward, Doubled, Isolated, Passed};
 
 use crate::board::iter;
 use crate::constants::boards::{ADJACENT_FILES, EMPTY, FILES, RANKS};
@@ -17,15 +16,7 @@ use crate::Board;
 const WHITE_HALF: Board = RANKS[0] | RANKS[1] | RANKS[2] | RANKS[3];
 const BLACK_HALF: Board = RANKS[4] | RANKS[5] | RANKS[6] | RANKS[7];
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
-enum Feature {
-    Passed,
-    Doubled,
-    Isolated,
-    Backward,
-}
-
-type Bonus = (i32, i32);
+type Score = (i32, i32);
 
 #[derive(Clone, PartialEq)]
 struct CachedEval {
@@ -36,8 +27,10 @@ struct CachedEval {
 }
 
 pub struct PawnStructureFacet {
-    connected_passer_bonus: Bonus,
-    passer_rank_bonuses: [Bonus; 6],
+    doubled_pawn_penalty: Score,
+    isolated_pawn_penalty: Score,
+    connected_passer_bonus: Score,
+    passer_rank_bonuses: [Score; 6],
     cache: RefCell<Vec<Option<CachedEval>>>,
 }
 
@@ -45,6 +38,8 @@ impl Default for PawnStructureFacet {
     fn default() -> Self {
         PawnStructureFacet {
             cache: RefCell::new(vec![None; 10000]),
+            doubled_pawn_penalty: (-35, -65),
+            isolated_pawn_penalty: (-20, -5),
             connected_passer_bonus: (70, 120),
             passer_rank_bonuses: [
                 // Starting rank
@@ -76,17 +71,15 @@ impl EvalFacet for PawnStructureFacet {
                 return Evaluation::Phased { mid: entry.mid, end: entry.end };
             }
         }
-        let (mut mid, mut end) = (0, 0);
-        for &f in &[Passed, Doubled, Isolated, Backward] {
-            let (m, e) = match f {
-                Doubled => (0, 0),
-                Isolated => (0, 0),
-                Backward => (0, 0),
-                Passed => self.evaluate_passed_pawns(whites, blacks),
-            };
-            mid += m;
-            end += e;
-        }
+
+        let (mid, end) = *&[
+            self.evaluate_passed_pawns(whites, blacks),
+            self.evaluate_doubled_pawns(whites, blacks),
+            self.evaluate_isolated_pawns(whites, blacks),
+        ]
+        .iter()
+        .fold((0, 0), |(am, ae), &(nm, ne)| (am + nm, ae + ne));
+
         cache_ref[index] = Some(CachedEval { whites, blacks, mid, end });
         Evaluation::Phased { mid, end }
     }
@@ -97,7 +90,7 @@ impl EvalFacet for PawnStructureFacet {
 }
 
 impl PawnStructureFacet {
-    fn evaluate_passed_pawns(&self, whites: Board, blacks: Board) -> (i32, i32) {
+    fn evaluate_passed_pawns(&self, whites: Board, blacks: Board) -> Score {
         let (w_passers, b_passers) = find_passed_pawns(whites, blacks);
         let (mut mid, mut end) = (0i32, 0i32);
         // Evaluate the rank rewards for advancing
@@ -123,6 +116,18 @@ impl PawnStructureFacet {
             end += (w_count - b_count) * con_end;
         }
         (mid, end)
+    }
+
+    fn evaluate_doubled_pawns(&self, whites: Board, blacks: Board) -> Score {
+        let doubled_count = count_doubled_pawns(whites, blacks);
+        let (mid_pen, end_pen) = self.doubled_pawn_penalty;
+        (mid_pen * doubled_count, end_pen * doubled_count)
+    }
+
+    fn evaluate_isolated_pawns(&self, whites: Board, blacks: Board) -> Score {
+        let isolated_count = count_isolated_pawns(whites, blacks);
+        let (mid_pen, end_pen) = self.isolated_pawn_penalty;
+        (mid_pen * isolated_count, end_pen * isolated_count)
     }
 }
 
@@ -181,7 +186,7 @@ mod test_passed {
         test_eval((2 * 160 + 70 - 40, 2 * 200 + 120 - 60), board!(B7, C7, F4), board!(F5, G4))
     }
 
-    fn test_eval(expected: Bonus, whites: Board, blacks: Board) {
+    fn test_eval(expected: Score, whites: Board, blacks: Board) {
         let f = PawnStructureFacet::default();
         let (mid, end) = expected;
         assert_eq!(expected, f.evaluate_passed_pawns(whites, blacks));
@@ -238,56 +243,121 @@ mod test_passed {
     }
 }
 
-//fn count_passed_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
-//    let mut count = 0i32;
-//    for file_index in 0..8 {
-//        let file = BitBoard::FILES[file_index];
-//        let adj_files = ADJACENT_FILES[file_index];
-//
-//        let last_black_def = (adj_files & blacks).iter().last()
-//            .map(|s| s.rank_index()).unwrap_or(0);
-//        count += (file & whites).iter()
-//            .filter(|s| s.rank_index() >= last_black_def).count() as i32;
-//
-//        let last_white_def = (adj_files & whites).iter().last()
-//            .map(|s| s.rank_index()).unwrap_or(10);
-//        count -= (file & blacks).iter()
-//            .filter(|s| s.rank_index() <= last_white_def).count() as i32;
-//    }
-//    count
-//}
-//
-//fn count_doubled_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
-//    let mut count = 0i32;
-//    for file_index in 0..8 {
-//        let file = BitBoard::FILES[file_index];
-//        count += count_doubling(file & whites);
-//        count -= count_doubling(file & blacks);
-//    }
-//    count
-//}
-//
-//fn count_doubling(board: BitBoard) -> i32 {
-//    board.iter()
-//        .tuple_windows::<(_, _)>()
-//        .filter(|(a, b)| b.file_index() == a.file_index() + 1)
-//        .count() as i32
-//}
-//
-//fn count_isolated_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
-//    let mut count = 0i32;
-//    for file_index in 0..8 {
-//        let file = BitBoard::FILES[file_index];
-//        let adj_files = ADJACENT_FILES[file_index];
-//        if (adj_files & whites).first().is_none() && (file & whites).size() == 1 {
-//            count += 1
-//        }
-//        if (adj_files & blacks).first().is_none() && (file & blacks).size() == 1 {
-//            count -= 1
-//        }
-//    }
-//    count
-//}
+fn count_doubled_pawns(whites: Board, blacks: Board) -> i32 {
+    let mut count = 0i32;
+    for file_index in 0..8 {
+        let file = FILES[file_index];
+        count += count_doubling(file & whites);
+        count -= count_doubling(file & blacks);
+    }
+    count
+}
+
+fn count_doubling(board: Board) -> i32 {
+    iter(board)
+        .tuple_windows::<(_, _)>()
+        .filter(|(a, b)| square_rank(*b) == square_rank(*a) + 1)
+        .count() as i32
+}
+
+fn count_isolated_pawns(whites: Board, blacks: Board) -> i32 {
+    let mut count = 0i32;
+    for file_index in 0..8 {
+        let file = FILES[file_index];
+        let adj_files = ADJACENT_FILES[file_index];
+        if (adj_files & whites) == 0 {
+            count += (file & whites).count_ones() as i32
+        }
+        if (adj_files & blacks) == 0 {
+            count -= (file & blacks).count_ones() as i32
+        }
+    }
+    count
+}
+
+#[cfg(test)]
+mod simple_test {
+    use crate::constants::square::*;
+    use crate::eval::pawns::{count_doubled_pawns, count_isolated_pawns};
+    use crate::test::reflect_board;
+    use crate::{board, Board};
+
+    fn execute_test(
+        under_test: fn(Board, Board) -> i32,
+        whites: Board,
+        blacks: Board,
+        expected_count: i32,
+    ) {
+        assert_eq!(under_test(whites, blacks), expected_count);
+        assert_eq!(under_test(reflect_board(blacks), reflect_board(whites)), -expected_count);
+    }
+
+    #[test]
+    fn doubled_case_0() {
+        execute_test(count_doubled_pawns, board!(), board!(), 0)
+    }
+
+    #[test]
+    fn doubled_case_1() {
+        execute_test(count_doubled_pawns, board!(A4, A5, A7, B3, C2, C3), board!(), 2)
+    }
+
+    #[test]
+    fn doubled_case_2() {
+        execute_test(count_doubled_pawns, board!(A4, A5, A7, B3, C2, C3, D5, D6, D7), board!(), 4)
+    }
+
+    #[test]
+    fn doubled_case_3() {
+        execute_test(
+            count_doubled_pawns,
+            board!(A4, A5, A7, B3, C2, C3, D5, D6, D7),
+            board!(C5, D6, H6, H7),
+            3,
+        )
+    }
+
+    #[test]
+    fn isolated_case_0() {
+        execute_test(count_isolated_pawns, board!(), board!(), 0)
+    }
+
+    #[test]
+    fn isolated_case_1() {
+        execute_test(count_isolated_pawns, board!(A5), board!(), 1)
+    }
+
+    #[test]
+    fn isolated_case_2() {
+        execute_test(count_isolated_pawns, board!(H6), board!(), 1)
+    }
+
+    #[test]
+    fn isolated_case_3() {
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, D4), board!(), 0)
+    }
+
+    #[test]
+    fn isolated_case_4() {
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, D4, F2, G2, H3), board!(), 0)
+    }
+
+    #[test]
+    fn isolated_case_5() {
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, E4, G2, H3), board!(), 1)
+    }
+
+    #[test]
+    fn isolated_case_6() {
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, E4, E5, G2, H3), board!(), 2)
+    }
+
+    #[test]
+    fn isolated_case_7() {
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, E4, E5, G2, H3), board!(C7), 1)
+    }
+}
+
 //
 //fn count_backward_pawns(whites: BitBoard, blacks: BitBoard) -> i32 {
 //    let mut count = 0i32;

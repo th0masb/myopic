@@ -1,8 +1,8 @@
 use crate::moves::Move;
-use crate::node;
 use crate::node::SearchNode;
 use crate::position::Position;
 use crate::search::{SearchParameters, TranspositionsImpl};
+use crate::{node, Symmetric};
 
 const DEPTH: usize = 4;
 const TABLE_SIZE: usize = 10_000;
@@ -14,26 +14,10 @@ fn test(position: &str, expected_move_pool: Vec<&str>, is_won: bool) {
         .map(|s| position.clone().play(s).unwrap().first().unwrap().clone())
         .collect();
 
-    test_impl(position.into(), parsed_moves, is_won);
-    //let ref_board = position.reflect();
-    //let ref_move_pool = expected_move_pool.reflect();
-    //test_impl(ref_board, ref_move_pool, is_won);
-
-    //match setup {
-    //    Setup::Fen(fen_string) => {
-    //        let base_board = fen_string.parse::<Board>().unwrap();
-    //        let ref_board = Evaluator::from(base_board.reflect());
-    //        let board = Evaluator::from(base_board);
-    //        let ref_move_pool = expected_move_pool.reflect();
-    //        test_impl(board, expected_move_pool, is_won);
-    //        test_impl(ref_board, ref_move_pool, is_won);
-    //    }
-    //    Setup::Pgn(pgn_string) => {
-    //        let mut board = Evaluator::default();
-    //        board.play_pgn(pgn_string).unwrap();
-    //        test_impl(board, expected_move_pool, is_won)
-    //    }
-    //}
+    test_impl(position.clone().into(), parsed_moves.clone(), is_won);
+    let ref_board = position.reflect();
+    let ref_move_pool = parsed_moves.into_iter().map(|m| m.reflect()).collect();
+    test_impl(ref_board.into(), ref_move_pool, is_won);
 }
 
 fn test_impl(board: SearchNode, expected_move_pool: Vec<Move>, is_won: bool) {
@@ -113,11 +97,7 @@ fn tactic_2() {
 
 #[test]
 fn prefer_castling() {
-    test(
-        "1. e4 e5 2. f4 exf4 3. Nf3 g5 4. Nc3 Nc6 5. g3 g4 6. Nh4 Nd4 7. Bc4 Be7",
-        vec!["e1g1"],
-        false,
-    )
+    test("1. e4 Nc6 2. Nf3 e5 3. Bb5 h6 4. a3 d6", vec!["e1g1"], false)
 }
 
 #[test]
