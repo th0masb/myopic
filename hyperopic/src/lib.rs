@@ -23,6 +23,8 @@ mod test;
 mod timing;
 #[rustfmt::skip]
 pub mod constants;
+#[cfg(test)]
+mod bench;
 
 pub type Side = usize;
 // H1 -> .. -> A1 -> H2 ... -> A8

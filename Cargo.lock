@@ -945,6 +945,7 @@ name = "hyperopic"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dotenv",
  "lazy_static",
  "regex",
  "rustc-hash",
