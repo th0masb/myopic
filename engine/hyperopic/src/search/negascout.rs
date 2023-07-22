@@ -11,7 +11,8 @@ use crate::node;
 use crate::node::SearchNode;
 use crate::position::{TerminalState, CASTLING_DETAILS};
 use crate::search::end::SearchEnd;
-use crate::search::moves::MoveGenerator;
+use crate::search::moves::{MoveGenerator, SearchMove};
+use crate::search::pv::PrincipleVariation;
 use crate::search::quiescent;
 use crate::search::transpositions::{Transpositions, TreeNode};
 
@@ -23,7 +24,6 @@ pub struct Context {
     pub beta: i32,
     pub depth: u8,
     pub precursors: Vec<Move>,
-    pub early_break_enabled: bool,
 }
 
 impl Context {
@@ -36,7 +36,6 @@ impl Context {
             beta: next_beta,
             depth: self.depth - cmp::min(r, self.depth),
             precursors: next_precursors,
-            early_break_enabled: self.early_break_enabled,
         }
     }
 }
@@ -59,7 +58,15 @@ impl std::ops::Neg for SearchResponse {
 pub struct Scout<'a, E: SearchEnd, T: Transpositions> {
     pub end: &'a E,
     pub transpositions: &'a mut T,
-    pub moves: MoveGenerator<'a>,
+    pub moves: MoveGenerator,
+    pub pv: &'a PrincipleVariation,
+}
+
+fn reposition_first(dest: &mut Vec<SearchMove>, new_first: &Move) {
+    if let Some(index) = dest.iter().position(|m| &m.m == new_first) {
+        let removed = dest.remove(index);
+        dest.insert(0, removed);
+    }
 }
 
 impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
@@ -77,12 +84,23 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
             .map(|eval| SearchResponse { eval, path: vec![] });
         }
 
-        let (hash, mut table_move) = (node.position().key, None);
-        match self.transpositions.get(node.position()) {
+        let (key, mut table_move) = (node.position().key, None);
+        // If we are in a repeated position then do not break early using table lookup as we can
+        // enter a repeated cycle.
+        let is_repeated_position = node
+            .position()
+            .history
+            .iter()
+            .rev()
+            .take_while(|(_, m)| m.is_repeatable())
+            .any(|(d, _)| d.key == key);
+
+        let table_entry = self.transpositions.get(node.position()).cloned();
+        match &table_entry {
             None => {}
             Some(Pv { depth, eval, best_path: optimal_path, .. }) => {
                 table_move = optimal_path.first().cloned();
-                if ctx.early_break_enabled
+                if !is_repeated_position
                     && *depth >= ctx.depth
                     && table_move.is_some()
                     && is_pseudo_legal(node, table_move.as_ref().unwrap())
@@ -92,20 +110,20 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
             }
             Some(Cut { depth, beta, cutoff_move, .. }) => {
                 table_move = Some(cutoff_move.clone());
-                if ctx.early_break_enabled
+                if !is_repeated_position
                     && *depth >= ctx.depth
                     && ctx.beta <= *beta
-                    && is_pseudo_legal(node, cutoff_move)
+                    && is_pseudo_legal(node, &cutoff_move)
                 {
                     return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
                 }
             }
             Some(All { depth, eval, best_move, .. }) => {
                 table_move = Some(best_move.clone());
-                if ctx.early_break_enabled
+                if !is_repeated_position
                     && *depth >= ctx.depth
                     && *eval <= ctx.alpha
-                    && is_pseudo_legal(node, best_move)
+                    && is_pseudo_legal(node, &best_move)
                 {
                     return Ok(SearchResponse { eval: *eval, path: vec![] });
                 }
@@ -123,26 +141,62 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
         }
 
         let (start_alpha, mut result, mut best_path) = (ctx.alpha, -node::INFTY, vec![]);
-        for (i, m) in self.moves.generate(node, &ctx, table_move.as_ref()).enumerate() {
+        let mut mvs = self.moves.generate(node);
+        table_move.map(|m| reposition_first(&mut mvs, &m));
+        let precursors = ctx.precursors.as_slice();
+        let in_pvs_node = self.pv.in_pv(precursors);
+        let next_pv = if in_pvs_node { self.pv.get_next_move(precursors) } else { None };
+        next_pv.map(|m| reposition_first(&mut mvs, &m));
+        let in_check = node.position().in_check();
+        let is_pv_node = matches!(table_entry, Some(TreeNode::Pv { .. }));
+
+        let mut i = 0;
+        let mut non_tactical_i = 0;
+        let mut research = false;
+        while i < mvs.len() {
+            let sm = &mvs[i];
+            let m = &sm.m;
+
+            let mut r = 1;
+            if !research
+                && ctx.depth > 2
+                && !in_check
+                && !in_pvs_node
+                && !is_pv_node
+                && !sm.is_tactical()
+            {
+                match non_tactical_i {
+                    0 => {}
+                    1..=6 => r += 1,
+                    _ => r += ctx.depth / 3,
+                }
+            }
+
             node.make(m.clone())?;
             #[allow(unused_assignments)]
             let mut response = SearchResponse::default();
             if i == 0 {
                 // Perform a full search immediately on the first move which
                 // we expect to be the best
-                response = -self.search(node, ctx.next_level(-ctx.beta, -ctx.alpha, &m, 1))?;
+                response = -self.search(node, ctx.next_level(-ctx.beta, -ctx.alpha, &m, r))?;
             } else {
                 // Search with null window under the assumption that the
                 // previous moves are better than this
-                response = -self.search(node, ctx.next_level(-ctx.alpha - 1, -ctx.alpha, &m, 1))?;
+                response = -self.search(node, ctx.next_level(-ctx.alpha - 1, -ctx.alpha, &m, r))?;
                 // If there is some move which can raise alpha
                 if ctx.alpha < response.eval && response.eval < ctx.beta {
                     // Then this was actually a better move and so we must
                     // perform a full search
-                    response = -self.search(node, ctx.next_level(-ctx.beta, -ctx.alpha, &m, 1))?;
+                    response = -self.search(node, ctx.next_level(-ctx.beta, -ctx.alpha, &m, r))?;
                 }
             }
             node.unmake()?;
+
+            // If we found an alpha increase at reduced depth perform a full research to double check
+            if !research && r > 1 && response.eval > ctx.alpha {
+                research = true;
+                continue;
+            }
 
             if response.eval > result {
                 result = response.eval;
@@ -154,9 +208,14 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
             if ctx.alpha >= ctx.beta {
                 self.transpositions.put(
                     node.position(),
-                    Cut { depth: ctx.depth, beta: ctx.beta, cutoff_move: m, hash },
+                    Cut { depth: ctx.depth, beta: ctx.beta, cutoff_move: m.clone(), hash: key },
                 );
                 return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
+            }
+            i += 1;
+            research = false;
+            if !sm.is_tactical() {
+                non_tactical_i += 1;
             }
         }
 
@@ -165,13 +224,13 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
             if let Some(m) = best_path.first() {
                 self.transpositions.put(
                     node.position(),
-                    All { depth: ctx.depth, eval: result, best_move: m.clone(), hash },
+                    All { depth: ctx.depth, eval: result, best_move: m.clone(), hash: key },
                 );
             }
         } else {
             self.transpositions.put(
                 node.position(),
-                Pv { depth: ctx.depth, eval: result, best_path: best_path.clone(), hash },
+                Pv { depth: ctx.depth, eval: result, best_path: best_path.clone(), hash: key },
             );
         }
 
