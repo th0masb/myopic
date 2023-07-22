@@ -24,6 +24,7 @@ pub struct Context {
     pub beta: i32,
     pub depth: u8,
     pub precursors: Vec<Move>,
+    pub known_pv_node: bool,
 }
 
 impl Context {
@@ -36,6 +37,7 @@ impl Context {
             beta: next_beta,
             depth: self.depth - cmp::min(r, self.depth),
             precursors: next_precursors,
+            known_pv_node: false,
         }
     }
 }
@@ -140,28 +142,34 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
             }
         }
 
-        let (start_alpha, mut result, mut best_path) = (ctx.alpha, -node::INFTY, vec![]);
         let mut mvs = self.moves.generate(node);
         table_move.map(|m| reposition_first(&mut mvs, &m));
         let precursors = ctx.precursors.as_slice();
-        let in_pvs_node = self.pv.in_pv(precursors);
-        let next_pv = if in_pvs_node { self.pv.get_next_move(precursors) } else { None };
+        // Principle variation search
+        let in_pvs = self.pv.in_pv(precursors);
+        let next_pv = if in_pvs { self.pv.get_next_move(precursors) } else { None };
         next_pv.map(|m| reposition_first(&mut mvs, &m));
         let in_check = node.position().in_check();
-        let is_pv_node = matches!(table_entry, Some(TreeNode::Pv { .. }));
+        let is_pv_node = ctx.known_pv_node || matches!(table_entry, Some(TreeNode::Pv { .. }));
+        let start_alpha = ctx.alpha;
 
         let mut i = 0;
         let mut non_tactical_i = 0;
         let mut research = false;
+        let mut best_path = vec![];
+        let mut raised_alpha = false;
+        let mut did_reduced_search = false;
+
         while i < mvs.len() {
             let sm = &mvs[i];
             let m = &sm.m;
 
             let mut r = 1;
-            if !research
+            if !raised_alpha
+                && !research
                 && ctx.depth > 2
                 && !in_check
-                && !in_pvs_node
+                && !in_pvs
                 && !is_pv_node
                 && !sm.is_tactical()
             {
@@ -192,19 +200,18 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
             }
             node.unmake()?;
 
-            // If we found an alpha increase at reduced depth perform a full research to double check
-            if !research && r > 1 && response.eval > ctx.alpha {
-                research = true;
-                continue;
-            }
-
-            if response.eval > result {
-                result = response.eval;
+            if ctx.alpha < response.eval {
+                // If we found an alpha increase at reduced depth research move at full depth to double check
+                if r > 1 {
+                    research = true;
+                    continue;
+                }
+                raised_alpha = true;
+                ctx.alpha = response.eval;
                 best_path = response.path;
                 best_path.insert(0, m.clone());
             }
 
-            ctx.alpha = cmp::max(ctx.alpha, result);
             if ctx.alpha >= ctx.beta {
                 self.transpositions.put(
                     node.position(),
@@ -212,11 +219,28 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
                 );
                 return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
             }
+
             i += 1;
             research = false;
             if !sm.is_tactical() {
                 non_tactical_i += 1;
             }
+            if r > 1 {
+                did_reduced_search = true;
+            }
+            // If this is the case we are in a PV node and so need to research everything at full
+            // depth, so don't continue this search any longer
+            if did_reduced_search && raised_alpha {
+                break;
+            }
+        }
+
+        // In this case we thought we weren't in a PV node but we actually were, do a full research
+        // of the node
+        if did_reduced_search && raised_alpha {
+            ctx.alpha = start_alpha;
+            ctx.known_pv_node = true;
+            return self.search(node, ctx);
         }
 
         // Populate the table with the information from this node.
@@ -224,17 +248,17 @@ impl<E: SearchEnd, T: Transpositions> Scout<'_, E, T> {
             if let Some(m) = best_path.first() {
                 self.transpositions.put(
                     node.position(),
-                    All { depth: ctx.depth, eval: result, best_move: m.clone(), hash: key },
+                    All { depth: ctx.depth, eval: ctx.alpha, best_move: m.clone(), hash: key },
                 );
             }
         } else {
             self.transpositions.put(
                 node.position(),
-                Pv { depth: ctx.depth, eval: result, best_path: best_path.clone(), hash: key },
+                Pv { depth: ctx.depth, eval: ctx.alpha, best_path: best_path.clone(), hash: key },
             );
         }
 
-        Ok(SearchResponse { eval: result, path: best_path })
+        Ok(SearchResponse { eval: ctx.alpha, path: best_path })
     }
 }
 

@@ -170,6 +170,7 @@ impl<E: SearchEnd, T: Transpositions> Search<'_, E, T> {
                 alpha: -node::INFTY,
                 beta: node::INFTY,
                 precursors: vec![],
+                known_pv_node: false,
             },
         )?;
 
