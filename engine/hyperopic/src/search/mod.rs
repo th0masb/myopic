@@ -130,7 +130,12 @@ impl<E: SearchEnd, T: Transpositions> Search<'_, E, T> {
                 }
                 Ok(response) => {
                     pv.set(response.path.as_slice());
+                    let eval = response.eval;
                     best_response = Some(response);
+                    // Inevitable checkmate detected, don't search any deeper
+                    if eval.abs() == node::WIN_VALUE {
+                        break;
+                    }
                 }
             }
         }
@@ -154,8 +159,6 @@ impl<E: SearchEnd, T: Transpositions> Search<'_, E, T> {
             return Err(anyhow!("Cannot iteratively deepen with depth 0"));
         }
 
-        // TODO If any move in the current position leads to a draw by repetition then disable the
-        //  transposition table early break?
         let SearchResponse { eval, path } = Scout {
             end: &self.end,
             transpositions: self.transpositions,
