@@ -288,14 +288,6 @@ pub type Constraints = SquareMap<Board>;
 #[derive(Debug, PartialEq)]
 pub struct ConstrainedPieces(pub Board, pub SquareMap<Board>);
 
-fn is_repeatable_move(m: &Move) -> bool {
-    match m {
-        Null => true,
-        Enpassant { .. } | Promote { .. } | Castle { .. } => false,
-        Normal { moving, capture, .. } => piece_class(*moving) != class::P && capture.is_none(),
-    }
-}
-
 impl Position {
     pub fn in_check(&self) -> bool {
         intersects(self.passive_control, self.piece_boards[create_piece(self.active, class::K)])
@@ -351,7 +343,7 @@ impl Position {
             .iter()
             .filter(|(_, m)| m != &Null)
             .rev()
-            .take_while(|(_, m)| is_repeatable_move(m))
+            .take_while(|(_, m)| m.is_repeatable())
             .map(|(discards, _)| discards.key);
 
         for p in positions {
