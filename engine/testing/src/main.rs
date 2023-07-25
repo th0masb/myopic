@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use chrono::{DateTime, Timelike, Utc};
+use chrono::{Datelike, DateTime, Timelike, Utc};
 use clap::Parser;
 use hyperopic::Engine;
 use lichess_api::ratings::{ChallengeRequest, OnlineBot, TimeLimitType, TimeLimits};
@@ -20,24 +20,25 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
 const TABLE_SIZE: usize = 5_000_000;
+const TIME_LIMITS: [TimeLimits; 3] = [
+    TimeLimits { limit: 120, increment: 1 },
+    TimeLimits { limit: 180, increment: 2 },
+    TimeLimits { limit: 300, increment: 5 },
+];
 
 #[derive(Parser, Debug)]
 struct Args {
     #[arg(long)]
     auth_token: String,
     #[arg(long)]
-    time_limit: u32,
-    #[arg(long)]
-    time_increment: u32,
-    #[arg(long)]
     rated: bool,
     #[arg(long, default_value_t = 19)]
     start_hour: u32,
-    #[arg(long, default_value_t = 6)]
+    #[arg(long, default_value_t = 7)]
     end_hour: u32,
     #[arg(long, default_value_t = LevelFilter::Info)]
     log_level: LevelFilter,
-    #[arg(long, default_value_t = 3)]
+    #[arg(long, default_value_t = 2)]
     max_concurrent_games: usize,
     #[arg(long, default_value_t = 150)]
     rating_offset_above: u32,
@@ -45,6 +46,10 @@ struct Args {
     rating_offset_below: u32,
     #[arg(long, default_value_t = 5400)]
     flush_interval_secs: u64,
+    #[arg(long)]
+    time_limit: Option<u32>,
+    #[arg(long)]
+    time_increment: Option<u32>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -103,7 +108,6 @@ async fn search_for_game(args: &Args, bot_id: String, mut rx: Receiver<GameStart
                         offset_below: args.rating_offset_below,
                         offset_above: args.rating_offset_above
                     },
-                    TimeLimits { limit: args.time_limit, increment: args.time_increment },
                 ).await {
                     log::error!("Error in challenge poll: {}", e);
                     backoff_index += 1;
@@ -145,13 +149,13 @@ async fn execute_challenge_poll(
     bot_id: &str,
     client: &LichessClient,
     rating_range: RatingRange,
-    time_limit: TimeLimits,
 ) -> Result<()> {
     let now = Utc::now();
     if !get_active_time_range(args).into_iter().any(|r| r.contains(&now)) {
         log::debug!("{} not in active range", now);
         return Ok(());
     }
+    let time_limit = choose_time_limits(args);
     let exclusions = vec!["hyperopic", "myopic-bot"];
     let time_limit_type = time_limit.get_type();
     let BotState { rating, online_bots, games_in_progress } =
@@ -221,6 +225,19 @@ async fn execute_challenge_poll(
 
     *tracker.activity.entry(chosen.id).or_insert(0) += 1;
     Ok(())
+}
+
+fn choose_time_limits(args: &Args) -> TimeLimits {
+    if args.time_limit.is_some() && args.time_increment.is_some() {
+        TimeLimits {
+            limit: args.time_limit.unwrap(),
+            increment: args.time_increment.unwrap(),
+        }
+    } else {
+        let now = Utc::now();
+        let day_of_week = now.weekday().num_days_from_monday() as usize;
+        TIME_LIMITS[day_of_week % TIME_LIMITS.len()].clone()
+    }
 }
 
 async fn fetch_bot_state(
