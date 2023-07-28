@@ -1,4 +1,4 @@
-use crate::constants::{class, create_piece, piece_class, piece_side, side_parity};
+use crate::constants::{class, create_piece, piece_class, piece_side, reflect_side, side_parity};
 use crate::{ClassMap, Piece};
 
 use crate::moves::Move;
@@ -79,7 +79,7 @@ impl MaterialFacet {
                 }
             }
             Move::Enpassant { side, .. } => {
-                remove(self, create_piece(*side, class::P));
+                remove(self, create_piece(reflect_side(*side), class::P));
             }
             Move::Promote { promoted, capture, .. } => {
                 let side = piece_side(*promoted);
