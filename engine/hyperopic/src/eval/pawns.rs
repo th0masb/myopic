@@ -217,6 +217,16 @@ mod test_passed {
         test_find_passers(board!(C4, C5, C6), board!(B5, D5), board!(C5, C6), EMPTY)
     }
 
+    #[test]
+    fn find_passers_3() {
+        test_find_passers(
+            board!(G2, E5, D4, B6, B4, B3),
+            board!(H6, F5, E6, C6, A6),
+            board!(B6),
+            EMPTY,
+        )
+    }
+
     fn test_find_passers(
         whites: Board,
         blacks: Board,
@@ -278,6 +288,7 @@ fn count_isolated_pawns(whites: Board, blacks: Board) -> i32 {
 
 #[cfg(test)]
 mod simple_test {
+    use crate::constants::boards::EMPTY;
     use crate::constants::square::*;
     use crate::eval::pawns::{count_doubled_pawns, count_isolated_pawns};
     use crate::test::reflect_board;
@@ -295,17 +306,17 @@ mod simple_test {
 
     #[test]
     fn doubled_case_0() {
-        execute_test(count_doubled_pawns, board!(), board!(), 0)
+        execute_test(count_doubled_pawns, EMPTY, EMPTY, 0)
     }
 
     #[test]
     fn doubled_case_1() {
-        execute_test(count_doubled_pawns, board!(A4, A5, A7, B3, C2, C3), board!(), 2)
+        execute_test(count_doubled_pawns, board!(A4, A5, A7, B3, C2, C3), EMPTY, 2)
     }
 
     #[test]
     fn doubled_case_2() {
-        execute_test(count_doubled_pawns, board!(A4, A5, A7, B3, C2, C3, D5, D6, D7), board!(), 4)
+        execute_test(count_doubled_pawns, board!(A4, A5, A7, B3, C2, C3, D5, D6, D7), EMPTY, 4)
     }
 
     #[test]
@@ -320,37 +331,37 @@ mod simple_test {
 
     #[test]
     fn isolated_case_0() {
-        execute_test(count_isolated_pawns, board!(), board!(), 0)
+        execute_test(count_isolated_pawns, EMPTY, EMPTY, 0)
     }
 
     #[test]
     fn isolated_case_1() {
-        execute_test(count_isolated_pawns, board!(A5), board!(), 1)
+        execute_test(count_isolated_pawns, board!(A5), EMPTY, 1)
     }
 
     #[test]
     fn isolated_case_2() {
-        execute_test(count_isolated_pawns, board!(H6), board!(), 1)
+        execute_test(count_isolated_pawns, board!(H6), EMPTY, 1)
     }
 
     #[test]
     fn isolated_case_3() {
-        execute_test(count_isolated_pawns, board!(A3, B2, C4, D4), board!(), 0)
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, D4), EMPTY, 0)
     }
 
     #[test]
     fn isolated_case_4() {
-        execute_test(count_isolated_pawns, board!(A3, B2, C4, D4, F2, G2, H3), board!(), 0)
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, D4, F2, G2, H3), EMPTY, 0)
     }
 
     #[test]
     fn isolated_case_5() {
-        execute_test(count_isolated_pawns, board!(A3, B2, C4, E4, G2, H3), board!(), 1)
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, E4, G2, H3), EMPTY, 1)
     }
 
     #[test]
     fn isolated_case_6() {
-        execute_test(count_isolated_pawns, board!(A3, B2, C4, E4, E5, G2, H3), board!(), 2)
+        execute_test(count_isolated_pawns, board!(A3, B2, C4, E4, E5, G2, H3), EMPTY, 2)
     }
 
     #[test]

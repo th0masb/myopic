@@ -42,13 +42,7 @@ fn promotion_eval_bug() {
 
 #[test]
 fn enpassant_bug() {
-    assert_move_better(
-        "8/6rk/p1p1p2p/1pPqPp2/1PNP4/1PQ5/5RPK/3b4 w - b6 0 49",
-        "c5b6",
-        "c4d2",
-        1
-    )
-
+    assert_move_better("8/6rk/p1p1p2p/1pPqPp2/1PNP4/1PQ5/5RPK/3b4 w - b6 0 49", "c5b6", "c4d2", 1)
 }
 
 const TABLE_SIZE: usize = 10000;

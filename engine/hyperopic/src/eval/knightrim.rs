@@ -85,13 +85,12 @@ impl EvalFacet for KnightRimFacet {
 
 #[cfg(test)]
 mod test {
-    use super::Knight;
+
     use crate::constants::square::*;
-    use crate::eval::knightrim::{FirstMoveStore, KnightRimFacet};
+    use crate::eval::knightrim::KnightRimFacet;
     use crate::node::{EvalFacet, Evaluation};
     use crate::position::Position;
     use crate::test::facets::test_facet_evolution;
-    use crate::Side;
 
     #[test]
     fn evaluation() {
