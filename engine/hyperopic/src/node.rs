@@ -1,4 +1,4 @@
-use crate::constants::side;
+use crate::constants::{side, side_parity};
 use crate::position::{Position, TerminalState};
 
 use crate::eval::material::{MaterialFacet, PieceValues};
@@ -106,7 +106,7 @@ impl SearchNode {
             Some(TerminalState::Draw) => DRAW_VALUE,
             Some(TerminalState::Loss) => LOSS_VALUE,
             None => {
-                let parity = if self.position.active == side::W { 1 } else { -1 };
+                let parity = side_parity(self.position.active);
                 let material = self.phase.unwrap(self.material.static_eval(&self.position));
                 let facets = self
                     .facets
@@ -158,7 +158,7 @@ impl From<Position> for SearchNode {
                     Box::new(DevelopmentFacet::default()),
                     Box::new(KnightRimFacet::default()),
                     Box::new(PawnStructureFacet::default()),
-                    Box::new(SafetyFacet::default()),
+                    //Box::new(SafetyFacet::default()),
                 ],
             };
             moves.into_iter().rev().for_each(|m| eval.make(m).unwrap());
@@ -170,7 +170,7 @@ impl From<Position> for SearchNode {
                 facets: vec![
                     Box::new(PieceSquareTablesFacet::from(&board)),
                     Box::new(PawnStructureFacet::default()),
-                    Box::new(SafetyFacet::default()),
+                    //Box::new(SafetyFacet::default()),
                 ],
                 position: board,
             }

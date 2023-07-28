@@ -175,3 +175,12 @@ fn test_black_promotion() {
         "r1bqkb1R/p6p/2np4/8/1n1N3P/P1N1B1P1/2P2P2/R1KQnB1R w q - 0 13",
     );
 }
+
+#[test]
+fn enpassant() {
+    execute_test(
+        "8/6rk/p1p1p2p/1pPqPp2/1PNP4/1PQ5/5RPK/3b4 w - b6 0 49",
+        Move::Enpassant { side: side::W, from: C5, dest: B6, capture: B5 },
+        "8/6rk/pPp1p2p/3qPp2/1PNP4/1PQ5/5RPK/3b4 b - - 0 49"
+    )
+}
