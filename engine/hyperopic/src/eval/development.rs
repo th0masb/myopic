@@ -133,8 +133,6 @@ mod test {
     use crate::node::{EvalFacet, Evaluation};
     use crate::position::Position;
     use crate::test::facets::test_facet_evolution;
-    use crate::Board;
-    use crate::Side;
 
     #[test]
     fn penalty_test() {

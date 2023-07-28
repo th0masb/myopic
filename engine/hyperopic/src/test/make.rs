@@ -181,6 +181,6 @@ fn enpassant() {
     execute_test(
         "8/6rk/p1p1p2p/1pPqPp2/1PNP4/1PQ5/5RPK/3b4 w - b6 0 49",
         Move::Enpassant { side: side::W, from: C5, dest: B6, capture: B5 },
-        "8/6rk/pPp1p2p/3qPp2/1PNP4/1PQ5/5RPK/3b4 b - - 0 49"
+        "8/6rk/pPp1p2p/3qPp2/1PNP4/1PQ5/5RPK/3b4 b - - 0 49",
     )
 }

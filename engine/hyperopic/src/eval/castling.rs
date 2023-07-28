@@ -13,7 +13,7 @@ pub struct CastlingFacet {
 
 impl Default for CastlingFacet {
     fn default() -> Self {
-        CastlingFacet { castling_status: Default::default(), penalty: 85 }
+        CastlingFacet { castling_status: Default::default(), penalty: 70 }
     }
 }
 

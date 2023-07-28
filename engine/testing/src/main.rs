@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use chrono::{Datelike, DateTime, Timelike, Utc};
+use chrono::{DateTime, Datelike, Timelike, Utc};
 use clap::Parser;
 use hyperopic::Engine;
 use lichess_api::ratings::{ChallengeRequest, OnlineBot, TimeLimitType, TimeLimits};
@@ -229,10 +229,7 @@ async fn execute_challenge_poll(
 
 fn choose_time_limits(args: &Args) -> TimeLimits {
     if args.time_limit.is_some() && args.time_increment.is_some() {
-        TimeLimits {
-            limit: args.time_limit.unwrap(),
-            increment: args.time_increment.unwrap(),
-        }
+        TimeLimits { limit: args.time_limit.unwrap(), increment: args.time_increment.unwrap() }
     } else {
         let now = Utc::now();
         let day_of_week = now.weekday().num_days_from_monday() as usize;

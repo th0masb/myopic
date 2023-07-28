@@ -6,12 +6,7 @@ use crate::{node, Symmetric};
 
 const TABLE_SIZE: usize = 10_000;
 
-fn test(
-    position: &str,
-    expected_move_pool: Vec<&str>,
-    is_won: bool,
-    depth: usize,
-) {
+fn test(position: &str, expected_move_pool: Vec<&str>, is_won: bool, depth: usize) {
     let position: Position = position.parse().unwrap();
     let parsed_moves: Vec<_> = expected_move_pool
         .into_iter()
@@ -48,7 +43,7 @@ fn queen_escape_attack() {
         "r4rk1/5ppp/8/1Bn1p3/Q7/8/5PPP/1R3RK1 w Qq - 5 27",
         vec!["a4b4", "a4c4", "a4g4", "a4h4", "a4c2", "a4d1"],
         false,
-        4
+        4,
     )
 }
 
@@ -117,10 +112,5 @@ fn win_material() {
 
 #[test]
 fn enpassant_win_pawn() {
-    test(
-        "8/6rk/p1p1p2p/1pPqPp2/1PNP4/1PQ5/5RPK/3b4 w - b6 0 49",
-        vec!["c5b6"],
-        false,
-        1
-    )
+    test("8/6rk/p1p1p2p/1pPqPp2/1PNP4/1PQ5/5RPK/3b4 w - b6 0 49", vec!["c5b6"], false, 1)
 }
