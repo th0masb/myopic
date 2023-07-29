@@ -2013,6 +2013,7 @@ dependencies = [
  "chrono",
  "clap 4.3.8",
  "hyperopic",
+ "lazy_static",
  "lichess_api",
  "lichess_events",
  "lichess_game",
