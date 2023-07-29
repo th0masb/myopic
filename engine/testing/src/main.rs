@@ -16,15 +16,24 @@ use simple_logger::SimpleLogger;
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::time::Duration;
+use lazy_static::lazy_static;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
 const TABLE_SIZE: usize = 5_000_000;
-const TIME_LIMITS: [TimeLimits; 3] = [
-    TimeLimits { limit: 120, increment: 1 },
-    TimeLimits { limit: 180, increment: 2 },
-    TimeLimits { limit: 300, increment: 5 },
-];
+
+lazy_static! {
+    // Every 10 days we do 2 blitz days, 1 rapid and 7 bullet
+    static ref TIME_LIMITS: [TimeLimits; 10] = std::array::from_fn(|i| {
+        if i % 5 == 0 {
+            TimeLimits { limit: 180, increment: 2 }
+        } else if i % 7 == 0 {
+            TimeLimits { limit: 300, increment: 5 }
+        } else {
+            TimeLimits { limit: 120, increment: 1 }
+        }
+    });
+}
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -231,9 +240,8 @@ fn choose_time_limits(args: &Args) -> TimeLimits {
     if args.time_limit.is_some() && args.time_increment.is_some() {
         TimeLimits { limit: args.time_limit.unwrap(), increment: args.time_increment.unwrap() }
     } else {
-        let now = Utc::now();
-        let day_of_week = now.weekday().num_days_from_monday() as usize;
-        TIME_LIMITS[day_of_week % TIME_LIMITS.len()].clone()
+        let day_of_month = Utc::now().day0() as usize;
+        TIME_LIMITS[day_of_month % TIME_LIMITS.len()].clone()
     }
 }
 
