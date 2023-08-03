@@ -18,7 +18,7 @@ enum Commands {
         pgn: String,
         #[arg(long)]
         depth: usize,
-        #[arg(long)]
+        #[arg(long, default_value_t = 100000)]
         table_size: usize,
     },
     SearchFen {
@@ -26,7 +26,7 @@ enum Commands {
         fen: String,
         #[arg(long)]
         depth: usize,
-        #[arg(long)]
+        #[arg(long, default_value_t = 100000)]
         table_size: usize,
     },
     Moves {

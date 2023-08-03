@@ -1,9 +1,26 @@
 use crate::moves::Move;
 use crate::position::Position;
+use TreeNode::*;
 
 pub trait Transpositions {
     fn get(&self, pos: &Position) -> Option<&TreeNode>;
     fn put(&mut self, pos: &Position, n: TreeNode);
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct TableEntry {
+    pub root_index: u16,
+    pub key: u64,
+    pub depth: u8,
+    pub eval: i32,
+    pub node_type: NodeType,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum NodeType {
+    Pv(Vec<Move>),
+    Cut(Move),
+    All(Move),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -25,6 +42,10 @@ impl Transpositions for TranspositionsImpl {
 
     fn put(&mut self, pos: &Position, n: TreeNode) {
         let index = self.index(pos.key);
+        let curr = &self.inner[index];
+        //if curr.is_some() && curr.as_ref().unwrap().depth() > n.depth() {
+        //    return
+        //}
         self.inner[index] = Some(n);
     }
 }
@@ -42,25 +63,25 @@ impl TranspositionsImpl {
 impl TreeNode {
     pub fn matches(&self, hash: u64) -> bool {
         match self {
-            TreeNode::Cut { hash: node_hash, .. } => *node_hash == hash,
-            TreeNode::All { hash: node_hash, .. } => *node_hash == hash,
-            TreeNode::Pv { hash: node_hash, .. } => *node_hash == hash,
+            Cut { hash: node_hash, .. } => *node_hash == hash,
+            All { hash: node_hash, .. } => *node_hash == hash,
+            Pv { hash: node_hash, .. } => *node_hash == hash,
         }
     }
 
     pub fn depth(&self) -> usize {
         (match self {
-            &TreeNode::Pv { depth, .. } => depth,
-            &TreeNode::Cut { depth, .. } => depth,
-            &TreeNode::All { depth, .. } => depth,
+            &Pv { depth, .. } => depth,
+            &Cut { depth, .. } => depth,
+            &All { depth, .. } => depth,
         }) as usize
     }
 
     pub fn get_move(&self) -> &Move {
         match self {
-            TreeNode::Pv { best_path: optimal_path, .. } => optimal_path.first().unwrap(),
-            TreeNode::Cut { cutoff_move, .. } => cutoff_move,
-            TreeNode::All { best_move, .. } => best_move,
+            Pv { best_path: optimal_path, .. } => optimal_path.first().unwrap(),
+            Cut { cutoff_move, .. } => cutoff_move,
+            All { best_move, .. } => best_move,
         }
     }
 }
