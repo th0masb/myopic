@@ -10,16 +10,16 @@ use crate::moves::Move;
 use crate::node;
 use crate::node::SearchNode;
 use crate::search::moves::MoveGenerator;
-use crate::search::negascout::{Context, Scout, SearchResponse};
+use crate::search::search::{Context, TreeSearcher, SearchResponse};
 use crate::search::pv::PrincipleVariation;
-pub use crate::search::transpositions::{Transpositions, TranspositionsImpl, TreeNode};
+pub use crate::search::table::{Transpositions, TranspositionsImpl, TreeNode};
 
 pub mod end;
 mod moves;
-pub mod negascout;
+pub mod search;
 mod pv;
 pub mod quiescent;
-mod transpositions;
+mod table;
 
 const DEPTH_UPPER_BOUND: usize = 20;
 
@@ -159,9 +159,10 @@ impl<E: SearchEnd, T: Transpositions> Search<'_, E, T> {
             return Err(anyhow!("Cannot iteratively deepen with depth 0"));
         }
 
-        let SearchResponse { eval, path } = Scout {
+        let root_index = self.node.position().history.len() as u16;
+        let SearchResponse { eval, path } = TreeSearcher {
             end: &self.end,
-            transpositions: self.transpositions,
+            table: self.transpositions,
             moves: MoveGenerator::default(),
             pv,
         }
@@ -173,7 +174,8 @@ impl<E: SearchEnd, T: Transpositions> Search<'_, E, T> {
                 alpha: -node::INFTY,
                 beta: node::INFTY,
                 precursors: vec![],
-                known_pv_node: false,
+                known_raise_alpha: None,
+                root_index
             },
         )?;
 

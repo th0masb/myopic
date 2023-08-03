@@ -1,3 +1,5 @@
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::time::Instant;
 
 use hyperopic::search::{SearchParameters, TranspositionsImpl};
@@ -34,14 +36,20 @@ async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Err
     let n = positions.len();
     let start = Instant::now();
     let mut moves = vec![];
+    let mut hasher = DefaultHasher::new();
     for (i, position) in positions.into_iter().enumerate() {
         if i % LOG_GAP == 0 {
-            log::info!("[Position {}, Elapsed {}ms]", i, start.elapsed().as_millis());
+            let cum_hash = hasher.finish();
+            hasher = DefaultHasher::new();
+            hasher.write_u64(cum_hash);
+            log::info!("[Position {}, Elapsed {}ms, Hash {}]", i, start.elapsed().as_millis(), cum_hash);
         }
-        moves.push(hyperopic::search::search(
+        let search_result = hyperopic::search::search(
             position.into(),
             SearchParameters { end: e.depth, table: &mut TranspositionsImpl::new(e.table_size) },
-        )?);
+        )?;
+        search_result.best_move.hash(&mut hasher);
+        moves.push(search_result);
     }
 
     let execution_times =
