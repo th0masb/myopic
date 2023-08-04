@@ -42,7 +42,12 @@ async fn handler(event: LambdaEvent<BenchStartEvent>) -> Result<BenchOutput, Err
             let cum_hash = hasher.finish();
             hasher = DefaultHasher::new();
             hasher.write_u64(cum_hash);
-            log::info!("[Position {}, Elapsed {}ms, Hash {}]", i, start.elapsed().as_millis(), cum_hash);
+            log::info!(
+                "[Position {}, Elapsed {}ms, Hash {}]",
+                i,
+                start.elapsed().as_millis(),
+                cum_hash
+            );
         }
         let search_result = hyperopic::search::search(
             position.into(),

@@ -1,9 +1,10 @@
 use clap::{Parser, Subcommand};
-use hyperopic::moves::Moves;
-use hyperopic::node::SearchNode;
-use hyperopic::position::Position;
-use hyperopic::search::{SearchParameters, Transpositions, TreeNode};
 use itertools::Itertools;
+
+use hyperopic::moves::Moves;
+use hyperopic::node::TreeNode;
+use hyperopic::position::Position;
+use hyperopic::search::{NodeType, SearchParameters, TableEntry, Transpositions};
 
 #[derive(Parser)]
 struct Cli {
@@ -53,7 +54,7 @@ fn main() {
 }
 
 struct DebugTranspositions {
-    store: Vec<Option<(String, TreeNode)>>,
+    store: Vec<Option<(String, TableEntry)>>,
 }
 
 impl DebugTranspositions {
@@ -63,11 +64,10 @@ impl DebugTranspositions {
 }
 
 impl Transpositions for DebugTranspositions {
-    fn get(&self, pos: &Position) -> Option<&TreeNode> {
-        let hash = pos.key;
-        let index = (hash % self.store.len() as u64) as usize;
+    fn get(&self, pos: &Position) -> Option<&TableEntry> {
+        let index = (pos.key % self.store.len() as u64) as usize;
         if let Some((existing, n)) = self.store[index].as_ref() {
-            if n.matches(hash) {
+            if n.key == pos.key {
                 let new_pos = to_table_id(&pos);
                 if existing.as_str() != new_pos.as_str() {
                     panic!("Collision: {} <-> {}", existing, new_pos)
@@ -81,13 +81,18 @@ impl Transpositions for DebugTranspositions {
         }
     }
 
-    fn put(&mut self, pos: &Position, n: TreeNode) {
-        let hash = pos.key;
-        let index = (hash % self.store.len() as u64) as usize;
-        if !pos.moves(&Moves::All).contains(&n.get_move()) {
-            panic!("Bad node {} <-> {:?}", pos.to_string(), n)
+    fn put(&mut self, pos: &Position, root_index: u16, depth: u8, eval: i32, node_type: NodeType) {
+        let index = (pos.key % self.store.len() as u64) as usize;
+        let m = match &node_type {
+            NodeType::Pv(path) => path.first().unwrap(),
+            NodeType::Cut(m) => m,
+            NodeType::All(m) => m,
+        };
+        if !pos.moves(&Moves::All).contains(m) {
+            panic!("Bad node {} <-> {:?}", pos.to_string(), node_type)
         }
-        self.store[index] = Some((to_table_id(&pos), n))
+        let entry = TableEntry { key: pos.key, root_index, depth, eval, node_type };
+        self.store[index] = Some((to_table_id(&pos), entry))
     }
 }
 
@@ -95,7 +100,7 @@ fn to_table_id(pos: &Position) -> String {
     pos.to_string().split_whitespace().take(4).join(" ")
 }
 
-fn run_search(mut state: SearchNode, depth: usize, table_size: usize) {
+fn run_search(mut state: TreeNode, depth: usize, table_size: usize) {
     if depth == 0 {
         println!("Static: {}", state.relative_eval());
         println!("Quiescent: {}", hyperopic::search::quiescent::full_search(&mut state).unwrap());
