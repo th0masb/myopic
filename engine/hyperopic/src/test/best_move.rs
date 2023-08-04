@@ -1,5 +1,5 @@
 use crate::moves::Move;
-use crate::node::SearchNode;
+use crate::node::TreeNode;
 use crate::position::Position;
 use crate::search::{SearchParameters, TranspositionsImpl};
 use crate::{node, Symmetric};
@@ -19,7 +19,7 @@ fn test(position: &str, expected_move_pool: Vec<&str>, is_won: bool, depth: usiz
     test_impl(ref_board.into(), ref_move_pool, is_won, depth);
 }
 
-fn test_impl(board: SearchNode, expected_move_pool: Vec<Move>, is_won: bool, depth: usize) {
+fn test_impl(board: TreeNode, expected_move_pool: Vec<Move>, is_won: bool, depth: usize) {
     let mut table = TranspositionsImpl::new(TABLE_SIZE);
     let params = SearchParameters { end: depth, table: &mut table };
     match crate::search::search(board, params) {

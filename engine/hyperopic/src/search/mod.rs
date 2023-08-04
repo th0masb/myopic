@@ -8,17 +8,17 @@ use end::SearchEnd;
 
 use crate::moves::Move;
 use crate::node;
-use crate::node::SearchNode;
+use crate::node::TreeNode;
 use crate::search::moves::MoveGenerator;
-use crate::search::search::{Context, TreeSearcher, SearchResponse};
 use crate::search::pv::PrincipleVariation;
-pub use crate::search::table::{Transpositions, TranspositionsImpl, TreeNode};
+use crate::search::search::{Context, SearchResponse, TreeSearcher};
+pub use crate::search::table::{NodeType, TableEntry, Transpositions, TranspositionsImpl};
 
 pub mod end;
 mod moves;
-pub mod search;
 mod pv;
 pub mod quiescent;
+pub mod search;
 mod table;
 
 const DEPTH_UPPER_BOUND: usize = 20;
@@ -27,7 +27,7 @@ const DEPTH_UPPER_BOUND: usize = 20;
 /// state and a terminator and compute the best move we can make from this
 /// state within the duration constraints implied by the terminator.
 pub fn search<E: SearchEnd, T: Transpositions>(
-    node: SearchNode,
+    node: TreeNode,
     parameters: SearchParameters<E, T>,
 ) -> Result<SearchOutcome> {
     Search { node, end: parameters.end, transpositions: parameters.table }.search()
@@ -104,7 +104,7 @@ mod searchoutcome_serialize_test {
 }
 
 struct Search<'a, E: SearchEnd, T: Transpositions> {
-    node: SearchNode,
+    node: TreeNode,
     end: E,
     transpositions: &'a mut T,
 }
@@ -175,7 +175,7 @@ impl<E: SearchEnd, T: Transpositions> Search<'_, E, T> {
                 beta: node::INFTY,
                 precursors: vec![],
                 known_raise_alpha: None,
-                root_index
+                root_index,
             },
         )?;
 

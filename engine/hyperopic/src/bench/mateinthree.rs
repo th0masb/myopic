@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use regex::Regex;
 
-use crate::node::{SearchNode, WIN_VALUE};
+use crate::node::{TreeNode, WIN_VALUE};
 use crate::position::Position;
 use crate::search::{search, SearchParameters};
 use crate::{Move, TranspositionsImpl};
@@ -205,6 +205,6 @@ fn load_cases(data_path: String, max_cases: usize) -> Vec<TestCase> {
 
 //#[derive(Clone)]
 struct TestCase {
-    eval: SearchNode,
+    eval: TreeNode,
     expected_move: Move,
 }

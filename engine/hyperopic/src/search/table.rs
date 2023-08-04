@@ -1,10 +1,10 @@
 use crate::moves::Move;
 use crate::position::Position;
-use TreeNode::*;
+use std::cmp::min;
 
 pub trait Transpositions {
-    fn get(&self, pos: &Position) -> Option<&TreeNode>;
-    fn put(&mut self, pos: &Position, n: TreeNode);
+    fn get(&self, pos: &Position) -> Option<&TableEntry>;
+    fn put(&mut self, pos: &Position, root_index: u16, depth: u8, eval: i32, node_type: NodeType);
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -23,30 +23,25 @@ pub enum NodeType {
     All(Move),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum TreeNode {
-    Pv { hash: u64, depth: u8, eval: i32, best_path: Vec<Move> },
-    Cut { hash: u64, depth: u8, beta: i32, cutoff_move: Move },
-    All { hash: u64, depth: u8, eval: i32, best_move: Move },
-}
-
 pub struct TranspositionsImpl {
-    inner: Vec<Option<TreeNode>>,
+    inner: Vec<Option<TableEntry>>,
 }
 
 impl Transpositions for TranspositionsImpl {
-    fn get(&self, pos: &Position) -> Option<&TreeNode> {
+    fn get(&self, pos: &Position) -> Option<&TableEntry> {
         let index = self.index(pos.key);
-        self.inner[index].as_ref().filter(|&m| m.matches(pos.key))
+        self.inner[index].as_ref().filter(|&m| m.key == pos.key)
     }
 
-    fn put(&mut self, pos: &Position, n: TreeNode) {
+    fn put(&mut self, pos: &Position, root_index: u16, depth: u8, eval: i32, node_type: NodeType) {
         let index = self.index(pos.key);
-        let curr = &self.inner[index];
-        //if curr.is_some() && curr.as_ref().unwrap().depth() > n.depth() {
-        //    return
-        //}
-        self.inner[index] = Some(n);
+        if let Some(existing) = &self.inner[index] {
+            let index_diff = root_index - min(existing.root_index, root_index);
+            if existing.depth as u16 > depth as u16 + index_diff {
+                return;
+            }
+        }
+        self.inner[index] = Some(TableEntry { root_index, depth, eval, key: pos.key, node_type });
     }
 }
 
@@ -57,31 +52,5 @@ impl TranspositionsImpl {
 
     fn index(&self, k: u64) -> usize {
         (k % self.inner.len() as u64) as usize
-    }
-}
-
-impl TreeNode {
-    pub fn matches(&self, hash: u64) -> bool {
-        match self {
-            Cut { hash: node_hash, .. } => *node_hash == hash,
-            All { hash: node_hash, .. } => *node_hash == hash,
-            Pv { hash: node_hash, .. } => *node_hash == hash,
-        }
-    }
-
-    pub fn depth(&self) -> usize {
-        (match self {
-            &Pv { depth, .. } => depth,
-            &Cut { depth, .. } => depth,
-            &All { depth, .. } => depth,
-        }) as usize
-    }
-
-    pub fn get_move(&self) -> &Move {
-        match self {
-            Pv { best_path: optimal_path, .. } => optimal_path.first().unwrap(),
-            Cut { cutoff_move, .. } => cutoff_move,
-            All { best_move, .. } => best_move,
-        }
     }
 }

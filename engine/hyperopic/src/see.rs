@@ -167,7 +167,7 @@ mod test {
     use crate::constants::{class, corner, create_piece, reflect_square, side};
     use crate::eval::material::PieceValues;
     use crate::moves::Move;
-    use crate::node::SearchNode;
+    use crate::node::TreeNode;
     use crate::position::Position;
 
     fn dummy_values() -> PieceValues {
@@ -275,7 +275,7 @@ mod test {
     fn see_case_7() {
         let initial_position =
             "r1bqk2r/1ppnnpb1/3p2p1/p2Pp1Pp/2P1P2P/2N1BP2/PP6/R2QKBNR w KQkq a6 0 11";
-        let mut node: SearchNode = initial_position.parse::<Position>().unwrap().into();
+        let mut node: TreeNode = initial_position.parse::<Position>().unwrap().into();
         let moves = vec![
             Move::Normal {
                 moving: create_piece(side::W, class::B),

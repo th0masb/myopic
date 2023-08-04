@@ -1,20 +1,19 @@
 use anyhow::{anyhow, Result};
 use std::cmp::{max, min};
 use std::time::Instant;
-
-use TreeNode::{All, Cut, Pv};
+use NodeType::{All, Cut, Pv};
 
 use crate::board::board_moves;
 use crate::constants::{class, create_piece, in_board};
 use crate::moves::Move;
 use crate::node;
-use crate::node::SearchNode;
+use crate::node::TreeNode;
 use crate::position::{TerminalState, CASTLING_DETAILS};
 use crate::search::end::SearchEnd;
 use crate::search::moves::{MoveGenerator, SearchMove};
 use crate::search::pv::PrincipleVariation;
 use crate::search::quiescent;
-use crate::search::table::{Transpositions, TreeNode};
+use crate::search::table::{NodeType, Transpositions};
 
 /// Provides relevant callstack information for the search to
 /// use during the traversal of the tree.
@@ -75,12 +74,12 @@ fn reposition_first(dest: &mut Vec<SearchMove>, new_first: &Move) {
 
 enum TableLookup {
     Miss,
-    Suggestion(TreeNode),
+    Suggestion(NodeType),
     Hit(SearchResponse),
 }
 
 impl<E: SearchEnd, T: Transpositions> TreeSearcher<'_, E, T> {
-    pub fn search(&mut self, node: &mut SearchNode, mut ctx: Context) -> Result<SearchResponse> {
+    pub fn search(&mut self, node: &mut TreeNode, mut ctx: Context) -> Result<SearchResponse> {
         if self.end.should_end(&ctx) {
             return Err(anyhow!("Terminated at depth {}", ctx.depth));
         }
@@ -104,8 +103,7 @@ impl<E: SearchEnd, T: Transpositions> TreeSearcher<'_, E, T> {
 
         if !in_pvs && should_try_null_move_pruning(node, &ctx) {
             node.make(Move::Null)?;
-            let score =
-                -self.search(node, ctx.next(-ctx.beta, -ctx.alpha, &Move::Null, 3))?;
+            let score = -self.search(node, ctx.next(-ctx.beta, -ctx.alpha, &Move::Null, 3))?;
             node.unmake()?;
             if score.eval > ctx.beta {
                 return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
@@ -117,7 +115,7 @@ impl<E: SearchEnd, T: Transpositions> TreeSearcher<'_, E, T> {
         let in_check = node.position().in_check();
         let is_pv_node = in_pvs
             || ctx.known_raise_alpha.is_some()
-            || matches!(table_entry, Some(TreeNode::Pv { .. }));
+            || matches!(table_entry, Some(NodeType::Pv(_)));
 
         let mut i = 0;
         let mut research = false;
@@ -170,19 +168,21 @@ impl<E: SearchEnd, T: Transpositions> TreeSearcher<'_, E, T> {
                     continue;
                 }
                 score = response.eval;
+                best_path = response.path;
+                best_path.insert(0, m.clone());
                 if ctx.alpha < score {
                     ctx.alpha = score;
                     raised_alpha = true;
-                    best_path = response.path;
-                    best_path.insert(0, m.clone());
                 }
             }
 
             if ctx.alpha >= ctx.beta {
-                let key = node.position().key;
                 self.table.put(
                     node.position(),
-                    Cut { depth: ctx.depth, beta: ctx.beta, cutoff_move: m.clone(), hash: key },
+                    ctx.root_index,
+                    ctx.depth,
+                    ctx.beta,
+                    Cut(m.clone()),
                 );
                 return Ok(SearchResponse { eval: ctx.beta, path: vec![] });
             }
@@ -207,96 +207,103 @@ impl<E: SearchEnd, T: Transpositions> TreeSearcher<'_, E, T> {
         }
 
         // Populate the table with the information from this node.
-        let key = node.position().key;
-        if raised_alpha {
-            debug_assert!(best_path.len() > 0);
-            self.table.put(
-                node.position(),
-                Pv { depth: ctx.depth, eval: ctx.alpha, best_path: best_path.clone(), hash: key },
-            );
-        } else {
-            debug_assert!(best_path.len() == 0);
-            if let Some(m) = best_path.first() {
-                self.table.put(
-                    node.position(),
-                    All { depth: ctx.depth, eval: score, best_move: m.clone(), hash: key },
-                );
-            }
-        }
+        debug_assert!(best_path.len() > 0);
+        self.table.put(
+            node.position(),
+            ctx.root_index,
+            ctx.depth,
+            score,
+            if raised_alpha {
+                Pv(best_path.clone())
+            } else {
+                All(best_path.first().unwrap().clone())
+            },
+        );
 
         Ok(SearchResponse { eval: ctx.alpha, path: best_path })
     }
 
-    fn do_table_lookup(&self, node: &SearchNode, ctx: &Context) -> TableLookup {
+    fn do_table_lookup(&self, node: &TreeNode, ctx: &Context) -> TableLookup {
         // If we are in a repeated position then do not break early using table lookup as we can
         // enter a repeated cycle.
-        let is_repeated_position = has_repetition(node);
-        match self.table.get(node.position()) {
-            None => TableLookup::Miss,
-            Some(n @ Pv { depth, eval, best_path: optimal_path, .. }) => {
-                if !is_repeated_position
-                    && *depth >= ctx.depth
-                    && optimal_path.len() > 0
-                    && is_pseudo_legal(node, optimal_path.first().unwrap())
-                {
-                    let adjusted_eval = min(ctx.beta, max(ctx.alpha, *eval));
-                    TableLookup::Hit(SearchResponse { eval: adjusted_eval, path: optimal_path.clone() })
-                } else {
-                    TableLookup::Suggestion(n.clone())
+        if let Some(existing) = self.table.get(node.position()) {
+            let is_repeated_position = has_repetition(node);
+            match &existing.node_type {
+                n @ Pv(path) => {
+                    if !is_repeated_position
+                        && existing.depth >= ctx.depth
+                        && path.len() > 0
+                        && is_pseudo_legal(node, path.first().unwrap())
+                    {
+                        let adjusted_eval = min(ctx.beta, max(ctx.alpha, existing.eval));
+                        TableLookup::Hit(SearchResponse { eval: adjusted_eval, path: path.clone() })
+                    } else {
+                        TableLookup::Suggestion(n.clone())
+                    }
+                }
+                n @ Cut(m) => {
+                    if !is_repeated_position
+                        && existing.depth >= ctx.depth
+                        && ctx.beta <= existing.eval
+                        && is_pseudo_legal(node, m)
+                    {
+                        TableLookup::Hit(SearchResponse { eval: ctx.beta, path: vec![] })
+                    } else {
+                        TableLookup::Suggestion(n.clone())
+                    }
+                }
+                n @ All(m) => {
+                    if !is_repeated_position
+                        && existing.depth >= ctx.depth
+                        && existing.eval <= ctx.alpha
+                        && is_pseudo_legal(node, m)
+                    {
+                        // Since we have a fail hard framework don't return the exact eval, but the
+                        // current alpha value
+                        TableLookup::Hit(SearchResponse { eval: ctx.alpha, path: vec![] })
+                    } else {
+                        TableLookup::Suggestion(n.clone())
+                    }
                 }
             }
-            Some(n @ Cut { depth, beta, cutoff_move, .. }) => {
-                if !is_repeated_position
-                    && *depth >= ctx.depth
-                    && ctx.beta <= *beta
-                    && is_pseudo_legal(node, cutoff_move)
-                {
-                    TableLookup::Hit(SearchResponse { eval: ctx.beta, path: vec![] })
-                } else {
-                    TableLookup::Suggestion(n.clone())
-                }
-            }
-            Some(n @ All { depth, eval, best_move, .. }) => {
-                if !is_repeated_position
-                    && *depth >= ctx.depth
-                    && *eval <= ctx.alpha
-                    && is_pseudo_legal(node, best_move)
-                {
-                    // Since we have a fail hard framework don't return the exact eval, but the
-                    // current alpha value
-                    TableLookup::Hit(SearchResponse { eval: ctx.alpha, path: vec![] })
-                } else {
-                    TableLookup::Suggestion(n.clone())
-                }
-            }
+        } else {
+            TableLookup::Miss
         }
     }
 
     fn generate_moves(
         &self,
-        node: &SearchNode,
+        node: &TreeNode,
         ctx: &Context,
-        table_entry: &Option<TreeNode>
+        table_entry: &Option<NodeType>,
     ) -> Vec<SearchMove> {
         let mut mvs = self.moves.generate(node);
-        table_entry.as_ref().map(|n| reposition_first(&mut mvs, n.get_move()));
+        table_entry.as_ref().map(|n| {
+            reposition_first(
+                &mut mvs,
+                match n {
+                    Pv(path) => path.first().unwrap(),
+                    Cut(m) => m,
+                    All(m) => m,
+                },
+            )
+        });
         ctx.known_raise_alpha.as_ref().map(|m| reposition_first(&mut mvs, m));
         self.pv.get_next_move(ctx.precursors.as_slice()).map(|m| reposition_first(&mut mvs, &m));
         mvs
     }
 }
 
-fn has_repetition(node: &SearchNode) -> bool {
-    node
-    .position()
-    .history
-    .iter()
-    .rev()
-    .take_while(|(_, m)| m.is_repeatable())
-    .any(|(d, _)| d.key == node.position().key)
+fn has_repetition(node: &TreeNode) -> bool {
+    node.position()
+        .history
+        .iter()
+        .rev()
+        .take_while(|(_, m)| m.is_repeatable())
+        .any(|(d, _)| d.key == node.position().key)
 }
 
-fn is_pseudo_legal(node: &SearchNode, m: &Move) -> bool {
+fn is_pseudo_legal(node: &TreeNode, m: &Move) -> bool {
     let position = node.position();
     match m {
         Move::Null => false,
@@ -323,7 +330,7 @@ fn is_pseudo_legal(node: &SearchNode, m: &Move) -> bool {
     }
 }
 
-fn should_try_null_move_pruning(node: &SearchNode, ctx: &Context) -> bool {
+fn should_try_null_move_pruning(node: &TreeNode, ctx: &Context) -> bool {
     let position = node.position();
     ctx.depth < 5 && ctx.beta < 1000 && !position.in_check() && {
         let active = position.active;
