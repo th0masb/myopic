@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use clap::Parser;
 use hyperopic::Engine;
+use lazy_static::lazy_static;
 use lichess_api::ratings::{ChallengeRequest, OnlineBot, TimeLimitType, TimeLimits};
 use lichess_api::{LichessClient, LichessEndgameClient};
 use lichess_events::events::{Challenge, GameStart};
@@ -16,7 +17,6 @@ use simple_logger::SimpleLogger;
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::time::Duration;
-use lazy_static::lazy_static;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 
