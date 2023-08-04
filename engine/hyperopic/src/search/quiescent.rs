@@ -8,7 +8,7 @@ use crate::constants::{class, piece_class};
 use crate::moves::Move::{Castle, Enpassant, Normal, Promote};
 use crate::moves::{Move, MoveFacet, Moves};
 use crate::node;
-use crate::node::SearchNode;
+use crate::node::TreeNode;
 use crate::position::TerminalState;
 
 const Q_CHECK_CAP: i32 = -1;
@@ -17,17 +17,17 @@ const DELTA_SKIP_MAX_PHASE: f32 = 0.9;
 const SHALLOW_MOVE_FACETS: [MoveFacet; 3] = [Attacking, Checking, Promoting];
 const DEEP_MOVE_FACETS: [MoveFacet; 2] = [Attacking, Promoting];
 
-pub fn full_search(node: &mut SearchNode) -> Result<i32> {
+pub fn full_search(node: &mut TreeNode) -> Result<i32> {
     search(node, -node::INFTY, node::INFTY)
 }
 
-pub fn search(node: &mut SearchNode, alpha: i32, beta: i32) -> Result<i32> {
+pub fn search(node: &mut TreeNode, alpha: i32, beta: i32) -> Result<i32> {
     search_impl(node, alpha, beta, -1)
 }
 
 /// Performs a depth limited search looking to evaluate only quiet positions,
 /// i.e. those with no attack moves.
-fn search_impl(node: &mut SearchNode, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
+fn search_impl(node: &mut TreeNode, mut alpha: i32, beta: i32, depth: i32) -> Result<i32> {
     // We know the start node not terminal otherwise wouldn't have entered the quiescent search
     if depth != -1 {
         match node.position().compute_terminal_state() {
@@ -86,7 +86,7 @@ fn search_impl(node: &mut SearchNode, mut alpha: i32, beta: i32, depth: i32) -> 
 }
 
 fn compute_quiescent_moves(
-    node: &mut SearchNode,
+    node: &mut TreeNode,
     in_check: bool,
     depth: i32,
 ) -> Vec<(MoveCategory, Move)> {
@@ -108,7 +108,7 @@ fn compute_quiescent_moves(
     moves
 }
 
-fn categorise(state: &mut SearchNode, mv: &Move) -> MoveCategory {
+fn categorise(state: &mut TreeNode, mv: &Move) -> MoveCategory {
     match mv {
         Null | Enpassant { .. } | Castle { .. } => MoveCategory::Other,
         Promote { promoted, capture, .. } => {

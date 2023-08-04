@@ -7,7 +7,7 @@ use crate::constants::{
 use crate::eval::tables::PositionTables;
 use crate::moves::Move::{Castle, Enpassant, Normal, Null, Promote};
 use crate::moves::{Move, Moves};
-use crate::node::SearchNode;
+use crate::node::TreeNode;
 use crate::position::{ConstrainedPieces, Position, CASTLING_DETAILS};
 use crate::{Board, Class, Piece, Square};
 
@@ -36,7 +36,7 @@ impl SearchMove {
 }
 
 impl MoveGenerator {
-    pub fn generate(&self, node: &SearchNode) -> Vec<SearchMove> {
+    pub fn generate(&self, node: &TreeNode) -> Vec<SearchMove> {
         let pos = node.position();
         let enemy_king = create_piece(reflect_side(pos.active), class::K);
         let enemy_king_loc = pos.piece_boards[enemy_king].trailing_zeros() as usize;
@@ -233,7 +233,7 @@ struct MaterialAndPositioningHeuristic {
 }
 
 impl MaterialAndPositioningHeuristic {
-    fn estimate(&self, board: &SearchNode, mv: &Move) -> i32 {
+    fn estimate(&self, board: &TreeNode, mv: &Move) -> i32 {
         match self.get_category(board, mv) {
             MoveCategory::GoodExchange(n) => 30_000 + n,
             MoveCategory::Special => 20_000,
@@ -242,7 +242,7 @@ impl MaterialAndPositioningHeuristic {
         }
     }
 
-    fn get_category(&self, eval: &SearchNode, mv: &Move) -> MoveCategory {
+    fn get_category(&self, eval: &TreeNode, mv: &Move) -> MoveCategory {
         match mv {
             Null | Enpassant { .. } | Castle { .. } | Promote { .. } => MoveCategory::Special,
             &Normal { moving, from, dest, capture } => {
@@ -278,7 +278,7 @@ enum MoveCategory {
     BadExchange(i32),
 }
 
-fn get_lower_value_delta(eval: &SearchNode, piece: Piece, dst: Square) -> Option<i32> {
+fn get_lower_value_delta(eval: &TreeNode, piece: Piece, dst: Square) -> Option<i32> {
     let piece_values = eval.piece_values();
     let p_class = piece_class(piece);
     let moving_value = piece_values[p_class];

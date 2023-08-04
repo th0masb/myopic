@@ -1,5 +1,5 @@
 use crate::moves::Move;
-use crate::node::SearchNode;
+use crate::node::TreeNode;
 use crate::position::Position;
 use crate::search::{SearchOutcome, SearchParameters, TranspositionsImpl};
 use crate::timing::TimeAllocator;
@@ -126,7 +126,7 @@ impl Engine {
 
     pub fn compute_move(&mut self, input: ComputeMoveInput) -> Result<ComputeMoveOutput> {
         let start = Instant::now();
-        let node: SearchNode = input.position.into();
+        let node: TreeNode = input.position.into();
         match self.perform_lookups(node.position().clone()) {
             Some(mv) => Ok(ComputeMoveOutput { best_move: mv, search_details: None }),
             None => {

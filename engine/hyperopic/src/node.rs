@@ -53,14 +53,14 @@ pub trait EvalFacet {
 /// Wrapper around a chess board which adds position evaluation capabilities.
 /// The evaluation function is decomposed into orthogonal "facets". The minimal
 /// evaluator looks only at material.
-pub struct SearchNode {
+pub struct TreeNode {
     position: Position,
     phase: Phase,
     material: MaterialFacet,
     facets: Vec<Box<dyn EvalFacet>>,
 }
 
-impl SearchNode {
+impl TreeNode {
     /// Get an immutable reference to the underlying position
     pub fn position(&self) -> &Position {
         &self.position
@@ -139,7 +139,7 @@ impl SearchNode {
     }
 }
 
-impl From<Position> for SearchNode {
+impl From<Position> for TreeNode {
     fn from(board: Position) -> Self {
         let mut board_clone = board.clone();
         let mut moves = vec![];
@@ -148,7 +148,7 @@ impl From<Position> for SearchNode {
         }
 
         if board_clone == Position::default() {
-            let mut eval = SearchNode {
+            let mut eval = TreeNode {
                 position: Position::default(),
                 phase: Default::default(),
                 material: Default::default(),
@@ -164,7 +164,7 @@ impl From<Position> for SearchNode {
             moves.into_iter().rev().for_each(|m| eval.make(m).unwrap());
             eval
         } else {
-            SearchNode {
+            TreeNode {
                 material: MaterialFacet::from(&board),
                 phase: Phase::from(&board),
                 facets: vec![
