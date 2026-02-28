@@ -11,17 +11,17 @@
     "cdk": "cdk"
   },
   "dependencies": {
-    "source-map-support": "^0.5.16",
     "aws-cdk-lib": "^2.0.0",
-    "constructs": "^10.0.0"
+    "constructs": "^10.0.0",
+    "source-map-support": "^0.5.16"
   },
   "devDependencies": {
     "@types/node": "10.17.27",
-    "ts-node": "^8.1.0",
-    "typescript": "^3.9.7",
+    "aws-cdk": "^2.1108.0",
     "aws-cdk-lib": "^2.0.0",
     "constructs": "^10.0.0",
-    "aws-cdk": "^2.0.0"
+    "ts-node": "^8.1.0",
+    "typescript": "^3.9.7"
   },
   "peerDependencies": {
     "aws-cdk-lib": "^2.0.0",
