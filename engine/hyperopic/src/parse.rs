@@ -164,7 +164,12 @@ pub fn parse_uci_move(position: &Position, input: &str) -> Result<Move> {
             Null => false,
             &Normal { from, dest, .. } => from == f && dest == d,
             &Enpassant { from, dest, .. } => from == f && dest == d,
-            &Castle { corner, .. } => CASTLING_DETAILS[corner].king_line == (f, d),
+            &Castle { corner, .. } => {
+                let details = &CASTLING_DETAILS[corner];
+                let (king_from, king_dest) = details.king_line;
+                let (corner_square, _) = details.rook_line;
+                f == king_from && (d == king_dest || d == corner_square)
+            }
             &Promote { from, dest, promoted, .. } => {
                 from == f
                     && dest == d
@@ -685,5 +690,25 @@ mod test_single_uci_move {
             "r3k2r/pp1q1ppp/n1p2n2/4p3/3pP2P/3P1QP1/PPPN1PB1/R4RK1 b kq - 2 13",
             "e8c8",
         )
+    }
+
+    #[test]
+    fn case_twelve() {
+        execute_success_test("cwk", "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1h1")
+    }
+
+    #[test]
+    fn case_thirteen() {
+        execute_success_test("cwq", "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1", "e1a1")
+    }
+
+    #[test]
+    fn case_fourteen() {
+        execute_success_test("cbk", "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1", "e8h8")
+    }
+
+    #[test]
+    fn case_fifteen() {
+        execute_success_test("cbq", "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1", "e8a8")
     }
 }
