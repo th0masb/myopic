@@ -8,6 +8,7 @@ import {AccountAndRegion, BotChallengerConfig} from "../config";
 import * as path from "path";
 import {Schedule, ScheduleExpression, ScheduleTargetInput} from "aws-cdk-lib/aws-scheduler";
 import {LambdaInvoke} from "aws-cdk-lib/aws-scheduler-targets";
+import {Platform} from "aws-cdk-lib/aws-ecr-assets";
 
 export class ChallengerStack extends Stack {
     constructor(
@@ -22,9 +23,11 @@ export class ChallengerStack extends Stack {
             retryAttempts: 0,
             memorySize: 128,
             timeout: Duration.minutes(3),
+            architecture: lambda.Architecture.ARM_64,
             code: lambda.DockerImageCode.fromImageAsset(
                 path.join(__dirname, "..", "..", ".."),
                 {
+                    platform: Platform.LINUX_ARM64,
                     file: path.join("tools", "workspace.dockerfile"),
                     buildArgs: {
                         APP_NAME: "challenge",
